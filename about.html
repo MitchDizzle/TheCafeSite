@@ -13,7 +13,20 @@
 </head>
 <body class="page-body">
 
-    <div id="nav-mount"></div>
+    <nav class="nav" aria-label="Site navigation">
+        <div class="nav__inner">
+            <a href="index.html" class="nav__brand">The Café</a>
+            <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav__links" id="nav-links" role="list">
+                <li><a href="about.html">About</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="contact.html" class="btn btn-primary">Book a Catering</a></li>
+            </ul>
+        </div>
+    </nav>
 
     <main>
 
@@ -63,7 +76,18 @@
 
     </main>
 
-    <div id="footer-mount"></div>
+    <footer class="footer" aria-label="Site footer">
+        <div class="footer__inner">
+            <p class="footer__brand">The Café</p>
+            <ul class="footer__links" role="list">
+                <li><a href="about.html">About</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <p class="footer__copy">&copy; <span class="footer-year"></span> The Café. All rights reserved.</p>
+        </div>
+    </footer>
 
     <script src="js/main.js"></script>
 </body>

@@ -1,135 +1,84 @@
 /* ============================================================
    The Cafe — Shared Inner-Page JS
-   Handles: nav/footer fetch includes, mobile nav toggle,
-            active nav link highlighting, scroll-fade sections
+   Handles: mobile nav toggle, active nav link, footer year,
+            footer slide-in, scroll-fade sections
    ============================================================ */
 
 (function () {
     'use strict';
 
-    /* ── Component loader ───────────────────────────────────── */
+    /* ── Mobile nav toggle ──────────────────────────────────── */
 
-    /**
-     * Fetches an HTML fragment and injects it into the given mount element.
-     * Falls back silently if the fetch fails (e.g. file:// protocol locally).
-     */
-    function loadComponent(mountId, url, callback) {
-        const mount = document.getElementById(mountId);
-        if (!mount) return;
+    var toggle = document.querySelector('.nav__toggle');
+    var links  = document.querySelector('.nav__links');
 
-        fetch(url)
-            .then(function (r) {
-                if (!r.ok) throw new Error('fetch failed: ' + r.status);
-                return r.text();
-            })
-            .then(function (html) {
-                mount.innerHTML = html;
-                if (typeof callback === 'function') callback(mount);
-            })
-            .catch(function (err) {
-                console.warn('Could not load component:', url, err);
-            });
-    }
+    if (toggle && links) {
+        toggle.addEventListener('click', function () {
+            var open = links.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', open);
+        });
 
-    /* ── Nav helpers (run after nav fragment is injected) ───── */
-
-    function initNav(navMount) {
-        // Mobile toggle
-        const toggle = navMount.querySelector('.nav__toggle');
-        const links  = navMount.querySelector('.nav__links');
-
-        if (toggle && links) {
-            toggle.addEventListener('click', function () {
-                const open = links.classList.toggle('open');
-                toggle.setAttribute('aria-expanded', open);
-            });
-
-            // Close menu when a link is clicked
-            links.addEventListener('click', function (e) {
-                if (e.target.tagName === 'A') {
-                    links.classList.remove('open');
-                    toggle.setAttribute('aria-expanded', 'false');
-                }
-            });
-        }
-
-        // Highlight active page link
-        const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-        navMount.querySelectorAll('.nav__links a').forEach(function (a) {
-            const href = a.getAttribute('href');
-            if (href && href === currentPath) {
-                a.classList.add('active');
-                a.setAttribute('aria-current', 'page');
+        links.addEventListener('click', function (e) {
+            if (e.target.tagName === 'A') {
+                links.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
             }
         });
     }
 
-    /* ── Scroll-fade observer ───────────────────────────────── */
+    /* ── Active nav link ────────────────────────────────────── */
 
-    function initScrollFade() {
-        if (!window.IntersectionObserver) return;
+    var currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('.nav__links a').forEach(function (a) {
+        if (a.getAttribute('href') === currentPage) {
+            a.classList.add('active');
+            a.setAttribute('aria-current', 'page');
+        }
+    });
 
-        const elements = document.querySelectorAll('[data-fade]');
-        if (!elements.length) return;
+    /* ── Footer year ────────────────────────────────────────── */
 
-        const observer = new IntersectionObserver(function (entries) {
+    document.querySelectorAll('.footer-year').forEach(function (el) {
+        el.textContent = new Date().getFullYear();
+    });
+
+    /* ── Footer slide-in ────────────────────────────────────── */
+
+    var footer = document.querySelector('.footer');
+    if (footer && window.IntersectionObserver) {
+        var footerObs = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.15 });
-
-        elements.forEach(function (el) {
-            el.classList.add('fade-ready');
-            observer.observe(el);
-        });
-    }
-
-    /* ── Base path (handles /thecafe/ subfolder staging) ────── */
-
-    function getBasePath() {
-        // Derive base from a known script tag, or fall back to /thecafe/
-        const scripts = document.querySelectorAll('script[src*="main.js"]');
-        if (scripts.length) {
-            const src = scripts[scripts.length - 1].getAttribute('src');
-            // src = "js/main.js" (relative) or "/thecafe/js/main.js" (absolute)
-            return src.replace(/js\/main\.js$/, '');
-        }
-        return '/thecafe/';
-    }
-
-    /* ── Init ───────────────────────────────────────────────── */
-
-    const base = getBasePath();
-
-    function initFooter(footerMount) {
-        const footer = footerMount.querySelector('.footer');
-        if (!footer) return;
-
-        if (!window.IntersectionObserver) {
-            footer.classList.add('is-visible');
-            return;
-        }
-
-        const obs = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
+                    footer.getBoundingClientRect();
                     footer.classList.add('is-visible');
-                    obs.unobserve(footer);
+                    footerObs.unobserve(footer);
                 }
             });
         }, { threshold: 0.1 });
-
-        obs.observe(footer);
+        footerObs.observe(footer);
+    } else if (footer) {
+        footer.classList.add('is-visible');
     }
 
-    loadComponent('nav-mount',    base + 'components/nav.html',    initNav);
-    loadComponent('footer-mount', base + 'components/footer.html', initFooter);
+    /* ── Scroll-fade sections ───────────────────────────────── */
 
-    document.addEventListener('DOMContentLoaded', function () {
-        initScrollFade();
-    });
+    if (window.IntersectionObserver) {
+        var fadeEls = document.querySelectorAll('[data-fade]');
+        if (fadeEls.length) {
+            var fadeObs = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        fadeObs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            fadeEls.forEach(function (el) {
+                el.classList.add('fade-ready');
+                fadeObs.observe(el);
+            });
+        }
+    }
 
 }());
