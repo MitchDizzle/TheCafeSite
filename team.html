@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Meet the team behind The Cafe — the people who make every event and meal special.">
+    <title>Our Team | The Cafe</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* Team card grid — placeholder layout */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 2rem;
+            margin-top: 2.5rem;
+        }
+
+        .team-card {
+            background: #fff;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(44, 24, 16, 0.07);
+        }
+
+        .team-card__photo {
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            background: #E8E2D9;
+            object-fit: cover;
+        }
+
+        .team-card__body {
+            padding: 1.25rem;
+        }
+
+        .team-card__name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .team-card__role {
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--firebrick);
+            margin-bottom: 0.75rem;
+        }
+
+        .team-card__bio {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: rgba(44, 24, 16, 0.75);
+        }
+    </style>
+</head>
+<body class="page-body">
+
+    <div id="nav-mount"></div>
+
+    <main>
+        <section class="section" aria-labelledby="team-heading">
+            <div class="container">
+                <h1 id="team-heading">Meet the Team</h1>
+                <p style="margin-top: 0.75rem;">The people behind every plate.</p>
+
+                <!-- TODO: populate cards after client team interviews -->
+                <div class="team-grid">
+
+                    <!-- Example card — duplicate and fill in per team member -->
+                    <article class="team-card">
+                        <!-- Replace div with: <img src="assets/team/name.jpg" alt="[Name]" class="team-card__photo"> -->
+                        <div class="team-card__photo"></div>
+                        <div class="team-card__body">
+                            <h2 class="team-card__name">Name Placeholder</h2>
+                            <p class="team-card__role">Role Placeholder</p>
+                            <p class="team-card__bio">Short bio from client interview — 2–3 sentences.</p>
+                        </div>
+                    </article>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="footer-mount"></div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

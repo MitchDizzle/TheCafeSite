@@ -1,0 +1,20 @@
+<footer class="footer" aria-label="Site footer">
+    <div class="footer__inner">
+        <p class="footer__brand">The Cafe</p>
+
+        <ul class="footer__links" role="list">
+            <li><a href="about.html">About</a></li>
+            <li><a href="team.html">Team</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+
+        <!-- TODO: replace with real phone/email once provided by client -->
+        <p class="footer__copy">&copy; <span id="footer-year"></span> The Cafe. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    var el = document.getElementById('footer-year');
+    if (el) el.textContent = new Date().getFullYear();
+</script>

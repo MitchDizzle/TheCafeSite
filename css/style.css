@@ -1,0 +1,316 @@
+/* ============================================================
+   The Cafe — Shared Inner-Page Styles
+   Used by: about.html, team.html, gallery.html, contact.html
+   ============================================================ */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --cream:          #FAF7F2;
+    --firebrick:      #B22222;
+    --firebrick-dark: #8B1A1A;
+    --text-dark:      #2C1810;
+    --overlay:        rgba(18, 8, 4, 0.52);
+
+    --nav-height:     64px;
+    --section-pad:    4rem;
+    --max-width:      1100px;
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    background: var(--cream);
+    color: var(--text-dark);
+    line-height: 1.7;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+a {
+    color: var(--firebrick);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--firebrick-dark);
+}
+
+/* ── Typography ───────────────────────────────────────────── */
+
+h1, h2, h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--text-dark);
+    line-height: 1.2;
+}
+
+h1 { font-size: clamp(2rem, 5vw, 3.25rem); }
+h2 { font-size: clamp(1.5rem, 3.5vw, 2.25rem); }
+h3 { font-size: clamp(1.1rem, 2.5vw, 1.5rem); }
+
+p { max-width: 65ch; }
+
+/* ── Layout helpers ───────────────────────────────────────── */
+
+.container {
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+}
+
+.section {
+    padding-block: var(--section-pad);
+}
+
+.section--alt {
+    background: #F1EDE6;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+
+.btn {
+    font-family: 'Lato', sans-serif;
+    font-weight: 400;
+    font-size: 0.875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 0.85rem 2.2rem;
+    border-radius: 2px;
+    border: 2px solid transparent;
+    display: inline-block;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.btn:hover { transform: translateY(-2px); }
+.btn:focus-visible { outline: 3px solid var(--firebrick); outline-offset: 3px; }
+
+.btn-primary {
+    background: var(--firebrick);
+    color: var(--cream);
+    border-color: var(--firebrick);
+}
+.btn-primary:hover {
+    background: var(--firebrick-dark);
+    border-color: var(--firebrick-dark);
+    color: var(--cream);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--firebrick);
+    border-color: var(--firebrick);
+}
+.btn-outline:hover {
+    background: var(--firebrick);
+    color: var(--cream);
+}
+
+/* ── Nav ──────────────────────────────────────────────────── */
+
+.nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--nav-height);
+    background: var(--cream);
+    border-bottom: 1px solid rgba(44, 24, 16, 0.1);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+}
+
+.nav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+}
+
+.nav__brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+}
+
+.nav__links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    align-items: center;
+}
+
+.nav__links a {
+    font-family: 'Lato', sans-serif;
+    font-weight: 400;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dark);
+    transition: color 0.2s;
+}
+
+.nav__links a:hover,
+.nav__links a.active {
+    color: var(--firebrick);
+}
+
+.nav__links .btn {
+    padding: 0.5rem 1.4rem;
+    font-size: 0.8rem;
+}
+
+/* Hamburger (mobile) */
+.nav__toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.nav__toggle span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--text-dark);
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+@media (max-width: 700px) {
+    .nav__toggle { display: flex; }
+
+    .nav__links {
+        display: none;
+        position: absolute;
+        top: var(--nav-height);
+        left: 0; right: 0;
+        background: var(--cream);
+        flex-direction: column;
+        gap: 0;
+        border-bottom: 1px solid rgba(44, 24, 16, 0.1);
+        padding-block: 0.5rem;
+    }
+
+    .nav__links.open { display: flex; }
+
+    .nav__links li { width: 100%; }
+
+    .nav__links a {
+        display: block;
+        padding: 0.85rem 1.5rem;
+    }
+
+    .nav__links .btn {
+        margin: 0.5rem 1.5rem 0.5rem;
+        display: inline-block;
+        width: auto;
+    }
+}
+
+/* ── Page top offset (for fixed nav) ─────────────────────── */
+
+.page-body {
+    padding-top: var(--nav-height);
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+
+.footer {
+    background: var(--text-dark);
+    color: var(--cream);
+    padding-block: 2.5rem;
+    text-align: center;
+}
+
+.footer__inner {
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.footer__brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--cream);
+}
+
+.footer__links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.footer__links a {
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(250, 247, 242, 0.65);
+    transition: color 0.2s;
+}
+
+.footer__links a:hover {
+    color: var(--cream);
+}
+
+.footer__copy {
+    font-size: 0.75rem;
+    color: rgba(250, 247, 242, 0.4);
+    margin-top: 0.5rem;
+}
+
+/* ── Section divider / chevron scroll indicator ───────────── */
+
+.chevron-down {
+    display: flex;
+    justify-content: center;
+    padding-top: 1.5rem;
+}
+
+.chevron-down svg {
+    width: 28px;
+    height: 28px;
+    opacity: 0.4;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(6px); }
+}
+
+/* ── Accessibility ────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .btn, .nav__links a { transition: none; }
+    .chevron-down svg { animation: none; }
+}

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Book a catering or get in touch with The Cafe. Fill out our inquiry form and we'll get back to you promptly.">
+    <title>Contact | The Cafe</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* Form layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group--full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-dark);
+            font-weight: 400;
+        }
+
+        input, select, textarea {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 300;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(44, 24, 16, 0.25);
+            border-radius: 2px;
+            background: #fff;
+            color: var(--text-dark);
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--firebrick);
+        }
+
+        textarea { resize: vertical; min-height: 120px; }
+
+        .form-submit { margin-top: 0.5rem; }
+
+        /* Contact info block */
+        .contact-info {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid rgba(44, 24, 16, 0.12);
+        }
+
+        .contact-info__list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 1rem;
+        }
+
+        .contact-info__list li {
+            font-size: 0.95rem;
+        }
+
+        /* FAQ */
+        .faq {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid rgba(44, 24, 16, 0.12);
+        }
+
+        .faq__list {
+            list-style: none;
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .faq__q {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .faq__a {
+            font-size: 0.9rem;
+            color: rgba(44, 24, 16, 0.75);
+        }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group--full { grid-column: 1; }
+        }
+    </style>
+</head>
+<body class="page-body">
+
+    <div id="nav-mount"></div>
+
+    <main>
+        <section class="section" aria-labelledby="contact-heading">
+            <div class="container">
+
+                <!-- ── Booking Form ─────────────────────────── -->
+                <h1 id="contact-heading">Book a Catering</h1>
+                <p style="margin-top: 0.75rem; max-width: 55ch;">
+                    Tell us about your event and we'll follow up with availability and a custom quote.
+                </p>
+
+                <!-- TODO: replace YOUR_FORM_ID with Formspree endpoint once account is set up -->
+                <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" novalidate>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" autocomplete="name" required placeholder="Jane Smith">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" autocomplete="email" required placeholder="jane@example.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone (optional)</label>
+                            <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="(555) 000-0000">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="date">Event Date</label>
+                            <input type="date" id="date" name="event_date">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="guests">Estimated Guest Count</label>
+                            <input type="number" id="guests" name="guest_count" min="1" placeholder="50">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="service">Service Type</label>
+                            <select id="service" name="service_type">
+                                <option value="">Select one…</option>
+                                <option value="catering">Event Catering</option>
+                                <option value="meals-on-wheels">Meals on Wheels / Meal Prep</option>
+                                <option value="other">Other / Not Sure</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group form-group--full">
+                            <label for="message">Tell us about your event</label>
+                            <textarea id="message" name="message" placeholder="Location, occasion, dietary needs, anything else we should know…"></textarea>
+                        </div>
+
+                        <div class="form-group form-group--full form-submit">
+                            <button type="submit" class="btn btn-primary">Send Inquiry</button>
+                        </div>
+
+                    </div>
+
+                </form>
+
+                <!-- ── Contact Info ─────────────────────────── -->
+                <div class="contact-info">
+                    <h2>Get in Touch</h2>
+                    <!-- TODO: replace with real contact info from client -->
+                    <ul class="contact-info__list">
+                        <li>Phone: <a href="tel:+10000000000">(000) 000-0000</a></li>
+                        <li>Email: <a href="mailto:hello@example.com">hello@example.com</a></li>
+                        <li>Response time: TODO — ask client</li>
+                    </ul>
+                </div>
+
+                <!-- ── FAQ ─────────────────────────────────── -->
+                <div class="faq">
+                    <h2>Frequently Asked Questions</h2>
+                    <!-- TODO: fill in answers from client interview -->
+                    <ul class="faq__list">
+                        <li>
+                            <p class="faq__q">How far in advance should I book?</p>
+                            <p class="faq__a">TODO — answer from client.</p>
+                        </li>
+                        <li>
+                            <p class="faq__q">Do you accommodate dietary restrictions?</p>
+                            <p class="faq__a">TODO — answer from client.</p>
+                        </li>
+                        <li>
+                            <p class="faq__q">What is your cancellation policy?</p>
+                            <p class="faq__a">TODO — answer from client.</p>
+                        </li>
+                        <li>
+                            <p class="faq__q">Do you provide serving staff?</p>
+                            <p class="faq__a">TODO — answer from client.</p>
+                        </li>
+                        <li>
+                            <p class="faq__q">What areas do you serve?</p>
+                            <p class="faq__a">TODO — service area from client.</p>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <div id="footer-mount"></div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
