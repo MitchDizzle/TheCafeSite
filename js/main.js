@@ -104,8 +104,29 @@
 
     const base = getBasePath();
 
+    function initFooter(footerMount) {
+        const footer = footerMount.querySelector('.footer');
+        if (!footer) return;
+
+        if (!window.IntersectionObserver) {
+            footer.classList.add('is-visible');
+            return;
+        }
+
+        const obs = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    footer.classList.add('is-visible');
+                    obs.unobserve(footer);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        obs.observe(footer);
+    }
+
     loadComponent('nav-mount',    base + 'components/nav.html',    initNav);
-    loadComponent('footer-mount', base + 'components/footer.html', null);
+    loadComponent('footer-mount', base + 'components/footer.html', initFooter);
 
     document.addEventListener('DOMContentLoaded', function () {
         initScrollFade();
