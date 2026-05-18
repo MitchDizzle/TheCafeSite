@@ -94,6 +94,7 @@ p { max-width: 65ch; }
     border: 2px solid transparent;
     display: inline-block;
     cursor: pointer;
+    color: var(--cream);
     transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
 
@@ -118,6 +119,10 @@ p { max-width: 65ch; }
 }
 .btn-outline:hover {
     background: var(--firebrick);
+    color: var(--cream);
+}
+
+.nav .btn {
     color: var(--cream);
 }
 
