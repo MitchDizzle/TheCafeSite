@@ -114,7 +114,7 @@ p { max-width: 65ch; }
 
 .btn-outline {
     background: transparent;
-    color: var(--firebrick);
+    color: var(--cream);
     border-color: var(--firebrick);
 }
 .btn-outline:hover {
@@ -181,8 +181,7 @@ p { max-width: 65ch; }
     transition: color 0.2s;
 }
 
-.nav__links a:hover,
-.nav__links a.active {
+.nav__links a:hover {
     color: var(--firebrick);
 }
 
