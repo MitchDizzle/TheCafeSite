@@ -60,6 +60,48 @@
 
         .form-submit { margin-top: 0.5rem; }
 
+        .form-section-heading {
+            grid-column: 1 / -1;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: var(--text-dark);
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(44, 24, 16, 0.12);
+            margin-top: 0.5rem;
+        }
+
+        .form-hint {
+            font-size: 0.78rem;
+            color: rgba(44, 24, 16, 0.55);
+            margin-top: 0.15rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem 1.4rem;
+            margin-top: 0.25rem;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.88rem;
+            text-transform: none;
+            letter-spacing: 0;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            padding: 0;
+            border: none;
+            accent-color: var(--firebrick);
+            cursor: pointer;
+        }
+
         /* Contact info block */
         .contact-info {
             margin-top: 3rem;
@@ -143,34 +185,96 @@
 
                     <div class="form-grid">
 
+                        <!-- ── Contact ── -->
                         <div class="form-group">
-                            <label for="name">Name</label>
+                            <label for="name">Name <span style="color:var(--firebrick)">*</span></label>
                             <input type="text" id="name" name="name" autocomplete="name" required placeholder="Jane Smith">
                         </div>
 
                         <div class="form-group">
-                            <label for="email">Email</label>
+                            <label for="org">Company / Organization</label>
+                            <input type="text" id="org" name="organization" autocomplete="organization" placeholder="Optional">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email <span style="color:var(--firebrick)">*</span></label>
                             <input type="email" id="email" name="email" autocomplete="email" required placeholder="jane@example.com">
                         </div>
 
                         <div class="form-group">
-                            <label for="phone">Phone (optional)</label>
-                            <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="(555) 000-0000">
+                            <label for="phone">Phone <span style="color:var(--firebrick)">*</span></label>
+                            <input type="tel" id="phone" name="phone" autocomplete="tel" required placeholder="(555) 000-0000">
+                        </div>
+
+                        <!-- ── Event Details ── -->
+                        <h3 class="form-section-heading">Event Details</h3>
+
+                        <div class="form-group">
+                            <label for="event-name">Name of Event</label>
+                            <input type="text" id="event-name" name="event_name" placeholder="Birthday party, corporate lunch…">
                         </div>
 
                         <div class="form-group">
-                            <label for="date">Event Date</label>
-                            <input type="date" id="date" name="event_date">
+                            <label for="event-location">Event Location</label>
+                            <input type="text" id="event-location" name="event_location" placeholder="Venue or address">
                         </div>
 
                         <div class="form-group">
-                            <label for="guests">Estimated Guest Count</label>
-                            <input type="number" id="guests" name="guest_count" min="1" placeholder="50">
+                            <label for="date">Event Date <span style="color:var(--firebrick)">*</span></label>
+                            <input type="date" id="date" name="event_date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="guests">Guest Count <span style="color:var(--firebrick)">*</span></label>
+                            <input type="number" id="guests" name="guest_count" min="15" required placeholder="Minimum 15">
+                            <span class="form-hint">Minimum 15 guests</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="start-time">Start Time</label>
+                            <input type="time" id="start-time" name="start_time">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="end-time">End Time</label>
+                            <input type="time" id="end-time" name="end_time">
+                        </div>
+
+                        <!-- ── Service Preferences ── -->
+                        <h3 class="form-section-heading">Service Preferences</h3>
+
+                        <div class="form-group">
+                            <label for="service-style">Style of Service</label>
+                            <select id="service-style" name="service_style">
+                                <option value="">— Select one —</option>
+                                <option value="Buffet">Buffet</option>
+                                <option value="Sit Down">Sit Down Dinner</option>
+                                <option value="Drop Off">Drop Off</option>
+                                <option value="Appetizer">Appetizer / Reception</option>
+                                <option value="Stations">Stations</option>
+                                <option value="Unsure">Not sure yet</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="budget">Budget (optional)</label>
+                            <input type="text" id="budget" name="budget" placeholder="e.g. $500, open to quote">
                         </div>
 
                         <div class="form-group form-group--full">
-                            <label for="message">Tell us about your event</label>
-                            <textarea id="message" name="message" placeholder="Location, occasion, dietary needs, anything else we should know…"></textarea>
+                            <label>Additional Items Needed</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="extras" value="Table Linen"> Table Linen</label>
+                                <label><input type="checkbox" name="extras" value="China"> China</label>
+                                <label><input type="checkbox" name="extras" value="Servers"> Servers for the meal</label>
+                                <label><input type="checkbox" name="extras" value="Plasticware"> Plasticware</label>
+                                <label><input type="checkbox" name="extras" value="None"> None / Food only</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group--full">
+                            <label for="message">Additional Requests or Requirements</label>
+                            <textarea id="message" name="message" placeholder="Food allergies, dietary restrictions, anything else we should know…"></textarea>
                         </div>
 
                         <div class="form-group form-group--full form-submit">
@@ -188,7 +292,7 @@
                     <ul class="contact-info__list">
                         <li>Phone: <a href="tel:+19136801300">(913) 680-1300</a></li>
                         <li>Email: <a href="mailto:theabcafe@gmail.com">theabcafe@gmail.com</a></li>
-                        <li>Response time: TODO</li>
+                        <li>Location: 417 S 6th St, Leavenworth Kansas</li>
                     </ul>
                 </div>
 

@@ -1,0 +1,1902 @@
+/*
+THEME NAME: The Restaurant
+THEME URI: http://redfactory.nl/themes/therestaurant/
+DESCRIPTION: A complete restaurant website
+VERSION: 4.2
+AUTHOR: <a href="http://themeforest.net/user/redfactory/portfolio/?ref=redfactory">Red Factory</a>
+AUTHOR URI: http://themeforest.net/user/redfactory/portfolio/?ref=redfactory
+*/
+@import "/web/20141225212611cs_/http://theabcafe.com/wp-content/themes/therestaurant/reset.css";
+body {
+	background: #fff;
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 13px;
+	color: #585858;
+	min-width: 980px;
+}
+.font {
+	padding: 0 0 2px 0;
+}
+.cufon-canvas {
+	padding: 2px 0 0 0;
+}
+a {
+	color: #464646;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+strong {
+	font-weight: bold;
+}
+hr {
+	border: none 0;
+	border-bottom: 1px solid #E0E0E0;
+	height: 1px;
+	margin: 10px 0;
+}
+blockquote {
+	font-style: italic;
+	background: url(/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/quotes.png) no-repeat top left;
+	background-position: 12px 12px;
+	color: #595959;
+	margin: 5px 0;
+	padding: 8px 15px 8px 60px;
+}
+#wrapper {
+	width: 100%;
+	margin: 0 auto;
+	position: relative;
+}
+.wrapper {
+	width: 960px;
+	margin: 0 auto;
+	position: relative;
+}
+
+
+
+
+
+/* begin ---------------------------------------- top */
+#top {
+	position: relative;
+	width: 100%;
+	height: 100px;
+	background: #000;
+	display: inline-block;
+	z-index: 5;
+}
+#logo-container {
+	display: inline-block;
+	float: left;
+	width: 450px;
+}
+#logo {
+	font-size: 24px;
+	margin: 11px 0 0 0;
+	font-weight: bold;
+	text-transform: uppercase;
+	display: block;
+}
+#logo a {
+	color: #fff;
+}
+#logo a:hover {
+	text-decoration: none;
+}
+#logo #text_logo {
+	margin: 10px 0 0 0;
+	display: inline-block;
+}
+#description {
+	font-size: 12px;
+	color: #fff;
+	margin: 5px 0 0 0;
+	display: block;
+}
+#tagline {
+	float: right;
+	display: inline-block;
+	width: 450px;
+	text-align: right;
+	margin: 30px 30px 0 0;
+}
+#tagline p {
+	font-family: 'OFL Sorts Mill Goudy TT', arial, serif;
+	font-style: italic;
+	font-size: 18px;
+	color: #eee;
+	line-height: 1.2;
+}
+/* end ---------------------------------------- top */
+
+
+
+
+
+/* begin ---------------------------------------- menu */
+#mainmenu {
+	position: absolute;
+	z-index: 10;
+	top: 81px;
+	width: 100%;
+}
+#mainmenu .wrapper {
+	position: relative;
+	width: 990px;
+}
+#menu-left {
+	position: absolute;
+	top: 5px;
+	left: 1px;
+	height: 0px;
+	width: 0px;
+	border-color: transparent;
+ 	border-style: solid;
+  	border-width: 7px;
+}
+#menu-right {
+	position: absolute;
+	top: 5px;
+	right: 1px;
+	height: 0px;
+	width: 0px;
+	border-color: transparent;
+ 	border-style: solid;
+  	border-width: 7px;
+}
+#menu-container-border {
+	position: absolute;
+	top: 4px;
+	left: 15px;
+	display: inline-block;
+	float: left;
+	border: 1px solid;
+}
+#menu-container {
+	width: 956px;
+	height: 42px;
+	display: inline-block;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png');
+	float: left;
+	vertical-align: text-top;
+	border-right: 1px solid;
+	border-bottom: 1px solid;
+	border-left: 1px solid;
+}
+#menu-shadow {
+	height: 100%;
+	width: 100%;
+	padding-bottom: 1px;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	-moz-box-shadow: 0px 0px 4px #000;
+	-webkit-box-shadow: 0px 0px 4px #000;
+	box-shadow: 0px 0px 4px #000;
+	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+	filter: alpha(opacity=50);
+	-moz-opacity:0.5;
+	-khtml-opacity: 0.5;
+	opacity: 0.5;
+	zoom: 1;
+}
+#mainmenu .wp_nav_menu {
+	display: inline-block;
+	zoom: 1;
+	*display: inline;
+}
+#mainmenu ul.menu {
+	position: relative;
+	display: inline-block;
+	margin: 0 0 0 25px;
+}
+#mainmenu .dropdown_arrow {
+	height: 0px;
+	width: 0px;
+	position: absolute;
+	top: 19px;
+	right: 10px;
+	border-color: #fff transparent transparent transparent;
+ 	border-style: solid;
+  	border-width: 5px;
+}
+#mainmenu ul.menu li.has-sub-menu:hover .dropdown_arrow, #mainmenu ul.menu li.has-sub-menu.current-menu-item .dropdown_arrow, #mainmenu ul.menu li.has-sub-menu.current-menu-parent .dropdown_arrow {
+	top: 21px;
+}
+#mainmenu ul.menu li {
+	float: left;
+	font-size: 14px;
+	padding: 15px;
+	margin: 0 3px;
+	display: inline-block;
+	position: relative;
+}
+#mainmenu ul.menu li.has-sub-menu {
+	padding-right: 30px;
+}
+#mainmenu ul.menu li a {
+	color: #fff;
+}
+#mainmenu ul.menu li:hover, #mainmenu ul.menu li.current-menu-item, #mainmenu ul.menu li.current-menu-parent {
+	background: #fff;
+	padding: 17px 14px 18px 14px;
+	margin: -3px 3px 0 3px;
+	border-top: #dedede 1px solid;
+	border-right: #dedede 1px solid;
+	border-left: #dedede 1px solid;
+}
+#mainmenu ul.menu li.has-sub-menu:hover, #mainmenu ul.menu li.has-sub-menu.current-menu-item, #mainmenu ul.menu li.has-sub-menu.current-menu-parent {
+	padding-right: 29px;
+}
+#mainmenu ul.menu li.has-sub-menu:hover {
+	padding-bottom: 24px;
+}
+#mainmenu ul.menu li ul.sub-menu {
+	position: absolute;
+	width: auto;
+	top: 55px;
+	left: -1px;
+	background: #fff;
+	display: none;
+	padding: 10px 0;
+	border-right: #dedede 1px solid;
+	border-bottom: #dedede 1px solid;
+	border-left: #dedede 1px solid;
+}
+#mainmenu ul.menu li:hover ul.sub-menu {
+	display: inline-block;
+}
+#mainmenu ul.menu li ul.sub-menu li {
+	clear: both;
+	height: auto;
+	width: 200px;
+	padding: 10px 15px;
+	margin: 0;
+	border: 0;
+	display: block;
+}
+#mainmenu ul.menu li ul.sub-menu li.current-menu-item, #mainmenu ul.menu li ul.sub-menu li:hover {
+	padding: 10px 15px;
+	margin: 0;
+	border: 0;
+	background: #eee;
+}
+#mainmenu ul.menu li:hover ul.sub-menu li a, #mainmenu ul.menu li ul.sub-menu li a {
+	padding: 0 10px 0 0;
+	display: block;
+	font-size: 13px;
+	height: auto;
+}
+#mainmenu ul.menu li a:hover, #mainmenu ul.menu li ul.sub-menu li a:hover {
+	text-decoration: none;
+}
+#stars-left, #stars-right {
+	margin: 15px 0 0 40px;
+	height: 13px;
+	width: auto;
+	display: inline-block;
+	vertical-align: top;
+	zoom: 1;
+	*display: inline;
+}
+#stars-right {
+	margin: 15px 40px 0 0;
+	float: right;
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+.star {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/star.png') no-repeat;
+	display: inline-block;
+	margin: 0 3px 0 0;
+	height: 13px;
+	width: 13px;
+	zoom: 1;
+	*display: inline;
+}
+/* end ---------------------------------------- menu */
+
+
+
+
+
+/* begin ---------------------------------------- header */
+#header {
+	position: relative;
+	width: 100%;
+	height: 80px;
+	background: #2f2720;
+	z-index: 5;
+	border-top: #0d0b08 1px solid;
+}
+#header_pattern {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	top: 0px;
+	left: 0px;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern.png');
+}
+#slider {
+	position: relative;
+	display: none;
+	height: 400px;
+	width: 1020px;
+	top: 0px;
+	left: 50%;
+	margin: 0 0 0 -510px;
+	z-index: 5;
+}
+#slider img {
+	display: none;
+}
+#slider_arrow {
+	position: absolute;
+	margin: 0 0 0 -41px;
+	top: -6px;
+	left: 50%;
+	height: 35px;
+	width: 82px;
+	cursor: pointer;
+	z-index: 6;
+	overflow: hidden;
+}
+#slider_arrow .arrow_bit_top {
+	height: 6px;
+	width: 62px;
+	position: absolute;
+	top: 0px;
+	left: 10px;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png') bottom;
+}
+#slider_arrow .arrow_bit_bottom {
+	height: 26px;
+	width: 54px;
+	position: absolute;
+	top: 0px;
+	left: 14px;
+	-webkit-border-radius: 0 0 26px 26px;
+    -moz-border-radius: 0 0 26px 26px;
+    border-radius: 0 0 26px 26px;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png') top;
+	box-shadow: 0px 1px 1px #888;
+  	-moz-box-shadow: 0px 1px 1px #888;
+  	-webkit-box-shadow: 0px 1px 1px #888;
+}
+#slider_arrow .arrow_bit_left, #slider_arrow .arrow_bit_right {
+	height: 6px;
+	width: 10px;
+	position: absolute;
+	top: 0px;
+	left: 4px;
+	-webkit-border-radius: 10px 10px 0 0;
+    -moz-border-radius: 10px 10px 0 0;
+    border-radius: 10px 10px 0 0;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png');
+}
+#slider_arrow .arrow_bit_right {
+	left: 68px;
+}
+#slider_arrow .arrow_bit_middle {
+	height: 12px;
+	width: 22px;
+	position: absolute;
+	top: 5px;
+	left: 30px;
+}
+#slider_arrow.arrow_up .arrow_bit_middle {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/arrow_up.png') no-repeat;
+}
+#slider_arrow.arrow_down .arrow_bit_middle {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/arrow_down.png') no-repeat;
+	top: 7px;
+}
+
+
+#ornament {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/ornament.png') no-repeat;
+	height: 20px;
+	width: 157px;
+	position: absolute;
+	top: 23px;
+	left: 50%;
+	margin: 0 0 0 -79px;
+}
+/* end ---------------------------------------- header */
+
+
+
+
+
+/* begin ---------------------------------------- content */
+#container {
+	position: relative;
+	z-index: 6;
+	width: 100%;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/container_bg.png') 0px 1px repeat-x;
+	height: auto;
+	display: inline-block;
+	text-align: center;
+}
+#container .wrapper {
+	display: inline-block;
+	text-align: left;
+}
+#breadcrumbs {
+	display: inline-block;
+	color: #7c7c7c;
+	position: absolute;
+	top: 28px;
+	left: 0px;
+	text-shadow: #f8f8f8 0px 1px 0px;
+}
+#content-top {
+	display: inline-block;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/content_top.png') 50% bottom no-repeat;
+	height: 48px;
+	width: 960px;
+	padding: 22px 0 0 0;
+}
+#content-bottom, #widget-bottom {
+	display: inline-block;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/content_bottom.png') 50% top no-repeat;
+	height: 30px;
+	width: 960px;
+}
+#content-border, #widget-border {
+	border: #dedede 1px solid;
+	display: inline-block;
+}
+#content, #frontwidgets {
+	width: 956px;
+	height: auto;
+	border: #fff 1px solid;
+	background: #edeae6 url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/content_bg.png') repeat-x;
+	display: inline-block;
+	position: relative;
+	padding: 0 0 25px 0;
+}
+#frontwidgets {
+	padding: 0;
+}
+#content.home, #gallery #content {
+	padding-bottom: 0;
+}
+.ie7 #content.home {
+	padding-bottom: 25px;
+}
+#frontwidgets h3 {
+	margin: 20px 0;
+	font-size: 20px;
+}
+.ribbon-container {
+	width: 100%;
+	position: absolute;
+	top: -12px;
+	left: 0px;
+	float: left;
+	overflow: hidden;
+	padding-bottom: 5px;
+}
+.title-container {
+	position: relative;
+	left: 50%;
+	float: left;
+}
+.title-container .title {
+	width: auto;
+	height: auto;
+	border: 1px solid;
+	display: inline-block;
+	position: relative;
+	left: -50%;
+	box-shadow: 0px 0px 4px #999;
+  	-moz-box-shadow: 0px 0px 4px #999;
+  	-webkit-box-shadow: 0px 0px 4px #999;
+}
+.title-container h1, .title-container h2, .title-container h3, .title-container .post-title {
+	color: #fff;
+	font-size: 17px;
+	padding: 8px 30px 5px 30px;
+	display: inline-block;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png');
+	border: 1px solid;
+}
+.title-container .bar-left {
+  	position: absolute;
+	top: -1px;
+	left: -10px;
+  	border-color: transparent;
+ 	border-style: solid;
+  	border-width: 5px;
+  	width: 0;
+ 	height: 0;
+}
+.title-container .bar-right {
+	position: absolute;
+	top: -1px;
+	right: -10px;
+  	border-color: transparent;
+  	border-style: solid;
+  	border-width: 5px;
+  	width: 0;
+  	height: 0;
+}
+.frontcontent-container {
+	display: inline-block;
+	padding: 42px 0 0 0;
+}
+.readmore {
+	margin: 20px 0 0 4px;
+	width: auto;
+	height: auto;
+	display: inline-block;
+	border: 1px solid;
+	box-shadow: 0px 1px 2px #aaa;
+  	-moz-box-shadow: 0px 1px 2px #aaa;
+  	-webkit-box-shadow: 0px 1px 2px #aaa;
+	z-index: 99;
+	position: relative;
+	line-height: 1em;
+}
+#footer .readmore {
+	box-shadow: 0px 1px 2px #060606;
+  	-moz-box-shadow: 0px 1px 2px #060606;
+  	-webkit-box-shadow: 0px 1px 2px #060606;
+	text-shadow: #888 0px 1px 0px;
+}
+.readmore:hover, input[type="submit"]:hover {
+	text-decoration: none;
+}
+.post .readmore {
+	margin-top: 0px;
+}
+/*.readmore {
+	float: left;
+}*/
+.readmore {
+	float: none;
+	*display: inline;
+	zoom: 1;
+}
+.readmore a, input[type="submit"] {
+	color: #fff;
+	text-shadow: #444 0px -1px 0px;
+	cursor: pointer;
+	padding: 8px 15px;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png');
+	display: inline-block;
+	margin: 0;
+	border: 1px solid;
+}
+.readmore a:hover {
+	text-decoration: none;
+}
+input[type="submit"] {
+	margin: 0px;
+	padding: 5px 10px;
+}
+.ie7 input[type="submit"] {
+	padding: 6px 7px;
+    border: 0px;
+}
+#post-container {
+	width: 600px;
+	height: auto;
+	display: inline-block;
+	padding: 25px 20px 20px 20px;
+}
+.sidebar_left #post-container {
+	float: right;
+}
+.sidebar_right #post-container {
+	float: left;
+}
+.post {
+	padding: 30px 0 0 0;
+	float: left;
+	display: inline-block;
+	width: 600px;
+}
+.fullwidthpage .post, .fullwidthpage #post-container {
+	width: 916px;
+}
+.post-img {
+	border: #dedede 1px solid;
+	height: auto;
+	width: 596px;
+	display: inline-block;
+	margin: 0 0 15px 0;
+	padding: 1px;
+	background: #fff url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/glass_small.png') 50% 50% no-repeat;
+}
+.fullwidthpage .post-img {
+	width: 912px;
+}
+.post-img-border {
+	border: #f0f0f0 4px solid;
+}
+.post-img a {
+	display: inline-block;
+}
+.post-img img {
+	width: 588px;
+	height: auto;
+	display: inline-block;
+}
+.fullwidthpage .post-img img {
+	width: 904px;
+}
+.post-title {
+	color: #3F403B;
+	font-size: 24px;
+}
+.title-container .post-title {
+	color: #fff;
+	font-size: 18px;
+}
+.title-container .post-title a {
+	color: #fff;
+}
+.page-subtitle {
+	color: #aaa;
+	font-size: 17px;
+	margin: 40px 0 0 0;
+}
+.post-meta {
+	font-size: 12px;
+	color: #000;
+	margin: 10px 0 15px 0;
+	text-shadow: #f8f8f8 0px 1px 0px;
+	position: relative;
+}
+.singular .post-meta {
+	margin-bottom: 5px;
+}
+.jump_to_comments {
+	float: right;
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+.post-devider, .meta-devider {
+    background: none repeat scroll 0 0 #F8F7F5;
+    border-top: 1px solid #E4E3E1;
+    display: inline-block;
+    height: 1px;
+    margin: 30px 0 0 0;
+    width: 100%;
+}
+.meta-devider {
+	margin: 7px 0 9px 0;
+}
+
+.post-comments {
+	float: right;
+	background: url(/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/cbubble_left.gif) no-repeat top left;
+	padding: 3px 0 7px 7px;
+}
+.post-comments a {
+	background: url(/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/cbubble_right.gif) no-repeat top right;
+	padding: 3px 7px 7px 0;
+	color: #fff;
+}
+.post-comments a:hover {
+	color: #fff;
+}
+.post-content {
+	line-height: 1.5;
+	color: #3e3e3e;
+	text-shadow: #f8f8f8 0px 1px 0px;
+	width: 100%;
+}
+.singular .post-content {
+	margin-top: 10px;
+}
+.post-content .selection {
+	text-shadow: none;
+}
+.post-content h1 {
+	font-size: 28px;
+	margin: 0 0 10px 0;
+}
+.post-content h2 {
+	font-size: 24px;
+	padding: 15px 0 0 0;
+	margin: 0 0 10px 0;
+}
+.post-content h3 {
+	font-size: 20px;
+	font-weight: bold;
+	padding: 15px 0 0 0;
+	margin: 0 0 10px 0;
+}
+.post-content h4 {
+	font-size: 16px;
+	font-weight: bold;
+	padding: 10px 0 0 0;
+	margin: 0 0 5px 0;
+}
+.post-content h5 {
+	font-size: 13px;
+	font-weight: bold;
+	padding: 10px 0 0 0;
+	margin: 0 0 5px 0;
+}
+.post-content h6 {
+	font-size: 13px;
+	margin: 0 0 5px 0;
+	padding: 10px 0 0 0;
+	font-style: italic;
+}
+.post-content p {
+	line-height: 1.5;
+	margin-bottom: 20px;
+}
+.post-content .alignnone {
+	background: #FFF;
+	padding: 5px;
+}
+.post-content .alignleft {
+	float: left;
+	margin: 5px 25px 15px 0;
+	display: inline-block;
+}
+.post-content .alignright {
+	float: right;
+	margin: 5px 0 15px 25px;
+	display: inline-block;
+}
+.post-content .aligncenter {
+	display: block;
+	text-align: center;
+	margin: 5px auto 15px auto;
+}
+.post-content .wp-caption {}
+.post-content .wp-caption p.wp-caption-text {
+	margin: 5px 0 0 0;
+	font-style: italic;
+	text-align: center;
+	color: #888;
+}
+.post-content .wp-caption img {
+	width: 100%;
+	height: auto;
+}
+.post-content .alignnone, .post-content .alignleft, .post-content .alignright, .post-content .aligncenter {
+	max-width: 586px;
+	height: auto;
+	border: 1px solid #fff;
+	padding: 4px;
+	background: #f0f0f0;
+	box-shadow: 0px 0px 1px #cecece;
+  	-moz-box-shadow: 0px 0px 1px #cecece;
+  	-webkit-box-shadow: 0px 0px 1px #cecece;
+}
+.fullwidthpage .alignnone, .fullwidthpage .alignleft, .fullwidthpage .alignright, .post-content .aligncenter {
+	max-width: 906px;
+	height: auto;
+}
+
+
+
+.post-content ul,.post-content ol {
+	margin-left: 30px;
+	margin-bottom: 20px;
+	margin-top: 5px;
+}
+.post-content ul li ul,.post-content ol li ol {
+	margin-left: 30px;
+	margin-bottom: 0;
+}
+.post-content ul {
+	list-style: disc;
+}
+.post-content ol {
+	list-style: decimal;
+}
+.post-content ul li,.post-content ol li {
+	line-height: 1.3;
+	margin-bottom: 5px;
+}
+.more-link {
+	font-weight: 700;
+	display: block;
+	margin-top: 10px;
+}
+.section-title {
+	font-size: 140%;
+	margin-bottom: 10px;
+}
+.navleft {
+	float: left;
+}
+.navright {
+	float: right;
+}
+.navigation div a {
+	display: inline-block;
+	margin: 20px 0 0 0;
+	font-size: 17px;
+}
+
+input[type=text], input[type=password], textarea {
+	border: #fff 1px solid;
+	padding: 5px;
+	background: #f4f4f4;
+	box-shadow: 0px 0px 1px #ccc;
+  	-moz-box-shadow: 0px 0px 1px #ccc;
+  	-webkit-box-shadow: 0px 0px 1px #ccc;
+	max-width: 100%;
+}
+input[type=text]:focus, , input[type=password]:focus, textarea:focus {
+	background: #fafafa;
+}
+
+
+
+.social-sharing {
+	display: inline-block;
+	float: left;
+}
+ul.sharing, ul.sharing li {
+	display: inline-block;
+    list-style:none;
+    padding:0;
+    margin:0;
+	position: relative;
+}
+.ie7 ul.sharing li {
+	float: left;
+}
+ul.sharing li a {
+	height: 24px;
+	width: 24px;
+	margin: 0 10px 0 0;
+	display: inline-block;
+    -moz-opacity: 0.70;
+    -khtml-opacity: 0.70;
+	-webkit-opacity: 0.70;
+    opacity: 0.70;
+    zoom: 1;
+}
+ul.sharing li a:hover {
+    -moz-opacity: 1;
+    -khtml-opacity: 1;
+	-webkit-opacity: 1;
+    opacity: 1;
+    zoom: 1;
+}
+ul.sharing li.tweet a {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/twitter.png') no-repeat 50% 50%;
+}
+ul.sharing li.fb a {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/facebook.png') no-repeat 50% 50%;
+}
+ul.sharing li.gbuzz a {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/google-buzz.png') no-repeat 50% 50%;
+}
+ul.sharing li.digg a {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/digg.png') no-repeat 50% 50%;
+}
+ul.sharing li.del a {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/delicious.png') no-repeat 50% 50%;
+}
+ul.sharing li.stumble a {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/stumbleupon.png') no-repeat 50% 50%;
+}
+ul.sharing li.linkedin a {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/linkedin.png') no-repeat 50% 50%;
+}
+ul.sharing li.google a {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/google.png') no-repeat 50% 50%;
+}
+/* end ---------------------------------------- content */
+
+
+
+
+
+/* begin ---------------------------------------- gallery */
+#gallery #post-container {
+	width: 956px;
+	padding: 20px 0 10px 0;
+}
+.gal_item {
+	display: inline-block;
+	width: 270px;
+	height: auto;
+	margin: 30px 24px 0 24px;
+	float: left;
+}
+.gal_item .post-title {
+	font-size: 20px;
+}
+.gal_item .post-img {
+	width: auto;
+	height: auto;
+	display: inline-block;
+	margin: 0 0 10px 0;
+	padding: 1px;
+	background: #fff;
+	border: #DEDEDC 1px solid;
+}
+.gal_item .post-img-border {
+	width: 258px;
+	height: auto;
+	overflow: hidden;
+	border: #f0f0f0 4px solid;
+	background: #fff url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/glass_small.png') 50% 50% no-repeat;
+}
+.gal_item .post-img-border {
+	display: inline-block;
+}
+.gal_item .post-img img {
+	border: 0;
+	padding: 0;
+	width: 258px;
+	height: auto;
+}
+.gal_item .post-content p {
+	margin: 10px 0 0 0;
+}
+.gal-devider {
+	display: inline-block;
+	width: 100%;
+	height: 0px;
+	float: left;
+}
+#nicepagination {
+	width: 100%;
+	margin: 30px 0 0 0;
+	display: inline-block;
+	text-align: center;
+	position: relative;
+}
+#gallery #nicepagination {
+	margin-top: 40px;
+	margin-bottom: 20px;
+}
+#nicepagination ul {
+	position: relative;
+	clear: both;
+	display: inline-block;
+	margin 0 auto;
+}
+#nicepagination ul li {
+	margin: 0 5px;
+	font-size: 14px;
+}
+#nicepagination ul li.active {}
+/* end ---------------------------------------- gallery */
+
+
+
+
+
+/* begin ---------------------------------------- menu card */
+#card-container {
+	width: 956px;
+	height: 0px;
+	display: inline-block;
+	padding: 50px 0;
+	position: relative;
+	overflow: hidden;
+	text-shadow: #f8f8f8 0px 1px 0px;
+}
+#card-prev {
+	position: absolute;
+	display: inline-block;
+	top: 80px;
+	left: -8px;
+	width: 28px;
+	height: 74px;
+	z-index: 8;
+}
+#card-prev .arrow_bit_top {
+	width: 6px;
+	height: 62px;
+	position: absolute;
+	left: 0px;
+	top: 6px;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png') bottom;
+}
+#card-prev .arrow_bit_bottom {
+	width: 26px;
+	height: 54px;
+	position: absolute;
+	left: 0px;
+	top: 10px;
+	-webkit-border-radius: 0 26px 26px 0;
+    -moz-border-radius: 0 26px 26px 0;
+    border-radius: 0 26px 26px 0;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png') top;
+	box-shadow: 1px 0px 1px #888;
+  	-moz-box-shadow: 1px 0px 1px #888;
+  	-webkit-box-shadow: 1px 0px 1px #888;
+}
+#card-prev .arrow_bit_left, #card-prev .arrow_bit_right {
+	width: 6px;
+	height: 10px;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	-webkit-border-radius: 10px 0 0 10px;
+    -moz-border-radius: 10px 0 0 10px;
+    border-radius: 10px 0 0 10px;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png');
+}
+#card-prev .arrow_bit_right {
+	top: 64px;
+}
+#card-prev .arrow_bit_middle {
+	width: 12px;
+	height: 22px;
+	position: absolute;
+	left: 5px;
+	top: 26px;
+}
+#card-prev .arrow_bit_middle {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/arrow_left.png') no-repeat;
+}
+
+
+
+#card-next {
+	position: absolute;
+	display: inline-block;
+	top: 80px;
+	right: -8px;
+	width: 28px;
+	height: 74px;
+	z-index: 8;
+}
+#card-next .arrow_bit_top {
+	width: 6px;
+	height: 62px;
+	position: absolute;
+	right: 0px;
+	top: 6px;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png') bottom;
+}
+#card-next .arrow_bit_bottom {
+	width: 26px;
+	height: 54px;
+	position: absolute;
+	right: 0px;
+	top: 10px;
+	-webkit-border-radius: 26px 0 0 26px;
+    -moz-border-radius: 26px 0 0 26px;
+    border-radius: 26px 0 0 26px;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png') top;
+	box-shadow: -1px 0px 1px #888;
+  	-moz-box-shadow: -1px 0px 1px #888;
+  	-webkit-box-shadow: -1px 0px 1px #888;
+}
+#card-next .arrow_bit_left, #card-next .arrow_bit_right {
+	width: 6px;
+	height: 10px;
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	-webkit-border-radius: 0 10px 10px 0;
+    -moz-border-radius: 0 10px 10px 0;
+    border-radius: 0 10px 10px 0;
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/patern_sharp.png');
+}
+#card-next .arrow_bit_right {
+	top: 64px;
+}
+#card-next .arrow_bit_middle {
+	width: 12px;
+	height: 22px;
+	position: absolute;
+	right: 5px;
+	top: 26px;
+}
+#card-next .arrow_bit_middle {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/arrow_right.png') no-repeat;
+}
+#card-slider {
+	width: 100000px;
+	height: auto;
+	display: inline-block;
+	position: absolute;
+	top: 60px;
+	left: 0px;
+	z-index: 7;
+}
+.card-page {
+	width: 956px;
+	height: auto;
+	float: left;
+	display: inline-block;
+	position: relative;
+}
+.menucard-devider {
+	position: absolute;
+	height: 100%;
+	width: 1px;
+	background: #E0E0DE;
+	border-right: #f7f7f5 1px solid;
+	left: 50%;
+}
+.card-cat {
+	width: 400px;
+	height: auto;
+	float: left;
+	padding: 0 39px;
+	display: inline-block;
+}
+.card-cat h2 {
+	font-size: 22px;
+}
+.card-cat h3 {
+	font-size: 18px;
+	margin: 50px 0 0 0;
+}
+.card-cat .cat-desc {
+	font-style: italic;
+	padding: 15px 0 5px 0;
+	display: inline-block;
+}
+.card-cat .devider {
+	margin: -5px 0 0 0;
+}
+.card-item {
+	margin: 25px 0 0 0;
+	display: inline-block;
+	width: 100%;
+	position: relative;
+}
+.card-item .dottedline {
+	width: 100%;
+	height: 13px;
+	border-bottom: #ccc 1px dotted;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}
+.card-item.has-thumbnail .dottedline {
+	width: 75%;
+	left: 25%;
+}
+.card-item .item-img {
+	border: #DEDEDE 1px solid;
+	display: inline-block;
+	margin: 0 20px 0 0;
+	vertical-align: top;
+	float: left;
+	padding: 1px;
+	background: #fff;
+}
+.card-item .item-img-border {
+	border: #f0f0f0 4px solid;
+	background: #fff url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/glass_tiny.png') 50% 50% no-repeat;
+	height: 56px;
+	width: 56px;
+	overflow: hidden;
+	display: inline-block;
+}
+.card-item .item-img img {
+	height: 100%;
+	width: auto;
+	display: inline-block;
+}
+.card-item .item-text {
+	display: inline-block;
+	width: 320px;
+	float: left;
+	zoom: 1;
+	*display: inline;
+}
+.card-item.has-thumbnail .item-text {
+	width: 200px;
+}
+.card-item .name {
+	font-weight: bold;
+	display: inline-block;
+	line-height: 1.5;
+	padding: 0 10px 0 0; 
+	background: #edeae6;
+	position: relative;
+	zoom: 1;
+	*display: inline;
+}
+.card-item a {
+	text-decoration: underline;
+}
+.card-item .price {
+	display: inline-block;
+	float: right;
+	width: auto;
+	text-align: right;
+	font-weight: bold;
+	line-height: 1.5;
+	padding: 0 0 0 10px;
+	background: #edeae6;
+	position: relative;
+}
+.card-item .description {
+	display: block;
+	line-height: 1.5;
+	padding: 5px 0 0 0;
+}
+/* end ---------------------------------------- menu card */
+
+
+
+
+
+/* begin ---------------------------------------- comments */
+#comments {
+	display: inline-block;
+	margin: 20px 0 0 0;
+	text-shadow: #f8f8f8 0px 1px 0px;
+}
+#comments-title {
+	font-size: 22px;
+	padding: 0 0 10px 0;
+}
+#comments .comment-notes {
+	line-height: 1.6;
+}
+#reply-title {
+	font-size: 22px;
+}
+#comments ol.commentlist {
+	margin-bottom: 40px;
+}
+#comments li.comment {
+	margin: 10px 0;
+	line-height: 1.6;
+}
+#comments ul.children li.comment {
+	margin: 10px 0 0px 20px;
+}
+#comments .comment-single {
+	display: block;
+	position: relative;
+	border: 1px solid #fff;
+	background: #eee;
+	padding: 15px;
+}
+#comments .comment-gravatar {
+	float: left;
+	display: block;
+	margin-right: 20px;
+	heigth: 60px;
+	width: 60px;
+	background: #fff;
+	padding: 5px;
+	border: 1px solid #DEDEDC;
+}
+#comments .comment-meta {
+	font-style: italic;
+}
+#comments .comment-meta .fn {
+	font-weight: bold;
+	margin: 0 25px 0 0;
+	font-style: normal;
+}
+#comments .comment-body {
+	margin: 15px 0;
+}
+#comments .comment-body p {
+	line-height: 1.6;
+}
+#comments .reply {
+	float: right;
+	font-style: normal;
+}
+#respond {
+	margin-bottom: 10px;
+}
+#commentform {
+	margin: 0;
+	padding: 20px 0 0 0;
+}
+#respond .required {
+	display: inline-block;
+}
+#respond label {
+	display: inline-block;
+	margin: 15px 0 5px 0;
+	font-weight: bold;
+}
+#respond input, #respond textarea {
+	display: block;
+}
+#respond input[type="text"] {
+	max-width: 600px;
+	margin-bottom: 10px;
+	padding: 5px;
+}
+#respond textarea {
+	max-width: 570px;
+	height: 100px;
+	font-family: Arial, Helvetica, sans-serif;
+	padding: 10px;
+	color: #5d5d5d;
+}
+#respond .form-allowed-tags, #respond .form-submit {
+	margin-top: 15px;
+	line-height: 1.6;
+}
+#cancel-comment-reply-link {
+	float: right;
+}
+/* end ---------------------------------------- comments */
+
+
+
+
+
+/* begin ---------------------------------------- sidebar */
+#sidebar {
+	width: 280px;
+	margin: 35px 0 0 0;
+	display: inline-block;
+	color: #8b8a8b;
+	position: relative;
+}
+.sidebar_left #sidebar {
+	float: left;
+	padding: 20px 0 20px 20px;
+}
+.sidebar_right #sidebar {
+	float: right;
+	padding: 20px 20px 20px 0;
+}
+#sidebar a {
+	color: #8b8a8b;
+	text-decoration: underline;
+}
+#sidebar .readmore a {
+	text-decoration: none;	
+}
+.sidepanel {
+	position: relative;
+	margin-bottom: 15px;
+	text-shadow: #f8f8f8 0px 1px 0px;
+	float: left;
+	width: 280px;
+}
+.widget-container .sidepanel {
+	width: 280px;
+	padding: 40px 19px 0 19px;
+}
+#frontwidgets .sidepanel {
+	padding-top: 0px;
+}
+.sidepanel h3 {
+	color: #414445;
+	font-size: 17px;
+}
+.sidepanel .title-container h3 {
+	color: #fff;
+}
+#sidebar .sidepanel h3 {
+	margin-bottom: 10px;
+}
+.sidepanel ul li {
+	padding: 5px 0;
+	line-height: 1.5;
+}
+.sidepanel p {
+	margin-top: 8px;
+	line-height: 1.5;
+}
+#searchform #s {
+	width: 180px;
+}
+#searchform input[type="submit"] {
+	width: 80px;
+}
+.sidepanel .post-title {
+	font-size: 13px;
+}
+/* end ---------------------------------------- sidebar */
+
+
+
+
+
+/* begin ---------------------------------------- footer */
+#footer-container {
+	position: relative;
+	z-index: 6;
+	width: 100%;
+	height: auto;
+	display: inline-block;
+}
+#footer {
+	margin: 0 auto;
+	width: 958px;
+	height: auto;
+	margin: 0 0 20px 0;
+	display: inline-block;
+	background: #191919 url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/footer_bg.png') repeat-x;
+	border: #191919 1px solid;
+	color: #fff;
+	position: relative;
+	float: left;
+}
+#footer-border {
+	display: inline-block;
+	border: #555 1px solid;
+	width: 956px;
+	height: auto;
+	position: relative;
+	float: left;
+}
+#footer .sidepanel {
+	width: 200px;
+	display: inline-block;
+	float: left;
+	margin: 35px 20px 0 19px;
+	padding: 0 0 35px 0;
+	position: relative;
+	color: #777;
+	font-size: 12px;
+	text-shadow: #000 0px -1px 0px;
+}
+#footer .sidepanel h3 {
+	color: #fff;
+	size: 17px;
+	margin: 0 0 20px 0;
+}
+#footer .sidepanel a {
+	color: #bbb;
+}
+#footer-links {
+	display: inline-block;
+	list-style: none;
+	padding: 0 0 15px 0;
+}
+#footer-links li {
+	float: left;
+	margin-right: 15px;
+}
+/* end ---------------------------------------- footer */
+
+
+
+
+
+/* begin ---------------------------------------- widgets */
+.rf_fronttext_widget p {
+	display: inline-block;
+	margin-top: 0px;
+}
+.rf_fronttext_widget .postimage-container {
+	border: #dedede 1px solid;
+	margin: 0 0 15px 0;
+	display: block;
+	float: left;
+	width: 276px;
+	padding: 1px;
+	background: #fff;
+}
+#footer .rf_fronttext_widget .postimage-container {
+	border-color: #2a2a2a;
+	background-color: #000;
+	width: 196px;
+}
+.rf_fronttext_widget .postimage-border {
+	border: #f0f0f0 4px solid;
+	width: 268px;
+	height: auto;
+	overflow: hidden;
+	display: inline-block;
+	background: #fff url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/glass_small.png') 50% 50% no-repeat;
+}
+#footer .rf_fronttext_widget .postimage-border {
+	border-color: #131313;
+	width: 188px;
+}
+.rf_fronttext_widget .postimage {
+	display: inline-block;
+}
+.rf_fronttext_widget .postimage img {
+	width: 100%;
+	height: auto;
+}
+
+
+
+.rf_contact_widget .social-buttons {
+	margin: 0 0 10px 0;
+	display: inline-block;
+}
+.rf_contact_widget .social-buttons a {
+	margin: 1px 0 0 15px;
+	display: inline-block;
+	float: left;
+}
+.rf_contact_widget .social-buttons a:first-child {
+	margin-left: 0;
+}
+.rf_contact_widget .social-buttons a:hover {
+	margin-top: 0px;
+}
+.rf_contact_widget .phone, .rf_contact_widget .email, .rf_contact_widget .location {
+	width: 100%;
+	display: inline-block;
+	margin: 10px 0 0 0;
+}
+.rf_contact_widget .phone .icon {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/phone_dark.png') 50% 50% no-repeat;
+}
+#footer .rf_contact_widget .phone .icon {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/phone.png') 50% 50% no-repeat;
+}
+.rf_contact_widget .email .icon {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/email_dark.png') 50% 50% no-repeat;
+}
+#footer .rf_contact_widget .email .icon {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/email.png') 50% 50% no-repeat;
+}
+.rf_contact_widget .location .icon {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/pin_dark.png') 50% 50% no-repeat;
+}
+#footer .rf_contact_widget .location .icon {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/pin.png') 50% 50% no-repeat;
+}
+.rf_contact_widget .icon {
+	height: 24px;
+	width: 24px;
+	display: inline-block;
+	float: left;
+}
+.rf_contact_widget .text {
+	display: inline-block;
+	float: left;
+	width: auto;
+	margin: 1px 0 0 10px;
+}
+.rf_contact_widget p {
+	margin: 0;
+}
+
+
+
+.rf_twitter_widget {
+	display: inline-block;
+}
+.rf_twitter_widget .tweet {
+	background: #FAFAFA;
+	border: #D4D4D4 1px solid;
+	-webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+	padding: 10px;
+}
+#footer .rf_twitter_widget .tweet {
+	background: #222;
+	border: #444 1px solid;
+}
+.rf_twitter_widget ul.tweet_list {
+	display: inline-block;
+}
+.rf_twitter_widget ul.tweet_list li {
+	line-height: 1.6;
+	margin: 0;
+	padding: 0;
+	display: inline-block;
+}
+.rf_twitter_widget .tweet_time, .rf_twitter_widget .tweet_time a {
+	display: block;
+}
+.rf_twitter_widget .arrow-container {
+	height: 10px;
+	width: 10px;
+	position: relative;
+	margin: -1px 0 0 35px;
+	display: inline-block;
+	z-index: 100;
+}
+.rf_twitter_widget .arrow-border {
+	height: 0;
+	width: 0;
+	border-color: #D4D4D4 transparent transparent transparent;
+ 	border-style: solid;
+  	border-width: 10px;
+	top: 0px;
+	left: 0px;
+	position: absolute;
+}
+#footer .rf_twitter_widget .arrow-border {
+	border-color: #444 transparent transparent transparent;
+}
+.rf_twitter_widget .arrow {
+	height: 0;
+	width: 0;
+	border-color: #FAFAFA transparent transparent transparent;
+ 	border-style: solid;
+  	border-width: 8px;
+	display: inline-block;
+	top: 0px;
+	left: 2px;
+	position: absolute;
+}
+#footer .rf_twitter_widget .arrow {
+	border-color: #222 transparent transparent transparent;
+}
+.rf_twitter_widget .follow {
+	display: inline-block;
+	width: 100%;
+	position: relative;
+}
+.rf_twitter_widget .follow img {
+	float: left;
+	margin: 0 0 0 5px;
+}
+.rf_twitter_widget .follow a.followme {
+	float: right;
+	margin: 0 5px 0 0;
+}
+
+
+
+.rf_latest_posts_widget .post-item {
+	display: inline-block;
+	position: relative;
+	width: 100%;
+	margin: 10px 0 0 0;
+}
+.rf_latest_posts_widget .post-item.first {
+	margin: 0;
+}
+.rf_latest_posts_widget .postimage-container {
+	float: left;
+	position: relative;
+	display: inline-block;
+	overflow: hidden;
+	margin: 0 15px 0 0;
+	border: 1px solid #DEDEDE;
+	background: #fff;
+	padding: 1px;
+}
+#footer .rf_latest_posts_widget .postimage-container {
+	border-color: #2a2a2a;
+	background: #000;
+}
+.rf_latest_posts_widget .postimage-container a {
+	width: 50px;
+	height: 50px;
+	display: inline-block;
+	overflow: hidden;
+	background: #fff url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/glass_tiny.png') 50% 50% no-repeat;
+	border: 4px solid #f0f0f0;
+}
+#footer .rf_latest_posts_widget .postimage-container a {
+	border-color: #131313;
+}
+.rf_latest_posts_widget .postimage-container img {
+	height: 100%;
+	width: auto;
+}
+#sidebar .rf_latest_posts_widget a {
+	text-decoration: none;
+}
+.rf_latest_posts_widget h4 {
+	display: block;
+	font-size: 14px;
+	line-height: 1.3em;
+}
+.rf_latest_posts_widget a:hover h4 {
+	text-decoration: underline;
+}
+#footer .rf_latest_posts_widget a:hover h4 {
+	color: #fff;
+	text-decoration: none;
+}
+.rf_latest_posts_widget .post-date {
+	display: block;
+	margin: 5px 0;
+	line-height: 1.3em;
+}
+
+
+
+.widget_line {
+	width: 100%;
+	height: 1px;
+	display: inline-block;
+	float: left;
+}
+/* end ---------------------------------------- widgets */
+
+
+
+
+
+/* begin ------------------------------------------------------------ Shortcodes */
+.devider, .devider-top {
+	height: 1px;
+	margin: 0 8px;
+	display: block;
+	border-bottom: #E0E0DE 1px solid;
+	-moz-box-shadow: 0px 1px 0px #F7F7F5;
+	-webkit-box-shadow: 0px 1px 0px #F7F7F5;
+	box-shadow: 0px 1px 0px #F7F7F5;
+}
+.devider {
+	padding: 10px 0 0 0;
+	margin: 0 0 20px 0;
+}
+.devider-top {
+	padding: 20px 0 0 0;
+	margin: 0 25px 40px 0;
+	position: relative;
+}
+.devider-top a {
+	position: absolute;
+	margin: 20px 0 0 0;
+	top: -0.5em;
+	right: -25px;
+	font-size: 11px;
+}
+.post-meta-bottom .devider-top {
+	margin-bottom: 0;
+	padding-top: 10px;
+}
+.post-meta-bottom .devider-top a {
+	margin-top: 10px;
+}
+
+
+
+.post .column2x1, .post .column3x1, .post .column3x2, .post .column4x1, .post .column4x3 {
+	display: inline-block;
+	height: auto;
+	margin: 20px 2% 20px 0;
+	vertical-align: text-top;
+	line-height: 1.6;
+}
+.ie7 .post .column2x1, .ie7 .post .column3x1, .ie7 .post .column3x2, .ie7 .post .column4x1, .ie7 .post .column4x3 {
+	float: left;
+}
+.post .column2x1 {
+	width: 47.5%;
+}
+.post .column3x1 {
+	width: 31%;
+}
+.post .column3x2 {
+	width: 64.5%;
+}
+.post .column4x1 {
+	width: 22.5%;
+}
+.post .column4x3 {
+	width: 73%;
+}
+.post .last {
+	margin-right: 0;
+}
+.post .sc_sample {
+	display: block;
+	color: #aaa;
+	margin: 0 0 10px 0;
+	padding: 15px 10px;
+	background: #fcfcfc;
+	border: #DEDEDE 1px solid;
+	line-height: 1.6;
+}
+
+
+
+.post .toggle {
+	padding: 10px 0;
+}
+.post .toggle .title {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/minus.png') 0 50% no-repeat;
+	padding: 9px 0 9px 50px;
+	cursor: pointer;
+}
+.post .toggle.fold .title {
+	background: url('/web/20141225212611im_/http://theabcafe.com/wp-content/themes/therestaurant/images/plus.png') 0 50% no-repeat;
+}
+.post .toggle .toggle-content {
+	margin: 0;
+	padding: 0;
+}
+
+
+
+.message {
+	display: block;
+	color: #717fa1;
+	margin: 0 0 10px 0;
+	padding: 15px 10px;
+	background: #d7e6f5;
+	border: #aacae6 1px solid;
+	line-height: 1.6;
+}
+.message .title {
+	color: #626d86;
+}
+.message.notice {
+	color: #847c4f;
+	background: #fcf2c6;
+	border: #ffcf4f 1px solid;
+}
+.message.notice .title {
+	color: #726b44;
+}
+.message.succes {
+	color: #4c794b;
+	background: #d8f2ce;
+	border: #b1e098 1px solid;
+}
+.message.succes .title {
+	color: #416840;
+}
+.message.error {
+	color: #c76458;
+	background: #ffe9e9;
+	border: #ffbcbc 1px solid;
+}
+.message.error .title {
+	color: #bd5b4f;
+}
+
+
+
+#content .readmore.custom_button {
+	margin-bottom: 20px;
+}
+/* end ------------------------------------------------------------ Shortcodes */
+
+
+
+
+
+
+/* begin ---------------------------------------- misc */
+.sep {
+	color: #CCC;
+	margin: 0 8px;
+}
+.ico-small {
+	vertical-align: middle;
+	margin: 0 5px 2px 0;
+}
+.screen-reader-text {
+	display: none;
+}
+input[type="text"] {
+	padding: 5px;
+}
+
+/* widget styling */
+#calendar_wrap th {
+	padding: 5px;
+	font-weight: bold;
+}
+#calendar_wrap td {
+	padding: 5px;
+}
+/* end ---------------------------------------- misc */
+/*
+     FILE ARCHIVED ON 21:26:11 Dec 25, 2014 AND RETRIEVED FROM THE
+     INTERNET ARCHIVE ON 01:08:53 May 27, 2026.
+     JAVASCRIPT APPENDED BY WAYBACK MACHINE, COPYRIGHT INTERNET ARCHIVE.
+
+     ALL OTHER CONTENT MAY ALSO BE PROTECTED BY COPYRIGHT (17 U.S.C.
+     SECTION 108(a)(3)).
+*/
+/*
+playback timings (ms):
+  capture_cache.get: 1.099
+  load_resource: 87.225
+  PetaboxLoader3.resolve: 53.16
+  PetaboxLoader3.datanode: 11.458
+*/

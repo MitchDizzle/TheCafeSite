@@ -29,14 +29,17 @@
 
         .gallery-grid__item img {
             width: 100%;
+            height: 100%;
             display: block;
-            /* All gallery images lazy loaded */
+            object-fit: cover;
+            object-position: center 35%;
         }
 
         /* Placeholder block shown until real images are added */
         .gallery-placeholder {
             width: 100%;
             background: #E8E2D9;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -67,23 +70,35 @@
                 <!-- All images should use loading="lazy" -->
                 <div class="gallery-grid" role="list">
 
+                    <!-- Kitchen front-on: trim ceiling/floor, center on tables + fridges -->
+                    <div class="gallery-grid__item" role="listitem">
+                        <div class="gallery-placeholder" style="aspect-ratio: 16/9;">
+                            <img src="./assets/gallery/a5876693-1304-4463-a148-e54501471e58_20260526_194950_0000.jpg"
+                                 alt="Commercial kitchen prep area with stainless steel tables and refrigerators"
+                                 loading="lazy"
+                                 style="object-position: center 45%;">
+                        </div>
+                    </div>
+                    <!-- Kitchen long-angle: trim ceiling, anchor mid-section -->
+                    <div class="gallery-grid__item" role="listitem">
+                        <div class="gallery-placeholder" style="aspect-ratio: 16/9;">
+                            <img src="./assets/gallery/fe565db0-4936-4fdd-8303-38a93f53415d_20260526_195046_0000.jpg"
+                                 alt="Wide view down the kitchen showing prep tables and equipment"
+                                 loading="lazy"
+                                 style="object-position: center 30%;">
+                        </div>
+                    </div>
                     <div class="gallery-grid__item" role="listitem">
                         <div class="gallery-placeholder" style="aspect-ratio: 4/3;"></div>
                     </div>
                     <div class="gallery-grid__item" role="listitem">
-                        <div class="gallery-placeholder" style="aspect-ratio: 3/4;"></div>
-                    </div>
-                    <div class="gallery-grid__item" role="listitem">
-                        <div class="gallery-placeholder" style="aspect-ratio: 1/1;"></div>
+                        <div class="gallery-placeholder" style="aspect-ratio: 4/3;"></div>
                     </div>
                     <div class="gallery-grid__item" role="listitem">
                         <div class="gallery-placeholder" style="aspect-ratio: 4/3;"></div>
                     </div>
                     <div class="gallery-grid__item" role="listitem">
-                        <div class="gallery-placeholder" style="aspect-ratio: 3/2;"></div>
-                    </div>
-                    <div class="gallery-grid__item" role="listitem">
-                        <div class="gallery-placeholder" style="aspect-ratio: 2/3;"></div>
+                        <div class="gallery-placeholder" style="aspect-ratio: 4/3;"></div>
                     </div>
 
                 </div>

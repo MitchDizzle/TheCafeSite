@@ -1,0 +1,67 @@
+@charset "UTF-8";
+/**
+ * featured-page-widget.css: Stylesheet for widget.
+ *
+ * @package Featured Page Widget
+ * @subpackage includes
+ * @author GrandSlambert
+ * @copyright 2009-2011
+ * @access public
+ * @since 0.1
+*/
+
+.featured-post-widget {
+     clear: both;
+}
+
+.fpw-image-left {
+     float: left;
+     padding-right: 10px;
+     padding-bottom: 5px;
+}
+
+.fpw-image-right {
+     float: right;
+     padding-left: 10px;
+     padding-bottom: 5px;
+}
+
+h3.featured-post-title {
+     margin: 5px 0;
+     font-size: 16px;
+}
+
+div.featured-post-widget-border {
+     border: solid 1px #dadada;
+     margin-bottom: 8px;
+}
+
+div.featured-post-widget-border h3.featured-post-title {
+     padding: 0 5px;
+}
+
+div.featured-post-widget-border div.featured_post_content {
+     padding: 0 5px;
+}
+
+div.featured-post-widget-border div.featured_post_more_link {
+     padding: 0 5px;
+     margin: 0;
+     border-top: solid 1px #dadada;
+}
+
+/*
+     FILE ARCHIVED ON 21:05:11 Dec 25, 2014 AND RETRIEVED FROM THE
+     INTERNET ARCHIVE ON 01:14:52 May 27, 2026.
+     JAVASCRIPT APPENDED BY WAYBACK MACHINE, COPYRIGHT INTERNET ARCHIVE.
+
+     ALL OTHER CONTENT MAY ALSO BE PROTECTED BY COPYRIGHT (17 U.S.C.
+     SECTION 108(a)(3)).
+*/
+/*
+playback timings (ms):
+  capture_cache.get: 0.402
+  load_resource: 60.835
+  PetaboxLoader3.resolve: 36.852
+  PetaboxLoader3.datanode: 23.643
+*/
