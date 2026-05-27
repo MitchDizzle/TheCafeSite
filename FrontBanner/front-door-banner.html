@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cafe — Front Door Banner</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <style>
+        @page {
+            size: 11in 17in portrait;
+            margin: 0;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --firebrick:      #B22222;
+            --firebrick-dark: #8B1A1A;
+            --text-dark:      #2C1810;
+            --rule-color:     #C8A0A0;
+        }
+
+        html, body {
+            width: 11in;
+            height: 17in;
+            background: #ccc;
+        }
+
+        .page {
+            width: 11in;
+            height: 17in;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75in 0.75in 0.6in;
+        }
+
+        /* ── Top: The Cafe ── */
+        .top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2in;
+            width: 100%;
+        }
+
+        /* white-space: nowrap keeps it on one line regardless of container width */
+        .cafe-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 2.15in;
+            line-height: 1;
+            color: var(--text-dark);
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+
+        .entrance-label {
+            font-family: 'Lato', sans-serif;
+            font-weight: 300;
+            font-size: 0.7in;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: var(--firebrick);
+            opacity: 0.55;
+        }
+
+        /* ── Divider ── */
+        .rule {
+            width: 5in;
+            height: 0;
+            border-top: 2px solid var(--rule-color);
+            flex-shrink: 0;
+        }
+
+        /* ── Bottom: Meals on Wheels + Pickup ── */
+        .bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25in;
+            width: 100%;
+            padding-bottom: 2in;
+        }
+
+        .meals-label {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.35in;
+            line-height: 1.05;
+            color: var(--firebrick);
+            letter-spacing: 0.02em;
+            text-align: center;
+        }
+
+        .pickup-label {
+            font-family: 'Lato', sans-serif;
+            font-weight: 700;
+            font-size: 1in;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--text-dark);
+        }
+
+        /* ── COA logo — kept small to avoid pixelation ── */
+        .coa-logo {
+            margin-top: 0.35in;
+            width: 1.6in;
+            /* image-rendering kept default (browser smooths it) */
+            opacity: 0.85;
+        }
+
+        @media print {
+            html, body { background: #fff; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+
+    <div class="top">
+        <h1 class="cafe-title">The Café</h1>
+        <span class="entrance-label">Entrance</span>
+    </div>
+
+    <div class="rule"></div>
+
+    <div class="bottom">
+        <p class="meals-label">Meals on Wheels</p>
+        <p class="pickup-label"> ↓  Pickup  ↓ </p>
+    </div>
+
+</div>
+
+</body>
+</html>
