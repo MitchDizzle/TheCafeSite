@@ -334,3 +334,12 @@ p { max-width: 65ch; }
     .nav { animation: none; }
     .footer { transform: none; opacity: 1; transition: none; }
 }
+
+
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-group(root) {
+    animation-duration: 1s;
+}

@@ -9,17 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
-
+    <link rel="stylesheet" href="css/style.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        :root {
-            --cream:          #FAF7F2;
-            --firebrick:      #B22222;
-            --firebrick-dark: #8B1A1A;
-            --text-dark:      #2C1810;
-            --overlay:        rgba(18, 8, 4, 0.52);
-        }
 
         html, body { height: 100%; overflow: hidden; }
 
@@ -77,6 +70,13 @@
             letter-spacing: 0.02em;
         }
 
+        .hero-subspace {
+            display: flex; gap: 0.5rem;
+            padding: 0.5rem;
+            flex-wrap: wrap; justify-content: center;
+            background-color: rgba(0, 0, 0, 0.45);
+        }
+
         .hero-subtitle {
             font-family: 'Lato', sans-serif;
             font-weight: 300;
@@ -88,10 +88,11 @@
             margin-top: 0.25rem;
         }
 
+
         /* Buttons */
         .hero-actions {
             display: flex; gap: 1rem;
-            margin-top: 1.75rem;
+            margin-top: 1rem;
             flex-wrap: wrap; justify-content: center;
         }
 
@@ -180,9 +181,15 @@
     <div class="hero-content">
         <p class="hero-eyebrow">Catering &amp; Meal Prep Services</p>
         <h1 class="hero-title">The Café</h1>
-        <p class="hero-subtitle">Catering &amp; Meal Prep, Crafted with Care</p>
+        <div class="hero-subspace">
+            <p class="hero-subtitle">
+                <a href="tel:+19136801300">(913) 680-1300</a><br/>
+                <a href="mailto:theabcafe@gmail.com">theabcafe@gmail.com</a><br/>
+                417 S 6th St, Leavenworth Kansas
+            </p>
+        </div>
         <nav class="hero-actions" aria-label="Main navigation">
-            <a href="contact.html" class="btn btn-primary">Book a Catering</a>
+            <a href="contact.html" class="btn btn-primary">Contact & Catering</a>
             <a href="about.html"   class="btn btn-ghost">Learn More</a>
         </nav>
     </div>
