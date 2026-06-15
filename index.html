@@ -153,6 +153,27 @@
             .hero-actions { flex-direction: column; width: 100%; max-width: 280px; }
             .btn { text-align: center; width: 100%; }
         }
+
+        .filigree-divider .line {
+            stroke-dasharray: 211;
+            stroke-dashoffset: 211;
+            animation: draw 6s ease-out forwards, thicken 6s ease-out 8s forwards;
+        }
+        .line:nth-child(1) { animation-delay: 0s; }
+        .line:nth-child(2) { animation-delay: 0s; }
+        .line:nth-child(3) { animation-delay: 0.5s; }
+        .line:nth-child(4) { animation-delay: 0.5s; }
+
+        @keyframes draw {
+            to {
+               stroke-dashoffset: 0;
+            }
+            
+        }
+        @keyframes thicken {
+            from { stroke-width: 1; }
+            to { stroke-width: 2; }
+        }
     </style>
 </head>
 <body>
@@ -182,6 +203,69 @@
     <div class="hero-content">
         <p class="hero-eyebrow">Catering &amp; Meal Prep Services</p>
         <h1 class="hero-title">The Café</h1>
+        <svg class="filigree-divider" viewBox="0 0 400 60" xmlns="http://w3.org">
+            <path class="line" d="M 200 10
+            l 15,20
+            m -15,-10
+            l 14,10
+            c 0 0, 5 -7, 10 0 
+            l 0,0 5,-5 20,5 
+            3,-3 3,3 
+            50,0 
+            c 0 0, 5 -7, 10 0 
+            l 3,-3 3,3
+            c 0 0, 5 -7, 10 0 
+            l 0,0 5,-5 20,5 
+            l 10,0
+            " fill="none" stroke="var(--cream)" stroke-width="1" transform="translate(0,0)"/>
+            <path class="line" d="M 200 10
+            l 15,20
+            m -15,-10
+            l 14,10
+            c 0 0, 5 -7, 10 0 
+            l 0,0 5,-5 20,5 
+            3,-3 3,3 
+            50,0 
+            c 0 0, 5 -7, 10 0 
+            l 3,-3 3,3
+            c 0 0, 5 -7, 10 0 
+            l 0,0 5,-5 20,5 
+            l 10,0
+            " fill="none" stroke="var(--cream)" stroke-width="1" transform="scale(-1,1) translate(-400,0)"/>
+            <path class="line" d="M 200 10
+            l 15,20
+            m -15,-10
+            l 14,10
+            c 0 0, 5 -7, 10 0 
+            l 0,0 5,-5 20,5 
+            3,-3 3,3 
+            50,0 
+            c 0 0, 5 -7, 10 0 
+            l 3,-3 3,3
+            c 0 0, 5 -7, 10 0 
+            l 0,0 5,-5 20,5 
+            l 10,0
+            " fill="none" stroke="var(--cream)" stroke-width="1" transform="scale(1,-1) translate(0,-60)"/>
+            <path class="line" d="M 200 10
+            l 15,20
+            m -15,-10
+            l 14,10
+            c 0 0, 5 -7, 10 0 
+            l 0,0 5,-5 20,5 
+            3,-3 3,3 
+            50,0 
+            c 0 0, 5 -7, 10 0 
+            l 3,-3 3,3
+            c 0 0, 5 -7, 10 0 
+            l 0,0 5,-5 20,5 
+            l 10,0
+            " fill="none" stroke="var(--cream)" stroke-width="1" transform="scale(-1,-1) translate(-400,-60)"/>
+        </svg>
+
+        <nav class="hero-actions" aria-label="Main navigation">
+            <a href="contact.html" class="btn btn-primary">Contact & Catering</a>
+            <a href="about.html"   class="btn btn-ghost">Learn More</a>
+        </nav>
         <div class="hero-subspace">
             <p class="hero-subtitle">
                 <a href="tel:+19136801300">(913) 680-1300</a><br/>
@@ -189,10 +273,6 @@
                 <a href="http://maps.google.com/?q=417 S 6th St, Leavenworth, KS 66048">417 S 6th St, Leavenworth, KS 66048</a>
             </p>
         </div>
-        <nav class="hero-actions" aria-label="Main navigation">
-            <a href="contact.html" class="btn btn-primary">Contact & Catering</a>
-            <a href="about.html"   class="btn btn-ghost">Learn More</a>
-        </nav>
     </div>
 
     <div class="dots" role="tablist" aria-label="Slideshow navigation">
