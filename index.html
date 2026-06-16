@@ -155,24 +155,29 @@
         }
 
         .filigree-divider .line {
-            stroke-dasharray: 211;
-            stroke-dashoffset: 211;
-            animation: draw 6s ease-out forwards, thicken 6s ease-out 8s forwards;
+            stroke-dasharray: 171;
+            stroke-dashoffset: 171;
+            animation: draw 6s ease-out forwards;
         }
-        .line:nth-child(1) { animation-delay: 0s; }
-        .line:nth-child(2) { animation-delay: 0s; }
-        .line:nth-child(3) { animation-delay: 0.5s; }
-        .line:nth-child(4) { animation-delay: 0.5s; }
-
+        .filigree-divider .diamond-outer {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: draw 1s ease-out 0.75s forwards;
+        }
+        .filigree-divider .diamond-inner {
+            stroke-dasharray: 73;
+            stroke-dashoffset: 73;
+            animation: draw 0.8s ease-out 0.9s forwards;
+        }
+        .line:nth-child(3) { animation-delay: 0s; }
+        .line:nth-child(4) { animation-delay: 0s; }
+        .line:nth-child(5) { animation-delay: 0.5s; }
+        .line:nth-child(6) { animation-delay: 0.5s; }
         @keyframes draw {
             to {
                stroke-dashoffset: 0;
             }
             
-        }
-        @keyframes thicken {
-            from { stroke-width: 1; }
-            to { stroke-width: 2; }
         }
     </style>
 </head>
@@ -204,12 +209,11 @@
         <p class="hero-eyebrow">Catering &amp; Meal Prep Services</p>
         <h1 class="hero-title">The Café</h1>
         <svg class="filigree-divider" viewBox="0 0 400 60" xmlns="http://w3.org">
-            <path class="line" d="M 200 10
-            l 15,20
-            m -15,-10
-            l 14,10
+            <path class="diamond-outer" d="M 200 10 l 15,20 -15,20 -15,-20 15,-20 Z" fill="none" stroke="var(--cream)" stroke-width="1"/>
+            <path class="diamond-inner" d="M 200 20 l 15,10 -15,10 -15,-10 15,-10 Z" fill="none" stroke="var(--cream)" stroke-width="1"/>
+            <path class="line" d="M 215 30
             c 0 0, 5 -7, 10 0 
-            l 0,0 5,-5 20,5 
+            l 0,0 5,-7 20,7 
             3,-3 3,3 
             50,0 
             c 0 0, 5 -7, 10 0 
@@ -218,12 +222,9 @@
             l 0,0 5,-5 20,5 
             l 10,0
             " fill="none" stroke="var(--cream)" stroke-width="1" transform="translate(0,0)"/>
-            <path class="line" d="M 200 10
-            l 15,20
-            m -15,-10
-            l 14,10
+            <path class="line" d="M 215 30
             c 0 0, 5 -7, 10 0 
-            l 0,0 5,-5 20,5 
+            l 0,0 5,-7 20,7 
             3,-3 3,3 
             50,0 
             c 0 0, 5 -7, 10 0 
@@ -232,12 +233,9 @@
             l 0,0 5,-5 20,5 
             l 10,0
             " fill="none" stroke="var(--cream)" stroke-width="1" transform="scale(-1,1) translate(-400,0)"/>
-            <path class="line" d="M 200 10
-            l 15,20
-            m -15,-10
-            l 14,10
+            <path class="line" d="M 215 30
             c 0 0, 5 -7, 10 0 
-            l 0,0 5,-5 20,5 
+            l 0,0 5,-7 20,7 
             3,-3 3,3 
             50,0 
             c 0 0, 5 -7, 10 0 
@@ -246,12 +244,9 @@
             l 0,0 5,-5 20,5 
             l 10,0
             " fill="none" stroke="var(--cream)" stroke-width="1" transform="scale(1,-1) translate(0,-60)"/>
-            <path class="line" d="M 200 10
-            l 15,20
-            m -15,-10
-            l 14,10
+            <path class="line" d="M 215 30
             c 0 0, 5 -7, 10 0 
-            l 0,0 5,-5 20,5 
+            l 0,0 5,-7 20,7 
             3,-3 3,3 
             50,0 
             c 0 0, 5 -7, 10 0 
