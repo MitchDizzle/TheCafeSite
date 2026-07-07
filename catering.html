@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Catering packages from The Café in Leavenworth, KS — office lunches, meetings, and events. Browse our bundles and call or send an inquiry to order.">
+    <title>Catering | The Café</title>
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Catering | The Café">
+    <meta property="og:description" content="Catering packages for offices, meetings, and events in Leavenworth, KS. Browse bundles and call to order.">
+    <meta property="og:url" content="https://mtch.tech/thecafe/catering.html">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* Bundle cards */
+        .bundle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 2rem;
+            margin-top: 2.5rem;
+        }
+
+        .bundle-card {
+            background: #fff;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(44, 24, 16, 0.07);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bundle-card__photo {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 45%, #CD853F 100%);
+        }
+
+        .bundle-card__body {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .bundle-card__name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+        }
+
+        .bundle-card__serves {
+            font-size: 0.78rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--firebrick);
+        }
+
+        .bundle-card__desc {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: rgba(44, 24, 16, 0.75);
+            flex: 1;
+        }
+
+        .bundle-card__price {
+            font-size: 0.85rem;
+            font-weight: 400;
+            padding-top: 0.6rem;
+            border-top: 1px solid rgba(44, 24, 16, 0.1);
+        }
+
+        /* How it works strip */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .steps li {
+            counter-increment: step;
+            font-size: 0.92rem;
+            line-height: 1.55;
+        }
+
+        .steps li::before {
+            content: counter(step);
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            color: var(--firebrick);
+            margin-bottom: 0.35rem;
+        }
+
+        .call-strip {
+            margin-top: 2.25rem;
+            background: #fff;
+            border-left: 4px solid var(--firebrick);
+            border-radius: 0 4px 4px 0;
+            padding: 1.1rem 1.4rem;
+            font-size: 1rem;
+        }
+
+        .call-strip a { font-weight: 400; }
+
+        /* Inquiry form (matches contact.html patterns) */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-group--full { grid-column: 1 / -1; }
+
+        label {
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-dark);
+            font-weight: 400;
+        }
+
+        input, textarea {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 300;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(44, 24, 16, 0.25);
+            border-radius: 2px;
+            background: #fff;
+            color: var(--text-dark);
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--firebrick);
+        }
+
+        textarea { resize: vertical; min-height: 120px; }
+
+        .form-hint {
+            font-size: 0.78rem;
+            color: rgba(44, 24, 16, 0.55);
+        }
+
+        .form-privacy {
+            font-size: 0.78rem;
+            color: rgba(44, 24, 16, 0.55);
+        }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group--full { grid-column: 1; }
+        }
+    </style>
+</head>
+<body class="page-body">
+
+    <nav class="nav" aria-label="Site navigation">
+        <div class="nav__inner">
+            <a href="index.html" class="nav__brand">The Café</a>
+            <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav__links" id="nav-links" role="list">
+                <li><a href="about.html">About</a></li>
+                <li><a href="catering.html">Catering</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="contact.html" class="btn btn-primary">Book a Catering</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+
+        <!-- ── Section 1: Intro + Bundles ───────────────────── -->
+        <section class="section" id="bundles" aria-labelledby="bundles-heading">
+            <div class="container">
+                <h1 id="bundles-heading">Catering Packages</h1>
+                <p style="margin-top: 0.75rem; max-width: 60ch;">
+                    Feeding a meeting, an office, or a celebration? Our catering bundles take the
+                    guesswork out — pick a package, tell us when, and we handle the rest. Every
+                    package is prepared from scratch in our Leavenworth kitchen.
+                </p>
+
+                <!-- TODO: replace placeholder bundles with real packages from client
+                     (names, contents, headcounts, prices, lead times). Photos replace
+                     the gradient placeholders. -->
+                <div class="bundle-grid">
+
+                    <article class="bundle-card">
+                        <div class="bundle-card__photo" role="img" aria-label="Photo coming soon"></div>
+                        <div class="bundle-card__body">
+                            <h2 class="bundle-card__name">Office Lunch Bundle</h2>
+                            <p class="bundle-card__serves">Feeds 10–12</p>
+                            <p class="bundle-card__desc">Sandwich or entrée trays with two sides,
+                                dessert, and everything needed to serve — dropped off ready to eat.</p>
+                            <p class="bundle-card__price">Call for pricing</p>
+                        </div>
+                    </article>
+
+                    <article class="bundle-card">
+                        <div class="bundle-card__photo" role="img" aria-label="Photo coming soon"></div>
+                        <div class="bundle-card__body">
+                            <h2 class="bundle-card__name">Meeting Tray</h2>
+                            <p class="bundle-card__serves">Feeds 6–8</p>
+                            <p class="bundle-card__desc">A lighter spread for smaller groups —
+                                perfect for morning meetings or working lunches.</p>
+                            <p class="bundle-card__price">Call for pricing</p>
+                        </div>
+                    </article>
+
+                    <article class="bundle-card">
+                        <div class="bundle-card__photo" role="img" aria-label="Photo coming soon"></div>
+                        <div class="bundle-card__body">
+                            <h2 class="bundle-card__name">Event Buffet Package</h2>
+                            <p class="bundle-card__serves">Feeds 15+</p>
+                            <p class="bundle-card__desc">Full buffet setup and service for larger
+                                gatherings — entrées, sides, and dessert, with staff available on request.</p>
+                            <p class="bundle-card__price">Call for pricing</p>
+                        </div>
+                    </article>
+
+                </div>
+            </div>
+
+            <div class="chevron-down" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+        </section>
+
+        <!-- ── Section 2: How Ordering Works ────────────────── -->
+        <section class="section section--alt" id="how-it-works" aria-labelledby="how-heading">
+            <div class="container">
+                <h2 id="how-heading">How Ordering Works</h2>
+                <ol class="steps">
+                    <li><strong>Pick a package</strong> — or tell us what you have in mind; custom orders are welcome.</li>
+                    <li><strong>Call or send the form</strong> — we'll talk through the date, headcount, and any dietary needs.</li>
+                    <li><strong>We confirm the details</strong> — you'll get a firm quote and a confirmed date.</li>
+                    <li><strong>Enjoy, then settle up</strong> — pay by check at delivery or pickup. No online payment needed.</li>
+                </ol>
+
+                <div class="call-strip">
+                    Fastest way to book: call us at <a href="tel:+19136801300">(913) 680-1300</a>.
+                    <!-- TODO: confirm phone number + lead time with client -->
+                </div>
+            </div>
+
+            <div class="chevron-down" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+        </section>
+
+        <!-- ── Section 3: Inquiry Form ──────────────────────── -->
+        <section class="section" id="inquiry" aria-labelledby="inquiry-heading">
+            <div class="container">
+                <h2 id="inquiry-heading">Send a Catering Inquiry</h2>
+                <p style="margin-top: 0.75rem; max-width: 55ch;">
+                    Prefer to start online? Send the basics and we'll call you back to plan the rest.
+                </p>
+
+                <!-- TODO: replace YOUR_FORM_ID with Formspree endpoint once account is set up -->
+                <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+
+                    <!-- honeypot: humans never see or fill this -->
+                    <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
+                           style="position:absolute; left:-9999px;" aria-hidden="true">
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label for="name">Name <span style="color:var(--firebrick)">*</span></label>
+                            <input type="text" id="name" name="name" autocomplete="name" required placeholder="Jane Smith">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="business">Business / Organization</label>
+                            <input type="text" id="business" name="business" autocomplete="organization" placeholder="Optional">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email <span style="color:var(--firebrick)">*</span></label>
+                            <input type="email" id="email" name="email" autocomplete="email" required placeholder="jane@example.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone <span style="color:var(--firebrick)">*</span></label>
+                            <input type="tel" id="phone" name="phone" autocomplete="tel" required placeholder="(555) 000-0000">
+                            <span class="form-hint">We'll call you back to confirm details</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event-date">Event Date</label>
+                            <input type="date" id="event-date" name="event_date">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="headcount">Headcount</label>
+                            <input type="number" id="headcount" name="headcount" min="1" placeholder="How many people?">
+                        </div>
+
+                        <div class="form-group form-group--full">
+                            <label for="message">What are you planning?</label>
+                            <textarea id="message" name="message"
+                                placeholder="The event, the package you're interested in, dietary needs — whatever you know so far."></textarea>
+                        </div>
+
+                        <div class="form-group form-group--full">
+                            <button type="submit" class="btn btn-primary">Send Inquiry</button>
+                            <p class="form-privacy" style="margin-top:0.6rem;">
+                                We only use your details to respond to this inquiry.
+                                See our <a href="privacy.html">privacy policy</a>.
+                            </p>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer" aria-label="Site footer">
+        <div class="footer__inner">
+            <p class="footer__brand">The Café</p>
+            <ul class="footer__links" role="list">
+                <li><a href="about.html">About</a></li>
+                <li><a href="catering.html">Catering</a></li>
+                <li><a href="team.html">Team</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="privacy.html">Privacy</a></li>
+            </ul>
+            <p class="footer__copy">&copy; <span class="footer-year"></span> The Café. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

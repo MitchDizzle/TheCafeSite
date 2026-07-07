@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FB Cover — 820×462</title>
+<link rel="stylesheet" href="social.css">
+
+<!-- ══════════════ EDIT ONLY THIS BLOCK ══════════════ -->
+<script>
+const CONFIG = {
+    tagline:    "Catering & Meal Prep, Crafted with Care",
+    detail:     "Leavenworth, KS · (913) 680-1300",
+    photo:      "",     // e.g. "../assets/gallery/spread.jpg" — empty = placeholder gradient
+    showGuides: false   // true while designing; MUST be false before export
+};
+</script>
+<!-- ═══════════════════════════════════════════════════ -->
+
+<style>
+    .canvas { width: 820px; height: 462px; }
+    /* Desktop shows ~820×312 center; mobile shows ~640×360 center.
+       Everything important lives in the central 640×312 that survives both. */
+    .content { gap: 12px; padding: 75px 90px; }
+    .wordmark { font-size: 72px; color: var(--cream); text-shadow: 0 2px 20px rgba(0,0,0,0.4); }
+    .filigree { color: var(--cream); }
+    .subline { font-size: 20px; color: var(--cream); opacity: 0.92; }
+    .detail { font-size: 15px; font-weight: 300; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cream); opacity: 0.75; margin-top: 4px; }
+    .guide-safe { left: 90px; right: 90px; top: 75px; bottom: 75px; }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+    <div class="photo-layer"></div>
+    <div class="overlay"></div>
+
+    <div class="content">
+        <div class="wordmark">The Café</div>
+        <div class="filigree"><span class="gem"></span></div>
+        <div class="subline" id="tagline"></div>
+        <div class="detail" id="detail"></div>
+    </div>
+
+    <div class="guide guide-safe" title="640×312 zone that survives desktop + mobile crops"></div>
+</div>
+
+<script>
+    document.getElementById('tagline').textContent = CONFIG.tagline;
+    document.getElementById('detail').textContent  = CONFIG.detail;
+    if (CONFIG.photo) document.querySelector('.photo-layer').style.setProperty('--photo', 'url("' + CONFIG.photo + '")');
+    if (CONFIG.showGuides) document.body.classList.add('show-guides');
+</script>
+</body>
+</html>

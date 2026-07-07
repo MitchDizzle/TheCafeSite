@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Weekly Menu — 1080×1350</title>
+<link rel="stylesheet" href="social.css">
+
+<!-- ══════════════ EDIT ONLY THIS BLOCK ══════════════
+     Automation target: a script can rewrite CONFIG and export
+     (see CafeWork TASKS P3-5). -->
+<script>
+const CONFIG = {
+    weekTitle:  "This Week's Lunch",
+    dateRange:  "July 7 – July 11",
+    items: [
+        { day: "Monday",    dish: "Placeholder dish — swap me" },
+        { day: "Tuesday",   dish: "Placeholder dish — swap me" },
+        { day: "Wednesday", dish: "Placeholder dish — swap me" },
+        { day: "Thursday",  dish: "Placeholder dish — swap me" },
+        { day: "Friday",    dish: "Placeholder dish — swap me" }
+    ],
+    footer:     "The Café · Leavenworth, KS · (913) 680-1300",
+    showGuides: false
+};
+</script>
+<!-- ═══════════════════════════════════════════════════ -->
+
+<style>
+    .canvas { width: 1080px; height: 1350px; justify-content: flex-start; }
+    /* Text-forward layout on cream — no photo needed, survives any crop
+       because content is centered with generous margins. */
+    .head-band {
+        width: 100%;
+        background: var(--firebrick);
+        color: var(--cream);
+        padding: 130px 80px 48px; /* top padding keeps title inside crop-safe square */
+        display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .head-band .wordmark { font-size: 52px; }
+    .head-band .title { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 88px; line-height: 1.05; }
+    .head-band .dates { font-size: 26px; font-weight: 300; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.85; }
+    .menu {
+        list-style: none;
+        width: 100%;
+        padding: 44px 110px;
+        display: flex; flex-direction: column;
+    }
+    .menu li {
+        display: flex; align-items: baseline; gap: 28px;
+        padding: 26px 0;
+        border-bottom: 2px solid rgba(44, 24, 16, 0.12);
+        text-align: left;
+    }
+    .menu li:last-child { border-bottom: none; }
+    .menu .day {
+        font-family: 'Playfair Display', serif; font-weight: 700;
+        font-size: 38px; color: var(--firebrick);
+        width: 250px; flex-shrink: 0;
+    }
+    .menu .dish { font-size: 34px; font-weight: 300; line-height: 1.35; }
+    .strip { height: 110px; font-size: 28px; }
+    .guide-safe { left: 0; right: 0; top: 135px; bottom: 135px; }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+    <div class="head-band">
+        <div class="wordmark">The Café</div>
+        <div class="title" id="week-title"></div>
+        <div class="dates" id="date-range"></div>
+    </div>
+
+    <ul class="menu" id="menu"></ul>
+
+    <div class="strip" id="footer"></div>
+    <div class="guide guide-safe"></div>
+</div>
+
+<script>
+    document.getElementById('week-title').textContent = CONFIG.weekTitle;
+    document.getElementById('date-range').textContent = CONFIG.dateRange;
+    document.getElementById('footer').textContent     = CONFIG.footer;
+    var menu = document.getElementById('menu');
+    CONFIG.items.forEach(function (it) {
+        var li = document.createElement('li');
+        var day = document.createElement('span');  day.className = 'day';  day.textContent = it.day;
+        var dish = document.createElement('span'); dish.className = 'dish'; dish.textContent = it.dish;
+        li.appendChild(day); li.appendChild(dish);
+        menu.appendChild(li);
+    });
+    if (CONFIG.showGuides) document.body.classList.add('show-guides');
+</script>
+</body>
+</html>

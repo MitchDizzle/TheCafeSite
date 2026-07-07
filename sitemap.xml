@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Staging URLs — swap host for the production domain at launch -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://mtch.tech/thecafe/index.html</loc></url>
+  <url><loc>https://mtch.tech/thecafe/about.html</loc></url>
+  <url><loc>https://mtch.tech/thecafe/catering.html</loc></url>
+  <url><loc>https://mtch.tech/thecafe/team.html</loc></url>
+  <url><loc>https://mtch.tech/thecafe/gallery.html</loc></url>
+  <url><loc>https://mtch.tech/thecafe/contact.html</loc></url>
+  <url><loc>https://mtch.tech/thecafe/privacy.html</loc></url>
+</urlset>

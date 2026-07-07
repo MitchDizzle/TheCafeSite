@@ -1,0 +1,131 @@
+/* ============================================================
+   The Cafe — Social Template Shared Styles
+   Templates are fixed-size canvases screenshotted to PNG.
+   Brand: cream/firebrick, Playfair Display + Lato (see repo
+   "The Cafe Website.md"). Keep text inside each template's
+   safe zone — Facebook crops edges in feed/thumbnail views.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --cream:          #FAF7F2;
+    --firebrick:      #B22222;
+    --firebrick-dark: #8B1A1A;
+    --text-dark:      #2C1810;
+    --overlay:        rgba(18, 8, 4, 0.52);
+}
+
+body {
+    font-family: 'Lato', sans-serif;
+    background: #444; /* offcuts around canvas when viewed in a browser */
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+}
+
+/* Fixed-size canvas — each template sets its own width/height */
+.canvas {
+    position: relative;
+    overflow: hidden;
+    background: var(--cream);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Photo layer: set --photo in the template config to use a real image */
+.photo-layer {
+    position: absolute;
+    inset: 0;
+    background-image: var(--photo, linear-gradient(135deg, #8B4513 0%, #A0522D 40%, #CD853F 100%));
+    background-size: cover;
+    background-position: center;
+}
+
+.overlay { position: absolute; inset: 0; background: var(--overlay); }
+
+.content { position: relative; display: flex; flex-direction: column; align-items: center; }
+
+/* Type */
+.wordmark {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+}
+
+.eyebrow {
+    font-weight: 300;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+}
+
+.headline {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.subline { font-weight: 300; line-height: 1.5; }
+
+/* Filigree divider: line — diamond — line */
+.filigree {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.filigree::before, .filigree::after {
+    content: '';
+    display: block;
+    width: 90px;
+    height: 2px;
+    background: currentColor;
+    opacity: 0.85;
+}
+.filigree .gem {
+    width: 10px;
+    height: 10px;
+    background: currentColor;
+    transform: rotate(45deg);
+}
+
+/* CTA chip */
+.cta {
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--firebrick);
+    color: var(--cream);
+    border-radius: 3px;
+    display: inline-block;
+}
+
+/* Footer strip pinned to canvas bottom (keep inside safe zone!) */
+.strip {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    background: var(--text-dark);
+    color: var(--cream);
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75em;
+}
+
+/* Safe-zone guides — set showGuides: true in a template's config
+   while designing; ALWAYS false before export */
+.guide {
+    position: absolute;
+    border: 2px dashed rgba(0, 200, 255, 0.85);
+    pointer-events: none;
+    display: none;
+}
+body.show-guides .guide { display: block; }

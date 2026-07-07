@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Profile Pic — 720×720</title>
+<link rel="stylesheet" href="social.css">
+
+<!-- ══════════════ EDIT ONLY THIS BLOCK ══════════════ -->
+<script>
+const CONFIG = {
+    line1:      "The",
+    line2:      "Café",
+    since:      "Leavenworth · Est. 2005",
+    showGuides: false   // true shows the circle crop; MUST be false before export
+};
+</script>
+<!-- ═══════════════════════════════════════════════════ -->
+
+<style>
+    /* Renders as a small circle in feed — wordmark only, high contrast,
+       everything inside the center ~Ø600 circle. */
+    .canvas { width: 720px; height: 720px; background: var(--firebrick); }
+    .content { gap: 0; }
+    .l1 { font-family: 'Playfair Display', serif; font-style: italic; font-size: 64px; color: var(--cream); opacity: 0.9; }
+    .l2 { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 190px; line-height: 1; color: var(--cream); margin-top: -10px; }
+    .since { font-size: 22px; font-weight: 300; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cream); opacity: 0.75; margin-top: 28px; }
+    .filigree { color: var(--cream); margin-top: 24px; }
+    .filigree::before, .filigree::after { width: 60px; }
+    .guide-circle { left: 60px; right: 60px; top: 60px; bottom: 60px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+    <div class="content">
+        <div class="l1" id="line1"></div>
+        <div class="l2" id="line2"></div>
+        <div class="filigree"><span class="gem"></span></div>
+        <div class="since" id="since"></div>
+    </div>
+    <div class="guide guide-circle" title="circle crop preview"></div>
+</div>
+
+<script>
+    document.getElementById('line1').textContent = CONFIG.line1;
+    document.getElementById('line2').textContent = CONFIG.line2;
+    document.getElementById('since').textContent = CONFIG.since;
+    if (CONFIG.showGuides) document.body.classList.add('show-guides');
+</script>
+</body>
+</html>
