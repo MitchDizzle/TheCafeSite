@@ -4,7 +4,7 @@
     {
       "name": "cafe-static",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8748"],
+      "runtimeArgs": ["-m", "http.server", "8748", "-d", "site"],
       "port": 8748
     }
   ]

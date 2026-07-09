@@ -50,22 +50,28 @@ Static HTML/CSS/JS website for **The Cafe**, a catering-only and meals-on-wheels
 
 ```
 thecafe/
-├── index.html              # Hero/landing — gateway page
-├── about.html              # About + Services + What to Expect (scrollable)
-├── team.html               # Meet the Team cards
-├── gallery.html            # Photo grid (lazy loaded)
-├── contact.html            # Booking form + contact info + FAQ
-├── css/
-│   └── style.css           # Shared styles for inner pages
-├── js/
-│   └── main.js             # Shared JS for inner pages (nav loader, scroll fx)
-├── components/
-│   ├── nav.html            # Shared nav fragment (loaded via fetch)
-│   └── footer.html         # Shared footer fragment
-└── assets/
-    ├── slides/             # Hero slideshow (slide1.jpg – slide4.jpg)
-    │   └── slide1.jpg      # Slide 1: load eagerly. Slides 2–4: lazy loaded.
-    └── gallery/            # Gallery photos
+├── site/                   # ← everything deployed to lvcafetogo.com; upload this folder only
+│   ├── index.html          # Hero/landing — gateway page
+│   ├── about.html          # About + Services + What to Expect (scrollable)
+│   ├── team.html           # Meet the Team cards
+│   ├── gallery.html        # Photo grid (lazy loaded)
+│   ├── catering.html       # Packages + booking form
+│   ├── contact.html        # Contact info + newsletter + FAQ
+│   ├── privacy.html        # Privacy policy
+│   ├── favicon.svg / robots.txt / sitemap.xml
+│   ├── css/
+│   │   └── style.css       # Shared styles for inner pages
+│   ├── js/
+│   │   └── main.js         # Shared JS for inner pages (nav, scroll fx, Formspree)
+│   ├── components/
+│   │   ├── nav.html        # Reference nav fragment (pages inline their own copy)
+│   │   └── footer.html     # Reference footer fragment
+│   └── assets/
+│       ├── slides/         # Hero slideshow (slide1.jpg – slide4.jpg)
+│       └── gallery/        # Gallery photos
+├── social/                 # Social media templates (not deployed)
+├── FrontBanner/            # Door signage (not deployed)
+└── archive/                # Old site snapshots (not deployed)
 ```
 
 ---
