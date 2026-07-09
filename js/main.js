@@ -60,6 +60,60 @@
         footer.classList.add('is-visible');
     }
 
+    /* ── Formspree forms: submit in-page, show confirmation ─── */
+
+    document.querySelectorAll('form[action*="formspree.io"]').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (!form.reportValidity()) return;
+
+            var button = form.querySelector('button[type="submit"]');
+            var status = form.querySelector('.form-status');
+            if (!status) {
+                status = document.createElement('p');
+                status.className = 'form-status';
+                status.setAttribute('role', 'status');
+                status.setAttribute('tabindex', '-1');
+                form.appendChild(status);
+            }
+            status.hidden = true;
+            status.classList.remove('form-status--error');
+
+            var buttonText = button ? button.textContent : '';
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Sending…';
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'Accept': 'application/json' }
+            }).then(function (response) {
+                if (!response.ok) throw new Error('Formspree returned ' + response.status);
+
+                form.querySelectorAll('.form-grid').forEach(function (el) {
+                    el.hidden = true;
+                });
+                status.textContent = form.getAttribute('data-success') ||
+                    'Thank you! Your message is on its way.';
+                status.hidden = false;
+                status.focus();
+            }).catch(function () {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = buttonText;
+                }
+                status.classList.add('form-status--error');
+                status.textContent = 'Sorry — something went wrong and your message was not sent. ' +
+                    'Please try again in a moment, or call us at (913) 680-1300.';
+                status.hidden = false;
+                status.focus();
+            });
+        });
+    });
+
     /* ── Scroll-fade sections ───────────────────────────────── */
 
     if (window.IntersectionObserver) {

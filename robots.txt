@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mtch.tech/thecafe/sitemap.xml
+Sitemap: https://lvcafetogo.com/sitemap.xml

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cafe-static",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8748"],
+      "port": 8748
+    }
+  ]
+}

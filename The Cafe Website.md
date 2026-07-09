@@ -1,7 +1,7 @@
 # The Cafe — Website Project
 
 ## Overview
-Static HTML/CSS/JS website for **The Cafe**, a catering-only and meals-on-wheels prep business (no sit-down dining). Staged at `mtch.tech/thecafe`, eventually moved to its own domain.
+Static HTML/CSS/JS website for **The Cafe**, a catering-only and meals-on-wheels prep business (no sit-down dining). Live at **https://lvcafetogo.com** (previously staged at `mtch.tech/thecafe`).
 
 ---
 
@@ -11,7 +11,7 @@ Static HTML/CSS/JS website for **The Cafe**, a catering-only and meals-on-wheels
 - **Contact form** via [Formspree](https://formspree.io) (free tier, domain-restricted, safe to expose endpoint in HTML)
 - **Fonts** via Google Fonts CDN — Playfair Display (headings) + Lato (body)
 - **Version control** — public GitHub repo (safe: no secrets, all content is intentionally public)
-- **Hosting** — `mtch.tech/thecafe` subfolder for staging; cheap shared host + domain for production
+- **Hosting** — live at `lvcafetogo.com`; `mtch.tech/thecafe` subfolder available as staging
 
 > **NFOServers note:** Uses custom control panel, not cPanel. SSI availability unknown — use JS fetch approach for shared components.
 
@@ -78,10 +78,11 @@ thecafe/
 | `about.html` | Our Story → What We Offer → What to Expect | 3 scroll sections with chevron indicators |
 | `team.html` | Staff cards (photo + name + role + bio) | Requires team interviews |
 | `gallery.html` | Masonry/grid photo layout | All images lazy loaded |
-| `contact.html` | Booking form → Contact info → FAQ | Formspree for form submission |
+| `catering.html` | Packages → Booking form | Full booking form, Formspree (`f/xzdlnpnw`) |
+| `contact.html` | Catering pointer → Contact info → Newsletter → FAQ | Newsletter form, Formspree (`f/mdarqnql`) |
 
 ### Hero button mapping
-- **"Book a Catering"** → `contact.html`
+- **"Book a Catering"** → `catering.html#inquiry`
 - **"Learn More"** → `about.html`
 
 ---

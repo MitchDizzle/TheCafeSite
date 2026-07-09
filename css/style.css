@@ -247,6 +247,18 @@ p { max-width: 65ch; }
     padding-top: var(--nav-height);
 }
 
+/* ── Under-construction notice ────────────────────────────── */
+
+.construction-banner {
+    background: var(--firebrick);
+    color: var(--cream);
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    padding: 0.55rem 1.5rem;
+}
+
 /* ── Footer ───────────────────────────────────────────────── */
 
 .footer {
@@ -324,6 +336,28 @@ p { max-width: 65ch; }
 @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50%       { transform: translateY(6px); }
+}
+
+/* ── Form status messages (Formspree submit feedback) ─────── */
+
+.form-status {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    font-size: 1.05rem;
+    color: var(--text-dark);
+    background: rgba(178, 34, 34, 0.06);
+    border-left: 3px solid var(--firebrick);
+    border-radius: 4px;
+}
+
+.form-status:focus {
+    outline: none;
+}
+
+.form-status--error {
+    font-weight: 400;
+    color: var(--firebrick-dark);
+    background: rgba(178, 34, 34, 0.1);
 }
 
 /* ── Accessibility ────────────────────────────────────────── */

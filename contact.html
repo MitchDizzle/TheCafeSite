@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Book a catering or get in touch with The Café. Fill out our inquiry form and we'll get back to you promptly.">
+    <meta name="description" content="Get in touch with The Café in Leavenworth, KS — phone, email, and location, plus our weekly menu newsletter signup.">
     <title>Contact | The Café</title>
 
     <meta property="og:type" content="website">
     <meta property="og:title" content="Contact | The Café">
-    <meta property="og:description" content="Book a catering or get in touch with The Café in Leavenworth, KS — inquiry form, contact info, and newsletter signup.">
-    <meta property="og:url" content="https://mtch.tech/thecafe/contact.html">
+    <meta property="og:description" content="Get in touch with The Café in Leavenworth, KS — contact info, FAQ, and weekly menu newsletter signup.">
+    <meta property="og:url" content="https://lvcafetogo.com/contact.html">
+    <link rel="canonical" href="https://lvcafetogo.com/contact.html">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -172,125 +173,26 @@
                 <li><a href="catering.html">Catering</a></li>
                 <li><a href="team.html">Team</a></li>
                 <li><a href="gallery.html">Gallery</a></li>
-                <li><a href="contact.html" class="btn btn-primary">Book a Catering</a></li>
+                <li><a href="contact.html" class="btn btn-primary">Contact</a></li>
             </ul>
         </div>
     </nav>
+
+    <div class="construction-banner" role="note">
+        Pardon our crumbs — this website is still under construction. Some details may change.
+    </div>
 
     <main>
         <section class="section" aria-labelledby="contact-heading">
             <div class="container">
 
-                <!-- ── Booking Form ─────────────────────────── -->
-                <h1 id="contact-heading">Book a Catering</h1>
+                <!-- ── Heading + catering pointer ───────────── -->
+                <h1 id="contact-heading">Contact Us</h1>
                 <p style="margin-top: 0.75rem; max-width: 55ch;">
-                    Tell us about your event and we'll follow up with availability and a custom quote.
+                    Planning an event? Our booking form on the catering page has everything
+                    we need to get started on your quote.
                 </p>
-
-                <!-- TODO: replace YOUR_FORM_ID with Formspree endpoint once account is set up -->
-                <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" novalidate>
-
-                    <div class="form-grid">
-
-                        <!-- ── Contact ── -->
-                        <div class="form-group">
-                            <label for="name">Name <span style="color:var(--firebrick)">*</span></label>
-                            <input type="text" id="name" name="name" autocomplete="name" required placeholder="Jane Smith">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="org">Company / Organization</label>
-                            <input type="text" id="org" name="organization" autocomplete="organization" placeholder="Optional">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="email">Email <span style="color:var(--firebrick)">*</span></label>
-                            <input type="email" id="email" name="email" autocomplete="email" required placeholder="jane@example.com">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="phone">Phone <span style="color:var(--firebrick)">*</span></label>
-                            <input type="tel" id="phone" name="phone" autocomplete="tel" required placeholder="(555) 000-0000">
-                        </div>
-
-                        <!-- ── Event Details ── -->
-                        <h3 class="form-section-heading">Event Details</h3>
-
-                        <div class="form-group">
-                            <label for="event-name">Name of Event</label>
-                            <input type="text" id="event-name" name="event_name" placeholder="Birthday party, corporate lunch…">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="event-location">Event Location</label>
-                            <input type="text" id="event-location" name="event_location" placeholder="Venue or address">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="date">Event Date <span style="color:var(--firebrick)">*</span></label>
-                            <input type="date" id="date" name="event_date" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="guests">Guest Count <span style="color:var(--firebrick)">*</span></label>
-                            <input type="number" id="guests" name="guest_count" min="15" required placeholder="Minimum 15">
-                            <span class="form-hint">Minimum 15 guests</span>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="start-time">Start Time</label>
-                            <input type="time" id="start-time" name="start_time">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="end-time">End Time</label>
-                            <input type="time" id="end-time" name="end_time">
-                        </div>
-
-                        <!-- ── Service Preferences ── -->
-                        <h3 class="form-section-heading">Service Preferences</h3>
-
-                        <div class="form-group">
-                            <label for="service-style">Style of Service</label>
-                            <select id="service-style" name="service_style">
-                                <option value="">— Select one —</option>
-                                <option value="Buffet">Buffet</option>
-                                <option value="Sit Down">Sit Down Dinner</option>
-                                <option value="Drop Off">Drop Off</option>
-                                <option value="Appetizer">Appetizer / Reception</option>
-                                <option value="Stations">Stations</option>
-                                <option value="Unsure">Not sure yet</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="budget">Budget (optional)</label>
-                            <input type="text" id="budget" name="budget" placeholder="e.g. $500, open to quote">
-                        </div>
-
-                        <div class="form-group form-group--full">
-                            <label>Additional Items Needed</label>
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" name="extras" value="Table Linen"> Table Linen</label>
-                                <label><input type="checkbox" name="extras" value="China"> China</label>
-                                <label><input type="checkbox" name="extras" value="Servers"> Servers for the meal</label>
-                                <label><input type="checkbox" name="extras" value="Plasticware"> Plasticware</label>
-                                <label><input type="checkbox" name="extras" value="None"> None / Food only</label>
-                            </div>
-                        </div>
-
-                        <div class="form-group form-group--full">
-                            <label for="message">Additional Requests or Requirements</label>
-                            <textarea id="message" name="message" placeholder="Food allergies, dietary restrictions, anything else we should know…"></textarea>
-                        </div>
-
-                        <div class="form-group form-group--full form-submit">
-                            <button type="submit" class="btn btn-primary">Send Inquiry</button>
-                        </div>
-
-                    </div>
-
-                </form>
+                <a href="catering.html#inquiry" class="btn btn-primary" style="margin-top: 1.25rem; display: inline-block;">Book a Catering</a>
 
                 <!-- ── Contact Info ─────────────────────────── -->
                 <div class="contact-info">
@@ -311,12 +213,12 @@
                         from the kitchen, straight to your inbox.
                     </p>
 
-                    <!-- TODO: replace YOUR_NEWSLETTER_FORM_ID with a dedicated Formspree endpoint;
-                         swaps to our own backend in Phase 1 (see CafeWork TASKS P1-7) -->
-                    <form action="https://formspree.io/f/YOUR_NEWSLETTER_FORM_ID" method="POST">
+                    <!-- Formspree for now; swaps to our own backend in Phase 1 (see CafeWork TASKS P1-7) -->
+                    <form action="https://formspree.io/f/mdarqnql" method="POST"
+                          data-success="You're on the list! Watch your inbox for weekly menus and news from the kitchen.">
                         <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
                                style="position:absolute; left:-9999px;" aria-hidden="true">
-                        <input type="hidden" name="_subject" value="Newsletter signup">
+                        <input type="hidden" name="_subject" value="Newsletter signup — website form">
 
                         <div class="form-grid">
                             <div class="form-group">
