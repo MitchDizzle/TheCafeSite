@@ -84,7 +84,7 @@ thecafe/
 | `about.html` | Our Story → What We Offer → What to Expect | 3 scroll sections with chevron indicators |
 | `team.html` | Staff cards (photo + name + role + bio) | Requires team interviews |
 | `gallery.html` | Masonry/grid photo layout | All images lazy loaded |
-| `catering.html` | Packages → Booking form | Full booking form, Formspree (`f/xzdlnpnw`) |
+| `catering.html` | Booking form only (packages/menu return as their own page once real menu items exist) | Full booking form, Formspree (`f/xzdlnpnw`) |
 | `contact.html` | Catering pointer → Contact info → Newsletter → FAQ | Newsletter form, Formspree (`f/mdarqnql`) |
 
 ### Hero button mapping

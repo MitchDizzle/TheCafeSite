@@ -11,7 +11,7 @@ Project planning, decisions, and the task backlog live OUTSIDE this public repo 
 - New pages: copy the structure of `site/about.html`. Nav and footer are inlined in each page (not fetched); `site/components/nav.html` and `site/components/footer.html` are the reference copies — keep them in sync when the nav/footer changes.
 - `site/index.html` is a self-contained hero/gateway page (own inline CSS, no nav).
 - Images lazy-loaded; respect `prefers-reduced-motion`; keep pages accessible (this audience skews older).
-- Live site: `https://lvcafetogo.com` (canonical/og:url/sitemap use this host). All asset and link paths are relative, so the site also works from a subfolder (old staging: `mtch.tech/thecafe`).
+- Live site: `https://lvcafetogo.com` (canonical/og:url/sitemap use this host). Internal links are extensionless (`href="about"`, not `about.html`) — `site/.htaccess` rewrites them to the real files, so pages only render correctly through a server with those rules, not from `file://`. `404.html` uses root-absolute links since it renders at arbitrary paths.
 - Social templates live in `social/` (fixed-size HTML → PNG screenshots); door signage precedent in `FrontBanner/`.
 
 ## Safety

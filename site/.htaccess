@@ -1,0 +1,64 @@
+# ============================================================
+# The Cafe — lvcafetogo.com
+# ============================================================
+
+AddDefaultCharset UTF-8
+
+# No directory listings
+Options -Indexes
+
+# ── Canonical URLs: force https + apex domain ──────────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # www.lvcafetogo.com → lvcafetogo.com
+    RewriteCond %{HTTP_HOST} ^www\.lvcafetogo\.com$ [NC]
+    RewriteRule ^ https://lvcafetogo.com%{REQUEST_URI} [R=301,L]
+
+    # http → https
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ https://lvcafetogo.com%{REQUEST_URI} [R=301,L]
+
+    # /index.html → / (matches canonical + og:url)
+    RewriteCond %{THE_REQUEST} \s/index\.html[\s?] [NC]
+    RewriteRule ^index\.html$ / [R=301,L]
+
+    # /page.html → /page (drop the extension from visible URLs)
+    RewriteCond %{THE_REQUEST} \s/([^\s?]+)\.html[\s?] [NC]
+    RewriteRule ^ /%1 [R=301,L]
+
+    # serve /page from page.html internally
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.html -f
+    RewriteRule ^(.+?)/?$ $1.html [L]
+</IfModule>
+
+# ── Custom error page ───────────────────────────────────────
+ErrorDocument 404 /404.html
+
+# ── Compression ─────────────────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript text/javascript image/svg+xml application/xml application/json
+</IfModule>
+
+# ── Browser caching ─────────────────────────────────────────
+# HTML stays fresh (site still changing); assets cache longer.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/webp "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+</IfModule>
+
+# ── Security headers ────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # HSTS only once the request is already https (180 days)
+    Header always set Strict-Transport-Security "max-age=15552000" env=HTTPS
+</IfModule>

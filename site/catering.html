@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Catering packages from The Café in Leavenworth, KS — office lunches, meetings, and events. Browse our bundles and book online or call to order.">
+    <meta name="description" content="Book catering from The Café in Leavenworth, KS — office lunches, meetings, and events. Send a booking request online or call to order.">
     <title>Catering | The Café</title>
 
     <meta property="og:type" content="website">
     <meta property="og:title" content="Catering | The Café">
-    <meta property="og:description" content="Catering packages for offices, meetings, and events in Leavenworth, KS. Browse bundles and book online.">
-    <meta property="og:url" content="https://lvcafetogo.com/catering.html">
-    <link rel="canonical" href="https://lvcafetogo.com/catering.html">
+    <meta property="og:description" content="Catering for offices, meetings, and events in Leavenworth, KS. Book online or call to order.">
+    <meta property="og:url" content="https://lvcafetogo.com/catering">
+    <link rel="canonical" href="https://lvcafetogo.com/catering">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,88 +19,6 @@
     <link rel="stylesheet" href="css/style.css">
 
     <style>
-        /* Bundle cards */
-        .bundle-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-            gap: 2rem;
-            margin-top: 2.5rem;
-        }
-
-        .bundle-card {
-            background: #fff;
-            border-radius: 4px;
-            overflow: hidden;
-            box-shadow: 0 2px 12px rgba(44, 24, 16, 0.07);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .bundle-card__photo {
-            width: 100%;
-            aspect-ratio: 16 / 10;
-            background: linear-gradient(135deg, #8B4513 0%, #A0522D 45%, #CD853F 100%);
-        }
-
-        .bundle-card__body {
-            padding: 1.25rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            flex: 1;
-        }
-
-        .bundle-card__name {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.15rem;
-        }
-
-        .bundle-card__serves {
-            font-size: 0.78rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--firebrick);
-        }
-
-        .bundle-card__desc {
-            font-size: 0.9rem;
-            line-height: 1.6;
-            color: rgba(44, 24, 16, 0.75);
-            flex: 1;
-        }
-
-        .bundle-card__price {
-            font-size: 0.85rem;
-            font-weight: 400;
-            padding-top: 0.6rem;
-            border-top: 1px solid rgba(44, 24, 16, 0.1);
-        }
-
-        /* How it works strip */
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-            list-style: none;
-            counter-reset: step;
-        }
-
-        .steps li {
-            counter-increment: step;
-            font-size: 0.92rem;
-            line-height: 1.55;
-        }
-
-        .steps li::before {
-            content: counter(step);
-            display: block;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.6rem;
-            color: var(--firebrick);
-            margin-bottom: 0.35rem;
-        }
-
         .call-strip {
             margin-top: 2.25rem;
             background: #fff;
@@ -209,16 +127,15 @@
 
     <nav class="nav" aria-label="Site navigation">
         <div class="nav__inner">
-            <a href="index.html" class="nav__brand">The Café</a>
+            <a href="./" class="nav__brand">The Café</a>
             <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
                 <span></span><span></span><span></span>
             </button>
             <ul class="nav__links" id="nav-links" role="list">
-                <li><a href="about.html">About</a></li>
-                <li><a href="catering.html">Catering</a></li>
-                <li><a href="team.html">Team</a></li>
-                <li><a href="gallery.html">Gallery</a></li>
-                <li><a href="contact.html" class="btn btn-primary">Contact</a></li>
+                <li><a href="about">About</a></li>
+                <li><a href="catering">Catering</a></li>
+                <li><a href="gallery">Gallery</a></li>
+                <li><a href="contact" class="btn btn-primary">Contact</a></li>
             </ul>
         </div>
     </nav>
@@ -229,97 +146,21 @@
 
     <main>
 
-        <!-- ── Section 1: Intro + Bundles ───────────────────── -->
-        <section class="section" id="bundles" aria-labelledby="bundles-heading">
+        <!-- Packages/menu section removed for now — becomes its own page once
+             real menu items exist (old bundle markup is in git history). -->
+
+        <!-- ── Booking Form ─────────────────────────────────── -->
+        <section class="section" id="inquiry" aria-labelledby="inquiry-heading">
             <div class="container">
-                <h1 id="bundles-heading">Catering Packages</h1>
-                <p style="margin-top: 0.75rem; max-width: 60ch;">
-                    Feeding a meeting, an office, or a celebration? Our catering bundles take the
-                    guesswork out — pick a package, tell us when, and we handle the rest. Every
-                    package is prepared from scratch in our Leavenworth kitchen.
+                <h1 id="inquiry-heading">Book a Catering</h1>
+                <p style="margin-top: 0.75rem; max-width: 55ch;">
+                    Tell us about your event and we'll follow up with availability and a custom quote.
                 </p>
-
-                <!-- TODO: replace placeholder bundles with real packages from client
-                     (names, contents, headcounts, prices, lead times). Photos replace
-                     the gradient placeholders. -->
-                <div class="bundle-grid">
-
-                    <article class="bundle-card">
-                        <div class="bundle-card__photo" role="img" aria-label="Photo coming soon"></div>
-                        <div class="bundle-card__body">
-                            <h2 class="bundle-card__name">Office Lunch Bundle</h2>
-                            <p class="bundle-card__serves">Feeds 10–12</p>
-                            <p class="bundle-card__desc">Sandwich or entrée trays with two sides,
-                                dessert, and everything needed to serve — dropped off ready to eat.</p>
-                            <p class="bundle-card__price">Call for pricing</p>
-                        </div>
-                    </article>
-
-                    <article class="bundle-card">
-                        <div class="bundle-card__photo" role="img" aria-label="Photo coming soon"></div>
-                        <div class="bundle-card__body">
-                            <h2 class="bundle-card__name">Meeting Tray</h2>
-                            <p class="bundle-card__serves">Feeds 6–8</p>
-                            <p class="bundle-card__desc">A lighter spread for smaller groups —
-                                perfect for morning meetings or working lunches.</p>
-                            <p class="bundle-card__price">Call for pricing</p>
-                        </div>
-                    </article>
-
-                    <article class="bundle-card">
-                        <div class="bundle-card__photo" role="img" aria-label="Photo coming soon"></div>
-                        <div class="bundle-card__body">
-                            <h2 class="bundle-card__name">Event Buffet Package</h2>
-                            <p class="bundle-card__serves">Feeds 15+</p>
-                            <p class="bundle-card__desc">Full buffet setup and service for larger
-                                gatherings — entrées, sides, and dessert, with staff available on request.</p>
-                            <p class="bundle-card__price">Call for pricing</p>
-                        </div>
-                    </article>
-
-                </div>
-            </div>
-
-            <div class="chevron-down" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-            </div>
-        </section>
-
-        <!-- ── Section 2: How Ordering Works ────────────────── -->
-        <section class="section section--alt" id="how-it-works" aria-labelledby="how-heading">
-            <div class="container">
-                <h2 id="how-heading">How Ordering Works</h2>
-                <ol class="steps">
-                    <li><strong>Pick a package</strong> — or tell us what you have in mind; custom orders are welcome.</li>
-                    <li><strong>Call or send the form</strong> — we'll talk through the date, headcount, and any dietary needs.</li>
-                    <li><strong>We confirm the details</strong> — you'll get a firm quote and a confirmed date.</li>
-                    <li><strong>Enjoy, then settle up</strong> — pay by check at delivery or pickup. No online payment needed.</li>
-                </ol>
 
                 <div class="call-strip">
                     Fastest way to book: call us at <a href="tel:+19136801300">(913) 680-1300</a>.
                     <!-- TODO: confirm phone number + lead time with client -->
                 </div>
-            </div>
-
-            <div class="chevron-down" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-            </div>
-        </section>
-
-        <!-- ── Section 3: Inquiry Form ──────────────────────── -->
-        <section class="section" id="inquiry" aria-labelledby="inquiry-heading">
-            <div class="container">
-                <h2 id="inquiry-heading">Book a Catering</h2>
-                <p style="margin-top: 0.75rem; max-width: 55ch;">
-                    Tell us about your event and we'll follow up with availability and a custom quote.
-                </p>
 
                 <form action="https://formspree.io/f/xzdlnpnw" method="POST" novalidate
                       data-success="Thank you! Your booking request is on its way — we'll follow up with availability and a custom quote.">
@@ -427,7 +268,7 @@
                             <button type="submit" class="btn btn-primary">Send Inquiry</button>
                             <p class="form-privacy" style="margin-top:0.6rem;">
                                 We only use your details to respond to this inquiry.
-                                See our <a href="privacy.html">privacy policy</a>.
+                                See our <a href="privacy">privacy policy</a>.
                             </p>
                         </div>
 
@@ -442,12 +283,12 @@
         <div class="footer__inner">
             <p class="footer__brand">The Café</p>
             <ul class="footer__links" role="list">
-                <li><a href="about.html">About</a></li>
-                <li><a href="catering.html">Catering</a></li>
-                <li><a href="team.html">Team</a></li>
-                <li><a href="gallery.html">Gallery</a></li>
-                <li><a href="contact.html">Contact</a></li>
-                <li><a href="privacy.html">Privacy</a></li>
+                <li><a href="about">About</a></li>
+                <li><a href="catering">Catering</a></li>
+                <li><a href="team">Team</a></li>
+                <li><a href="gallery">Gallery</a></li>
+                <li><a href="contact">Contact</a></li>
+                <li><a href="privacy">Privacy</a></li>
             </ul>
             <p class="footer__copy">&copy; <span class="footer-year"></span> The Café. All rights reserved.</p>
         </div>

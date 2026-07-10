@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Page not found — The Café, Leavenworth, KS.">
+    <meta name="robots" content="noindex">
+    <title>Page Not Found | The Café</title>
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="page-body">
+
+    <nav class="nav" aria-label="Site navigation">
+        <div class="nav__inner">
+            <a href="/" class="nav__brand">The Café</a>
+            <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav__links" id="nav-links" role="list">
+                <li><a href="/about">About</a></li>
+                <li><a href="/catering">Catering</a></li>
+                <li><a href="/gallery">Gallery</a></li>
+                <li><a href="/contact" class="btn btn-primary">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="construction-banner" role="note">
+        Pardon our crumbs — this website is still under construction. Some details may change.
+    </div>
+
+    <main>
+        <section class="section" aria-labelledby="notfound-heading" style="text-align: center;">
+            <div class="container">
+                <h1 id="notfound-heading">Hmm, that page isn't on the menu.</h1>
+                <p style="margin-top: 1rem; max-width: 55ch; margin-inline: auto;">
+                    The page you're looking for may have moved or no longer exists.
+                    Try one of these instead:
+                </p>
+                <div style="margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: center;">
+                    <a href="/" class="btn btn-primary">Home</a>
+                    <a href="/catering" class="btn btn-primary">Catering</a>
+                    <a href="/contact" class="btn btn-primary">Contact</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer" aria-label="Site footer">
+        <div class="footer__inner">
+            <p class="footer__brand">The Café</p>
+            <ul class="footer__links" role="list">
+                <li><a href="/about">About</a></li>
+                <li><a href="/catering">Catering</a></li>
+                <li><a href="/team">Team</a></li>
+                <li><a href="/gallery">Gallery</a></li>
+                <li><a href="/contact">Contact</a></li>
+                <li><a href="/privacy">Privacy</a></li>
+            </ul>
+            <p class="footer__copy">&copy; <span class="footer-year"></span> The Café. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>

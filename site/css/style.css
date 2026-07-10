@@ -245,6 +245,14 @@ p { max-width: 65ch; }
 
 .page-body {
     padding-top: var(--nav-height);
+    /* fill the viewport so the footer never floats mid-screen on short pages */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.page-body main {
+    flex: 1 0 auto;
 }
 
 /* ── Under-construction notice ────────────────────────────── */
