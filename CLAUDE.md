@@ -3,7 +3,7 @@
 Static HTML/CSS/JS site for The Cafe (catering & meal prep, Leavenworth KS). **No build tools, no npm, no frameworks** — keep it that way.
 
 ## Planning & tasks
-Project planning, decisions, and the task backlog live OUTSIDE this public repo at `C:\Users\Mitch\Desktop\CafeWork\` — read `PLAN.md` there first, take tasks from `TASKS.md`. Never commit business/planning details, pricing strategy, or outreach scripts to this repo.
+Project planning, decisions, and the task backlog live OUTSIDE this public repo at `E:\GitHub\CafeWork\` (private repo) — read `PLAN.md` there first, take tasks from `TASKS.md`. Never commit business/planning details, pricing strategy, or outreach scripts to this repo.
 
 ## Conventions
 - Everything deployed to the live site lives under `site/` — upload that folder only. `social/`, `FrontBanner/`, `archive/`, and the `.md` docs stay out of deployment.
