@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>FB Post — 1080×1350</title>
+<title>FB Post Square — 1080×1080</title>
 <link rel="stylesheet" href="social.css">
 
 <!-- ══════════════ EDIT ONLY THIS BLOCK ══════════════ -->
@@ -19,18 +19,17 @@ const CONFIG = {
 <!-- ═══════════════════════════════════════════════════ -->
 
 <style>
-    .canvas { width: 1080px; height: 1350px; }
-    /* Safe zone: central 1080×1080 square — FB may crop toward square
-       in feed/thumbnails, so all text stays inside it (top/bottom 135px
-       margins are photo-bleed only), with 80px inner padding. */
-    .content { padding: 215px 80px; gap: 26px; }
+    .canvas { width: 1080px; height: 1080px; }
+    /* Square fallback / IG-ready — no crop margins to worry about,
+       just the 80px inner padding rule. */
+    .content { padding: 80px; gap: 26px; }
     .wordmark { font-size: 64px; color: var(--cream); }
     .eyebrow { font-size: 26px; color: var(--cream); opacity: 0.8; margin-top: 10px; }
-    .headline { font-size: 110px; color: var(--cream); text-shadow: 0 3px 32px rgba(0,0,0,0.45); max-width: 900px; }
+    .headline { font-size: 104px; color: var(--cream); text-shadow: 0 3px 32px rgba(0,0,0,0.45); max-width: 900px; }
     .subline { font-size: 36px; color: var(--cream); opacity: 0.9; max-width: 760px; }
     .filigree { color: var(--cream); margin: 6px 0; }
     .cta { font-size: 30px; padding: 24px 54px; margin-top: 22px; }
-    .guide-safe { left: 0; right: 0; top: 135px; bottom: 135px; }
+    .guide-safe { left: 80px; right: 80px; top: 80px; bottom: 80px; }
 </style>
 </head>
 <body>
@@ -48,7 +47,7 @@ const CONFIG = {
         <div class="cta" id="cta"></div>
     </div>
 
-    <div class="guide guide-safe" title="text-safe zone"></div>
+    <div class="guide guide-safe" title="80px padding safe zone"></div>
 </div>
 
 <script>

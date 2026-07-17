@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LinkedIn Logo — 400×400</title>
+<link rel="stylesheet" href="social.css">
+
+<!-- ══════════════ EDIT ONLY THIS BLOCK ══════════════ -->
+<script>
+const CONFIG = {
+    line1:      "The",
+    line2:      "Café",
+    since:      "Est. 2005",
+    showGuides: false   // true while designing; MUST be false before export
+};
+</script>
+<!-- ═══════════════════════════════════════════════════ -->
+
+<style>
+    /* LinkedIn shows the company logo as a SQUARE tile (not a circle),
+       often tiny (~48px in feed) — big wordmark, minimal detail. */
+    /* Headless Chrome won't open a window narrower than ~500px, so the
+       shared centered-body layout would push this 400px canvas off-frame
+       at export; pin it to the top-left instead. (place-items must be
+       reset too — Chrome applies box alignment even in block layout.) */
+    body { display: block; min-height: 0; place-items: start; }
+    .canvas { width: 400px; height: 400px; background: var(--firebrick); }
+    .content { gap: 0; }
+    .l1 { font-family: 'Playfair Display', serif; font-style: italic; font-size: 42px; color: var(--cream); opacity: 0.9; }
+    .l2 { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 120px; line-height: 1; color: var(--cream); margin-top: -8px; }
+    .since { font-size: 14px; font-weight: 300; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cream); opacity: 0.75; margin-top: 16px; }
+    .filigree { color: var(--cream); margin-top: 14px; }
+    .filigree::before, .filigree::after { width: 38px; }
+    .filigree .gem { width: 7px; height: 7px; }
+    .guide-safe { left: 20px; right: 20px; top: 20px; bottom: 20px; }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+    <div class="content">
+        <div class="l1" id="line1"></div>
+        <div class="l2" id="line2"></div>
+        <div class="filigree"><span class="gem"></span></div>
+        <div class="since" id="since"></div>
+    </div>
+    <div class="guide guide-safe" title="tile padding"></div>
+</div>
+
+<script>
+    document.getElementById('line1').textContent = CONFIG.line1;
+    document.getElementById('line2').textContent = CONFIG.line2;
+    document.getElementById('since').textContent = CONFIG.since;
+    if (CONFIG.showGuides) document.body.classList.add('show-guides');
+</script>
+</body>
+</html>

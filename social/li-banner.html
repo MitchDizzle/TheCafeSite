@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LinkedIn Banner — 1128×191</title>
+<link rel="stylesheet" href="social.css">
+
+<!-- ══════════════ EDIT ONLY THIS BLOCK ══════════════ -->
+<script>
+const CONFIG = {
+    tagline:    "Catering for Leavenworth Businesses",
+    detail:     "Office Lunches · Events · Meal Prep · (913) 547-9994",
+    photo:      "",     // e.g. "../site/assets/gallery/spread.jpg" — empty = placeholder gradient
+    showGuides: false   // true while designing; MUST be false before export
+};
+</script>
+<!-- ═══════════════════════════════════════════════════ -->
+
+<style>
+    /* Company cover: very short and wide. LinkedIn overlaps the round/square
+       logo tile over the banner's LOWER-LEFT on the page view — keep all
+       text right of the left ~260px and out of the bottom ~40px. */
+    .canvas { width: 1128px; height: 191px; }
+    .content { flex-direction: row; gap: 34px; padding: 30px 60px 40px 270px; align-items: center; }
+    .wordmark { font-size: 54px; color: var(--cream); text-shadow: 0 2px 16px rgba(0,0,0,0.4); white-space: nowrap; }
+    .divider-v { width: 2px; height: 74px; background: var(--cream); opacity: 0.6; }
+    .stack { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 8px; }
+    .subline { font-size: 24px; color: var(--cream); opacity: 0.95; }
+    .detail { font-size: 14px; font-weight: 300; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cream); opacity: 0.78; }
+    .guide-safe { left: 270px; right: 30px; top: 20px; bottom: 40px; }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+    <div class="photo-layer"></div>
+    <div class="overlay"></div>
+
+    <div class="content">
+        <div class="wordmark">The Café</div>
+        <div class="divider-v"></div>
+        <div class="stack">
+            <div class="subline" id="tagline"></div>
+            <div class="detail" id="detail"></div>
+        </div>
+    </div>
+
+    <div class="guide guide-safe" title="zone clear of the logo-tile overlap"></div>
+</div>
+
+<script>
+    document.getElementById('tagline').textContent = CONFIG.tagline;
+    document.getElementById('detail').textContent  = CONFIG.detail;
+    if (CONFIG.photo) document.querySelector('.photo-layer').style.setProperty('--photo', 'url("' + CONFIG.photo + '")');
+    if (CONFIG.showGuides) document.body.classList.add('show-guides');
+</script>
+</body>
+</html>

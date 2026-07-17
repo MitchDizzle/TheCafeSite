@@ -21,10 +21,14 @@ if (-not $browser) { throw "No Chrome or Edge found - install one or add its pat
 
 # template name -> canvas size (must match the .canvas size in each file)
 $sizes = [ordered]@{
-    "fb-post"     = "1080,1350"
-    "weekly-menu" = "1080,1350"
-    "cover"       = "820,462"
-    "profile-pic" = "720,720"
+    "fb-post"        = "1080,1350"
+    "fb-post-square" = "1080,1080"
+    "weekly-menu"    = "1080,1350"
+    "cover"          = "820,462"
+    "profile-pic"    = "720,720"
+    "li-logo"        = "400,400"
+    "li-banner"      = "1128,191"
+    "li-post"        = "1200,627"
 }
 
 $date = Get-Date -Format "yyyyMMdd"

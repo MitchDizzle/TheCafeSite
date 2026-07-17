@@ -107,7 +107,7 @@
                 }
                 status.classList.add('form-status--error');
                 status.textContent = 'Sorry — something went wrong and your message was not sent. ' +
-                    'Please try again in a moment, or call us at (913) 680-1300.';
+                    'Please try again in a moment, or call us at (913) 547-9994.';
                 status.hidden = false;
                 status.focus();
             });
