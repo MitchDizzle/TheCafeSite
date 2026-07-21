@@ -55,11 +55,14 @@
     <nav class="nav" aria-label="Site navigation">
         <div class="nav__inner">
             <a href="./" class="nav__brand">The Café</a>
+
             <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
-                <span></span><span></span><span></span>
+                <span></span>
+                <span></span>
+                <span></span>
             </button>
+
             <ul class="nav__links" id="nav-links" role="list">
-                <li><a href="about">About</a></li>
                 <li><a href="catering">Catering</a></li>
                 <li><a href="gallery">Gallery</a></li>
                 <li><a href="contact" class="btn btn-primary">Contact</a></li>
@@ -81,10 +84,19 @@
                 <!-- All images should use loading="lazy" -->
                 <div class="gallery-grid" role="list">
 
+                    <!-- Storefront during a break in the storm -->
+                    <div class="gallery-grid__item" role="listitem">
+                        <div class="gallery-placeholder" style="aspect-ratio: 16/9;">
+                            <img src="./assets/gallery/20260710_060333-1.webp"
+                                 alt="Storefront during a break in the storm before dawn"
+                                 loading="lazy"
+                                 style="object-position: center 30%;">
+                        </div>
+                    </div>
                     <!-- Kitchen front-on: trim ceiling/floor, center on tables + fridges -->
                     <div class="gallery-grid__item" role="listitem">
                         <div class="gallery-placeholder" style="aspect-ratio: 16/9;">
-                            <img src="./assets/gallery/a5876693-1304-4463-a148-e54501471e58_20260526_194950_0000.jpg"
+                            <img src="./assets/gallery/a5876693-1304-4463-a148-e54501471e58_20260526_194950_0000.webp"
                                  alt="Commercial kitchen prep area with stainless steel tables and refrigerators"
                                  loading="lazy"
                                  style="object-position: center 45%;">
@@ -93,7 +105,7 @@
                     <!-- Kitchen long-angle: trim ceiling, anchor mid-section -->
                     <div class="gallery-grid__item" role="listitem">
                         <div class="gallery-placeholder" style="aspect-ratio: 16/9;">
-                            <img src="./assets/gallery/fe565db0-4936-4fdd-8303-38a93f53415d_20260526_195046_0000.jpg"
+                            <img src="./assets/gallery/fe565db0-4936-4fdd-8303-38a93f53415d_20260526_195046_0000.webp"
                                  alt="Wide view down the kitchen showing prep tables and equipment"
                                  loading="lazy"
                                  style="object-position: center 30%;">
