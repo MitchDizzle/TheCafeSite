@@ -11,12 +11,12 @@
             <li><a href="privacy">Privacy</a></li>
         </ul>
 
-        <!-- TODO: replace with real phone/email once provided by client -->
-        <p class="footer__copy">&copy; <span id="footer-year"></span> The Café. All rights reserved.</p>
+        <!-- TODO: decide whether the footer should also carry phone/email.
+             The details are known now — see contact.html — so this is a design
+             call, not a blocked-on-client one. -->
+        <p class="footer__copy">&copy; <span class="footer-year"></span> The Café. All rights reserved.</p>
     </div>
 </footer>
 
-<script>
-    var el = document.getElementById('footer-year');
-    if (el) el.textContent = new Date().getFullYear();
-</script>
+<!-- No inline script: js/main.js fills every .footer-year on the page. -->
+

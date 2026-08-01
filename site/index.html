@@ -17,6 +17,33 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Local-search structured data. Only facts already published on this site —
+         no hours, prices, or geo coordinates until the client confirms them
+         (adding unverified ones here would contradict Google Business Profile). -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FoodEstablishment",
+      "@id": "https://lvcafetogo.com/#business",
+      "name": "The Café",
+      "description": "Catering and meal prep serving Leavenworth, Kansas and the surrounding area.",
+      "url": "https://lvcafetogo.com/",
+      "telephone": "+1-913-547-9994",
+      "email": "theabcafe@gmail.com",
+      "foundingDate": "2005-10",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "417 S 6th St",
+        "addressLocality": "Leavenworth",
+        "addressRegion": "KS",
+        "postalCode": "66048",
+        "addressCountry": "US"
+      },
+      "areaServed": "Leavenworth, Kansas and the surrounding area"
+    }
+    </script>
+
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -158,12 +185,6 @@
         .dot.active { background: var(--cream); transform: scale(1.3); }
         .dot:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
 
-        /* Accessibility */
-        @media (prefers-reduced-motion: reduce) {
-            .slide { transition: opacity 0.01ms; }
-            .btn, .dot { transition: none; }
-        }
-
         /* Mobile */
         @media (max-width: 480px) {
             .hero-actions { flex-direction: column; width: 100%; max-width: 280px; }
@@ -229,6 +250,27 @@
                stroke-dashoffset: 0.49;
             }
         }
+
+        /* ── Accessibility ────────────────────────────────────
+           Must stay LAST: these rules have the same specificity as the
+           animation rules above, and a media query adds none — so ordering
+           is the only thing that lets them win. */
+        @media (prefers-reduced-motion: reduce) {
+            .slide { transition: opacity 0.01ms; }
+            .btn, .dot { transition: none; }
+
+            /* Show the filigree already drawn rather than animating it in.
+               Offsets match each keyframe's end state (draw → 0, drawhalf → 0.49). */
+            .filigree-divider .line {
+                animation: none;
+                stroke-dashoffset: 0;
+            }
+            .filigree-divider .diamond-outer,
+            .filigree-divider .diamond-inner {
+                animation: none;
+                stroke-dashoffset: 0.49;
+            }
+        }
     </style>
 </head>
 <body>
@@ -245,14 +287,18 @@
             <!-- <img src="assets/slides/slide1.jpg" alt="" loading="eager" fetchpriority="high"> -->
             <div class="slide-placeholder"></div>
         </div>
-        <!-- Slides 2–4: lazy — data-src swapped to real img when slide is about to show -->
-        <div class="slide slide-2" data-src="assets/slides/slide2.jpg">
+        <!-- Slides 2–4: gradient placeholders until real photos exist.
+             To enable a photo, drop the file in assets/slides/ and add
+             data-src="assets/slides/slideN.jpg" back onto that slide —
+             the script lazy-swaps it in just before the slide shows.
+             Leave data-src off while the file is missing or it 404s. -->
+        <div class="slide slide-2">
             <div class="slide-placeholder"></div>
         </div>
-        <div class="slide slide-3" data-src="assets/slides/slide3.jpg">
+        <div class="slide slide-3">
             <div class="slide-placeholder"></div>
         </div>
-        <div class="slide slide-4" data-src="assets/slides/slide4.jpg">
+        <div class="slide slide-4">
             <div class="slide-placeholder"></div>
         </div>
     </div>
@@ -262,7 +308,7 @@
     <div class="hero-content">
         <p class="hero-eyebrow">Catering &amp; Meal Prep Services</p>
         <h1 class="hero-title">The Café</h1>
-        <svg class="filigree-divider" viewBox="0 0 400 60" xmlns="http://w3.org">
+        <svg class="filigree-divider" viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg">
             <path class="diamond-outer" d="M 200 10 l 15,20 -15,20 -15,-20 15,-20 Z" fill="none" stroke="var(--cream)" stroke-width="1" pathLength="1"/>
             <path class="diamond-outer" d="M 200 10 l -15,20 15,20 15,-20 -15,-20 Z" fill="none" stroke="var(--cream)" stroke-width="1" pathLength="1"/>
             <path class="diamond-inner" d="M 200 20 l 15,10 -15,10 -15,-10 15,-10 Z" fill="none" stroke="var(--cream)" stroke-width="1" pathLength="1"/>
@@ -320,16 +366,18 @@
             <p class="hero-subtitle">
                 <a href="tel:+19135479994">(913) 547-9994</a><br/>
                 <a href="mailto:theabcafe@gmail.com">theabcafe@gmail.com</a><br/>
-                <a href="http://maps.google.com/?q=417 S 6th St, Leavenworth, KS 66048">417 S 6th St, Leavenworth, KS 66048</a>
+                <a href="https://maps.google.com/?q=417+S+6th+St,+Leavenworth,+KS+66048">417 S 6th St, Leavenworth, KS 66048</a>
             </p>
         </div>
     </div>
 
-    <div class="dots" role="tablist" aria-label="Slideshow navigation">
-        <button class="dot active" role="tab" aria-label="Slide 1" aria-selected="true"  data-index="0"></button>
-        <button class="dot"        role="tab" aria-label="Slide 2" aria-selected="false" data-index="1"></button>
-        <button class="dot"        role="tab" aria-label="Slide 3" aria-selected="false" data-index="2"></button>
-        <button class="dot"        role="tab" aria-label="Slide 4" aria-selected="false" data-index="3"></button>
+    <!-- Plain buttons, not role="tab": there are no tabpanels to own, and the
+         slides themselves are decorative (aria-hidden). -->
+    <div class="dots" role="group" aria-label="Slideshow navigation">
+        <button class="dot active" type="button" aria-label="Show slide 1" aria-current="true" data-index="0"></button>
+        <button class="dot"        type="button" aria-label="Show slide 2" data-index="1"></button>
+        <button class="dot"        type="button" aria-label="Show slide 3" data-index="2"></button>
+        <button class="dot"        type="button" aria-label="Show slide 4" data-index="3"></button>
     </div>
 
 </main>
@@ -356,12 +404,12 @@
     function goTo(index) {
         slides[current].classList.remove('active');
         dots[current].classList.remove('active');
-        dots[current].setAttribute('aria-selected', 'false');
+        dots[current].removeAttribute('aria-current');
 
         current = index;
         slides[current].classList.add('active');
         dots[current].classList.add('active');
-        dots[current].setAttribute('aria-selected', 'true');
+        dots[current].setAttribute('aria-current', 'true');
 
         // Pre-load the next slide so it's ready
         const next = slides[(current + 1) % slides.length];
