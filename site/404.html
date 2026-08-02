@@ -18,7 +18,9 @@
 
     <nav class="nav" aria-label="Site navigation">
         <div class="nav__inner">
-            <a href="./" class="nav__brand">The Café</a>
+            <!-- Root-absolute: this page renders at arbitrary paths, so relative
+                 links would resolve against the missing URL (/foo/bar → /foo/catering). -->
+            <a href="/" class="nav__brand">The Café</a>
 
             <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
                 <span></span>
@@ -27,9 +29,9 @@
             </button>
 
             <ul class="nav__links" id="nav-links" role="list">
-                <li><a href="catering">Catering</a></li>
-                <li><a href="gallery">Gallery</a></li>
-                <li><a href="contact" class="btn btn-primary">Contact</a></li>
+                <li><a href="/catering">Catering</a></li>
+                <li><a href="/gallery">Gallery</a></li>
+                <li><a href="/contact" class="btn btn-primary">Contact</a></li>
             </ul>
         </div>
     </nav>
