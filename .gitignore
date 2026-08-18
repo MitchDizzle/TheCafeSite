@@ -1,2 +1,5 @@
 # rendered social PNGs — regenerate with social/export.ps1
 social/exports/
+
+# Claude Code local settings (machine-specific paths)
+.claude/settings.local.json
