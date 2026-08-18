@@ -10,12 +10,23 @@
 }
 
 :root {
+    /* Structure follows the front-window graphic (35x54 Biz Info PROOF 2.pdf):
+       cool teal grounds, warm red accent on top.
+       --teal/--teal-dark are GROUNDS only (hero, footer, overlay) — red text on
+       teal is 1.3:1, never put one on the other.
+       --accent carries every interactive element and passes AA on cream (5.08). */
     --cream:          #FAF7F2;
-    --firebrick:      #B22222;
-    --firebrick-dark: #8B1A1A;
-    --text-dark:      #2C1810;
-    --text-link:      #e7997a;
-    --overlay:        rgba(18, 8, 4, 0.52);
+    --cream-alt:      #EDF1F1;
+    --teal:           #2C5E70;
+    --teal-dark:      #1F4552;
+    --accent:         #C0392F;
+    --accent-dark:    #A02F26;
+    --accent-rgb:     192, 57, 47;
+    --mint:           #8ED9D4;
+    --text-dark:      #22323A;
+    --text-dark-rgb:  34, 50, 58;
+    --text-link:      var(--mint);
+    --overlay:        rgba(10, 22, 28, 0.52);
 
     --nav-height:     64px;
     --section-pad:    4rem;
@@ -42,12 +53,12 @@ img {
 }
 
 a {
-    color: var(--firebrick);
+    color: var(--accent);
     text-decoration: none;
 }
 
 a:hover {
-    color: var(--firebrick-dark);
+    color: var(--accent-dark);
 }
 
 /* ── Typography ───────────────────────────────────────────── */
@@ -78,7 +89,7 @@ p { max-width: 65ch; }
 }
 
 .section--alt {
-    background: #F1EDE6;
+    background: var(--cream-alt);
 }
 
 /* ── Buttons ──────────────────────────────────────────────── */
@@ -100,26 +111,26 @@ p { max-width: 65ch; }
 }
 
 .btn:hover { transform: translateY(-2px); }
-.btn:focus-visible { outline: 3px solid var(--firebrick); outline-offset: 3px; }
+.btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
 .btn-primary {
-    background: var(--firebrick);
+    background: var(--accent);
     color: var(--cream);
-    border-color: var(--firebrick);
+    border-color: var(--accent);
 }
 .btn-primary:hover {
-    background: var(--firebrick-dark);
-    border-color: var(--firebrick-dark);
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
     color: var(--cream);
 }
 
 .btn-outline {
     background: transparent;
     color: var(--cream);
-    border-color: var(--firebrick);
+    border-color: var(--accent);
 }
 .btn-outline:hover {
-    background: var(--firebrick);
+    background: var(--accent);
     color: var(--cream);
 }
 
@@ -129,21 +140,15 @@ p { max-width: 65ch; }
 
 /* ── Nav ──────────────────────────────────────────────────── */
 
-@keyframes nav-slide-down {
-    from { transform: translateY(-100%); }
-    to   { transform: translateY(0); }
-}
-
 .nav {
     position: fixed;
     top: 0; left: 0; right: 0;
     height: var(--nav-height);
     background: var(--cream);
-    border-bottom: 1px solid rgba(44, 24, 16, 0.1);
+    border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.1);
     z-index: 100;
     display: flex;
     align-items: center;
-    animation: nav-slide-down 0.45s ease-out both;
 }
 
 .nav__inner {
@@ -183,7 +188,7 @@ p { max-width: 65ch; }
 }
 
 .nav__links a:hover {
-    color: var(--firebrick);
+    color: var(--accent);
 }
 
 .nav__links .btn {
@@ -221,7 +226,7 @@ p { max-width: 65ch; }
         background: var(--cream);
         flex-direction: column;
         gap: 0;
-        border-bottom: 1px solid rgba(44, 24, 16, 0.1);
+        border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.1);
         padding-block: 0.5rem;
     }
 
@@ -258,7 +263,7 @@ p { max-width: 65ch; }
 /* ── Under-construction notice ────────────────────────────── */
 
 .construction-banner {
-    background: var(--firebrick);
+    background: var(--accent);
     color: var(--cream);
     text-align: center;
     font-size: 0.85rem;
@@ -270,18 +275,10 @@ p { max-width: 65ch; }
 /* ── Footer ───────────────────────────────────────────────── */
 
 .footer {
-    background: var(--text-dark);
+    background: var(--teal-dark);
     color: var(--cream);
     padding-block: 2.5rem;
     text-align: center;
-    transform: translateY(2.5rem);
-    opacity: 0;
-    transition: transform 0.55s ease-out, opacity 0.45s ease-out;
-}
-
-.footer.is-visible {
-    transform: translateY(0);
-    opacity: 1;
 }
 
 .footer__inner {
@@ -353,8 +350,8 @@ p { max-width: 65ch; }
     padding: 1rem 1.25rem;
     font-size: 1.05rem;
     color: var(--text-dark);
-    background: rgba(178, 34, 34, 0.06);
-    border-left: 3px solid var(--firebrick);
+    background: rgba(var(--accent-rgb), 0.10);
+    border-left: 3px solid var(--accent);
     border-radius: 4px;
 }
 
@@ -364,8 +361,8 @@ p { max-width: 65ch; }
 
 .form-status--error {
     font-weight: 400;
-    color: var(--firebrick-dark);
-    background: rgba(178, 34, 34, 0.1);
+    color: var(--accent-dark);
+    background: rgba(var(--accent-rgb), 0.16);
 }
 
 /* ── Accessibility ────────────────────────────────────────── */

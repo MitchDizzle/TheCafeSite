@@ -1,7 +1,6 @@
 /* ============================================================
    The Cafe — Shared Inner-Page JS
-   Handles: mobile nav toggle, active nav link, footer year,
-            footer slide-in, scroll-fade sections
+   Handles: mobile nav toggle, active nav link, footer year, Formspree forms
    ============================================================ */
 
 (function () {
@@ -41,24 +40,6 @@
     document.querySelectorAll('.footer-year').forEach(function (el) {
         el.textContent = new Date().getFullYear();
     });
-
-    /* ── Footer slide-in ────────────────────────────────────── */
-
-    var footer = document.querySelector('.footer');
-    if (footer && window.IntersectionObserver) {
-        var footerObs = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    footer.getBoundingClientRect();
-                    footer.classList.add('is-visible');
-                    footerObs.unobserve(footer);
-                }
-            });
-        }, { threshold: 0.1 });
-        footerObs.observe(footer);
-    } else if (footer) {
-        footer.classList.add('is-visible');
-    }
 
     /* ── Formspree forms: submit in-page, show confirmation ─── */
 
@@ -113,26 +94,5 @@
             });
         });
     });
-
-    /* ── Scroll-fade sections ───────────────────────────────── */
-
-    if (window.IntersectionObserver) {
-        var fadeEls = document.querySelectorAll('[data-fade]');
-        if (fadeEls.length) {
-            var fadeObs = new IntersectionObserver(function (entries) {
-                entries.forEach(function (entry) {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                        fadeObs.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.15 });
-
-            fadeEls.forEach(function (el) {
-                el.classList.add('fade-ready');
-                fadeObs.observe(el);
-            });
-        }
-    }
 
 }());

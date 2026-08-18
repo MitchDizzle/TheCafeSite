@@ -50,7 +50,7 @@
             font-size: 0.95rem;
             font-weight: 300;
             padding: 0.75rem 1rem;
-            border: 1px solid rgba(44, 24, 16, 0.25);
+            border: 1px solid rgba(var(--text-dark-rgb), 0.25);
             border-radius: 2px;
             background: #fff;
             color: var(--text-dark);
@@ -60,7 +60,7 @@
 
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: var(--firebrick);
+            border-color: var(--accent);
         }
 
         textarea { resize: vertical; min-height: 120px; }
@@ -74,13 +74,13 @@
             font-weight: 400;
             color: var(--text-dark);
             padding-top: 0.75rem;
-            border-top: 1px solid rgba(44, 24, 16, 0.12);
+            border-top: 1px solid rgba(var(--text-dark-rgb), 0.12);
             margin-top: 0.5rem;
         }
 
         .form-hint {
             font-size: 0.78rem;
-            color: rgba(44, 24, 16, 0.55);
+            color: rgba(var(--text-dark-rgb), 0.55);
             margin-top: 0.15rem;
         }
 
@@ -105,7 +105,7 @@
             width: auto;
             padding: 0;
             border: none;
-            accent-color: var(--firebrick);
+            accent-color: var(--accent);
             cursor: pointer;
         }
 
@@ -113,7 +113,7 @@
         .contact-info {
             margin-top: 3rem;
             padding-top: 3rem;
-            border-top: 1px solid rgba(44, 24, 16, 0.12);
+            border-top: 1px solid rgba(var(--text-dark-rgb), 0.12);
         }
 
         .contact-info__list {
@@ -132,7 +132,7 @@
         .faq {
             margin-top: 3rem;
             padding-top: 3rem;
-            border-top: 1px solid rgba(44, 24, 16, 0.12);
+            border-top: 1px solid rgba(var(--text-dark-rgb), 0.12);
         }
 
         .faq__list {
@@ -151,7 +151,7 @@
 
         .faq__a {
             font-size: 0.9rem;
-            color: rgba(44, 24, 16, 0.75);
+            color: rgba(var(--text-dark-rgb), 0.75);
         }
 
         @media (max-width: 600px) {
@@ -224,7 +224,7 @@
 
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="nl-email">Email <span style="color:var(--firebrick)">*</span></label>
+                                <label for="nl-email">Email <span style="color:var(--accent-dark)">*</span></label>
                                 <input type="email" id="nl-email" name="email" autocomplete="email" required placeholder="you@example.com">
                             </div>
 
