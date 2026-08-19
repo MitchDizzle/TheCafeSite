@@ -1,0 +1,274 @@
+/* ============================================================
+   Front Door Banner — 11 × 17 in, portrait
+   Piece: src/studio/front-door-banner.njk
+
+   Every length is in absolute inches. This sheet gets printed and taped
+   to a glass door, so it is measured for legibility from the sidewalk,
+   not for a browser window. Nothing here may use %, vw, or rem.
+
+   Ink budget is a real constraint: an 11 × 17 flood-fill drains a desktop
+   printer and cockles the paper. So exactly one element is filled — the
+   masthead band, which earns it by carrying the identity and by being the
+   part that reads from across the street. Everything below it is ruled or
+   set in type on the bare sheet.
+   ============================================================ */
+
+.banner {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    /* No top padding: the masthead band supplies its own, and it has to
+       start at the very edge of the sheet to bleed. */
+    padding: 0 0.7in 0.55in;
+}
+
+/* ── Top: wordmark + entrance + filigree ─────────────────── */
+
+/* Masthead band.
+
+   This is the front-window graphic reproduced literally: the proof sits on
+   flat --teal with the cream wordmark and its coral offset, and that is what
+   the top of the sheet now is. It also does the sidewalk job — a solid block
+   of colour is readable from much further off than type on white.
+
+   FULL BLEED. The band runs past the sheet edge, which most desktop printers
+   cannot do: they reserve roughly 0.25in they will not put ink on, so you get
+   a white sliver on three sides unless you print borderless or trim after.
+   A print shop handles it. To make it safe for any printer instead, drop the
+   negative margins below and give it a border-radius.
+
+   Negative side margins rather than a wider box: .banner carries the 0.7in
+   side padding that every other section needs, so the band cancels it out
+   locally instead of the layout being restructured around one element. */
+.banner-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    align-self: stretch;
+    margin: 0 -0.7in;
+    /* Top padding is 0.07in deeper than the 0.65in margin it enforces: the
+       wordmark svg is overflow:visible, so the outward half of its teal stroke
+       paints past the element box — 1.05 viewBox units, which at 8.8in across
+       a 132.5-unit viewBox is 0.07in. getBoundingClientRect cannot see paint
+       overflow, so this was found by scanning ink pixels in the render. */
+    padding: 0.72in 0.7in 0.62in;
+    background: var(--teal);
+}
+
+.banner-wordmark {
+    /* piece.css derives the width AND the red offset from this one value.
+       8.8in wide → 2.44in tall at the mark's 3.61:1 ratio. */
+    --mark-w: 8.8in;
+
+    /* --coral, not --accent: on flat --teal this is the proof's literal
+       pairing, and the darker teal outline is what separates letterform from
+       shadow. The WEIGHT stays proof weight (piece.css default) rather than
+       .wordmark--hero — the hero thins it because it sits on a much darker
+       composited ground at screen size, which is not this sheet's problem. */
+    --mark-shadow-color: var(--coral);
+}
+
+.banner-entrance {
+    font-size: 0.42in;
+    opacity: 0.85;
+    margin-top: 0.22in;
+}
+
+.banner-filigree {
+    width: 6.4in;
+    margin-top: 0.3in;
+    opacity: 0.75;
+}
+
+/* ── Inset variant ───────────────────────────────────────────
+   Same sheet, masthead as a floating panel instead of a bleeding band.
+   Applied by src/studio/front-door-banner-inset.njk via bannerVariant.
+
+   The reason to want it: a desktop printer reserves roughly 0.25in it will
+   not put ink on, so the full-bleed version comes out with a white sliver on
+   three sides unless it is printed borderless or trimmed after. Nothing here
+   touches the paper edge, so any printer renders it as drawn.
+
+   It also lays down less ink, which on an 11 x 17 sheet is the difference
+   between paper that cockles and paper that does not. */
+.banner--inset {
+    /* The band supplied the sheet's top margin in the bleed version; with the
+       masthead pulled inside, the sheet has to provide it again. */
+    padding-top: 0.5in;
+}
+
+.banner--inset .banner-top {
+    /* Cancel the bleed — the panel sits inside the 0.7in live area now. */
+    margin: 0;
+    padding: 0.55in 0.5in 0.5in;
+    border-radius: 0.12in;
+}
+
+/* The panel is 9.6in wide with 0.5in of padding a side, so the mark has 8.6in
+   to live in rather than the whole sheet width. 8.2in leaves room for the
+   0.065in of stroke that paints outside its box at that size, and keeps the
+   letterforms clear of the rounded corners. */
+.banner--inset .banner-wordmark {
+    --mark-w: 8.2in;
+}
+
+.banner--inset .banner-filigree {
+    width: 5.6in;
+}
+
+/* ── Middle: the announcement ────────────────────────────── */
+
+.banner-announce {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.announce-kicker {
+    font-size: 0.78in;
+    letter-spacing: 0.02em;
+}
+
+.announce-day {
+    font-size: 0.8in;
+    margin-top: 0.06in;
+}
+
+/* The largest thing on the sheet — this is the one fact a passer-by needs.
+   nowrap is a tripwire as much as a style: if this line ever stops fitting
+   the 9.6in of live area it will visibly run off the edge rather than
+   quietly reflowing into something that no longer matches the proof. */
+.announce-date {
+    font-size: 1.6in;
+    margin-top: 0.02in;
+    white-space: nowrap;
+}
+
+/* Playfair's own ordinal sits on the baseline; lift and shrink it so the
+   date reads as a date rather than "October 5TH". */
+.announce-date sup {
+    font-size: 0.46em;
+    vertical-align: 0.62em;
+    letter-spacing: 0.01em;
+}
+
+/* ── Hours panel ─────────────────────────────────────────── */
+
+/* Ruled box rather than a filled one: it anchors the hours as a distinct
+   block of information without laying down a slab of ink.
+
+   The box is sized by its widest line, so its padding and .hours-time's
+   font-size trade against each other — together they must stay inside the
+   9.6in of live area. At 0.94in the time line measures 7.43in, which puts
+   the box at 8.9in with 0.7in of padding a side. */
+.banner-hours {
+    border: 0.035in solid var(--teal-dark);
+    border-radius: 0.06in;
+    padding: 0.34in 0.7in 0.4in;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%;
+}
+
+.hours-label {
+    font-size: 0.32in;
+}
+
+.hours-days {
+    font-size: 0.62in;
+    margin-top: 0.14in;
+}
+
+.hours-time {
+    font-size: 0.94in;
+    margin-top: 0.04in;
+    white-space: nowrap;
+}
+
+/* Lowercase small am/pm keeps the numerals dominant — those are what a
+   passer-by actually reads. */
+.hours-time .ampm {
+    font-size: 0.52em;
+    letter-spacing: 0.04em;
+}
+
+/* ── Footer: follow + contact ────────────────────────────── */
+
+/* The two columns are both nowrap, so neither can shrink: their combined
+   width plus the 0.5in gap has to stay under the 9.6in live area on its own.
+   The QR box alone is now ~2.96in of that, which is why the handle wraps onto
+   two lines. Growing any type down here means re-measuring the row, not just
+   nudging one value — there is under half an inch of slack left. */
+.banner-footer {
+    width: 100%;
+    border-top: 0.02in solid var(--teal);
+    padding-top: 0.34in;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5in;
+    text-align: left;
+}
+
+.follow {
+    display: flex;
+    align-items: center;
+    gap: 0.26in;
+}
+
+/* Sized for a phone focusing through the door glass — the banner hangs inside
+   facing out, so a scan happens through a reflective pane, often at an angle
+   and from a step or two back. Rough rule of thumb is that a code scans at
+   about 10x its own width, so 2.4in buys roughly two feet of standoff.
+
+   The padding IS the quiet zone: assets/qr-facebook.svg carries none of its
+   own. The spec wants four clear modules; this code is 37 modules across
+   2.4in, so one module is 0.065in and four is 0.26in. Trim the padding and
+   phones start failing to lock on — which is exactly the failure mode the
+   glass is already pushing us toward. */
+.follow-qr {
+    /* content-box on purpose. piece.css sets border-box globally, which would
+       make `width` the outer box and let the quiet-zone padding eat into the
+       symbol — at 2.4in that silently shrinks the actual code to 1.86in, which
+       is the opposite of what this block is for. Here width means the CODE and
+       the padding is added outside it. */
+    box-sizing: content-box;
+    width: 2.4in;
+    padding: 0.26in;
+    border: 0.02in solid var(--teal);
+    border-radius: 0.05in;
+}
+
+.follow-label {
+    font-size: 0.26in;
+}
+
+.follow-handle {
+    font-size: 0.28in;
+    line-height: 1.3;
+    margin-top: 0.08in;
+    white-space: nowrap;
+}
+
+.follow-handle strong { font-weight: 900; }
+
+.contact {
+    text-align: right;
+}
+
+.contact-phone {
+    font-size: 0.56in;
+    white-space: nowrap;
+}
+
+.contact-line {
+    font-size: 0.25in;
+    line-height: 1.45;
+    color: var(--text-dark);
+}

@@ -88,6 +88,14 @@
             width: 100%;
             height: auto;
 
+            /* Inkscape fitted the viewBox tight to the glyph outlines, with no
+               padding. An SVG viewport clips to its viewBox by default, so the
+               outward half of the stroke and the offset shadow were being cut
+               off at the edges — worst on the é and along the baseline.
+               Letting it paint outside costs nothing here: the mark is centred
+               in the hero with generous space around it. */
+            overflow: visible;
+
             /* Matches the front-window graphic's construction: a teal OUTLINE
                on the letterforms, plus a single red offset shadow.
 
@@ -113,10 +121,16 @@
                left side. It is genuinely cast down-right.
 
                stroke-width is doubled relative to the visible outline, since
-               paint-order hides the inner half behind the fill. */
+               paint-order hides the inner half behind the fill.
+
+               Shipped values sit deliberately UNDER the proof: outline 2.04%
+               of ink height (proof 2.90%), shadow 2.26% across / 3.26% down
+               (proof 4.35% / 6.14%). The proof is 35 inches tall and read from
+               a sidewalk; at hero size on a darkened ground the full weight
+               reads heavy and the shadow detaches. */
             fill: var(--cream);
             stroke: var(--teal-dark);
-            stroke-width: 2.1;
+            stroke-width: 1.5;
             /* miter, not round: at this weight a round join visibly blunts the
                script's pointed terminals, and the shadow inherits the rounding
                because it is cast from the stroked silhouette. The default
@@ -125,7 +139,16 @@
             stroke-linejoin: miter;
             stroke-miterlimit: 10;
             paint-order: stroke;
-            filter: drop-shadow(0.069em 0.098em 0 var(--accent));
+            /* --coral, not --accent: the proof's brighter red. On this ground
+               --accent reads as a separate dark slab rather than a shadow.
+
+               The proof sits on flat #2C5E70, where the darker teal outline
+               separates letterform from shadow. Here the gradient sits under
+               --overlay and composites to roughly #1A3944 — close enough to
+               the outline colour that the outline disappears into the
+               background, leaving an apparent gap. Shortening the offset and
+               lightening the red closes that gap. */
+            filter: drop-shadow(0.036em 0.052em 0 var(--coral));
         }
 
         .hero-subspace {

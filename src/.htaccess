@@ -54,6 +54,38 @@ ErrorDocument 404 /404.html
     ExpiresByType image/svg+xml "access plus 30 days"
 </IfModule>
 
+# ── Private studio board ────────────────────────────────────
+# /studio/ is the internal proof board: flyers, menus, print pieces and
+# social art shown to the client before they go out.
+#
+# It is deliberately absent from robots.txt and sitemap.xml. A Disallow line
+# would name the path in a world-readable file, which tells the scrapers that
+# ignore robots.txt exactly where to look. The header below is what actually
+# keeps the board out of search results, and unlike a <meta> tag it also
+# covers the PDFs and PNGs served from studio/files/ — a binary has nowhere
+# to put a meta tag, and the images are the part worth scraping.
+#
+# This is obscurity plus a no-index request, NOT access control. Anyone with
+# the URL can read it. For real protection, uncomment the Basic Auth block
+# below and create the password file outside the web root:
+#     htpasswd -c /home/USER/.studio-htpasswd cafe
+# The .htpasswd file must never be committed — this is a public repo.
+<IfModule mod_setenvif.c>
+    SetEnvIf Request_URI "^/studio(/|$)" STUDIO_AREA
+</IfModule>
+<IfModule mod_headers.c>
+    Header always set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex" env=STUDIO_AREA
+</IfModule>
+
+# <IfModule mod_authn_file.c>
+#     <If "%{REQUEST_URI} =~ m#^/studio(/|$)#">
+#         AuthType Basic
+#         AuthName "The Cafe Studio"
+#         AuthUserFile /home/USER/.studio-htpasswd
+#         Require valid-user
+#     </If>
+# </IfModule>
+
 # ── Security headers ────────────────────────────────────────
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"

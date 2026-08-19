@@ -1,0 +1,36 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Facebook Profile Picture (1080 × 1080)"
+canvasW: "1080px"
+canvasH: "1080px"
+pageCss: "/assets/css/fb-profile.css"
+
+tags: studio
+studioTitle: "Facebook Profile Picture"
+studioCategory: "Social"
+studioSize: "1080 × 1080 px · crops to a circle"
+studioNote: "Export to PNG, then upload. Facebook masks it to a circle and renders it as small as 40 px in feed, so everything sits inside the guide ring."
+studioW: 1080
+studioH: 1080
+studioOrder: 20
+---
+<div class="canvas fbpic">
+
+    {# Same treatment AND the same weight as the site hero — .wordmark--hero
+       pulls in the exact outline, offset and --coral that lvcafetogo.com
+       ships. This sits on a darkened teal ground like the hero does, so it
+       wants the hero's reduced numbers, not the print proof's heavier ones.
+       See the wordmark section of piece.css for the two weights. #}
+    <div class="fbpic-ring" aria-hidden="true"></div>
+
+    <div class="fbpic-content">
+        <div class="wordmark wordmark--light wordmark--hero fbpic-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <div class="fbpic-filigree">
+            {% include "partials/filigree.njk" %}
+        </div>
+        <p class="p-eyebrow fbpic-eyebrow">Leavenworth, Kansas</p>
+    </div>
+
+</div>

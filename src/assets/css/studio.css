@@ -1,0 +1,353 @@
+/* ============================================================
+   Studio — internal proof board
+   Page: src/studio/index.njk
+
+   Not a public page, so it is allowed to look like a tool: dark ground so
+   the white artboards read as physical sheets on a table, and a denser
+   type scale than the marketing pages use. Palette still comes from
+   tokens.css — the point of the board is to judge the brand, so the
+   chrome around it has to be the brand.
+   ============================================================ */
+
+.studio-body {
+    background: #16252C;
+    color: var(--cream);
+    /* style.css sets a generous marketing line-height; a tool wants tighter. */
+    line-height: 1.55;
+}
+
+/* style.css caps every <p> at 65ch for prose. Card text lives in narrow
+   columns already and the cap makes it ragged, so opt out inside the board. */
+.studio-body p { max-width: none; }
+
+.studio-body h1,
+.studio-body h2,
+.studio-body h3 { color: var(--cream); }
+
+.visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+
+.studio-head {
+    background: var(--teal-dark);
+    border-bottom: 3px solid var(--accent);
+    padding: 3rem 1.5rem 2.25rem;
+}
+
+.studio-head-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+}
+
+.studio-kicker {
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--mint);
+}
+
+.studio-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 2.9rem);
+    margin-top: 0.4rem;
+}
+
+.studio-lede {
+    font-size: 0.98rem;
+    color: var(--cream);
+    opacity: 0.78;
+    margin-top: 0.5rem;
+    max-width: 62ch;
+}
+
+.studio-jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+.studio-jump a {
+    font-size: 0.78rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cream);
+    border: 1px solid rgba(250, 247, 242, 0.28);
+    border-radius: 2px;
+    padding: 0.4rem 0.9rem;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.studio-jump a:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--cream);
+}
+
+.studio-jump a:focus-visible {
+    outline: 3px solid var(--mint);
+    outline-offset: 2px;
+}
+
+/* ── Sections ─────────────────────────────────────────────── */
+
+.studio-main {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+}
+
+.studio-empty {
+    color: var(--cream);
+    opacity: 0.75;
+    padding: 3rem 0;
+}
+
+.studio-empty code,
+.card-source code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85em;
+    background: rgba(250, 247, 242, 0.08);
+    border-radius: 2px;
+    padding: 0.1em 0.4em;
+}
+
+.studio-section {
+    /* Anchor links land under nothing sticky, but a little breathing room
+       above the heading keeps the jump from feeling like a cut. */
+    scroll-margin-top: 1.5rem;
+    margin-top: 2.75rem;
+}
+
+.studio-section:first-child { margin-top: 0.5rem; }
+
+.studio-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(250, 247, 242, 0.16);
+}
+
+.studio-count {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--cream);
+    background: var(--accent);
+    border-radius: 999px;
+    padding: 0.1rem 0.55rem;
+}
+
+/* ── Grid ─────────────────────────────────────────────────── */
+
+.studio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.card {
+    background: #1D3039;
+    border: 1px solid rgba(250, 247, 242, 0.12);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.15s, transform 0.15s;
+}
+
+.card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+/* ── Viewport ─────────────────────────────────────────────── */
+
+/* The frame is laid out at the artboard's real pixel size and scaled with a
+   transform, so what you see is the piece's true layout shrunk — not a
+   reflowed one. aspect-ratio reserves the right box before the frame loads
+   so the grid does not jump. --w/--h/--scale are set inline per card; the
+   script in index.njk keeps --scale correct as the card resizes. */
+.vp {
+    position: relative;
+    overflow: hidden;
+    background: #0F1B21;
+    border-bottom: 1px solid rgba(250, 247, 242, 0.12);
+}
+
+.vp--scaled {
+    aspect-ratio: var(--w) / var(--h);
+}
+
+.vp--scaled iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(var(--w) * 1px);
+    height: calc(var(--h) * 1px);
+    border: 0;
+    transform-origin: 0 0;
+    transform: scale(var(--scale, 0.3));
+    /* The preview is decorative; the card's own link and heading carry the
+       meaning, so keep the frame out of the tab order entirely. */
+    pointer-events: none;
+}
+
+.vp--image {
+    display: grid;
+    place-items: center;
+    padding: 0.75rem;
+    /* Checkerboard so a transparent PNG reads as transparent rather than
+       as a white artboard. */
+    background:
+        repeating-conic-gradient(#243943 0% 25%, #1B2C34 0% 50%) 50% / 24px 24px;
+}
+
+.vp--image img {
+    max-width: 100%;
+    max-height: 420px;
+    width: auto;
+    height: auto;
+}
+
+.vp--pdf { height: 420px; }
+
+.vp--pdf iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+}
+
+/* Transparent overlay that makes the whole preview a link. The iframe below
+   has pointer-events off, so this is what actually receives the click. */
+.vp-hit {
+    position: absolute;
+    inset: 0;
+}
+
+.vp-hit:focus-visible {
+    outline: 3px solid var(--mint);
+    outline-offset: -3px;
+}
+
+/* ── Card body ────────────────────────────────────────────── */
+
+.card-body {
+    padding: 1rem 1.1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+}
+
+.card-meta {
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mint);
+    margin-top: 0.3rem;
+}
+
+.card-note {
+    font-size: 0.86rem;
+    color: var(--cream);
+    opacity: 0.72;
+    margin-top: 0.6rem;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+.card-btn {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.5rem 1.1rem;
+    border-radius: 2px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--cream);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.card-btn:hover {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+    color: var(--cream);
+}
+
+.card-btn--ghost {
+    background: transparent;
+    color: var(--cream);
+    border-color: rgba(250, 247, 242, 0.35);
+}
+
+.card-btn--ghost:hover {
+    background: var(--cream);
+    border-color: var(--cream);
+    color: var(--text-dark);
+}
+
+.card-btn:focus-visible {
+    outline: 3px solid var(--mint);
+    outline-offset: 2px;
+}
+
+/* The one-liner that renders this piece to PNG at its exact artboard size. */
+.card-export {
+    font-size: 0.72rem;
+    margin-top: 0.8rem;
+    color: var(--mint);
+    word-break: break-all;
+}
+
+.card-export code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: rgba(142, 217, 212, 0.12);
+    border-radius: 2px;
+    padding: 0.15em 0.45em;
+}
+
+.card-source {
+    font-size: 0.72rem;
+    opacity: 0.5;
+    margin-top: 0.8rem;
+    word-break: break-all;
+}
+
+/* ── Motion ───────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    .card,
+    .studio-jump a,
+    .card-btn {
+        transition: none;
+    }
+    .card:hover { transform: none; }
+}

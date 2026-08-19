@@ -1,0 +1,221 @@
+---
+layout: layouts/base.njk
+title: "Studio — The Café"
+description: "Internal proof board."
+pageCss: "/assets/css/studio.css"
+bodyClass: "studio-body"
+# No nav or footer on this page, so the shared nav/footer script has nothing
+# to do. The viewport scaler at the bottom is the only JS here.
+noSiteJs: true
+eleventyExcludeFromCollections: true
+---
+{#- Merge the two sources of board items into one list.
+
+    1. collections.studio — pieces built by Eleventy from a .njk template.
+       They are live: the preview iframe shows whatever the current build
+       renders, so a CSS tweak is visible on the board immediately.
+    2. studioFiles — anything dropped into src/studio/files/. Auto-discovered
+       at build time by src/_data/studioFiles.js.
+
+    The (arr.push(x), arr) idiom is how you append inside a Nunjucks loop —
+    a bare {% set %} would be scoped to the loop body and thrown away. -#}
+{%- set items = [] %}
+
+{%- for piece in collections.studio %}
+  {%- set _ = items.push({
+        title:     piece.data.studioTitle or piece.data.title,
+        category:  piece.data.studioCategory or "Pages",
+        note:      piece.data.studioNote,
+        meta:      piece.data.studioSize,
+        url:       piece.filePathStem,
+        kind:      "embed",
+        w:         piece.data.studioW or 1056,
+        h:         piece.data.studioH or 1632,
+        printable: piece.data.pageSize,
+        source:    piece.inputPath,
+        slug:      piece.fileSlug,
+        order:     piece.data.studioOrder or 500
+     }) %}
+{%- endfor %}
+
+{%- for file in studioFiles %}
+  {%- set _ = items.push({
+        title:    file.title,
+        category: file.category,
+        note:     file.note,
+        meta:     file.ext + " · " + file.size + " · added " + file.added,
+        url:      file.url,
+        kind:     file.kind,
+        order:    file.order
+     }) %}
+{%- endfor %}
+
+{#- Category order: the ones we know about first, in a sensible reading order,
+    then anything a new subfolder invents, in the order it turns up. -#}
+{%- set preferred = ["Print", "Social", "Menus", "Flyers", "Pages", "Files"] %}
+{%- set categories = [] %}
+{%- for name in preferred %}
+  {%- if items | where("category", name) | length %}
+    {%- set _ = categories.push(name) %}
+  {%- endif %}
+{%- endfor %}
+{%- for item in items %}
+  {%- if item.category not in categories %}
+    {%- set _ = categories.push(item.category) %}
+  {%- endif %}
+{%- endfor %}
+
+<header class="studio-head">
+    <div class="studio-head-inner">
+        <p class="studio-kicker">Internal &middot; not linked, not indexed</p>
+        <h1 class="studio-title">The Caf&eacute; Studio</h1>
+        <p class="studio-lede">
+            Printable and shareable pieces built from the site&rsquo;s own theme.
+            Previews are live &mdash; they show the current build, not a screenshot.
+        </p>
+
+        {%- if categories | length > 1 %}
+        <nav class="studio-jump" aria-label="Jump to a section">
+            {%- for name in categories %}
+            <a href="#cat-{{ name | lower | replace(" ", "-") }}">{{ name }}</a>
+            {%- endfor %}
+        </nav>
+        {%- endif %}
+    </div>
+</header>
+
+<main class="studio-main">
+    {%- if not items | length %}
+    <p class="studio-empty">
+        Nothing on the board yet. Add a piece as a template in
+        <code>src/studio/</code>, or drop a PDF or image into
+        <code>src/studio/files/</code> and rebuild.
+    </p>
+    {%- endif %}
+
+    {%- for name in categories %}
+    {%- set group = items | where("category", name) | sort(false, false, "order") %}
+    <section class="studio-section" id="cat-{{ name | lower | replace(" ", "-") }}">
+        <h2 class="studio-section-title">{{ name }} <span class="studio-count">{{ group | length }}</span></h2>
+
+        <div class="studio-grid">
+            {%- for item in group %}
+            <article class="card">
+
+                {#- The viewport. For a template-built piece this is the real
+                    page in an iframe sized to its exact artboard dimensions
+                    and scaled down to fit the card, so the proportions are
+                    honest. The inline --scale is a first guess against a
+                    ~340px card; the script at the bottom corrects it once the
+                    real width is known, and on every resize after. -#}
+                {%- if item.kind == "embed" %}
+                <div class="vp vp--scaled"
+                     style="--w: {{ item.w }}; --h: {{ item.h }}; --scale: {{ (340 / item.w) | round(5) }}"
+                     data-w="{{ item.w }}">
+                    <iframe src="{{ item.url }}"
+                            title="{{ item.title }} preview"
+                            loading="lazy"
+                            scrolling="no"
+                            tabindex="-1"
+                            aria-hidden="true"></iframe>
+                    {#- The iframe swallows clicks, so an overlaid link is what
+                        keeps the whole tile clickable. -#}
+                    <a class="vp-hit" href="{{ item.url }}" target="_blank" rel="noopener">
+                        <span class="visually-hidden">Open {{ item.title }}</span>
+                    </a>
+                </div>
+
+                {%- elif item.kind == "image" %}
+                <div class="vp vp--image">
+                    <img src="{{ item.url }}" alt="{{ item.title }}" loading="lazy">
+                    <a class="vp-hit" href="{{ item.url }}" target="_blank" rel="noopener">
+                        <span class="visually-hidden">Open {{ item.title }}</span>
+                    </a>
+                </div>
+
+                {%- else %}
+                <div class="vp vp--pdf">
+                    <iframe src="{{ item.url }}#toolbar=0&amp;view=FitH"
+                            title="{{ item.title }} preview"
+                            loading="lazy"></iframe>
+                </div>
+                {%- endif %}
+
+                <div class="card-body">
+                    <h3 class="card-title">{{ item.title }}</h3>
+                    {%- if item.meta %}<p class="card-meta">{{ item.meta }}</p>{% endif %}
+                    {%- if item.note %}<p class="card-note">{{ item.note }}</p>{% endif %}
+
+                    <div class="card-actions">
+                        <a class="card-btn" href="{{ item.url }}" target="_blank" rel="noopener">Open</a>
+                        {%- if item.printable %}
+                        <button class="card-btn card-btn--ghost" type="button" data-print="{{ item.url }}">Print</button>
+                        {%- endif %}
+                    </div>
+
+                    {%- if item.slug %}
+                    {#- Headless-Chrome export. See scripts/export-studio.js for why
+                        this is a command rather than a button on the page. -#}
+                    <p class="card-export"><code>npm run export -- {{ item.slug }}</code></p>
+                    {%- endif %}
+
+                    {%- if item.source %}
+                    <p class="card-source"><code>{{ item.source }}</code></p>
+                    {%- endif %}
+                </div>
+
+            </article>
+            {%- endfor %}
+        </div>
+    </section>
+    {%- endfor %}
+</main>
+
+<script>
+(function () {
+    // Scale each artboard iframe to its card.
+    //
+    // The iframe is laid out at the artboard's true pixel size and then
+    // transform-scaled, rather than given a percentage width, because a
+    // percentage would let the piece re-flow to fit the card and the preview
+    // would stop matching what actually prints. This cannot be done in CSS
+    // alone: calc() has no way to divide one length by another.
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('.vp--scaled'));
+
+    function fit(box) {
+        var w = parseFloat(box.dataset.w);
+        if (!w) return;
+        box.style.setProperty('--scale', (box.clientWidth / w).toFixed(5));
+    }
+
+    if (window.ResizeObserver) {
+        var ro = new ResizeObserver(function (entries) {
+            entries.forEach(function (entry) { fit(entry.target); });
+        });
+        boxes.forEach(function (box) { ro.observe(box); });
+    } else {
+        boxes.forEach(fit);
+        window.addEventListener('resize', function () { boxes.forEach(fit); });
+    }
+
+    // Print straight from the board. The pieces are same-origin, so the frame's
+    // own @page size and print styles drive the dialog — which is the point:
+    // printing the board itself would give you 11x17 artwork on Letter paper.
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest('[data-print]');
+        if (!btn) return;
+
+        var card = btn.closest('.card');
+        var frame = card && card.querySelector('iframe');
+
+        try {
+            if (!frame || !frame.contentWindow) throw new Error('no frame');
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+        } catch (err) {
+            // Frame not ready yet (still lazy-loading) — open the piece itself.
+            window.open(btn.dataset.print, '_blank', 'noopener');
+        }
+    });
+}());
+</script>

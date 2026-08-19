@@ -1,0 +1,19 @@
+{# Static filigree divider.
+
+   Same artwork as the animated one on index.njk, but drawn already-complete
+   and stroked with currentColor so a print piece can tint it by setting
+   `color` on the wrapper. index.njk keeps its own inline copy because the
+   draw-on animation needs per-path classes this partial deliberately omits. #}
+<svg class="filigree {{ filigreeClass }}" viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <g fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M 200 10 l 15,20 -15,20 -15,-20 15,-20 Z"/>
+        <path d="M 200 10 l -15,20 15,20 15,-20 -15,-20 Z"/>
+        <path d="M 200 20 l 15,10 -15,10 -15,-10 15,-10 Z"/>
+        <path d="M 200 20 l -15,10 15,10 15,-10 -15,-10 Z"/>
+        {%- set arm = "M 215 30 c 0 0, 5 -7, 10 0 l 0,0 5,-7 20,7 3,-3 3,3 50,0 c 0 0, 5 -7, 10 0 l 3,-3 3,3 c 0 0, 5 -7, 10 0 l 0,0 5,-5 20,5 l 10,0" %}
+        <path d="{{ arm }}"/>
+        <path d="{{ arm }}" transform="scale(-1,1) translate(-400,0)"/>
+        <path d="{{ arm }}" transform="scale(1,-1) translate(0,-60)"/>
+        <path d="{{ arm }}" transform="scale(-1,-1) translate(-400,-60)"/>
+    </g>
+</svg>

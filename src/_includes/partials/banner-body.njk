@@ -1,0 +1,77 @@
+{#- Front door banner artwork, shared by both masthead variants.
+
+    Two pages render this: front-door-banner.njk (full-bleed teal band) and
+    front-door-banner-inset.njk (inset panel, printable on a desktop printer).
+    They differ ONLY in how the masthead meets the paper edge, so the markup
+    lives here rather than in two files that would quietly drift apart while
+    the client is choosing between them. Once one is picked, delete the other
+    page and this can be folded back inline.
+
+    The variant page sets `bannerVariant` in its front matter; Nunjucks
+    includes inherit the template context, so it is readable here. -#}
+<div class="canvas banner {{ bannerVariant }}">
+
+    {# The wordmark is Book Jacket converted to outlines — NOT a webfont. The
+       file was licensed for print through the sign shop; an @font-face rule
+       would hand the binary to every visitor. Outlines ship no font file.
+
+       inlineSvg rather than <img>: the artwork carries no fill of its own, so
+       inside an <img> it renders black and CSS cannot reach in to recolour it.
+       Inlined, .wordmark--light in piece.css gives it the cream letterform,
+       teal outline and red offset — the same treatment as the site hero and
+       the social pieces. #}
+    <header class="banner-top">
+        <div class="wordmark wordmark--light banner-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        {# Cream, not red. The masthead behind this is --teal, and red on teal
+           is 1.3:1 — the one pairing the palette forbids outright. #}
+        <p class="p-eyebrow banner-entrance ink-cream">Entrance</p>
+        <div class="banner-filigree ink-cream">
+            {% include "partials/filigree.njk" %}
+        </div>
+    </header>
+
+    {# Two lines, not one. "Monday, October 5th" set large enough to read from
+       the sidewalk does not fit across an 11in sheet, and shrinking it to fit
+       would make the date no bigger than the hours below it. Splitting lets
+       the date itself stay the largest thing on the banner. #}
+    <section class="banner-announce">
+        <p class="p-display-italic announce-kicker ink-teal">Restaurant opening</p>
+        <p class="p-display announce-day ink-teal">Monday</p>
+        <p class="p-display announce-date ink-accent">October 5<sup>th</sup></p>
+    </section>
+
+    <section class="banner-hours">
+        <p class="p-label hours-label ink-accent">Temporary Hours</p>
+        <p class="p-display hours-days ink-teal">Monday &ndash; Friday</p>
+        <p class="p-display hours-time ink-teal">6:00 <span class="ampm">am</span> &ndash; 12:00 <span class="ampm">pm</span></p>
+    </section>
+
+    <footer class="banner-footer">
+        <div class="follow">
+            {# Encodes https://www.facebook.com/LVCafeToGo at error-correction
+               level H, so the code still scans with a corner scuffed or a
+               thumbtack through it. Regenerate per studio/README.md. #}
+            <div class="qr follow-qr">
+                {% inlineSvg "/assets/qr-facebook.svg" %}
+            </div>
+            {# The handle breaks after the slash rather than running on one
+               line. The banner faces out through the door glass, so the code
+               is sized for a phone that has to focus through a reflective
+               pane; a narrower caption is what buys that width back. #}
+            <div class="follow-text">
+                <p class="p-label follow-label ink-accent">Follow us</p>
+                <p class="p-body follow-handle ink-teal">facebook.com/<br><strong>LVCafeToGo</strong></p>
+            </div>
+        </div>
+
+        <div class="contact">
+            <p class="p-display contact-phone ink-teal">{{ site.phone }}</p>
+            <p class="p-body contact-line">{{ site.email }}</p>
+            <p class="p-body contact-line">{{ site.address.street }}</p>
+            <p class="p-body contact-line">{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
+        </div>
+    </footer>
+
+</div>

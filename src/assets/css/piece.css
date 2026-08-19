@@ -1,0 +1,221 @@
+/* ============================================================
+   The Cafe — Shared print / social "piece" styles
+   Used by: layouts/piece.njk (everything under src/studio/)
+
+   A piece is a fixed artboard measured in inches (print) or pixels
+   (social), exported to PDF or PNG. It loads tokens.css for the palette
+   and NOTHING else from the site — style.css's clamp()ed type scale
+   would resize the artwork with the browser window and wreck the export.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.piece-body {
+    /* The offcut around the artboard when a piece is viewed on its own.
+       The studio board sizes its iframes to the exact canvas dimensions,
+       so this never shows through there. */
+    background: #3E4A50;
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    font-family: 'Lato', sans-serif;
+    color: var(--text-dark);
+
+    /* Print pieces are laid out in absolute inches. Any user font-size
+       preference must not scale them, so nothing here uses rem/em roots. */
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* Width/height come from the layout's inline <style>, driven by the
+   canvasW / canvasH front matter. */
+.canvas {
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* ── Wordmark ─────────────────────────────────────────────────
+   The Book Jacket logotype, converted to outlines. Same construction as
+   .hero-wordmark in home.css — a teal OUTLINE on the letterforms plus a
+   single red offset shadow — and the same reasoning applies:
+
+   ONE drop-shadow, never two. CSS filters chain, so a second hard-edged
+   drop-shadow casts from "glyph + first shadow" rather than from the glyph,
+   doubling the offset and tearing a gap. The teal comes from the stroke.
+
+   paint-order:stroke puts the stroke behind the fill so only its outer half
+   shows and the letterform keeps its true weight. stroke-width is in viewBox
+   units, so it scales with the mark — which is why it is a bare number.
+
+   TWO WEIGHTS, and the difference is deliberate.
+
+   The proof (35x54 Biz Info PROOF 2.pdf) is 35 inches tall and read from a
+   sidewalk: outline 2.90% of ink height, shadow 4.35% across / 6.14% down —
+   a 55-degree cast, light from the upper left. home.css ships the hero
+   noticeably UNDER that (2.04%, 2.26% / 3.26%) because at hero size on a
+   darkened ground the full weight reads heavy and the shadow detaches.
+
+   A print piece is the proof's situation, not the hero's, so proof weight is
+   the default here. Screen pieces on a teal ground add .wordmark--hero to get
+   the hero's exact numbers instead.
+
+   The offsets are multipliers of --mark-w rather than em, because an em-based
+   offset only lands correctly if the font-size happens to be ~0.63x the mark's
+   height, as the hero's does by coincidence. The artwork is a fixed
+   132.5 x 36.7 viewBox, so height = 0.27704 x width:
+       proof  x = 0.0435 x 0.27704 = 0.01205    y = 0.0614 x 0.27704 = 0.01701
+       hero   x = 0.0226 x 0.27704 = 0.00626    y = 0.0326 x 0.27704 = 0.00903 */
+.wordmark {
+    --mark-outline:      2.1;      /* viewBox units; halved to 2.90% by paint-order */
+    --mark-shadow-x:     0.01205;  /* x --mark-w */
+    --mark-shadow-y:     0.01701;  /* x --mark-w */
+    --mark-shadow-color: var(--accent);
+
+    display: block;
+    line-height: 0;
+    width: var(--mark-w);
+}
+
+.wordmark svg {
+    display: block;
+    width: 100%;
+    height: auto;
+
+    /* Inkscape fitted the viewBox tight to the glyph outlines with no padding,
+       and an SVG viewport clips to its viewBox — so the outward half of the
+       stroke and the whole offset shadow get cut off at the edges, worst on
+       the é and along the baseline. Every piece here centres the mark with
+       room around it, so painting outside costs nothing. */
+    overflow: visible;
+
+    stroke-width: var(--mark-outline);
+    /* miter, not round: at this weight a round join visibly blunts the script's
+       pointed terminals, and the shadow inherits the rounding because it is
+       cast from the stroked silhouette. The default miter-limit of 4 still
+       bevels the most acute joins, so raise it until the points survive. */
+    stroke-linejoin: miter;
+    stroke-miterlimit: 10;
+    paint-order: stroke;
+    filter: drop-shadow(
+        calc(var(--mark-w) * var(--mark-shadow-x))
+        calc(var(--mark-w) * var(--mark-shadow-y))
+        0 var(--mark-shadow-color));
+}
+
+/* Hero weight — what lvcafetogo.com actually ships. Use on a darkened teal
+   ground, where --accent reads as a separate dark slab rather than a shadow
+   and the full proof offset lets the shadow detach. --coral is the proof's
+   literal red; it is too light for text on cream (3.1:1), decoration only. */
+.wordmark--hero {
+    --mark-outline:      1.5;
+    --mark-shadow-x:     0.00626;
+    --mark-shadow-y:     0.00903;
+    --mark-shadow-color: var(--coral);
+}
+
+/* The house treatment: cream letterform, teal outline, red offset. Use this by
+   default — on a teal ground and on white paper alike. It is what makes a
+   printed piece and a Facebook post read as the same brand.
+
+   On white stock the cream fill is all but invisible and the teal stroke is
+   what actually draws the letters, which is why print pieces keep the proof's
+   heavier outline rather than the hero's. */
+.wordmark--light svg {
+    fill: var(--cream);
+    stroke: var(--teal-dark);
+}
+
+/* Solid-ink alternate. NOT the default — see --light above.
+   Reach for it only where the outline cannot be trusted to survive: a
+   photocopy, a fax-quality menu, a one-colour job, or anything printed small
+   enough that the outline closes up. It trades the hero's look for raw
+   contrast, so a piece using it will not quite match the social artwork. */
+.wordmark--ink svg {
+    fill: var(--teal-dark);
+    stroke: none;
+}
+
+/* ── Filigree divider ─────────────────────────────────────────
+   partials/filigree.njk strokes with currentColor, so set `color` on the
+   element or an ancestor to tint it. */
+.filigree {
+    display: block;
+    height: auto;
+    flex-shrink: 0;
+}
+
+/* ── Type helpers ─────────────────────────────────────────────
+   Sizes are always set by the individual piece; these only fix family,
+   weight, and tracking so every artboard speaks with the same voice. */
+.p-display {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+}
+
+.p-display-italic {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.1;
+}
+
+.p-eyebrow {
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+}
+
+.p-label {
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.p-body { font-family: 'Lato', sans-serif; font-weight: 400; }
+
+.ink-teal   { color: var(--teal-dark); }
+.ink-accent { color: var(--accent); }
+.ink-cream  { color: var(--cream); }
+
+/* ── QR ───────────────────────────────────────────────────────
+   assets/qr-*.svg draw their modules with currentColor and carry no quiet
+   zone of their own — the white padding here is that quiet zone, and
+   scanners need it. Do not remove the padding or crop the box. */
+.qr {
+    background: #fff;
+    display: block;
+    flex-shrink: 0;
+}
+
+.qr svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* Pure black scans more reliably than the teal; contrast is the whole
+       job of a QR code and cheap phone cameras in low light have little
+       margin. */
+    color: #000;
+}
+
+/* ── Print ────────────────────────────────────────────────────
+   Kill the screen offcut so the artboard is the entire sheet, and force
+   background graphics on — most browsers drop them by default and the
+   red offset shadow is a filter, not text. */
+@media print {
+    .piece-body {
+        background: #fff;
+        display: block;
+        min-height: 0;
+    }
+    .canvas {
+        margin: 0;
+        box-shadow: none;
+        break-inside: avoid;
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "eleventy --serve",
     "clean": "node -e \"require('fs').rmSync('_site',{recursive:true,force:true})\"",
-    "build": "npm run clean && eleventy"
+    "build": "npm run clean && eleventy",
+    "export": "npm run build && node scripts/export-studio.js"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0"

@@ -1,0 +1,59 @@
+/* ============================================================
+   Facebook Profile Picture — 1080 × 1080 px
+   Piece: src/studio/fb-profile.njk
+
+   Facebook masks the upload to a circle and shows it at 40–170 px in
+   most surfaces. So: one strong element (the wordmark), everything
+   inside the circle, nothing that depends on being read small.
+   ============================================================ */
+
+.fbpic {
+    /* Same teal ground as the hero's first slide, so the profile picture and
+       the site's first screen read as one thing. */
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    display: grid;
+    place-items: center;
+}
+
+/* Guide ring. Cream, not red: red on teal is 1.3:1 and would smear into the
+   ground at thumbnail size. Inset 44px puts it just inside Facebook's circle
+   mask, which cuts at the full 1080 diameter. */
+.fbpic-ring {
+    position: absolute;
+    inset: 44px;
+    border: 3px solid var(--cream);
+    border-radius: 50%;
+    opacity: 0.45;
+}
+
+.fbpic-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.fbpic-wordmark {
+    /* piece.css derives the width AND the red offset from this one value.
+
+       Pushed out close to the ring on purpose. Facebook shows this at 40px in
+       feed, so the wordmark has to be the whole picture — every pixel spent on
+       margin is one the mark does not get. 840px wide → 233px tall; the ring
+       has a 496px radius, so the chord at that height is 964px. */
+    --mark-w: 840px;
+}
+
+.fbpic-filigree {
+    width: 400px;
+    margin-top: 36px;
+    color: var(--mint);
+    opacity: 0.85;
+}
+
+.fbpic-eyebrow {
+    font-size: 34px;
+    color: var(--cream);
+    opacity: 0.8;
+    margin-top: 26px;
+}

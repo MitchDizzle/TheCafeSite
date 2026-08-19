@@ -1,0 +1,5 @@
+Drop printable and shareable files here — PDF, PNG, JPG, WEBP, SVG, GIF, AVIF,
+HTML. They appear on /studio/ automatically on the next build.
+
+A subfolder becomes the category: files/menus/lunch.pdf lands under "Menus".
+See ../README.md for the naming rules and the optional _meta.json overrides.

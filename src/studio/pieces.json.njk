@@ -1,0 +1,21 @@
+---
+# Export manifest for scripts/export-studio.js.
+#
+# Emitted rather than hand-maintained so that adding a piece to the board also
+# makes it exportable — same front matter, no second list to forget.
+permalink: "/studio/pieces.json"
+eleventyExcludeFromCollections: true
+---
+{%- set pieces = [] %}
+{%- for piece in collections.studio %}
+  {%- set _ = pieces.push({
+        slug:  piece.fileSlug,
+        title: piece.data.studioTitle or piece.data.title,
+        url:   piece.filePathStem,
+        w:     piece.data.studioW,
+        h:     piece.data.studioH,
+        scale: piece.data.studioExportScale or 1,
+        print: true if piece.data.pageSize else false
+     }) %}
+{%- endfor %}
+{{ pieces | dump(2) | safe }}

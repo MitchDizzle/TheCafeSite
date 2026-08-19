@@ -8,3 +8,6 @@ social/exports/
 node_modules
 _site/
 .cache/
+
+# Rendered studio PNGs — regenerate with `npm run export`
+exports/

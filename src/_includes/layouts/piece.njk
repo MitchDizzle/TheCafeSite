@@ -1,0 +1,44 @@
+{# Fixed-canvas layout for print and social pieces.
+
+   Deliberately NOT built on base.njk: a piece is a physical artboard, not a
+   web page. It wants exact inch/pixel geometry, its own @page size, and none
+   of style.css's responsive type scale — which would silently resize the
+   artwork depending on the browser window and ruin the export.
+
+   Every piece is noindex/nofollow. They live under /studio/, which the server
+   also marks noindex via X-Robots-Tag (see src/.htaccess).
+
+   Front matter contract:
+     title       required — browser tab / export filename hint
+     canvasW     required — CSS length, e.g. "11in" or "1080px"
+     canvasH     required — CSS length
+     pageSize    optional — @page size, e.g. "11in 17in portrait". Print only.
+     pageCss     optional — the piece's own stylesheet
+     studio*     optional — see src/studio/index.njk for the board fields
+#}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{{ title }}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ '/assets/css/tokens.css' | bust }}">
+    <link rel="stylesheet" href="{{ '/assets/css/piece.css' | bust }}">
+    {% if pageCss %}<link rel="stylesheet" href="{{ pageCss | bust }}">{% endif %}
+    <style>
+        {%- if pageSize %}
+        @page { size: {{ pageSize }}; margin: 0; }
+        {%- endif %}
+        .canvas { width: {{ canvasW }}; height: {{ canvasH }}; }
+    </style>
+    {{ headExtra | safe }}
+</head>
+<body class="piece-body">
+{{ content | safe }}
+</body>
+</html>
