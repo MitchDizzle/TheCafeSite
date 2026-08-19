@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "cafe-static",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8748", "-d", "site"],
-      "port": 8748
+      "name": "thecafe",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "port": 8080
     }
   ]
 }

@@ -1,81 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Browse photos of The Café's catering events and meal prep — food, setups, and finished spreads.">
-    <title>Gallery | The Café</title>
-
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Gallery | The Café">
-    <meta property="og:description" content="Photos of The Café's catering events and meal prep — food, setups, and finished spreads.">
-    <meta property="og:url" content="https://lvcafetogo.com/gallery">
-    <link rel="canonical" href="https://lvcafetogo.com/gallery">
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-
-    <style>
-        /* Masonry-style photo grid */
-        .gallery-grid {
-            columns: 3 280px;
-            column-gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .gallery-grid__item {
-            break-inside: avoid;
-            margin-bottom: 1rem;
-            border-radius: 3px;
-            overflow: hidden;
-            background: #DCE4E4;
-        }
-
-        .gallery-grid__item img {
-            width: 100%;
-            height: 100%;
-            display: block;
-            object-fit: cover;
-            object-position: center 35%;
-        }
-
-        /* Placeholder block shown until real images are added */
-        .gallery-placeholder {
-            width: 100%;
-            background: #DCE4E4;
-            overflow: hidden;
-        }
-    </style>
-</head>
-<body class="page-body">
-
-    <nav class="nav" aria-label="Site navigation">
-        <div class="nav__inner">
-            <a href="./" class="nav__brand">The Café</a>
-
-            <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-
-            <ul class="nav__links" id="nav-links" role="list">
-                <li><a href="catering">Catering</a></li>
-                <li><a href="gallery">Gallery</a></li>
-                <li><a href="contact" class="btn btn-primary">Contact</a></li>
-            </ul>
-        </div>
-    </nav>
-
-    <div class="construction-banner" role="note">
-        Pardon our crumbs — this website is still under construction. Some details may change.
-    </div>
-
-    <main>
-        <section class="section" aria-labelledby="gallery-heading">
+---
+layout: layouts/page.njk
+title: "Gallery | The Café"
+description: "Browse photos of The Café's catering events and meal prep — food, setups, and finished spreads."
+ogDescription: "Photos of The Café's catering events and meal prep — food, setups, and finished spreads."
+pageCss: "/assets/css/gallery.css"
+---
+<section class="section" aria-labelledby="gallery-heading">
             <div class="container">
                 <h1 id="gallery-heading">Gallery</h1>
                 <p style="margin-top: 0.75rem;">A look at our events, spreads, and everything in between.</p>
@@ -152,23 +82,3 @@
                 </div>
             </div>
         </section>
-    </main>
-
-    <footer class="footer" aria-label="Site footer">
-        <div class="footer__inner">
-            <p class="footer__brand">The Café</p>
-            <ul class="footer__links" role="list">
-                <li><a href="about">About</a></li>
-                <li><a href="catering">Catering</a></li>
-                <li><a href="team">Team</a></li>
-                <li><a href="gallery">Gallery</a></li>
-                <li><a href="contact">Contact</a></li>
-                <li><a href="privacy">Privacy</a></li>
-            </ul>
-            <p class="footer__copy">&copy; <span class="footer-year"></span> The Café. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <script src="js/main.js"></script>
-</body>
-</html>

@@ -1,0 +1,48 @@
+/* Page styles for team.njk — extracted from the inline <style> block
+   during the Eleventy migration so it can be cache-busted. */
+
+/* Team card grid — placeholder layout */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 2rem;
+            margin-top: 2.5rem;
+        }
+
+        .team-card {
+            background: #fff;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(var(--text-dark-rgb), 0.07);
+        }
+
+        .team-card__photo {
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            background: #DCE4E4;
+            object-fit: cover;
+        }
+
+        .team-card__body {
+            padding: 1.25rem;
+        }
+
+        .team-card__name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .team-card__role {
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent-dark);
+            margin-bottom: 0.75rem;
+        }
+
+        .team-card__bio {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: rgba(var(--text-dark-rgb), 0.75);
+        }

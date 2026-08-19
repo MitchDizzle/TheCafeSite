@@ -1,0 +1,20 @@
+{
+  "name": "The Café",
+  "url": "https://lvcafetogo.com",
+  "description": "Professional catering and meal prep services in Leavenworth, Kansas. Crafted with care for every occasion.",
+  "phone": "(913) 547-9994",
+  "phoneHref": "+1-913-547-9994",
+  "email": "theabcafe@gmail.com",
+  "address": {
+    "street": "417 S 6th St",
+    "locality": "Leavenworth",
+    "region": "KS",
+    "postalCode": "66048",
+    "country": "US"
+  },
+  "founded": "2005-10",
+
+  "_comment_construction": "Set to false to remove the under-construction banner from every page at once.",
+  "underConstruction": true,
+  "constructionNotice": "Pardon our crumbs — this website is still under construction. Some details may change."
+}

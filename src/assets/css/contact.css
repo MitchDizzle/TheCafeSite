@@ -1,0 +1,142 @@
+/* Page styles for contact.njk — extracted from the inline <style> block
+   during the Eleventy migration so it can be cache-busted. */
+
+/* Form layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group--full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-dark);
+            font-weight: 400;
+        }
+
+        input, select, textarea {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 300;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(var(--text-dark-rgb), 0.25);
+            border-radius: 2px;
+            background: #fff;
+            color: var(--text-dark);
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea { resize: vertical; min-height: 120px; }
+
+        .form-submit { margin-top: 0.5rem; }
+
+        .form-section-heading {
+            grid-column: 1 / -1;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: var(--text-dark);
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(var(--text-dark-rgb), 0.12);
+            margin-top: 0.5rem;
+        }
+
+        .form-hint {
+            font-size: 0.78rem;
+            color: rgba(var(--text-dark-rgb), 0.55);
+            margin-top: 0.15rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem 1.4rem;
+            margin-top: 0.25rem;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.88rem;
+            text-transform: none;
+            letter-spacing: 0;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            padding: 0;
+            border: none;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        /* Contact info block */
+        .contact-info {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid rgba(var(--text-dark-rgb), 0.12);
+        }
+
+        .contact-info__list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 1rem;
+        }
+
+        .contact-info__list li {
+            font-size: 0.95rem;
+        }
+
+        /* FAQ */
+        .faq {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid rgba(var(--text-dark-rgb), 0.12);
+        }
+
+        .faq__list {
+            list-style: none;
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .faq__q {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .faq__a {
+            font-size: 0.9rem;
+            color: rgba(var(--text-dark-rgb), 0.75);
+        }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group--full { grid-column: 1; }
+        }

@@ -1,0 +1,105 @@
+---
+layout: layouts/page.njk
+title: "Contact | The Café"
+description: "Get in touch with The Café in Leavenworth, KS — phone, email, and location, plus our weekly menu newsletter signup."
+ogDescription: "Get in touch with The Café in Leavenworth, KS — contact info, FAQ, and weekly menu newsletter signup."
+pageCss: "/assets/css/contact.css"
+---
+<section class="section" aria-labelledby="contact-heading">
+            <div class="container">
+
+                <!-- ── Heading + catering pointer ───────────── -->
+                <h1 id="contact-heading">Contact Us</h1>
+                <p style="margin-top: 0.75rem; max-width: 55ch;">
+                    Planning an event? Our booking form on the catering page has everything
+                    we need to get started on your quote.
+                </p>
+                <a href="catering#inquiry" class="btn btn-primary" style="margin-top: 1.25rem; display: inline-block;">Book a Catering</a>
+
+                <!-- ── Contact Info ─────────────────────────── -->
+                <div class="contact-info">
+                    <h2>Get in Touch</h2>
+                    <!-- TODO: replace with real contact info from client -->
+                    <ul class="contact-info__list">
+                        <li>Phone: <a href="tel:+19135479994">(913) 547-9994</a></li>
+                        <li>Email: <a href="mailto:theabcafe@gmail.com">theabcafe@gmail.com</a></li>
+                        <li>Location: <a href="https://maps.google.com/?q=417+S+6th+St,+Leavenworth,+KS+66048">417 S 6th St, Leavenworth, KS 66048</a></li>
+                    </ul>
+                </div>
+
+                <!-- ── Newsletter Signup ────────────────────── -->
+                <div class="contact-info" id="newsletter">
+                    <h2>Get Our Weekly Menu &amp; News</h2>
+                    <p style="margin-top: 0.75rem; max-width: 55ch;">
+                        Be first to hear what's cooking — weekly menus, catering specials, and news
+                        from the kitchen, straight to your inbox.
+                    </p>
+
+                    <!-- Formspree for now; swaps to our own backend in Phase 1 (see CafeWork TASKS P1-7) -->
+                    <form action="https://formspree.io/f/mdarqnql" method="POST"
+                          data-success="You're on the list! Watch your inbox for weekly menus and news from the kitchen.">
+                        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
+                               style="position:absolute; left:-9999px;" aria-hidden="true">
+                        <input type="hidden" name="_subject" value="Newsletter signup — website form">
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="nl-email">Email <span style="color:var(--accent-dark)">*</span></label>
+                                <input type="email" id="nl-email" name="email" autocomplete="email" required placeholder="you@example.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="nl-phone">Phone (optional)</label>
+                                <input type="tel" id="nl-phone" name="phone" autocomplete="tel" placeholder="(555) 000-0000">
+                                <span class="form-hint">Used to reach you about orders — we won't text news unless you say so below</span>
+                            </div>
+
+                            <div class="form-group form-group--full">
+                                <div class="checkbox-group">
+                                    <label>
+                                        <input type="checkbox" name="sms_consent" value="yes">
+                                        It's OK to text me menus and specials at the number above
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group form-group--full">
+                                <button type="submit" class="btn btn-primary">Sign Me Up</button>
+                                <p class="form-hint" style="margin-top: 0.6rem;">
+                                    Unsubscribe anytime. See our <a href="privacy">privacy policy</a>.
+                                </p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ── FAQ ─────────────────────────────────── -->
+                <div class="faq">
+                    <h2>Frequently Asked Questions</h2>
+                    <!-- TODO: fill in answers from client interview -->
+                    <ul class="faq__list">
+                        <li>
+                            <p class="faq__q">How far in advance should I book?</p>
+                            <p class="faq__a">TODO.</p>
+                        </li>
+                        <li>
+                            <p class="faq__q">Do you accommodate dietary restrictions?</p>
+                            <p class="faq__a">TODO.</p>
+                        </li>
+                        <li>
+                            <p class="faq__q">What is your cancellation policy?</p>
+                            <p class="faq__a">TODO.</p>
+                        </li>
+                        <li>
+                            <p class="faq__q">Do you provide serving staff?</p>
+                            <p class="faq__a">TODO.</p>
+                        </li>
+                        <li>
+                            <p class="faq__q">What areas do you serve?</p>
+                            <p class="faq__a">TODO.</p>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>

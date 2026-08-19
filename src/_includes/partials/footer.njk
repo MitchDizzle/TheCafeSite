@@ -1,0 +1,13 @@
+<footer class="footer" aria-label="Site footer">
+    <div class="footer__inner">
+        <p class="footer__brand">{{ site.name }}</p>
+        <ul class="footer__links" role="list">
+            {%- for item in nav.footer %}
+            <li><a href="{{ item.href }}">{{ item.label }}</a></li>
+            {%- endfor %}
+        </ul>
+        {# Year is filled in by main.js rather than at build time, so a site
+           that is not rebuilt over New Year does not show a stale copyright. #}
+        <p class="footer__copy">&copy; <span class="footer-year"></span> {{ site.name }}. All rights reserved.</p>
+    </div>
+</footer>

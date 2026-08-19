@@ -1,0 +1,22 @@
+{# Active state is resolved at build time by comparing each href to the page's
+   filePathStem. The old runtime check in main.js compared against the URL's
+   last path segment, which cannot work now that hrefs are root-absolute and
+   404.html renders at an arbitrary path. #}
+<nav class="nav" aria-label="Site navigation">
+    <div class="nav__inner">
+        <a href="/" class="nav__brand">{{ site.name }}</a>
+
+        <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <ul class="nav__links" id="nav-links" role="list">
+            {%- for item in nav.primary %}
+            {%- set isCurrent = (item.href == page.filePathStem) %}
+            <li><a href="{{ item.href }}"{% if item.cta %} class="btn btn-primary{% if isCurrent %} active{% endif %}"{% elif isCurrent %} class="active"{% endif %}{% if isCurrent %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+            {%- endfor %}
+        </ul>
+    </div>
+</nav>

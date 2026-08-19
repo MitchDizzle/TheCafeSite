@@ -3,3 +3,8 @@ social/exports/
 
 # Claude Code local settings (machine-specific paths)
 .claude/settings.local.json
+
+# Eleventy
+node_modules
+_site/
+.cache/

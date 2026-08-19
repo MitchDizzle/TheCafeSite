@@ -1,0 +1,12 @@
+---
+layout: layouts/base.njk
+bodyClass: page-body
+---
+{% include "partials/nav.njk" %}
+{% include "partials/construction-banner.njk" %}
+
+    <main>
+{{ content | safe }}
+    </main>
+
+{% include "partials/footer.njk" %}

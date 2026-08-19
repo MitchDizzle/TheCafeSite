@@ -1,6 +1,6 @@
 /* ============================================================
    The Cafe — Shared Inner-Page JS
-   Handles: mobile nav toggle, active nav link, footer year, Formspree forms
+   Handles: mobile nav toggle, footer year, Formspree forms
    ============================================================ */
 
 (function () {
@@ -24,16 +24,6 @@
             }
         });
     }
-
-    /* ── Active nav link ────────────────────────────────────── */
-
-    var currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    document.querySelectorAll('.nav__links a').forEach(function (a) {
-        if (a.getAttribute('href') === currentPage) {
-            a.classList.add('active');
-            a.setAttribute('aria-current', 'page');
-        }
-    });
 
     /* ── Footer year ────────────────────────────────────────── */
 
