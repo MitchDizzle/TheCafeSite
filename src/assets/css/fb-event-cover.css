@@ -1,0 +1,103 @@
+/* ============================================================
+   Opening Day Event Cover — 1920 × 1005 px
+   Piece: src/studio/fb-event-cover.njk
+
+   1.91:1 is what Facebook asks for, and what it shows on desktop. It is
+   not what most people see. On a phone the event page crops to roughly a
+   16:9 centre and then lays the event's own title/date card over the
+   bottom of it; "Events you may like" cuts a square out of the middle.
+
+   Hence one centred stack inside .cover-safe — a 1140 × 620 box, which is
+   what survives all three crops. Set showGuides: true in the front matter
+   to see it while designing.
+   ============================================================ */
+
+.cover {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    display: grid;
+    place-items: center;
+    text-align: center;
+    color: var(--cream);
+}
+
+/* A wide flat gradient at this size bands visibly once Facebook re-encodes
+   it. The radial lifts the centre so the letterforms sit on their own light
+   and the banding has somewhere to hide. */
+.cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 75% at 50% 46%, rgba(142, 217, 212, 0.16), transparent 70%);
+}
+
+/* The intersection of the three crops. Nothing readable outside it. */
+.cover-safe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1140px;
+    height: 620px;
+    transform: translate(-50%, -50%);
+    border: 2px dashed rgba(0, 200, 255, 0.85);
+    display: none;
+}
+
+.cover--guides .cover-safe { display: block; }
+
+.cover-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Nudged up off centre: the app's title card covers the bottom of the
+       artboard, so optical centre here is above geometric centre. */
+    margin-top: -34px;
+}
+
+.cover-kicker {
+    font-size: 28px;
+    color: var(--mint);
+    text-indent: 0.3em;  /* .p-eyebrow tracks 0.3em — see fb-opening-day.css */
+    margin-bottom: 26px;
+}
+
+.cover-wordmark {
+    /* piece.css derives the width AND the coral offset from this one value.
+       640px wide → 177px tall at the mark's 3.61:1 ratio. */
+    --mark-w: 640px;
+}
+
+.cover-filigree {
+    width: 300px;
+    margin-top: 20px;
+    color: var(--mint);
+    opacity: 0.7;
+}
+
+.cover-date {
+    font-size: 84px;
+    margin-top: 26px;
+}
+
+.cover-date sup {
+    font-size: 0.36em;
+    vertical-align: baseline;
+    position: relative;
+    top: -0.72em;
+    margin-left: 0.04em;
+}
+
+.cover-hours {
+    font-size: 28px;
+    letter-spacing: 0.06em;
+    margin-top: 18px;
+    color: var(--mint);
+}
+
+.cover-hours .ampm {
+    font-size: 0.72em;
+    margin-left: 0.12em;
+    letter-spacing: 0.04em;
+}
+
+.dot { opacity: 0.55; margin: 0 0.4em; }

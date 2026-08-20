@@ -38,14 +38,14 @@
        the date itself stay the largest thing on the banner. #}
     <section class="banner-announce">
         <p class="p-display-italic announce-kicker ink-teal">Restaurant opening</p>
-        <p class="p-display announce-day ink-teal">Monday</p>
-        <p class="p-display announce-date ink-accent">October 5<sup>th</sup></p>
+        <p class="p-display announce-day ink-teal">{{ site.opening.dayName }}</p>
+        <p class="p-display announce-date ink-accent">{{ site.opening.monthDay }}<sup>{{ site.opening.ordinal }}</sup></p>
     </section>
 
     <section class="banner-hours">
-        <p class="p-label hours-label ink-accent">Temporary Hours</p>
-        <p class="p-display hours-days ink-teal">Monday &ndash; Friday</p>
-        <p class="p-display hours-time ink-teal">6:00 <span class="ampm">am</span> &ndash; 12:00 <span class="ampm">pm</span></p>
+        <p class="p-label hours-label ink-accent">{{ site.opening.hoursLabel }}</p>
+        <p class="p-display hours-days ink-teal">{{ site.opening.hoursDays }}</p>
+        <p class="p-display hours-time ink-teal">{{ site.opening.opens.time }} <span class="ampm">{{ site.opening.opens.meridiem }}</span> &ndash; {{ site.opening.closes.time }} <span class="ampm">{{ site.opening.closes.meridiem }}</span></p>
     </section>
 
     <footer class="banner-footer">

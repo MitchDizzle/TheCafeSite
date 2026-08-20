@@ -1,0 +1,109 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Opening Day Post (1080 × 1080)"
+canvasW: "1080px"
+canvasH: "1080px"
+pageCss: "/assets/css/fb-opening-day.css"
+
+# ── EDIT THIS ───────────────────────────────────────────────
+# The specials card. Three short lines read best; four fit; five will
+# start to crowd the date above it.
+#
+#   specials:
+#     - "Biscuits & sausage gravy"
+#     - "Chicken fried steak & eggs"
+#     - "Cinnamon roll, still warm"
+#
+# Leave the list empty and the card exports with blank rules instead, so
+# the specials can be written in by hand or typed over the PNG later —
+# that is what `specialSlots` counts. Write & as a literal, never &amp;.
+specials: []
+specialSlots: 3
+
+# Small line under the card. Set to "" to drop it.
+specialsFootnote: "While they last"
+
+# The red reminder under a blank card. It exists so an unfinished post
+# cannot quietly become a published one. Set false for a deliberately
+# blank export.
+showSpecialsHint: true
+
+# The date, hours and address all come from src/_data/site.json — change
+# them there and the front door banner stays in step automatically.
+# ────────────────────────────────────────────────────────────
+
+tags: studio
+studioTitle: "Opening Day — Facebook post"
+studioCategory: "Social"
+studioSize: "1080 × 1080 px · square feed post"
+studioNote: "Specials are the `specials:` list at the top of the .njk — leave it empty to export blank rules to fill in later. Export to PNG and upload; a square post is never cropped in feed."
+studioW: 1080
+studioH: 1080
+studioOrder: 21
+---
+<div class="canvas post">
+
+    {# Same darkened teal ground as the profile picture, so a follower who
+       sees this in feed reads it as the same account without looking. #}
+    <header class="post-head">
+        {# .wordmark--hero, not the print weight: this sits on a dark
+           composited ground at screen size, which is the hero's situation
+           exactly. See the wordmark section of piece.css. #}
+        <div class="wordmark wordmark--light wordmark--hero post-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <div class="post-filigree">
+            {% include "partials/filigree.njk" %}
+        </div>
+    </header>
+
+    <section class="post-announce">
+        <p class="p-eyebrow post-kicker">{{ site.opening.kicker }}</p>
+        <p class="p-display-italic post-day">{{ site.opening.dayName }}</p>
+        {# Cream, not --accent. The ground is teal and red on teal is 1.3:1 —
+           the one pairing the palette forbids. The red is spent inside the
+           cream card below, where it has the contrast to earn it. #}
+        <p class="p-display post-date">{{ site.opening.monthDay }}<sup>{{ site.opening.ordinal }}</sup></p>
+        <p class="p-body post-hours">
+            {{ site.opening.opens.time }}<span class="ampm">{{ site.opening.opens.meridiem }}</span>
+            &ndash;
+            {{ site.opening.closes.time }}<span class="ampm">{{ site.opening.closes.meridiem }}</span>
+            <span class="dot">&middot;</span>
+            {{ site.opening.hoursDays }}
+        </p>
+    </section>
+
+    {# The fill-in-later card. Cream so it reads as a menu card pinned to the
+       post rather than more of the same panel. #}
+    <section class="post-specials{% if not specials.length %} post-specials--blank{% endif %}">
+        <p class="p-label spec-label">Opening Day Specials</p>
+        <div class="spec-rule" aria-hidden="true"></div>
+
+        {% if specials.length %}
+        <ul class="spec-list">
+            {%- for item in specials %}
+            <li class="p-display-italic spec-item">{{ item }}</li>
+            {%- endfor %}
+        </ul>
+        {% else %}
+        {# Ruled, not empty: blank space in the middle of a post reads as a
+           mistake, but a rule reads as a line waiting to be written on. #}
+        <div class="spec-blanks" aria-hidden="true">
+            {%- for _ in range(0, specialSlots) %}
+            <span class="spec-blank"></span>
+            {%- endfor %}
+        </div>
+        {% if showSpecialsHint %}
+        <p class="p-body spec-hint">Specials go here &mdash; fill in <code>specials:</code> at the top of <code>studio/fb-opening-day.njk</code></p>
+        {% endif %}
+        {% endif %}
+
+        {% if specialsFootnote %}<p class="p-body spec-foot">{{ specialsFootnote }}</p>{% endif %}
+    </section>
+
+    <footer class="post-foot">
+        <p class="p-label foot-line">{{ site.address.street }} <span class="dot">&middot;</span> {{ site.address.locality }}, {{ site.address.region }}</p>
+        <p class="p-label foot-line foot-line--quiet">lvcafetogo.com <span class="dot">&middot;</span> {{ site.phone }}</p>
+    </footer>
+
+</div>

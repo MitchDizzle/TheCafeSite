@@ -1,0 +1,200 @@
+/* ============================================================
+   Opening Day — Facebook post, 1080 × 1080 px
+   Piece: src/studio/fb-opening-day.njk
+
+   A square post is the one Facebook format that is never cropped in
+   feed, so the whole artboard is usable — but it is also shown about
+   500 px wide on a phone, which means every size here is roughly half
+   what it looks like on screen. Nothing smaller than 22px survives that.
+
+   Three things, in this order of loudness: the date, the specials card,
+   the wordmark. The wordmark is third on purpose — this post goes out
+   from a page that already carries the name.
+   ============================================================ */
+
+.post {
+    /* The profile picture's ground, exactly (fb-profile.css). Two posts from
+       the same page have to read as one account at thumbnail size. */
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 56px 60px 52px;
+    color: var(--cream);
+}
+
+/* Tracking is added to the RIGHT of every letter, including the last one,
+   so a centred line of it sits half a space left of true centre. Half the
+   tracking back as indent puts it right. Applied per-element rather than in
+   piece.css because the fix depends on the tracking value. */
+.post-kicker { text-indent: 0.3em; }   /* .p-eyebrow tracks 0.3em */
+.spec-label,
+.foot-line   { text-indent: 0.18em; }  /* .p-label tracks 0.18em  */
+
+/* ── Masthead ─────────────────────────────────────────────── */
+
+.post-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.post-wordmark {
+    /* piece.css derives the width AND the coral offset from this one value.
+       600px wide → 166px tall at the mark's 3.61:1 ratio. */
+    --mark-w: 600px;
+}
+
+.post-filigree {
+    width: 280px;
+    margin-top: 18px;
+    color: var(--mint);
+    opacity: 0.7;
+}
+
+/* ── The date ─────────────────────────────────────────────── */
+
+.post-announce { margin-top: 22px; }
+
+.post-kicker {
+    font-size: 26px;
+    color: var(--mint);
+}
+
+.post-day {
+    font-size: 38px;
+    margin-top: 18px;
+    opacity: 0.9;
+}
+
+.post-date {
+    font-size: 100px;
+    margin-top: 2px;
+}
+
+/* Playfair's default superscript sits too high and too large against a
+   100px numeral — it pulls the eye off the digit. */
+.post-date sup {
+    font-size: 0.36em;
+    vertical-align: baseline;
+    position: relative;
+    top: -0.72em;
+    margin-left: 0.04em;
+}
+
+.post-hours {
+    font-size: 28px;
+    letter-spacing: 0.06em;
+    margin-top: 14px;
+    color: var(--mint);
+}
+
+/* "6:00am" as one word, with the meridiem set small and tight — a full
+   space before it would break the time in half at this size. */
+.post-hours .ampm {
+    font-size: 0.72em;
+    margin-left: 0.12em;
+    letter-spacing: 0.04em;
+}
+
+.dot { opacity: 0.55; margin: 0 0.35em; }
+
+/* ── Specials card ────────────────────────────────────────── */
+
+/* Cream, so it reads as a card laid on the post rather than another band of
+   it — and so the red accent finally has a ground it passes AA on (5.08:1).
+   The drop shadow is neutral dark, NOT the wordmark's red offset: red on
+   teal is 1.3:1 and the shadow would disappear into the ground. */
+.post-specials {
+    width: 100%;
+    margin-top: 30px;
+    padding: 30px 44px 26px;
+    background: var(--cream);
+    color: var(--text-dark);
+    border-radius: 8px;
+    box-shadow: 0 14px 34px rgba(10, 22, 28, 0.28);
+}
+
+.spec-label {
+    font-size: 24px;
+    color: var(--accent);
+}
+
+.spec-rule {
+    height: 2px;
+    margin: 16px auto 0;
+    width: 100%;
+    background: rgba(var(--text-dark-rgb), 0.14);
+}
+
+/* ── Filled state ─────────────────────────────────────────── */
+
+.spec-list {
+    list-style: none;
+    margin-top: 8px;
+}
+
+.spec-item {
+    font-size: 38px;
+    color: var(--teal-dark);
+    padding: 12px 0 10px;
+    border-bottom: 2px dashed rgba(var(--text-dark-rgb), 0.18);
+}
+
+/* The dashed rules are what makes the blank card read as "to be filled in",
+   so the filled card keeps them — the two states stay the same object. */
+.spec-item:last-child { border-bottom: none; padding-bottom: 4px; }
+
+/* ── Blank state ──────────────────────────────────────────── */
+
+.spec-blanks {
+    display: flex;
+    flex-direction: column;
+    margin-top: 8px;
+}
+
+/* Ruled rather than empty. Empty space mid-post reads as a rendering
+   failure; a rule reads as a line waiting for a word. Height matches
+   .spec-item's line box so filling the list in does not move the card. */
+.spec-blank {
+    display: block;
+    height: 60px;
+    border-bottom: 2px dashed rgba(var(--text-dark-rgb), 0.28);
+}
+
+/* Deliberately loud. This is the one thing on the artboard that must never
+   ship, so it is set in the accent and left sitting under the rules where
+   the export cannot hide it. showSpecialsHint: false removes it. */
+.spec-hint {
+    font-size: 19px;
+    line-height: 1.4;
+    color: var(--accent);
+    margin-top: 12px;
+}
+
+.spec-hint code {
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+}
+
+.spec-foot {
+    font-size: 21px;
+    letter-spacing: 0.05em;
+    margin-top: 20px;
+    color: rgba(var(--text-dark-rgb), 0.62);
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+
+.post-foot { margin-top: 26px; }
+
+.foot-line {
+    font-size: 21px;
+    line-height: 1.7;
+    letter-spacing: 0.18em;
+}
+
+.foot-line--quiet { opacity: 0.72; }

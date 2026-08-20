@@ -14,6 +14,19 @@
   },
   "founded": "2005-10",
 
+  "_comment_opening": "Opening day. Read by the front door banner and the Facebook pieces in /studio/ so the date is stated once. hoursLabel says \"Temporary\" until the full schedule is set.",
+  "opening": {
+    "date": "2026-10-05",
+    "kicker": "Grand Opening",
+    "dayName": "Monday",
+    "monthDay": "October 5",
+    "ordinal": "th",
+    "hoursLabel": "Temporary Hours",
+    "hoursDays": "Monday – Friday",
+    "opens": { "time": "6:00", "meridiem": "am" },
+    "closes": { "time": "12:00", "meridiem": "pm" }
+  },
+
   "_comment_construction": "Set to false to remove the under-construction banner from every page at once.",
   "underConstruction": true,
   "constructionNotice": "Pardon our crumbs — this website is still under construction. Some details may change."

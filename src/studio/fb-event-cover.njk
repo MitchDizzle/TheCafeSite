@@ -1,0 +1,54 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Opening Day Event Cover (1920 × 1005)"
+canvasW: "1920px"
+canvasH: "1005px"
+pageCss: "/assets/css/fb-event-cover.css"
+
+# Design guides — the crop and safe-zone box. ALWAYS false before export.
+showGuides: false
+
+tags: studio
+studioTitle: "Opening Day — Facebook event cover"
+studioCategory: "Social"
+studioSize: "1920 × 1005 px · 1.91:1, Facebook's event size"
+studioNote: "For the cover image of a Facebook Event. No specials on it — an event has a description field for those, and the cover gets cropped differently on every surface. Everything sits inside the mobile-safe centre."
+studioW: 1920
+studioH: 1005
+studioOrder: 22
+---
+{#- Facebook crops this differently in every placement: the full 1.91:1 on
+    desktop, roughly a 16:9 centre cut on mobile, and a square thumbnail in
+    "Events you may like". Nothing on it may depend on the corners, and the
+    bottom strip is where the app lays its own date-and-title card. So the
+    composition is one centred stack, held inside the guide box. -#}
+<div class="canvas cover{% if showGuides %} cover--guides{% endif %}">
+
+    <div class="cover-safe" aria-hidden="true"></div>
+
+    <div class="cover-content">
+        <p class="p-eyebrow cover-kicker">{{ site.opening.kicker }}</p>
+
+        <div class="wordmark wordmark--light wordmark--hero cover-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+
+        <div class="cover-filigree">
+            {% include "partials/filigree.njk" %}
+        </div>
+
+        {# One line here, unlike the banner and the square post. This artboard
+           is 1920 wide — the date fits across it at full size, and stacking
+           it would push the hours down into the strip Facebook covers. #}
+        <p class="p-display cover-date">{{ site.opening.dayName }}, {{ site.opening.monthDay }}<sup>{{ site.opening.ordinal }}</sup></p>
+
+        <p class="p-body cover-hours">
+            {{ site.opening.opens.time }}<span class="ampm">{{ site.opening.opens.meridiem }}</span>
+            &ndash;
+            {{ site.opening.closes.time }}<span class="ampm">{{ site.opening.closes.meridiem }}</span>
+            <span class="dot">&middot;</span>
+            {{ site.address.street }}, {{ site.address.locality }}
+        </p>
+    </div>
+
+</div>
