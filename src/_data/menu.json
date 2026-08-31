@@ -1,0 +1,256 @@
+{
+  "_updated": "2026-08-21",
+  "_note": "Items with 'verify: true' had handwriting that was difficult to read precisely — confirm before publishing.",
+  "categories": [
+    {
+      "id": "breakfast",
+      "name": "Breakfast",
+      "items": [
+        {
+          "name": "Full Biscuit & Gravy",
+          "price": 9.00
+        },
+        {
+          "name": "Half Biscuit & Gravy",
+          "price": 5.00
+        },
+        {
+          "name": "Big Breakfast",
+          "description": "2 eggs, potatoes, meat & toast",
+          "price": 10.00
+        },
+        {
+          "name": "Burrito",
+          "description": "Build your own — choose from: bacon, sausage, ham, Canadian bacon, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
+          "price": 9.00
+        },
+        {
+          "name": "2 Egg Omelet",
+          "description": "Build your own — choose from: bacon, sausage, ham, Canadian bacon, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
+          "price": 9.00
+        },
+        {
+          "name": "3 Egg Omelet",
+          "description": "Build your own — choose from: bacon, sausage, ham, Canadian bacon, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
+          "price": 11.00
+        },
+        {
+          "name": "Breakfast Sandwich",
+          "description": "One egg, cheese & choice of bacon, sausage, ham or Canadian bacon. Served on biscuit, croissant, or English muffin (wheat, white, rye or 12 grain).",
+          "price": 8.00
+        }
+      ]
+    },
+    {
+      "id": "breakfast_sides",
+      "name": "Breakfast Sides",
+      "items": [
+        { "name": "Toast, Biscuit or Muffin", "price": 1.00 },
+        { "name": "Bagel with Cream Cheese", "price": 1.25 },
+        { "name": "Croissant", "price": 1.25 },
+        { "name": "Fried Potatoes", "price": 1.25 },
+        { "name": "Side of Gravy", "price": 1.25 },
+        { "name": "Bacon (3 strips)", "price": 1.00 },
+        { "name": "Sausage (1)", "price": 1.00 },
+        { "name": "Canadian Bacon (2)", "price": 1.00 },
+        { "name": "Grits", "price": 1.50 },
+        { "name": "Breakfast Roll", "price": 1.25 }
+      ]
+    },
+    {
+      "id": "wraps",
+      "name": "Wraps",
+      "items": [
+        {
+          "name": "Chicken Bacon Wrap",
+          "description": "Chicken, bacon, greens, tomato, ranch & cheese",
+          "price": 9.00
+        },
+        {
+          "name": "Clubhouse Wrap",
+          "description": "Turkey, ham, bacon, greens, tomato, ranch & cheese",
+          "price": 9.00
+        },
+        {
+          "name": "Buffalo Chicken Wrap",
+          "description": "Buffalo chicken, greens, tomato, ranch & cheese",
+          "price": 9.00
+        },
+        {
+          "name": "Cordon Bleu Wrap",
+          "description": "Chicken, ham, greens, tomato, Swiss cheese & dijon mustard",
+          "price": 9.00
+        },
+        {
+          "name": "Asian Chicken Wrap",
+          "description": "Chicken, greens, tomato, almonds & sesame dressing",
+          "price": 9.00
+        },
+        {
+          "name": "Caesar Chicken Wrap",
+          "description": "Chicken, greens, tomato, parmesan cheese & caesar dressing",
+          "price": 9.00
+        },
+        {
+          "name": "Veggie Wrap",
+          "price": 6.00
+        }
+      ]
+    },
+    {
+      "id": "sandwiches",
+      "name": "Sandwiches",
+      "note": "All sandwiches served with lettuce, tomato, pickle, onion & cheese on wheat, white, rye, 12 grain or croissant.",
+      "items": [
+        {
+          "name": "Turkey Sandwich",
+          "price": 8.00
+        },
+        {
+          "name": "Ham Sandwich",
+          "price": 8.00
+        },
+        {
+          "name": "BLT Sandwich",
+          "price": 8.00
+        },
+        {
+          "name": "Grilled Cheese",
+          "price": 5.00
+        }
+      ]
+    },
+    {
+      "id": "burgers",
+      "name": "Burgers or Chicken",
+      "note": "Served on Kaiser roll or wheat bun with lettuce, tomato, pickle & onion.",
+      "items": [
+        {
+          "name": "Hamburger",
+          "price": 8.00
+        },
+        {
+          "name": "Cheeseburger",
+          "price": 8.50
+        },
+        {
+          "name": "Navajo Burger",
+          "description": "Green chili, pepper jack cheese, jalapeno mayo",
+          "price": 11.00
+        },
+        {
+          "name": "Bacon Cheese Burger",
+          "description": "4 strips bacon & American cheese",
+          "price": 11.00
+        },
+        {
+          "name": "Mushroom Swiss Burger",
+          "description": "Mushrooms & Swiss cheese",
+          "price": 11.00
+        },
+        {
+          "name": "Cordon Bleu Burger",
+          "description": "Ham & Swiss cheese",
+          "price": 11.00
+        },
+        {
+          "name": "Patty Melt",
+          "description": "Swiss cheese & grilled onions on dark rye. Choice of hamburger or chicken.",
+          "price": 11.00
+        },
+        {
+          "name": "Philly Steak Sandwich",
+          "description": "Steak, onions, peppers, mushroom & mozzarella cheese on French roll",
+          "price": 11.00
+        },
+        {
+          "name": "Reuben Sandwich",
+          "description": "Corn beef, Swiss cheese & thousand island dressing on grilled dark rye",
+          "price": 10.00
+        },
+        {
+          "name": "Clubhouse Sandwich",
+          "description": "Turkey, ham, bacon, cheese, lettuce, tomato & mayo on toast",
+          "price": 10.00
+        }
+      ]
+    },
+    {
+      "id": "salads",
+      "name": "Salads",
+      "sizing": [
+        { "size": "Full", "price": 12.00 },
+        { "size": "Half", "price": 7.00 }
+      ],
+      "items": [
+        {
+          "name": "Strawberry Chicken Salad",
+          "description": "Greens, chicken, strawberries, walnuts, tomato, parmesan cheese & dressing"
+        },
+        {
+          "name": "Buffalo Chicken Salad",
+          "description": "Greens, buffalo chicken, bacon, tomato, egg, olives, cheddar cheese & dressing"
+        },
+        {
+          "name": "Chef Salad",
+          "description": "Greens, turkey, ham, tomato, egg, cheddar & parmesan cheese"
+        },
+        {
+          "name": "Cobb Salad",
+          "description": "Greens, chicken, bacon, tomato, egg, olives & parmesan cheese"
+        },
+        {
+          "name": "Broccoli Chicken Salad",
+          "description": "Greens, chicken, bacon, broccoli, almonds & dressing"
+        },
+        {
+          "name": "Taco Salad",
+          "description": "Chips, greens, taco meat, cheese, tomato, onions, olives, jalapeno, salsa & sour cream"
+        },
+        {
+          "name": "Dinner Salad",
+          "description": "Greens, tomato, olives, mushrooms, red onion & cheddar cheese",
+          "price": 4.00
+        }
+      ]
+    },
+    {
+      "id": "soup",
+      "name": "Soup of the Day",
+      "items": [
+        { "name": "Cup", "price": 5.00 },
+        { "name": "Bowl", "price": 7.00 }
+      ]
+    },
+    {
+      "id": "sides",
+      "name": "Sides",
+      "items": [
+        { "name": "Potato Salad", "price": 3.00 },
+        { "name": "Pasta Salad", "price": 3.00 },
+        { "name": "Cucumber Salad", "price": 3.00 },
+        { "name": "Tortellini Salad", "price": 3.00 },
+        { "name": "Cottage Cheese", "price": 3.00 },
+        { "name": "Salad of the Day", "price": 3.00 },
+        { "name": "Chips", "price": 1.25 }
+      ]
+    },
+    {
+      "id": "drinks",
+      "name": "Drinks",
+      "items": [
+        {
+          "name": "Iced Tea",
+          "variants": [
+            { "size": "Large", "price": 1.40 },
+            { "size": "Small", "price": 1.25 }
+          ]
+        },
+        { "name": "Bottle Water", "price": 1.50 },
+        { "name": "Bottle Tea", "price": 3.00 },
+        { "name": "Bottle Juice", "price": 4.00 },
+        { "name": "Bottle Soda", "price": 3.00 }
+      ]
+    }
+  ]
+}

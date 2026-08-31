@@ -48,6 +48,9 @@ module.exports = function (eleventyConfig) {
     return out;
   });
 
+  // Format a plain number as US currency for menu pricing — 9 -> "$9.00".
+  eleventyConfig.addFilter("money", (n) => `$${Number(n).toFixed(2)}`);
+
   // Narrow a list to the items whose `key` equals `value`.
   //
   // Nunjucks 3.2 ships a selectattr, but it IGNORES its test arguments and

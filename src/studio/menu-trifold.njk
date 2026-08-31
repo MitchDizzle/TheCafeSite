@@ -1,0 +1,132 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Menu, tri-fold"
+canvasW: "11in"
+canvasH: "8.5in"
+pageSize: "11in 8.5in landscape"
+pageCss: "/assets/css/menu-trifold.css"
+
+tags: studio
+studioTitle: "Menu — tri-fold"
+studioCategory: "Menus"
+studioSize: "11 × 8.5 in landscape · duplex, 2 pages · letter-fold"
+studioNote: "Print duplex, flip on short edge, then letter-fold: right panel in first, left panel over it. Source data has no items flagged verify:true right now, but re-check src/_data/menu.json's handwriting note before a real print run."
+studioW: 1056
+studioH: 1670
+studioOrder: 20
+---
+
+{#- Category lookup by id rather than a hand-built dict — Nunjucks has no
+    convenient way to assign into an object inside a template, but the
+    `where` filter already exists for the studio board's own grouping. -#}
+{%- set breakfast = (menu.categories | where("id", "breakfast"))[0] %}
+{%- set breakfastSides = (menu.categories | where("id", "breakfast_sides"))[0] %}
+{%- set wraps = (menu.categories | where("id", "wraps"))[0] %}
+{%- set sandwiches = (menu.categories | where("id", "sandwiches"))[0] %}
+{%- set burgers = (menu.categories | where("id", "burgers"))[0] %}
+{%- set salads = (menu.categories | where("id", "salads"))[0] %}
+{%- set soup = (menu.categories | where("id", "soup"))[0] %}
+{%- set sides = (menu.categories | where("id", "sides"))[0] %}
+{%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
+
+{%- macro category(c) %}
+<div class="menu-cat">
+    <h3 class="menu-cat-name p-display ink-teal">{{ c.name }}</h3>
+    {%- if c.note %}
+    <p class="menu-cat-note p-body">{{ c.note }}</p>
+    {%- endif %}
+    {%- if c.sizing %}
+    <p class="menu-cat-sizing p-label ink-accent">
+        {%- for s in c.sizing %}{{ s.size }} {{ s.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+    </p>
+    {%- endif %}
+    <ul class="menu-items">
+        {%- for item in c.items %}
+        <li class="menu-item">
+            <div class="menu-item-head">
+                <span class="menu-item-name p-body">{{ item.name }}</span>
+                <span class="menu-item-fill" aria-hidden="true"></span>
+                {%- if item.price %}
+                <span class="menu-item-price p-body">{{ item.price | money }}</span>
+                {%- elif item.variants %}
+                <span class="menu-item-price p-body">
+                    {%- for v in item.variants %}{{ v.size }} {{ v.price | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
+                </span>
+                {%- endif %}
+            </div>
+            {%- if item.description %}
+            <p class="menu-item-desc p-body">{{ item.description }}</p>
+            {%- endif %}
+        </li>
+        {%- endfor %}
+    </ul>
+</div>
+{%- endmacro %}
+
+<div class="trifold-stack">
+
+    {#- Outside sheet — back, then the flap that folds under the cover, then
+        the cover itself, left to right as the sheet lies flat. -#}
+    <div class="canvas trifold-canvas">
+        <div class="fold-line" style="left: 33.333%"></div>
+        <div class="fold-line" style="left: 66.667%"></div>
+
+        <section class="panel panel-back">
+            <p class="p-label panel-eyebrow ink-accent">Visit us</p>
+            <p class="p-display panel-hours-days ink-teal">{{ site.opening.hoursDays }}</p>
+            <p class="p-display panel-hours-time ink-teal">{{ site.opening.opens.time }} <span class="ampm">{{ site.opening.opens.meridiem }}</span> &ndash; {{ site.opening.closes.time }} <span class="ampm">{{ site.opening.closes.meridiem }}</span></p>
+            <p class="p-body panel-hours-label ink-accent">{{ site.opening.hoursLabel }}</p>
+
+            <div class="panel-spacer"></div>
+
+            <div class="panel-contact">
+                <p class="p-display panel-phone ink-teal">{{ site.phone }}</p>
+                <p class="p-body">{{ site.address.street }}</p>
+                <p class="p-body">{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
+                <p class="p-body">{{ site.email }}</p>
+            </div>
+        </section>
+
+        <section class="panel panel-flap">
+            <p class="p-eyebrow panel-eyebrow ink-accent">Also on the menu</p>
+            {{ category(salads) }}
+            {{ category(drinks) }}
+        </section>
+
+        <section class="panel panel-cover">
+            <div class="wordmark wordmark--light panel-wordmark">
+                {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+            </div>
+            <div class="panel-cover-filigree ink-teal">
+                {% include "partials/filigree.njk" %}
+            </div>
+            <p class="p-display-italic panel-cover-menu ink-cream">Menu</p>
+            <p class="p-body panel-cover-since">Serving Leavenworth since {{ site.founded.slice(0, 4) }}</p>
+        </section>
+    </div>
+
+    {#- Inside spread — the full menu, read left to right in the order it
+        opens: breakfast first, then lunch wraps and sandwiches, then the
+        griddle and green side of the menu. -#}
+    <div class="canvas trifold-canvas">
+        <div class="fold-line" style="left: 33.333%"></div>
+        <div class="fold-line" style="left: 66.667%"></div>
+
+        <section class="panel">
+            {{ category(breakfast) }}
+            {{ category(breakfastSides) }}
+        </section>
+
+        <section class="panel">
+            {{ category(wraps) }}
+            {{ category(sandwiches) }}
+            {{ category(sides) }}
+        </section>
+
+        <section class="panel">
+            {{ category(burgers) }}
+            {{ category(soup) }}
+        </section>
+    </div>
+
+</div>

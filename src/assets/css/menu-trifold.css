@@ -1,0 +1,189 @@
+/* ============================================================
+   Menu — tri-fold, 11 × 8.5 in landscape, duplex
+   Piece: src/studio/menu-trifold.njk
+
+   Two artboards, one per printed side. Fold guides are drawn as dashed
+   lines so the sheet can be hand-folded without a straightedge; piece.css's
+   print block already zeroes .canvas margin/shadow, so nothing extra is
+   needed there. Every length is in absolute inches — this is a fixed
+   artboard, not a responsive page.
+   ============================================================ */
+
+.trifold-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4in;
+}
+
+.trifold-canvas {
+    background: #fff;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media print {
+    .trifold-canvas:not(:last-child) {
+        break-after: page;
+    }
+}
+
+.fold-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+    border-left: 1px dashed #bbb;
+    pointer-events: none;
+}
+
+.panel {
+    position: relative;
+    padding: 0.5in 0.35in;
+    display: flex;
+    flex-direction: column;
+    gap: 0.18in;
+    overflow: hidden;
+}
+
+/* ── Cover panel ──────────────────────────────────────────── */
+
+.panel-cover {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: var(--teal);
+    gap: 0.3in;
+}
+
+.panel-wordmark {
+    --mark-w: 2.6in;
+}
+
+.panel-cover-filigree {
+    width: 1.6in;
+    color: var(--mint);
+}
+
+.panel-cover-menu {
+    font-size: 0.5in;
+}
+
+.panel-cover-since {
+    font-size: 0.13in;
+    color: var(--cream);
+    opacity: 0.85;
+}
+
+/* ── Back panel ───────────────────────────────────────────── */
+
+.panel-back {
+    justify-content: flex-start;
+}
+
+.panel-eyebrow {
+    font-size: 0.13in;
+}
+
+.panel-hours-days {
+    font-size: 0.24in;
+    margin-top: 0.05in;
+}
+
+.panel-hours-time {
+    font-size: 0.2in;
+}
+
+.panel-hours-time .ampm {
+    font-size: 0.6em;
+}
+
+.panel-hours-label {
+    font-size: 0.12in;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+}
+
+.panel-spacer {
+    flex: 1;
+}
+
+.panel-contact p {
+    font-size: 0.135in;
+    line-height: 1.5;
+}
+
+.panel-phone {
+    font-size: 0.22in;
+    margin-bottom: 0.05in;
+}
+
+/* ── Flap panel ───────────────────────────────────────────── */
+
+.panel-flap .panel-eyebrow {
+    margin-bottom: 0.05in;
+}
+
+/* ── Menu categories, shared by every panel on the inside spread
+       and the flap panel's Sides/Drinks callout ─────────────── */
+
+.menu-cat + .menu-cat {
+    margin-top: 0.22in;
+}
+
+.menu-cat-name {
+    font-size: 0.19in;
+}
+
+.menu-cat-note {
+    font-size: 0.1in;
+    font-style: italic;
+    color: var(--text-dark);
+    opacity: 0.8;
+    margin-top: 0.03in;
+}
+
+.menu-cat-sizing {
+    font-size: 0.12in;
+    margin-top: 0.03in;
+}
+
+.menu-items {
+    list-style: none;
+    margin-top: 0.1in;
+}
+
+.menu-item + .menu-item {
+    margin-top: 0.09in;
+}
+
+.menu-item-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.08in;
+}
+
+.menu-item-name {
+    font-size: 0.125in;
+    font-weight: 700;
+}
+
+.menu-item-fill {
+    flex: 1;
+    border-bottom: 1px dotted #ccc;
+    /* Sits on the text baseline rather than the box's own, so the dots
+       line up with the type instead of floating under it. */
+    transform: translateY(-0.25em);
+}
+
+.menu-item-price {
+    font-size: 0.12in;
+    white-space: nowrap;
+}
+
+.menu-item-desc {
+    font-size: 0.095in;
+    line-height: 1.35;
+    color: var(--text-dark);
+    opacity: 0.75;
+    margin-top: 0.02in;
+}
