@@ -21,9 +21,28 @@
     grid-template-columns: repeat(3, 1fr);
 }
 
+/* Proofing label above each artboard. There is no bleed room to print panel
+   roles on the sheet, and a mislabelled panel costs a whole print run — so
+   the roles are stated on screen and removed from the print. */
+.fold-legend {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cream);
+    opacity: 0.75;
+}
+
+.fold-legend strong {
+    font-weight: 900;
+    opacity: 1;
+}
+
 @media print {
     .trifold-canvas:not(:last-child) {
         break-after: page;
+    }
+    .fold-legend {
+        display: none;
     }
 }
 
@@ -45,36 +64,132 @@
     overflow: hidden;
 }
 
-/* ── Cover panel ──────────────────────────────────────────── */
+/* ── Front cover / flyer panel ────────────────────────────────
+   The cover is not filled. A flood-teal third of the sheet is a slab of ink
+   that cockles paper on a desktop printer and bleeds along the fold crease
+   right where the piece gets handled — and this same artwork gets photocopied
+   for the counter. So the front door banner's inset answer applies here: one
+   contained masthead box carries the identity, everything under it is ruled
+   or set in type on bare stock.
+
+   It also has a second job. Tacked to a board or left on a counter the cover
+   IS the flyer, so it repeats the hours, address, phone and both links that
+   the back panel carries. That duplication is deliberate — nobody unfolds a
+   flyer to find out when it is open. */
 
 .panel-cover {
     align-items: center;
-    justify-content: center;
     text-align: center;
+    gap: 0.16in;
+}
+
+/* The one filled element on the sheet. Rounded and inset so nothing touches
+   a paper edge or a fold — any printer renders it as drawn. */
+.cover-mast {
+    align-self: stretch;
     background: var(--teal);
-    gap: 0.3in;
+    border-radius: 0.1in;
+    /* Top padding runs deeper than the bottom: the wordmark svg is
+       overflow:visible and the outward half of its teal stroke plus the red
+       offset paint past the element box, so the extra space is what keeps the
+       shadow off the corner radius. */
+    padding: 0.34in 0.24in 0.26in;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.panel-wordmark {
-    --mark-w: 2.6in;
+.cover-wordmark {
+    /* 3.667in panel less 0.35in padding a side less 0.24in box padding a side
+       leaves 2.37in of live width; 2.2in leaves the stroke and offset room. */
+    --mark-w: 2.2in;
+    --mark-shadow-color: var(--coral);
 }
 
-.panel-cover-filigree {
-    width: 1.6in;
-    color: var(--mint);
+.cover-menu {
+    font-size: 0.34in;
+    margin-top: 0.16in;
 }
 
-.panel-cover-menu {
-    font-size: 0.5in;
+.cover-filigree {
+    width: 1.5in;
+    color: var(--teal);
+    margin-top: 0.04in;
 }
 
-.panel-cover-since {
-    font-size: 0.13in;
-    color: var(--cream);
+.cover-since {
+    font-size: 0.115in;
+    letter-spacing: 0.02em;
     opacity: 0.85;
 }
 
-/* ── Back panel ───────────────────────────────────────────── */
+/* Ruled, not filled — same reasoning as the banner's hours box, and it keeps
+   the one block a passer-by actually reads distinct without more ink. */
+.cover-hours {
+    border: 0.02in solid var(--teal-dark);
+    border-radius: 0.05in;
+    padding: 0.14in 0.18in 0.16in;
+    align-self: stretch;
+}
+
+.cover-hours .hours-label {
+    font-size: 0.11in;
+}
+
+.cover-hours .hours-days {
+    font-size: 0.18in;
+    margin-top: 0.05in;
+}
+
+/* nowrap is a tripwire: if this line ever stops fitting the panel it runs off
+   the edge visibly instead of quietly reflowing into something that no longer
+   matches the banner. */
+.cover-hours .hours-time {
+    font-size: 0.235in;
+    margin-top: 0.02in;
+    white-space: nowrap;
+}
+
+.cover-hours .hours-time .ampm {
+    font-size: 0.55em;
+    letter-spacing: 0.03em;
+}
+
+.cover-where {
+    margin-top: 0.14in;
+}
+
+.cover-street {
+    font-size: 0.2in;
+}
+
+.cover-city {
+    font-size: 0.125in;
+    margin-top: 0.03in;
+}
+
+.cover-phone {
+    font-size: 0.24in;
+    margin-top: 0.1in;
+    white-space: nowrap;
+}
+
+.cover-links {
+    margin-top: 0.16in;
+    padding-top: 0.12in;
+    border-top: 0.015in solid var(--teal);
+    align-self: stretch;
+}
+
+.cover-link {
+    font-size: 0.135in;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+/* ── Back panel ───────────────────────────────────────────────
+   The face that lies up when the closed piece sits on a table, so it is the
+   one that carries the two QR codes. */
 
 .panel-back {
     justify-content: flex-start;
@@ -97,14 +212,12 @@
     font-size: 0.6em;
 }
 
-.panel-hours-label {
-    font-size: 0.12in;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-}
-
 .panel-spacer {
     flex: 1;
+}
+
+.panel-contact {
+    margin-top: 0.22in;
 }
 
 .panel-contact p {
@@ -115,6 +228,45 @@
 .panel-phone {
     font-size: 0.22in;
     margin-bottom: 0.05in;
+}
+
+/* Two codes across a 3.667in panel with 0.35in padding a side: 2.967in of
+   live width less a 0.2in gap, so about 1.38in a column. qr-*.svg carry no
+   quiet zone of their own — .code-qr's padding IS the quiet zone, four
+   modules wide. Trimming it is what makes phones fail to lock on. */
+.panel-codes {
+    display: flex;
+    gap: 0.2in;
+    align-items: flex-start;
+}
+
+.code {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+}
+
+.code-qr {
+    /* content-box: piece.css sets border-box globally, which would let the
+       quiet-zone padding eat into the symbol itself. Here width means the
+       CODE and the padding is added outside it. */
+    box-sizing: content-box;
+    width: 1.16in;
+    padding: 0.1in;
+    border: 0.015in solid var(--teal);
+    border-radius: 0.04in;
+    margin: 0 auto;
+}
+
+.code-label {
+    font-size: 0.085in;
+    margin-top: 0.07in;
+}
+
+.code-line {
+    font-size: 0.095in;
+    line-height: 1.35;
+    word-break: break-word;
 }
 
 /* ── Flap panel ───────────────────────────────────────────── */

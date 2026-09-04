@@ -14,17 +14,24 @@
   },
   "founded": "2005-10",
 
-  "_comment_opening": "Opening day. Read by the front door banner and the Facebook pieces in /studio/ so the date is stated once. hoursLabel says \"Temporary\" until the full schedule is set.",
+  "_comment_social": "Public handles. Used by the menu tri-fold and the /studio/ social pieces; the QR art in assets/qr-facebook.svg and assets/qr-website.svg encodes these same two URLs.",
+  "social": {
+    "facebook": "https://www.facebook.com/LVCafeToGo",
+    "facebookHandle": "facebook.com/LVCafeToGo",
+    "website": "lvcafetogo.com"
+  },
+
+  "_comment_opening": "Opening day. Read by the front door banner and the Facebook pieces in /studio/ so the date is stated once. Not billed as a grand opening — the kitchen is still transitioning off the old contract, so the doors open first and a grand opening comes later.",
   "opening": {
     "date": "2026-10-05",
-    "kicker": "Grand Opening",
+    "kicker": "Opening Day",
     "dayName": "Monday",
     "monthDay": "October 5",
     "ordinal": "th",
-    "hoursLabel": "Temporary Hours",
+    "hoursLabel": "Hours",
     "hoursDays": "Monday – Friday",
     "opens": { "time": "6:00", "meridiem": "am" },
-    "closes": { "time": "12:00", "meridiem": "pm" }
+    "closes": { "time": "2:00", "meridiem": "pm" }
   },
 
   "_comment_construction": "Set to false to remove the under-construction banner from every page at once.",

@@ -10,7 +10,7 @@ tags: studio
 studioTitle: "Menu — tri-fold"
 studioCategory: "Menus"
 studioSize: "11 × 8.5 in landscape · duplex, 2 pages · letter-fold"
-studioNote: "Print duplex, flip on short edge, then letter-fold: right panel in first, left panel over it. Source data has no items flagged verify:true right now, but re-check src/_data/menu.json's handwriting note before a real print run."
+studioNote: "Print duplex, flip on SHORT edge, then letter-fold: right third in first, left third over it. Sheet 1 left-to-right is tuck flap / back cover / front cover; the cover doubles as a flyer (hours, address, phone, both links). Lift the cover and you get Breakfast on the left, salads and drinks on the right. Re-check src/_data/menu.json's handwriting note before a real print run."
 studioW: 1056
 studioH: 1670
 studioOrder: 20
@@ -63,29 +63,29 @@ studioOrder: 20
 </div>
 {%- endmacro %}
 
+{# Screen-only. There is no bleed room to print panel labels on the sheet
+   itself, and mislabelling a panel costs a whole print run — so the roles are
+   called out here, where they are visible while proofing in the browser and
+   gone from the export and the print. #}
 <div class="trifold-stack">
 
-    {#- Outside sheet — back, then the flap that folds under the cover, then
-        the cover itself, left to right as the sheet lies flat. -#}
+    <p class="fold-legend">Sheet 1 &mdash; outside &middot; <strong>tuck flap</strong> (first thing seen on opening) &middot; <strong>back cover</strong> &middot; <strong>front cover / flyer</strong></p>
+
+    {#- OUTSIDE SHEET, as it lies flat, printed side up.
+
+        Panel order here is dictated by the fold, not by reading order. Letter
+        fold, right third in first, left third over it: the right panel ends
+        up on top of the closed piece (front cover), the middle panel ends up
+        on the bottom (back cover), and the LEFT panel is the one that tucks
+        away inside — it is the half-spread a customer sees the instant they
+        lift the cover, paired with the inside sheet's leftmost panel.
+
+        That is why the tuck flap is first and the back panel second. They
+        were the other way round before, which put "Visit us" inside the fold
+        and the salads on the back of the piece. -#}
     <div class="canvas trifold-canvas">
         <div class="fold-line" style="left: 33.333%"></div>
         <div class="fold-line" style="left: 66.667%"></div>
-
-        <section class="panel panel-back">
-            <p class="p-label panel-eyebrow ink-accent">Visit us</p>
-            <p class="p-display panel-hours-days ink-teal">{{ site.opening.hoursDays }}</p>
-            <p class="p-display panel-hours-time ink-teal">{{ site.opening.opens.time }} <span class="ampm">{{ site.opening.opens.meridiem }}</span> &ndash; {{ site.opening.closes.time }} <span class="ampm">{{ site.opening.closes.meridiem }}</span></p>
-            <p class="p-body panel-hours-label ink-accent">{{ site.opening.hoursLabel }}</p>
-
-            <div class="panel-spacer"></div>
-
-            <div class="panel-contact">
-                <p class="p-display panel-phone ink-teal">{{ site.phone }}</p>
-                <p class="p-body">{{ site.address.street }}</p>
-                <p class="p-body">{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
-                <p class="p-body">{{ site.email }}</p>
-            </div>
-        </section>
 
         <section class="panel panel-flap">
             <p class="p-eyebrow panel-eyebrow ink-accent">Also on the menu</p>
@@ -93,21 +93,89 @@ studioOrder: 20
             {{ category(drinks) }}
         </section>
 
-        <section class="panel panel-cover">
-            <div class="wordmark wordmark--light panel-wordmark">
-                {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        <section class="panel panel-back">
+            <p class="p-label panel-eyebrow ink-accent">Visit us</p>
+            <p class="p-display panel-hours-days ink-teal">{{ site.opening.hoursDays }}</p>
+            <p class="p-display panel-hours-time ink-teal">{{ site.opening.opens.time }} <span class="ampm">{{ site.opening.opens.meridiem }}</span> &ndash; {{ site.opening.closes.time }} <span class="ampm">{{ site.opening.closes.meridiem }}</span></p>
+
+            <div class="panel-contact">
+                <p class="p-display panel-phone ink-teal">{{ site.phone }}</p>
+                <p class="p-body">{{ site.address.street }}</p>
+                <p class="p-body">{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
+                <p class="p-body">{{ site.email }}</p>
             </div>
-            <div class="panel-cover-filigree ink-teal">
+
+            <div class="panel-spacer"></div>
+
+            {# Both codes, side by side, on the panel that ends up face-up on
+               a table. assets/qr-*.svg carry no quiet zone of their own —
+               .qr's padding IS the quiet zone, so do not trim it. #}
+            <div class="panel-codes">
+                <div class="code">
+                    <div class="qr code-qr">{% inlineSvg "/assets/qr-facebook.svg" %}</div>
+                    <p class="p-label code-label ink-accent">Follow</p>
+                    <p class="p-body code-line ink-teal">{{ site.social.facebookHandle }}</p>
+                </div>
+                <div class="code">
+                    <div class="qr code-qr">{% inlineSvg "/assets/qr-website.svg" %}</div>
+                    <p class="p-label code-label ink-accent">Order &amp; catering</p>
+                    <p class="p-body code-line ink-teal">{{ site.social.website }}</p>
+                </div>
+            </div>
+        </section>
+
+        {#- FRONT COVER. Doubles as a flyer, so it has to stand on its own:
+            hours, street address, phone and both links live here as well as
+            on the back panel.
+
+            NOT a flood of teal. A full-panel fill is a third of the sheet in
+            solid ink on both a desktop printer and a copier — it cockles the
+            paper and bleeds at the fold. Same answer as the front door
+            banner's inset variant: one contained masthead box, everything
+            else ruled or set in type on the bare sheet. -#}
+        <section class="panel panel-cover">
+            <div class="cover-mast">
+                <div class="wordmark wordmark--light cover-wordmark">
+                    {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+                </div>
+                <p class="p-display-italic cover-menu ink-cream">Menu</p>
+            </div>
+
+            <div class="cover-filigree ink-teal">
                 {% include "partials/filigree.njk" %}
             </div>
-            <p class="p-display-italic panel-cover-menu ink-cream">Menu</p>
-            <p class="p-body panel-cover-since">Serving Leavenworth since {{ site.founded.slice(0, 4) }}</p>
+
+            <p class="p-body cover-since ink-teal">Serving Leavenworth since {{ site.founded.slice(0, 4) }}</p>
+
+            <div class="panel-spacer"></div>
+
+            <div class="cover-hours">
+                <p class="p-label hours-label ink-accent">{{ site.opening.hoursLabel }}</p>
+                <p class="p-display hours-days ink-teal">{{ site.opening.hoursDays }}</p>
+                <p class="p-display hours-time ink-teal">{{ site.opening.opens.time }} <span class="ampm">{{ site.opening.opens.meridiem }}</span> &ndash; {{ site.opening.closes.time }} <span class="ampm">{{ site.opening.closes.meridiem }}</span></p>
+            </div>
+
+            <div class="cover-where">
+                <p class="p-display cover-street ink-teal">{{ site.address.street }}</p>
+                <p class="p-body cover-city">{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
+                <p class="p-display cover-phone ink-teal">{{ site.phone }}</p>
+            </div>
+
+            <div class="cover-links">
+                <p class="p-body cover-link ink-teal">{{ site.social.website }}</p>
+                <p class="p-body cover-link ink-teal">{{ site.social.facebookHandle }}</p>
+            </div>
         </section>
     </div>
 
-    {#- Inside spread — the full menu, read left to right in the order it
-        opens: breakfast first, then lunch wraps and sandwiches, then the
-        griddle and green side of the menu. -#}
+    <p class="fold-legend">Sheet 2 &mdash; inside &middot; <strong>Breakfast</strong> &middot; lunch &middot; griddle</p>
+
+    {#- INSIDE SHEET — the full menu, read left to right once the piece is
+        open flat. Its LEFT panel is the one that pairs with the outside
+        sheet's tuck flap in the first half-spread, so breakfast leads: it is
+        what a customer reads the moment the cover lifts, before the piece is
+        even open all the way. Do not reorder these without re-reading the
+        fold note on the outside sheet above. -#}
     <div class="canvas trifold-canvas">
         <div class="fold-line" style="left: 33.333%"></div>
         <div class="fold-line" style="left: 66.667%"></div>
