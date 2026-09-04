@@ -1,10 +1,13 @@
 {
   "_updated": "2026-08-21",
   "_note": "Items with 'verify: true' had handwriting that was difficult to read precisely — confirm before publishing.",
+  "_note_price_review": "Items with 'priceReview: true' are priced under $2.00 and are known to be stale — they date from the old menu and have not been re-costed yet. The tri-fold marks them with a red bullet ON SCREEN AND IN THE PNG EXPORT ONLY; the marker is hidden in print, so a proof shows the open questions but a real sheet never ships with them. Set the price and delete the flag.",
   "categories": [
     {
       "id": "breakfast",
       "name": "Breakfast",
+      "_note_build": "The build-your-own filling list used to be repeated verbatim on the burrito and on both omelets. It is one note on the category now — same options, stated once, which is also how the sandwiches category reads.",
+      "note": "Burritos and omelets are build-your-own — choose from bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
       "items": [
         {
           "name": "Full Biscuit & Gravy",
@@ -21,22 +24,16 @@
         },
         {
           "name": "Burrito",
-          "description": "Build your own — choose from: bacon, sausage, ham, Canadian bacon, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
           "price": 9.00
         },
         {
-          "name": "2 Egg Omelet",
-          "description": "Build your own — choose from: bacon, sausage, ham, Canadian bacon, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
-          "price": 9.00
-        },
-        {
-          "name": "3 Egg Omelet",
-          "description": "Build your own — choose from: bacon, sausage, ham, Canadian bacon, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
-          "price": 11.00
+          "_note_prices": "One line, two sizes. `prices` renders as '$9.00 / $11.00' in the same order as the sizes in the name — 2 egg first, 3 egg second — so the mapping is implied rather than labelled twice.",
+          "name": "2 / 3 Egg Omelet",
+          "prices": [9.00, 11.00]
         },
         {
           "name": "Breakfast Sandwich",
-          "description": "One egg, cheese & choice of bacon, sausage, ham or Canadian bacon. Served on biscuit, croissant, or English muffin (wheat, white, rye or 12 grain).",
+          "description": "One egg, cheese & choice of bacon, sausage or ham. Served on biscuit, croissant, or English muffin (wheat, white, rye or 12 grain).",
           "price": 8.00
         }
       ]
@@ -45,16 +42,12 @@
       "id": "breakfast_sides",
       "name": "Breakfast Sides",
       "items": [
-        { "name": "Toast, Biscuit or Muffin", "price": 1.00 },
-        { "name": "Bagel with Cream Cheese", "price": 1.25 },
-        { "name": "Croissant", "price": 1.25 },
-        { "name": "Fried Potatoes", "price": 1.25 },
-        { "name": "Side of Gravy", "price": 1.25 },
-        { "name": "Bacon (3 strips)", "price": 1.00 },
-        { "name": "Sausage (1)", "price": 1.00 },
-        { "name": "Canadian Bacon (2)", "price": 1.00 },
-        { "name": "Grits", "price": 1.50 },
-        { "name": "Breakfast Roll", "price": 1.25 }
+        { "name": "Toast, Biscuit or English Muffin", "price": 2.50 },
+        { "name": "Bacon (4 slices)", "price": 4.50 },
+        { "name": "Sausage Patty", "price": 3.00 },
+        { "name": "Fried Potatoes", "price": 1.25, "priceReview": true },
+        { "name": "Side of Gravy", "price": 1.25, "priceReview": true },
+        { "name": "Bagel with Cream Cheese", "price": 1.25, "priceReview": true }
       ]
     },
     {
@@ -232,7 +225,7 @@
         { "name": "Tortellini Salad", "price": 3.00 },
         { "name": "Cottage Cheese", "price": 3.00 },
         { "name": "Salad of the Day", "price": 3.00 },
-        { "name": "Chips", "price": 1.25 }
+        { "name": "Chips", "price": 1.25, "priceReview": true }
       ]
     },
     {
@@ -241,12 +234,13 @@
       "items": [
         {
           "name": "Iced Tea",
+          "priceReview": true,
           "variants": [
             { "size": "Large", "price": 1.40 },
             { "size": "Small", "price": 1.25 }
           ]
         },
-        { "name": "Bottle Water", "price": 1.50 },
+        { "name": "Bottle Water", "price": 1.50, "priceReview": true },
         { "name": "Bottle Tea", "price": 3.00 },
         { "name": "Bottle Juice", "price": 4.00 },
         { "name": "Bottle Soda", "price": 3.00 }

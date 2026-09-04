@@ -1,0 +1,207 @@
+/* ============================================================
+   Studio downloads — /studio/downloads/
+   Page: src/studio/downloads.njk
+
+   The board at /studio/ is a desktop review surface: live iframes, honest
+   artboard proportions, a print button. This page is the opposite end of
+   the same job — it is opened on a phone, on café wifi, by someone who
+   wants the file in their camera roll and out to Facebook in under a
+   minute. So: one column, thumbnails instead of iframes, and tap targets
+   sized for a thumb rather than a cursor.
+   ============================================================ */
+
+.downloads-body {
+    background: var(--cream);
+    color: var(--text-dark);
+    font-family: 'Lato', sans-serif;
+    line-height: 1.55;
+}
+
+/* ── Head ─────────────────────────────────────────────────── */
+
+.dl-head {
+    background: var(--teal-dark);
+    color: var(--cream);
+    padding: 2rem 1.25rem 1.75rem;
+}
+
+.dl-kicker {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--mint);
+}
+
+/* The colour is not inherited from .dl-head. style.css sets an explicit
+   `color` on h1/h2/h3, and an explicit declaration beats an inherited one no
+   matter how specific the ancestor — so without this the title renders
+   --text-dark on the dark teal band and all but disappears. */
+.dl-title {
+    color: var(--cream);
+    font-family: 'Playfair Display', serif;
+    font-size: 2.1rem;
+    line-height: 1.1;
+    margin-top: 0.35rem;
+}
+
+.dl-lede,
+.dl-note {
+    font-size: 0.95rem;
+    margin-top: 0.75rem;
+    max-width: 42rem;
+}
+
+.dl-note {
+    font-size: 0.85rem;
+    opacity: 0.78;
+}
+
+/* Mint, not --accent. The ground is teal-dark and red on teal is 1.3:1 —
+   the one pairing the palette forbids outright. */
+.dl-note strong { color: var(--mint); font-weight: 700; }
+
+.dl-back {
+    margin-top: 1.1rem;
+}
+
+.dl-back a {
+    color: var(--mint);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.dl-back a:hover,
+.dl-back a:focus-visible { text-decoration: underline; }
+
+/* ── List ─────────────────────────────────────────────────── */
+
+.dl-main {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 4rem;
+}
+
+.dl-section + .dl-section { margin-top: 2.25rem; }
+
+.dl-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--teal-dark);
+    border-bottom: 2px solid rgba(var(--text-dark-rgb), 0.12);
+    padding-bottom: 0.4rem;
+}
+
+.dl-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.dl-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.1);
+}
+
+/* ── Thumbnail ────────────────────────────────────────────────
+   Fixed box, contained image. The pieces run from an 11 x 17 portrait to a
+   1080 square to an 11 x 8.5 landscape two-sheet stack; `contain` lets all
+   three sit in one column without cropping any of them, which matters when
+   the thumbnail is how you tell two menu revisions apart. */
+.dl-thumb {
+    flex: 0 0 auto;
+    width: 5.5rem;
+    height: 6.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid rgba(var(--text-dark-rgb), 0.15);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dl-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.dl-body { min-width: 0; }
+
+.dl-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    line-height: 1.25;
+    color: var(--teal-dark);
+}
+
+.dl-meta {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-top: 0.2rem;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────
+   44px minimum on the tap target. This page exists to be used one-handed
+   on a phone; anything smaller is a mis-tap on a link that starts a
+   download. */
+.dl-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+}
+
+.dl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 4.5rem;
+    padding: 0 1rem;
+    border-radius: 4px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+
+.dl-btn:hover,
+.dl-btn:focus-visible { background: var(--accent-dark); }
+
+.dl-btn--ghost {
+    background: transparent;
+    color: var(--accent);
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.dl-btn--ghost:hover,
+.dl-btn--ghost:focus-visible {
+    background: rgba(var(--accent-rgb), 0.08);
+    color: var(--accent-dark);
+}
+
+.dl-btn--quiet {
+    background: transparent;
+    color: var(--teal-dark);
+    box-shadow: inset 0 0 0 1px rgba(var(--text-dark-rgb), 0.25);
+}
+
+.dl-btn--quiet:hover,
+.dl-btn--quiet:focus-visible {
+    background: rgba(var(--text-dark-rgb), 0.06);
+}
+
+@media (max-width: 26rem) {
+    .dl-thumb { width: 4.25rem; height: 5rem; }
+    .dl-btn { min-width: 0; flex: 1 1 auto; }
+}

@@ -12,7 +12,16 @@
      title       required — browser tab / export filename hint
      canvasW     required — CSS length, e.g. "11in" or "1080px"
      canvasH     required — CSS length
-     pageSize    optional — @page size, e.g. "11in 17in portrait". Print only.
+     pageSize    optional — @page size, e.g. "11in 17in". Print only.
+
+                 TWO LENGTHS, NO ORIENTATION KEYWORD. `size` takes either a
+                 named page size plus portrait/landscape, or a pair of
+                 lengths — "11in 8.5in landscape" is neither, so the whole
+                 declaration is invalid and the browser silently falls back
+                 to US Letter portrait. It fails without an error and without
+                 changing anything on screen; the only symptom is a PDF that
+                 comes out the wrong sheet size, which is easy to blame on
+                 the print dialog. Give the width first and the shape follows.
      pageCss     optional — the piece's own stylesheet
      studio*     optional — see src/studio/index.njk for the board fields
 #}<!DOCTYPE html>

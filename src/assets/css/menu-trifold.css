@@ -32,16 +32,32 @@
     opacity: 0.75;
 }
 
+.fold-legend--review {
+    margin-bottom: -0.2in;
+}
+
 .fold-legend strong {
     font-weight: 900;
     opacity: 1;
+}
+
+/* Proofing marker on a price that has not been re-costed since the old menu.
+   Same contract as .fold-legend: visible while proofing in the browser and in
+   the PNG, gone from the print. A stale price must be impossible to miss on a
+   proof and impossible to ship on a sheet — printing the dot would do the
+   opposite of both. */
+.price-review {
+    color: var(--accent);
+    font-weight: 900;
+    margin-left: 0.03in;
 }
 
 @media print {
     .trifold-canvas:not(:last-child) {
         break-after: page;
     }
-    .fold-legend {
+    .fold-legend,
+    .price-review {
         display: none;
     }
 }
@@ -115,6 +131,11 @@
     width: 1.5in;
     color: var(--teal);
     margin-top: 0.04in;
+}
+
+.cover-tagline {
+    font-size: 0.175in;
+    line-height: 1.35;
 }
 
 .cover-since {
@@ -228,6 +249,22 @@
 .panel-phone {
     font-size: 0.22in;
     margin-bottom: 0.05in;
+}
+
+.panel-note {
+    margin-top: 0.26in;
+    border-top: 0.015in solid var(--teal);
+    padding-top: 0.16in;
+}
+
+.panel-note-label {
+    font-size: 0.105in;
+}
+
+.panel-note-body {
+    font-size: 0.115in;
+    line-height: 1.45;
+    margin-top: 0.07in;
 }
 
 /* Two codes across a 3.667in panel with 0.35in padding a side: 2.967in of

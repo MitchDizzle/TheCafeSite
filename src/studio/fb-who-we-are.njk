@@ -1,0 +1,90 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Who We Are Post (1080 × 1080)"
+canvasW: "1080px"
+canvasH: "1080px"
+pageCss: "/assets/css/fb-who-we-are.css"
+
+# ── EDIT THIS ───────────────────────────────────────────────
+# The body copy, one string per paragraph. Three short paragraphs is
+# what the card is measured for — a fourth will push the date block
+# into the footer. The long version belongs in the Facebook caption,
+# not on the image: feed crops the picture, never the caption.
+#
+# Write & as a literal, never &amp; — Nunjucks escapes these on output.
+story:
+  - "We have cooked on 6th Street since 2005 — scratch breakfast, lunch, and catering for our neighbors."
+  - "On Monday we open our doors with an all-new menu, made the way we would feed our own families."
+
+# The line that keeps the promise honest. This post deliberately does
+# NOT say grand opening: the kitchen is still coming off years of one
+# kind of cooking, and a new menu takes a while to settle. Say the
+# quiet part out loud rather than over-promise and under-deliver.
+modestLine: "Not a grand opening — just open. A brand new menu takes a while to settle, and we would rather get it right than get it loud. The celebration comes later."
+
+# Date, hours and address come from the opening block in
+# src/_data/site.json, same as the door banner. One edit moves them all.
+# ────────────────────────────────────────────────────────────
+
+tags: studio
+studioTitle: "Who We Are — Facebook post"
+studioCategory: "Social"
+studioSize: "1080 × 1080 px · square feed post"
+studioNote: "The introduce-ourselves post, announcing October 5th as an opening and NOT a grand opening. Body copy is the `story:` list at the top of the .njk; keep it to two or three short paragraphs and put the long version in the Facebook caption instead. Export to PNG and upload — a square post is never cropped in feed."
+studioW: 1080
+studioH: 1080
+studioOrder: 22
+---
+{# Cream ground, not the teal of fb-opening-day.njk.
+
+   That post is one fact set large; this one is a paragraph of reading. Body
+   copy reversed out of a dark ground is measurably slower to read, and this
+   audience skews older — so the card is bare stock with a single teal
+   masthead, and the teal is spent on the identity instead of the ground.
+   The two still read as the same account because the masthead is identical. #}
+<div class="canvas whois">
+
+    <header class="whois-mast">
+        {# .wordmark--hero, not the print weight: this is a dark composited
+           ground at screen size, which is the hero's situation exactly. #}
+        <div class="wordmark wordmark--light wordmark--hero whois-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-eyebrow whois-kicker">Who we are</p>
+    </header>
+
+    <section class="whois-body">
+        <p class="p-display-italic whois-lede ink-teal">A Leavenworth kitchen<br>since {{ site.founded.slice(0, 4) }}</p>
+
+        <div class="whois-filigree ink-teal">
+            {% include "partials/filigree.njk" %}
+        </div>
+
+        {%- for para in story %}
+        <p class="p-body whois-para">{{ para }}</p>
+        {%- endfor %}
+
+        {# The date block. Red on cream is 5.08:1 and passes AA — this is the
+           one place on the card the accent is spent, because the date is the
+           single thing a reader has to leave with. #}
+        <div class="whois-date">
+            <p class="p-label whois-date-label ink-accent">Doors open</p>
+            <p class="p-display whois-date-line ink-teal">{{ site.opening.dayName }}, {{ site.opening.monthDay }}<sup>{{ site.opening.ordinal }}</sup></p>
+            <p class="p-body whois-date-hours ink-teal">
+                {{ site.opening.opens.time }}<span class="ampm">{{ site.opening.opens.meridiem }}</span>
+                &ndash;
+                {{ site.opening.closes.time }}<span class="ampm">{{ site.opening.closes.meridiem }}</span>
+                <span class="dot">&middot;</span>
+                {{ site.opening.hoursDays }}
+            </p>
+        </div>
+
+        <p class="p-body whois-modest">{{ modestLine }}</p>
+    </section>
+
+    <footer class="whois-foot">
+        <p class="p-label foot-line">{{ site.address.street }} <span class="dot">&middot;</span> {{ site.address.locality }}, {{ site.address.region }}</p>
+        <p class="p-label foot-line foot-line--quiet">{{ site.social.website }} <span class="dot">&middot;</span> {{ site.phone }}</p>
+    </footer>
+
+</div>

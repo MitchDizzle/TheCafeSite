@@ -3,16 +3,16 @@ layout: layouts/piece.njk
 title: "The Café — Menu, tri-fold"
 canvasW: "11in"
 canvasH: "8.5in"
-pageSize: "11in 8.5in landscape"
+pageSize: "11in 8.5in"
 pageCss: "/assets/css/menu-trifold.css"
 
 tags: studio
 studioTitle: "Menu — tri-fold"
 studioCategory: "Menus"
 studioSize: "11 × 8.5 in landscape · duplex, 2 pages · letter-fold"
-studioNote: "Print duplex, flip on SHORT edge, then letter-fold: right third in first, left third over it. Sheet 1 left-to-right is tuck flap / back cover / front cover; the cover doubles as a flyer (hours, address, phone, both links). Lift the cover and you get Breakfast on the left, salads and drinks on the right. Re-check src/_data/menu.json's handwriting note before a real print run."
+studioNote: "Print duplex, flip on SHORT edge, then letter-fold: right third in first, left third over it. Sheet 1 left-to-right is tuck flap / back cover / front cover; the cover doubles as a flyer (hours, address, phone, both links). Breakfast lives on the tuck flap, so it is what a customer reads the instant the cover lifts; the inside sheet is lunch. Re-check src/_data/menu.json's handwriting note before a real print run."
 studioW: 1056
-studioH: 1670
+studioH: 1830
 studioOrder: 20
 ---
 
@@ -44,10 +44,24 @@ studioOrder: 20
         {%- for item in c.items %}
         <li class="menu-item">
             <div class="menu-item-head">
-                <span class="menu-item-name p-body">{{ item.name }}</span>
+                <span class="menu-item-name p-body">{{ item.name }}
+                    {#- Screen and PNG only, never printed — see .price-review in
+                        the stylesheet and the _note_price_review in menu.json.
+                        Marks a price carried over from the old menu that has not
+                        been re-costed. -#}
+                    {%- if item.priceReview %}<span class="price-review" title="Price not re-costed yet">&bull;</span>{% endif -%}
+                </span>
                 <span class="menu-item-fill" aria-hidden="true"></span>
                 {%- if item.price %}
                 <span class="menu-item-price p-body">{{ item.price | money }}</span>
+                {%- elif item.prices %}
+                {#- One item, one line, two prices — "2 / 3 Egg Omelet · $9.00 / $11.00".
+                    The order matches the sizes in the item name, so the pairing is
+                    implied and neither has to be labelled twice. Unlike `variants`,
+                    which prints its own size words. -#}
+                <span class="menu-item-price p-body">
+                    {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
+                </span>
                 {%- elif item.variants %}
                 <span class="menu-item-price p-body">
                     {%- for v in item.variants %}{{ v.size }} {{ v.price | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
@@ -69,7 +83,9 @@ studioOrder: 20
    gone from the export and the print. #}
 <div class="trifold-stack">
 
-    <p class="fold-legend">Sheet 1 &mdash; outside &middot; <strong>tuck flap</strong> (first thing seen on opening) &middot; <strong>back cover</strong> &middot; <strong>front cover / flyer</strong></p>
+    <p class="fold-legend fold-legend--review">A red <span class="price-review">&bull;</span> marks a price still to be re-costed. Screen and PNG proof only &mdash; it never prints.</p>
+
+    <p class="fold-legend">Sheet 1 &mdash; outside &middot; <strong>tuck flap &mdash; BREAKFAST</strong> (first thing seen on opening) &middot; <strong>back cover</strong> &middot; <strong>front cover / flyer</strong></p>
 
     {#- OUTSIDE SHEET, as it lies flat, printed side up.
 
@@ -77,20 +93,24 @@ studioOrder: 20
         fold, right third in first, left third over it: the right panel ends
         up on top of the closed piece (front cover), the middle panel ends up
         on the bottom (back cover), and the LEFT panel is the one that tucks
-        away inside — it is the half-spread a customer sees the instant they
-        lift the cover, paired with the inside sheet's leftmost panel.
+        away inside — it is the panel a customer is reading the instant they
+        lift the cover, before the piece is open flat.
 
-        That is why the tuck flap is first and the back panel second. They
-        were the other way round before, which put "Visit us" inside the fold
-        and the salads on the back of the piece. -#}
+        So the LEFT panel carries breakfast. Everything else on the menu can
+        wait until the tri-fold is open; breakfast cannot. -#}
     <div class="canvas trifold-canvas">
         <div class="fold-line" style="left: 33.333%"></div>
         <div class="fold-line" style="left: 66.667%"></div>
 
+        {#- THE TUCK FLAP, and the most valuable panel on the piece.
+
+            It is the half-panel a customer is looking at the instant the
+            cover lifts, before the tri-fold is open flat — so breakfast is
+            here, not on the inside sheet. Breakfast is what this kitchen
+            opens at six in the morning to sell. -#}
         <section class="panel panel-flap">
-            <p class="p-eyebrow panel-eyebrow ink-accent">Also on the menu</p>
-            {{ category(salads) }}
-            {{ category(drinks) }}
+            {{ category(breakfast) }}
+            {{ category(breakfastSides) }}
         </section>
 
         <section class="panel panel-back">
@@ -103,6 +123,11 @@ studioOrder: 20
                 <p class="p-body">{{ site.address.street }}</p>
                 <p class="p-body">{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
                 <p class="p-body">{{ site.email }}</p>
+            </div>
+
+            <div class="panel-note">
+                <p class="p-label panel-note-label ink-accent">Catering &amp; meal prep</p>
+                <p class="p-body panel-note-body">Trays, box lunches and full-service catering for offices, churches, funerals and family gatherings. Call ahead or ask at the counter &mdash; we will build a menu around your date.</p>
             </div>
 
             <div class="panel-spacer"></div>
@@ -145,6 +170,7 @@ studioOrder: 20
                 {% include "partials/filigree.njk" %}
             </div>
 
+            <p class="p-display-italic cover-tagline ink-teal">Breakfast &amp; Lunch<br>Catering &amp; Meal Prep</p>
             <p class="p-body cover-since ink-teal">Serving Leavenworth since {{ site.founded.slice(0, 4) }}</p>
 
             <div class="panel-spacer"></div>
@@ -168,21 +194,21 @@ studioOrder: 20
         </section>
     </div>
 
-    <p class="fold-legend">Sheet 2 &mdash; inside &middot; <strong>Breakfast</strong> &middot; lunch &middot; griddle</p>
+    <p class="fold-legend">Sheet 2 &mdash; inside (opened flat) &middot; salads &amp; soup &middot; wraps &amp; sandwiches &middot; griddle &amp; drinks</p>
 
-    {#- INSIDE SHEET — the full menu, read left to right once the piece is
-        open flat. Its LEFT panel is the one that pairs with the outside
-        sheet's tuck flap in the first half-spread, so breakfast leads: it is
-        what a customer reads the moment the cover lifts, before the piece is
-        even open all the way. Do not reorder these without re-reading the
-        fold note on the outside sheet above. -#}
+    {#- INSIDE SHEET — the rest of the menu, read left to right once the
+        piece is open flat. Breakfast is NOT here; it is on the outside
+        sheet's tuck flap, which is what a customer sees first. This sheet is
+        lunch, running light to heavy: salads and soup, then wraps and
+        sandwiches, then the griddle. Drinks close it out on the right.
+        Do not reorder these without re-reading the fold note above. -#}
     <div class="canvas trifold-canvas">
         <div class="fold-line" style="left: 33.333%"></div>
         <div class="fold-line" style="left: 66.667%"></div>
 
         <section class="panel">
-            {{ category(breakfast) }}
-            {{ category(breakfastSides) }}
+            {{ category(salads) }}
+            {{ category(soup) }}
         </section>
 
         <section class="panel">
@@ -193,7 +219,7 @@ studioOrder: 20
 
         <section class="panel">
             {{ category(burgers) }}
-            {{ category(soup) }}
+            {{ category(drinks) }}
         </section>
     </div>
 

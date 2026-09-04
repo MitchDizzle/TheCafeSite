@@ -351,3 +351,28 @@
     }
     .card:hover { transform: none; }
 }
+
+/* ── Downloads link ───────────────────────────────────────────
+   Sits between the lede and the jump nav. Boxed rather than set as a plain
+   link because it leaves the board entirely — it is the phone-facing
+   surface, not another section of this page. */
+.studio-downloads {
+    margin-top: 1.1rem;
+}
+
+.studio-downloads a {
+    display: inline-block;
+    padding: 0.6rem 1rem;
+    border-radius: 4px;
+    background: rgba(var(--accent-rgb), 0.14);
+    box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.45);
+    color: var(--mint);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.studio-downloads a:hover,
+.studio-downloads a:focus-visible {
+    background: rgba(var(--accent-rgb), 0.24);
+}

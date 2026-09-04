@@ -1,0 +1,162 @@
+/* ============================================================
+   Who We Are — Facebook post, 1080 × 1080 px
+   Piece: src/studio/fb-who-we-are.njk
+
+   A square post is the one Facebook format never cropped in feed, so the
+   whole artboard is usable — but it renders about 500px wide on a phone,
+   which means every size here is roughly half what it looks like on
+   screen. Nothing under 22px survives that, and this card carries actual
+   paragraphs, so the body sits at 30px rather than the 22px floor.
+
+   Loudness order: the lede, the date, the story. Unlike fb-opening-day.css
+   this one is a READ, not a glance — which is why it is set on cream.
+   ============================================================ */
+
+.whois {
+    background: var(--cream);
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 36px;
+    color: var(--text-dark);
+    text-align: center;
+}
+
+/* Tracking is added to the RIGHT of every letter, including the last, so a
+   centred line of it sits half a space left of true centre. Half the tracking
+   back as indent puts it right. Per-element, because the fix depends on the
+   tracking value. */
+.whois-kicker { text-indent: 0.3em; }    /* .p-eyebrow tracks 0.3em */
+.whois-date-label,
+.foot-line    { text-indent: 0.18em; }   /* .p-label tracks 0.18em  */
+
+/* ── Masthead ─────────────────────────────────────────────────
+   The one filled element, and it is the same gradient as the profile
+   picture and the opening-day post — that is what makes a follower read
+   three different-looking posts as one account without looking twice. */
+
+.whois-mast {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    padding: 36px 60px 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.whois-wordmark {
+    /* piece.css derives the width AND the coral offset from this one value.
+       460px wide → 127px tall at the mark's 3.61:1 ratio. */
+    --mark-w: 460px;
+}
+
+.whois-kicker {
+    font-size: 24px;
+    color: var(--mint);
+    margin-top: 18px;
+}
+
+/* ── Body ─────────────────────────────────────────────────── */
+
+.whois-body {
+    flex: 1;
+    padding: 26px 74px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.whois-lede {
+    font-size: 52px;
+    line-height: 1.12;
+}
+
+.whois-filigree {
+    width: 220px;
+    margin-top: 14px;
+    opacity: 0.55;
+}
+
+.whois-para {
+    font-size: 28px;
+    line-height: 1.45;
+    margin-top: 16px;
+    max-width: 830px;
+}
+
+/* ── The date ─────────────────────────────────────────────────
+   The one thing a reader has to leave with, so it gets the accent and a
+   ruled box to lift it off the run of body copy. Red on cream is 5.08:1
+   and passes AA; red on teal is 1.3:1, which is why the box is not
+   filled. */
+
+.whois-date {
+    margin-top: 24px;
+    border: 3px solid var(--teal);
+    border-radius: 8px;
+    padding: 16px 40px 18px;
+}
+
+.whois-date-label {
+    font-size: 23px;
+}
+
+.whois-date-line {
+    font-size: 48px;
+    margin-top: 8px;
+    white-space: nowrap;
+}
+
+/* Playfair sets its ordinal on the baseline; lift and shrink it so the date
+   reads as a date rather than "October 5TH". */
+.whois-date-line sup {
+    font-size: 0.44em;
+    vertical-align: 0.66em;
+}
+
+.whois-date-hours {
+    font-size: 26px;
+    margin-top: 10px;
+    white-space: nowrap;
+}
+
+.whois-date-hours .ampm {
+    font-size: 0.72em;
+    letter-spacing: 0.03em;
+}
+
+.whois-date-hours .dot {
+    color: var(--accent);
+    margin: 0 4px;
+}
+
+/* The honesty line. Smaller and italic so it reads as an aside rather than
+   as a disclaimer — it is a promise about pace, not fine print. */
+.whois-modest {
+    font-size: 23px;
+    font-style: italic;
+    line-height: 1.42;
+    margin-top: 20px;
+    max-width: 800px;
+    opacity: 0.8;
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+
+.whois-foot {
+    padding: 0 60px;
+    margin-top: 22px;
+}
+
+.foot-line {
+    font-size: 24px;
+    color: var(--teal-dark);
+}
+
+.foot-line--quiet {
+    margin-top: 10px;
+    opacity: 0.7;
+}
+
+.foot-line .dot {
+    color: var(--accent);
+    margin: 0 6px;
+}

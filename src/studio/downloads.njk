@@ -1,0 +1,92 @@
+---
+layout: layouts/base.njk
+title: "Downloads — The Café Studio"
+description: "Internal download list."
+pageCss: "/assets/css/downloads.css"
+bodyClass: "downloads-body"
+noSiteJs: true
+eleventyExcludeFromCollections: true
+
+# NOT the flat `studio/downloads.html` that src/src.11tydata.js would give
+# this file. scripts/export-studio.js writes the exported PNGs and PDFs into
+# _site/studio/downloads/, and Apache's mod_dir redirects a request for
+# /studio/downloads to /studio/downloads/ the moment that directory exists —
+# which would land on a missing index and 404. So the page IS that directory's
+# index, and it sits beside the files it lists.
+permalink: "/studio/downloads/index.html"
+---
+{#- The list is built from the same collection as the board, so a new piece in
+    src/studio/ is downloadable the moment it is on the board — there is no
+    second list to update.
+
+    The links are written unconditionally rather than probed: Eleventy runs
+    BEFORE the exporter, so at build time none of these files exist yet. That
+    is why `npm run build` runs the exporter too and why the exporter fails the
+    build if a piece will not render — a link here must never dangle. -#}
+{%- set groups = [] %}
+{%- for piece in collections.studio %}
+  {%- if piece.data.studioCategory not in groups %}
+    {%- set _ = groups.push(piece.data.studioCategory or "Pages") %}
+  {%- endif %}
+{%- endfor %}
+
+<header class="dl-head">
+    <p class="dl-kicker">Internal &middot; not linked, not indexed</p>
+    <h1 class="dl-title">Downloads</h1>
+    <p class="dl-lede">
+        Every studio piece, exported at full size. Made for a phone &mdash; tap a
+        PNG to save it to your camera roll and post it straight from there.
+    </p>
+    <p class="dl-note">
+        <strong>PNG</strong> for posting. <strong>PDF</strong> for printing &mdash;
+        it stays vector at the real sheet size, and it leaves out the proofing
+        marks the PNG shows.
+    </p>
+    <p class="dl-back"><a href="/studio/">&larr; Back to the board</a></p>
+</header>
+
+<main class="dl-main">
+    {%- for name in groups %}
+    <section class="dl-section">
+        <h2 class="dl-section-title">{{ name }}</h2>
+
+        <ul class="dl-list">
+            {%- for piece in collections.studio %}
+            {%- if (piece.data.studioCategory or "Pages") == name %}
+            <li class="dl-item">
+                {#- The thumbnail is the exported PNG itself, not a live iframe
+                    like the board uses. This page is for a phone on a café
+                    wifi: seven artboards in seven iframes is seven full page
+                    loads with webfonts, and lazy-loaded images are a fraction
+                    of that. -#}
+                <a class="dl-thumb" href="/studio/downloads/{{ piece.fileSlug }}.png" target="_blank" rel="noopener">
+                    <img src="/studio/downloads/{{ piece.fileSlug }}.png"
+                         alt="{{ piece.data.studioTitle or piece.data.title }}"
+                         loading="lazy">
+                </a>
+
+                <div class="dl-body">
+                    <h3 class="dl-name">{{ piece.data.studioTitle or piece.data.title }}</h3>
+                    {%- if piece.data.studioSize %}
+                    <p class="dl-meta">{{ piece.data.studioSize }}</p>
+                    {%- endif %}
+
+                    {#- `download` rather than a plain link: on a phone a bare
+                        link to a PNG opens the image in a tab and the file has
+                        to be long-pressed out of it. With the attribute it
+                        goes straight to the downloads folder. -#}
+                    <div class="dl-actions">
+                        <a class="dl-btn" href="/studio/downloads/{{ piece.fileSlug }}.png" download>PNG</a>
+                        {%- if piece.data.pageSize %}
+                        <a class="dl-btn dl-btn--ghost" href="/studio/downloads/{{ piece.fileSlug }}.pdf" download>PDF</a>
+                        {%- endif %}
+                        <a class="dl-btn dl-btn--quiet" href="{{ piece.url }}">Open</a>
+                    </div>
+                </div>
+            </li>
+            {%- endif %}
+            {%- endfor %}
+        </ul>
+    </section>
+    {%- endfor %}
+</main>

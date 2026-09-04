@@ -7,7 +7,8 @@ Project planning, decisions, and the task backlog live OUTSIDE this public repo 
 
 ## Build
 - `npm start` — Eleventy dev server with live reload on `http://localhost:8080`. Its extensionless URL resolution matches `.htaccess`, so `/catering` works locally exactly as it does in production. **Use this rather than opening files from `file://`**, which cannot resolve extensionless links.
-- `npm run build` — clean build into `_site/`. **`_site/` is what gets uploaded**, not `src/`. Both `_site/` and `node_modules/` are gitignored.
+- `npm run build` — clean build into `_site/`, **then exports every `/studio/` piece to PNG (and PDF, where the piece sets `pageSize`) via headless Chrome**. **`_site/` is what gets uploaded**, not `src/`. Both `_site/` and `node_modules/` are gitignored. Chrome or Edge is therefore a build dependency; set `CHROME_PATH` if it is not in a standard location. `npm run export` re-runs just the artwork half.
+- Exported pieces are published at `/studio/downloads/` so they can be saved on a phone — see `src/studio/README.md`. `npm start` does not export, so that page is empty until a `npm run build` has run.
 - `social/`, `FrontBanner/`, `archive/`, and the `.md` docs stay out of the build entirely.
 
 ## Structure

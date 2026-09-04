@@ -74,6 +74,14 @@ eleventyExcludeFromCollections: true
             Previews are live &mdash; they show the current build, not a screenshot.
         </p>
 
+        {#- The board is a desktop review surface — live iframes at true
+            artboard proportions. /studio/downloads/ is the same pieces as
+            saved files, for a phone: that is where the person actually
+            posting to Facebook gets the PNG. -#}
+        <p class="studio-downloads">
+            <a href="/studio/downloads/">Downloads &mdash; PNG &amp; PDF of every piece &rarr;</a>
+        </p>
+
         {%- if categories | length > 1 %}
         <nav class="studio-jump" aria-label="Jump to a section">
             {%- for name in categories %}

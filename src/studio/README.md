@@ -64,7 +64,7 @@ Copy `fb-profile.njk` as a starting point. The front matter contract:
 | `layout` | yes | Always `layouts/piece.njk` |
 | `title` | yes | Browser tab |
 | `canvasW` / `canvasH` | yes | Artboard size — `"11in"` or `"1080px"` |
-| `pageSize` | print only | `@page` size, e.g. `"11in 17in portrait"`. Its presence is also what puts a **Print** button on the card. |
+| `pageSize` | print only | `@page` size as **two lengths, width first, no orientation keyword** — `"11in 17in"`, `"11in 8.5in"`. `"11in 8.5in landscape"` is invalid CSS and silently falls back to Letter portrait. Its presence is also what puts a **Print** button on the card, and what makes `npm run export` write a PDF as well as a PNG. |
 | `pageCss` | usually | The piece's own stylesheet in `assets/css/` |
 | `tags: studio` | yes | This is what puts it on the board |
 | `studioTitle` | | Board heading (defaults to `title`) |
@@ -81,14 +81,21 @@ reasoning is documented there.
 
 ## The opening-day pieces
 
-Three artboards carry the October 5th announcement, and none of them states
+Four artboards carry the October 5th announcement, and none of them states
 the date itself:
 
 | Piece | For |
 |---|---|
 | `front-door-banner` | 11 x 17 taped inside the door glass |
+| `fb-who-we-are` | 1080 square introduce-ourselves post |
 | `fb-opening-day` | 1080 square Facebook feed post |
 | `fb-event-cover` | 1920 x 1005 cover image on a Facebook Event |
+
+It is an **opening, not a grand opening** — the kitchen is coming off years of
+one kind of cooking and a new menu needs time to settle. `fb-who-we-are` says
+that out loud in its `modestLine`, and `site.opening.kicker` reads "Opening
+Day" rather than "Grand Opening" for the same reason. Do not quietly upgrade
+the wording; the grand opening is a separate, later piece.
 
 The date, the hours and the address all come from the `opening` block in
 `src/_data/site.json`. Change it there once and all three follow; there is no
@@ -121,12 +128,41 @@ surface Facebook shows it on — only the centre of it is safe to put words in.
 
 ## Exporting
 
-```bash
-npm run export
-```
+Exporting is part of the build. `npm run build` renders every board piece to
+PNG at its exact artboard size, and any piece with a `pageSize` also to a
+**PDF** at that sheet size, one page per artboard. `npm run export` does the
+same without the clean, for when only the artwork changed.
 
-Builds the site, then renders every board piece to PNG at its exact artboard
-size into `exports/` (gitignored). One piece at a time:
+Files land in **two** places:
+
+| Where | Filename | For |
+|---|---|---|
+| `_site/studio/downloads/` | `menu-trifold.png` | Published — served at `/studio/downloads/` |
+| `exports/` | `menu-trifold_20260904.png` | Local history, gitignored |
+
+The published copy is undated because it is a URL: a link that works today has
+to keep working after the next build, so each build overwrites it. It lives
+inside `_site`, so `npm run clean` takes it with everything else and a piece
+deleted from the board stops being downloadable — a stale PNG of a menu we no
+longer serve is worse than no PNG at all.
+
+**This makes Chrome a build dependency.** No Chrome or Edge, no build. That is
+deliberate: `/studio/downloads/` writes its links from the same collection as
+the board, before the exporter has run, so a piece that fails to render has to
+fail the build rather than leave a dead link on the page. Set `CHROME_PATH` if
+it is somewhere unusual. CI runs headless with `--no-sandbox`.
+
+`npm start` does **not** export — the dev server only runs Eleventy, so
+`/studio/downloads/` will list pieces whose files are not there yet. Run
+`npm run build` once to fill it in.
+
+The PDF is not the PNG with another extension. The PNG rasterises the screen
+rendering; the PDF goes through `@media print`, so the proofing furniture
+drops out — the tri-fold's panel-role captions and its red "not re-costed"
+bullets — and the type and wordmark stay vector. **Send the PDF to a printer,
+never the PNG.**
+
+One piece at a time:
 
 ```bash
 npm run export -- fb-profile
@@ -138,6 +174,25 @@ generated from the same front matter that puts them on the board.
 
 `studioExportScale` in front matter multiplies the output: `3` on an 11 x 17
 gives 3168 x 4896, about 288dpi.
+
+## Getting a piece onto a phone
+
+`/studio/downloads/` — linked from the top of the board. One column,
+thumbnails, and a **PNG** and **PDF** button per piece, both carrying the
+`download` attribute so a tap saves the file instead of opening it in a tab.
+That is the path for posting to Facebook from a phone: save the PNG, open the
+app, attach it.
+
+The page is `src/studio/downloads.njk`. It sets its own
+`permalink: "/studio/downloads/index.html"` rather than taking the flat
+`downloads.html` that `src/src.11tydata.js` would give it, because the exported
+files live in that same directory — Apache would redirect `/studio/downloads`
+to `/studio/downloads/` the moment the directory exists, and land on a missing
+index. Being the directory's index avoids the collision entirely.
+
+It is under `/studio/`, so the `X-Robots-Tag` in `src/.htaccess` covers it and
+every file in it. Same caveat as the rest of the board: obscurity plus a
+no-index request, not access control.
 
 ### Why a command and not a button on the board
 
