@@ -5,28 +5,79 @@ canvasW: "1080px"
 canvasH: "1080px"
 pageCss: "/assets/css/fb-opening-day.css"
 
-# ── EDIT THIS ───────────────────────────────────────────────
-# The specials card. Three short lines read best; four fit; five will
-# start to crowd the date above it.
+# ── Facts for writing the post ──────────────────────────────
+# Raw material, not copy. Shown on /studio/downloads/ so the post can be
+# written on a phone without switching back to a laptop to look something
+# up. Every line here is checked against the site or src/_data — a line
+# starting "ASK:" is a gap only Terry or Dalton can fill.
 #
-#   specials:
-#     - "Biscuits & sausage gravy"
-#     - "Chicken fried steak & eggs"
-#     - "Cinnamon roll, still warm"
+# Keep this list true. It is the thing someone will trust at 6am.
+facts:
+  - group: "The people — lead with this"
+    items:
+      - "Terry Booker and Dalton Watkins, business partners, are the two names on the door."
+      - "This post gets shared by friends and family first. They recognise a name long before an address, so open on the people, not the premises."
+      - "ASK: how long has each of them been cooking, and where?"
+      - "ASK: how did the two of them come to be partners?"
+      - "ASK: who runs which side day to day — kitchen, catering, front of house?"
+      - "ASK: what does reopening the dining room actually mean to them, in their own words? One sentence in Terry's voice beats a paragraph in ours."
+      - "ASK: one specific thing — a dish one of them is known for, a habit, something they always say. Specifics are what get shared; adjectives are not."
+      - "NEEDED: a photo of the two of them, in the kitchen or at the door. It will out-perform the graphic. No photos exist yet and AI imagery is off the table."
+
+  - group: "The date and the practical facts"
+    items:
+      - "Opening Monday, October 5th, 2026."
+      - "Hours 6:00am to 2:00pm, Monday through Friday."
+      - "417 S 6th St, Leavenworth, KS 66048."
+      - "Phone (913) 547-9994."
+      - "lvcafetogo.com and facebook.com/LVCafeToGo."
+      - "It is an opening, not a grand opening — the menu is brand new and needs time to settle. The celebration comes later."
+
+  - group: "The history"
+    items:
+      - "Opened October 2005 — twenty-one years this month, almost to the week."
+      - "Started in the historic Abernathy Building, near the Centennial Bridge, as a weekday breakfast-and-lunch counter."
+      - "Daily specials, sandwiches made to order, soups, salads, home-style plates."
+      - "Moved locations several times around Leavenworth over the years."
+      - "Eventually set the dining room aside and went catering-only — dinners, buffets, office lunches."
+      - "For years, much of the kitchen's output went out as Meals on Wheels: prepared meals for seniors and neighbors across the Leavenworth area. That work ends this fall."
+      - "October 5th is the return to a dining room. Do NOT say we are back in the Abernathy Building — that is where it started, not where it is."
+
+  - group: "The food"
+    items:
+      - "Breakfast: biscuits and gravy full or half, the Big Breakfast, burritos, 2/3 egg omelets, breakfast sandwiches. Burritos and omelets are build-your-own."
+      - "Lunch: wraps, sandwiches, burgers and chicken — Navajo burger, patty melt, Philly steak, Reuben, clubhouse. Salads full or half, soup of the day, sides."
+      - "Breakfast runs about $5 to $11, lunch mostly $8 to $12."
+      - "Catering is not going anywhere: sit-down dinners with china and linen, buffets, drop-off, appetizer and station service. Fifteen guest minimum, dietary accommodations on request."
+
+  - group: "How to end it"
+    items:
+      - "Ask a question. A cold page lives on comments, and comments are reach."
+      - "Best one: what do you want to see on the menu? The menu is genuinely still being written, so the answer changes something."
+      - "Ask people to share it. For a reopening, that is the whole distribution plan."
+
+  - group: "Do not say"
+    items:
+      - "Nothing about the Meals on Wheels contract, the bid, who won it, or per-meal pricing. Say the work ends this fall and leave it there."
+      - "Not 'grand opening'."
+      - "Nothing we have not checked. A wrong hour or a wrong price on a post that gets shared is the expensive kind of mistake."
+
+# ── The caption ─────────────────────────────────────────────
+# The post is the image AND this. The image is the thing that stops a
+# thumb in the feed, so it carries four facts and no more; everything
+# that needs reading lives here, where Facebook lets it be read.
 #
-# Leave the list empty and the card exports with blank rules instead, so
-# the specials can be written in by hand or typed over the PNG later —
-# that is what `specialSlots` counts. Write & as a literal, never &amp;.
-specials: []
-specialSlots: 3
-
-# Small line under the card. Set to "" to drop it.
-specialsFootnote: "While they last"
-
-# The red reminder under a blank card. It exists so an unfinished post
-# cannot quietly become a published one. Set false for a deliberately
-# blank export.
-showSpecialsHint: true
+# Shown on /studio/downloads/ with a copy button, so it can be pasted
+# from the same phone that just saved the PNG. One string per paragraph.
+# Write & and — as literals; Nunjucks escapes these on output.
+caption:
+  - "Twenty-one years ago this month, The Café opened as a small breakfast-and-lunch counter in the Abernathy Building, down by the Centennial Bridge. Daily specials, sandwiches made to order, soup, and home-style plates for whoever came through the door."
+  - "A lot has changed since. We moved a few times. Eventually we set the dining room aside and put everything into catering — dinners, buffets, office lunches — and for years now much of what has left this kitchen went out in Meals on Wheels trays to seniors and neighbors across Leavenworth. That work has meant more to us than we can put in a post, and it comes to an end this fall."
+  - "So we are doing the thing we have been talking about for a long time. We are opening the doors again."
+  - "Monday, October 5th. Breakfast from 6, lunch until 2, Monday through Friday, at 417 S 6th St. Biscuits and gravy, omelets built the way you want them, burgers, wraps, salads, and a soup of the day. Catering is not going anywhere — call us for that the same as always."
+  - "We are calling it an opening, not a grand opening. A brand new menu takes a while to settle, and we would rather get it right than get it loud. Come sit down, be patient with us, and tell us what you think."
+  - "417 S 6th St, Leavenworth · Mon–Fri, 6am–2pm · (913) 547-9994 · lvcafetogo.com"
+  - "What are you hoping to see on the menu? Tell us below — we are still writing it."
 
 # The date, hours and address all come from src/_data/site.json — change
 # them there and the front door banner stays in step automatically.
@@ -36,15 +87,21 @@ tags: studio
 studioTitle: "Opening Day — Facebook post"
 studioCategory: "Social"
 studioSize: "1080 × 1080 px · square feed post"
-studioNote: "Specials are the `specials:` list at the top of the .njk — leave it empty to export blank rules to fill in later. Export to PNG and upload; a square post is never cropped in feed."
+studioNote: "The feed stopper. The two partners sit under the wordmark on a cream plaque — red on cream, because red on the teal ground is 1.3:1 and the palette forbids it. Then the date, the hours and the catering email, and nothing else: a caption can be read, a thumbnail cannot. The story and the fact list live in this file's front matter and show up on /studio/downloads/. Export to PNG and upload; a square post is never cropped in feed."
 studioW: 1080
 studioH: 1080
 studioOrder: 21
 ---
+{# Four facts. That is the whole brief.
+
+   This used to carry a specials card as well, which put five things on an
+   artboard that gets scrolled past in about a second and rendered at ~500px
+   on a phone. A feed image is a headline, not a page: it earns the tap, and
+   the caption does the talking. Specials, when there are some, go in the
+   caption where they can be edited after posting — a typo in a PNG means a
+   re-upload and a lost post. #}
 <div class="canvas post">
 
-    {# Same darkened teal ground as the profile picture, so a follower who
-       sees this in feed reads it as the same account without looking. #}
     <header class="post-head">
         {# .wordmark--hero, not the print weight: this sits on a dark
            composited ground at screen size, which is the hero's situation
@@ -52,58 +109,49 @@ studioOrder: 21
         <div class="wordmark wordmark--light wordmark--hero post-wordmark">
             {% inlineSvg "/assets/thecafe.svg", "", site.name %}
         </div>
+
+        {#- The names, directly under the wordmark, in the accent red — on a
+            cream plaque, and the plaque is not decoration.
+
+            Red on teal is 1.3:1, the one pairing this palette forbids
+            outright, and the lighter --coral only reaches 2.15:1 against the
+            ground here — still under the 3:1 that large text needs. Red on
+            cream is 5.08:1 and passes AA. So the red goes where it can be
+            read, and the light plaque on a dark ground pulls the eye harder
+            than any change of hue would have anyway. -#}
+        <div class="post-names">
+            <p class="p-display post-names-line">
+                {%- for owner in site.owners %}{{ owner.name }}{% if not loop.last %} <span class="amp">&amp;</span> {% endif %}{% endfor -%}
+            </p>
+        </div>
+
         <div class="post-filigree">
             {% include "partials/filigree.njk" %}
         </div>
     </header>
 
     <section class="post-announce">
-        <p class="p-eyebrow post-kicker">{{ site.opening.kicker }}</p>
-        <p class="p-display-italic post-day">{{ site.opening.dayName }}</p>
-        {# Cream, not --accent. The ground is teal and red on teal is 1.3:1 —
-           the one pairing the palette forbids. The red is spent inside the
-           cream card below, where it has the contrast to earn it. #}
+        <p class="p-display-italic post-kicker">Opening for Breakfast &amp; Lunch</p>
         <p class="p-display post-date">{{ site.opening.monthDay }}<sup>{{ site.opening.ordinal }}</sup></p>
-        <p class="p-body post-hours">
+    </section>
+
+    {# When we are open. Ruled top and bottom rather than filled: a second
+       cream card here would fight the names plaque, and the names win. #}
+    <section class="post-facts">
+        <p class="p-display post-days">{{ site.opening.hoursDays }}</p>
+        <p class="p-display post-hours">
             {{ site.opening.opens.time }}<span class="ampm">{{ site.opening.opens.meridiem }}</span>
             &ndash;
             {{ site.opening.closes.time }}<span class="ampm">{{ site.opening.closes.meridiem }}</span>
-            <span class="dot">&middot;</span>
-            {{ site.opening.hoursDays }}
         </p>
     </section>
 
-    {# The fill-in-later card. Cream so it reads as a menu card pinned to the
-       post rather than more of the same panel. #}
-    <section class="post-specials{% if not specials.length %} post-specials--blank{% endif %}">
-        <p class="p-label spec-label">Opening Day Specials</p>
-        <div class="spec-rule" aria-hidden="true"></div>
-
-        {% if specials.length %}
-        <ul class="spec-list">
-            {%- for item in specials %}
-            <li class="p-display-italic spec-item">{{ item }}</li>
-            {%- endfor %}
-        </ul>
-        {% else %}
-        {# Ruled, not empty: blank space in the middle of a post reads as a
-           mistake, but a rule reads as a line waiting to be written on. #}
-        <div class="spec-blanks" aria-hidden="true">
-            {%- for _ in range(0, specialSlots) %}
-            <span class="spec-blank"></span>
-            {%- endfor %}
-        </div>
-        {% if showSpecialsHint %}
-        <p class="p-body spec-hint">Specials go here &mdash; fill in <code>specials:</code> at the top of <code>studio/fb-opening-day.njk</code></p>
-        {% endif %}
-        {% endif %}
-
-        {% if specialsFootnote %}<p class="p-body spec-foot">{{ specialsFootnote }}</p>{% endif %}
-    </section>
-
     <footer class="post-foot">
-        <p class="p-label foot-line">{{ site.address.street }} <span class="dot">&middot;</span> {{ site.address.locality }}, {{ site.address.region }}</p>
-        <p class="p-label foot-line foot-line--quiet">lvcafetogo.com <span class="dot">&middot;</span> {{ site.phone }}</p>
+        <p class="p-label post-catering">Email for Catering Options</p>
+        <p class="p-body post-email">{{ site.email }}</p>
+        {# The address is not on the brief, but a reopening post without one
+           sends people to Google to find out where. Kept small and last. #}
+        <p class="p-body post-addr">{{ site.address.street }} <span class="dot">&middot;</span> {{ site.address.locality }}, {{ site.address.region }}</p>
     </footer>
 
 </div>

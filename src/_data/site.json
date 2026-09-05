@@ -21,6 +21,12 @@
     "website": "lvcafetogo.com"
   },
 
+  "_comment_owners": "The two names on the door. On the opening post because a small-town reopening is shared for the people, not the premises — friends and family scrolling past recognise a name long before they read an address. Bios and photos are still outstanding: src/team.njk is a placeholder.",
+  "owners": [
+    { "name": "Terry Booker" },
+    { "name": "Dalton Watkins" }
+  ],
+
   "_comment_opening": "Opening day. Read by the front door banner and the Facebook pieces in /studio/ so the date is stated once. Not billed as a grand opening — the kitchen is still transitioning off the old contract, so the doors open first and a grand opening comes later.",
   "opening": {
     "date": "2026-10-05",
