@@ -93,13 +93,25 @@
 .post-announce { margin-top: 30px; }
 
 .post-kicker {
-    font-size: 44px;
+    font-size: 42px;
     color: var(--cream);
 }
 
+/* Small, and deliberately so. It is a caveat, not an announcement — but it
+   has to be ON the picture, because the picture is what gets shared without
+   the caption attached. */
+.post-service {
+    font-size: 21px;
+    color: var(--mint);
+    margin-top: 14px;
+    /* .p-label tracks 0.18em, added to the right of the last letter too, so
+       a centred line sits half a space left of true centre. */
+    text-indent: 0.18em;
+}
+
 .post-date {
-    font-size: 104px;
-    margin-top: 10px;
+    font-size: 96px;
+    margin-top: 14px;
 }
 
 /* Playfair's default superscript sits too high and too large against a
