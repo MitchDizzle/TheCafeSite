@@ -1,12 +1,13 @@
 ---
 layout: layouts/page.njk
 title: "Catering | The Café"
-description: "Book catering from The Café in Leavenworth, KS — office lunches, meetings, and events. Send a booking request online or call to order."
+description: "Book catering from The Café in Leavenworth, KS. Office lunches, meetings, and events. Send a booking request online or call to order."
 ogDescription: "Catering for offices, meetings, and events in Leavenworth, KS. Book online or call to order."
 pageCss: "/assets/css/catering.css"
 ---
-<!-- Packages/menu section removed for now — becomes its own page once
-             real menu items exist (old bundle markup is in git history). -->
+<!-- The menu now has its own page at /menu, built from src/_data/menu.json
+             and linked from the nav — the old packages/bundle markup that used to
+             sit here is in git history. -->
 
         <!-- ── Booking Form ─────────────────────────────────── -->
         <section class="section" id="inquiry" aria-labelledby="inquiry-heading">
@@ -22,12 +23,12 @@ pageCss: "/assets/css/catering.css"
                 </div>
 
                 <form action="https://formspree.io/f/xzdlnpnw" method="POST" novalidate
-                      data-success="Thank you! Your booking request is on its way — we'll follow up with availability and a custom quote.">
+                      data-success="Thank you! Your booking request is on its way. We'll follow up with availability and a custom quote.">
 
                     <!-- honeypot: humans never see or fill this -->
                     <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
                            style="position:absolute; left:-9999px;" aria-hidden="true">
-                    <input type="hidden" name="_subject" value="Catering booking request — website form">
+                    <input type="hidden" name="_subject" value="Catering booking request: website form">
 
                     <div class="form-grid">
 
@@ -92,7 +93,7 @@ pageCss: "/assets/css/catering.css"
                         <div class="form-group">
                             <label for="service-style">Style of Service</label>
                             <select id="service-style" name="service_style">
-                                <option value="">— Select one —</option>
+                                <option value="">Select one</option>
                                 <option value="Buffet">Buffet</option>
                                 <option value="Sit Down">Sit Down Dinner</option>
                                 <option value="Drop Off">Drop Off</option>

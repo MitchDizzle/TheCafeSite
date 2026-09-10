@@ -201,6 +201,81 @@
     background: rgba(var(--text-dark-rgb), 0.06);
 }
 
+/* ── Facts ───────────────────────────────────────────────────
+   The writing surface. Denser and tighter than the caption block — this is
+   scanned while typing in another app, not read straight through. */
+
+.dl-facts {
+    margin-top: 0.85rem;
+    border-top: 1px solid rgba(var(--text-dark-rgb), 0.12);
+    padding-top: 0.65rem;
+}
+
+.dl-facts > summary,
+.dl-caption > summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    /* The marker is the only hit target on a collapsed panel, so give the
+       whole summary line a thumb-sized one. */
+    padding: 0.35rem 0;
+    min-height: 34px;
+}
+
+.dl-facts-group {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    color: var(--teal-dark);
+    margin-top: 0.9rem;
+}
+
+.dl-facts-list {
+    margin: 0.4rem 0 0;
+    padding-left: 1.1rem;
+}
+
+.dl-facts-list li {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    margin-top: 0.35rem;
+}
+
+/* A gap only the client can close, and a rule that must not be broken. Both
+   are called out because this list is read in a hurry — an unanswered
+   question that looks like a fact is how an invented detail ends up in a
+   post that friends and family are about to share. */
+.dl-fact--gap::marker { color: var(--accent); }
+.dl-fact--gap { color: var(--accent-dark); font-weight: 700; }
+
+.dl-fact--warn { color: var(--accent-dark); }
+
+/* ── Caption ──────────────────────────────────────────────────
+   Collapsed by default. Seven paragraphs open under every card would turn a
+   scannable list into a wall of text, and the list is how you find the piece
+   in the first place. */
+
+.dl-caption {
+    margin-top: 0.85rem;
+    border-top: 1px solid rgba(var(--text-dark-rgb), 0.12);
+    padding-top: 0.65rem;
+}
+
+.dl-caption-body {
+    background: #fff;
+    border: 1px solid rgba(var(--text-dark-rgb), 0.12);
+    border-radius: 4px;
+    padding: 0.75rem 0.85rem;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.dl-caption-body p + p { margin-top: 0.7rem; }
+
+.dl-copy { margin-top: 0.6rem; }
+
 @media (max-width: 26rem) {
     .dl-thumb { width: 4.25rem; height: 5rem; }
     .dl-btn { min-width: 0; flex: 1 1 auto; }

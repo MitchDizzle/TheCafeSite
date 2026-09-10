@@ -82,6 +82,44 @@ permalink: "/studio/downloads/index.html"
                         {%- endif %}
                         <a class="dl-btn dl-btn--quiet" href="{{ piece.url }}">Open</a>
                     </div>
+
+                    {%- if piece.data.facts %}
+                    {#- Raw material for writing the post, on the same screen
+                        as the image it goes with. The point is not to save a
+                        file somewhere — it is that the post gets written on a
+                        phone, and every app switch to go look up an hour or a
+                        price is a chance to get one wrong. -#}
+                    <details class="dl-facts">
+                        <summary>Facts for the post</summary>
+                        {%- for block in piece.data.facts %}
+                        <h4 class="dl-facts-group">{{ block.group }}</h4>
+                        <ul class="dl-facts-list">
+                            {%- for fact in block.items %}
+                            {#- Nunjucks has no startswith; `in` on a string is a
+                                substring test, which is all this needs. -#}
+                            <li{% if "ASK:" in fact or "NEEDED:" in fact %} class="dl-fact--gap"{% elif "Do NOT" in fact or "Nothing about" in fact or "not 'grand opening'" in fact | lower %} class="dl-fact--warn"{% endif %}>{{ fact }}</li>
+                            {%- endfor %}
+                        </ul>
+                        {%- endfor %}
+                    </details>
+                    {%- endif %}
+
+                    {%- if piece.data.caption %}
+                    {#- The caption ships with the piece. A post is the image
+                        AND the words, and splitting them across a repo file
+                        and a phone is how a post goes out with the wrong date
+                        in the text. Collapsed by default so the list stays
+                        scannable. -#}
+                    <details class="dl-caption">
+                        <summary>Draft caption</summary>
+                        <div class="dl-caption-body" id="cap-{{ piece.fileSlug }}">
+                            {%- for para in piece.data.caption %}
+                            <p>{{ para }}</p>
+                            {%- endfor %}
+                        </div>
+                        <button class="dl-btn dl-btn--ghost dl-copy" type="button" data-copy="cap-{{ piece.fileSlug }}">Copy caption</button>
+                    </details>
+                    {%- endif %}
                 </div>
             </li>
             {%- endif %}
@@ -90,3 +128,53 @@ permalink: "/studio/downloads/index.html"
     </section>
     {%- endfor %}
 </main>
+
+<script>
+(function () {
+    // Copy a caption to the clipboard, paragraphs separated by a blank line
+    // the way Facebook's composer expects them.
+    //
+    // navigator.clipboard needs a secure context; over plain http on a phone
+    // it is simply undefined. The fallback selects the text instead, which
+    // leaves the OS "Copy" affordance one tap away rather than failing
+    // silently — a copy button that does nothing is worse than no button.
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest('[data-copy]');
+        if (!btn) return;
+
+        var body = document.getElementById(btn.dataset.copy);
+        if (!body) return;
+
+        var text = Array.prototype.map
+            .call(body.querySelectorAll('p'), function (p) { return p.textContent.trim(); })
+            .join('
+
+');
+
+        var done = function (label) {
+            var original = btn.dataset.label || btn.textContent;
+            btn.dataset.label = original;
+            btn.textContent = label;
+            setTimeout(function () { btn.textContent = original; }, 2000);
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(
+                function () { done('Copied'); },
+                function () { select(body); done('Select & copy'); }
+            );
+        } else {
+            select(body);
+            done('Select & copy');
+        }
+    });
+
+    function select(body) {
+        var range = document.createRange();
+        range.selectNodeContents(body);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+}());
+</script>

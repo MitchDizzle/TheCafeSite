@@ -10,9 +10,9 @@ tags: studio
 studioTitle: "Menu — tri-fold"
 studioCategory: "Menus"
 studioSize: "11 × 8.5 in landscape · duplex, 2 pages · letter-fold"
-studioNote: "Print duplex, flip on SHORT edge, then letter-fold: right third in first, left third over it. Sheet 1 left-to-right is tuck flap / back cover / front cover; the cover doubles as a flyer (hours, address, phone, both links). Breakfast lives on the tuck flap, so it is what a customer reads the instant the cover lifts; the inside sheet is lunch. Re-check src/_data/menu.json's handwriting note before a real print run."
+studioNote: "Print duplex, flip on SHORT edge, then letter-fold: right third in first, left third over it. Sheet 1 left-to-right is tuck flap / back cover / front cover; the cover doubles as a flyer (hours, address, phone, both links). Breakfast lives on the tuck flap, so it is what a customer reads the instant the cover lifts; the inside sheet is lunch. Re-check src/_data/menu.json's handwriting note before a real print run — and its dietary note: the GF/V/LS marks are drafted from ingredient lists, not confirmed by the kitchen, and the proof says so in red until `dietsConfirmed` is set."
 studioW: 1056
-studioH: 1830
+studioH: 1940
 studioOrder: 20
 ---
 
@@ -28,6 +28,44 @@ studioOrder: 20
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
+
+{#- Dietary marks. Rendered in the order the codes are declared in
+    menu.json's `diets` registry, not the order an item happens to list
+    them, so GF/V/LS always read left to right the same way and the legend
+    matches. `diet` is what the item IS; `dietOnRequest` is what the
+    kitchen will make it into if asked, and takes the asterisk. -#}
+{%- macro dietMarks(item) %}
+{%- set served = item.diet or [] %}
+{%- set onRequest = item.dietOnRequest or [] %}
+{%- if served.length or onRequest.length -%}
+<span class="menu-item-diet">
+    {%- for d in menu.diets -%}
+        {%- if d.code in served %}<abbr class="diet-mark" title="{{ d.name }}">{{ d.code }}</abbr>
+        {%- elif d.code in onRequest %}<abbr class="diet-mark diet-mark--request" title="{{ d.name }} on request">{{ d.code }}*</abbr>
+        {%- endif -%}
+    {%- endfor -%}
+</span>
+{%- endif %}
+{%- endmacro %}
+
+{#- The key. Prints once per sheet, low on a panel, because a mark a
+    customer cannot decode is worse than no mark. The shared-kitchen line is
+    the one part of this piece that is there for liability rather than for
+    reading — it prints. -#}
+{%- macro dietLegend() %}
+<div class="diet-legend">
+    <p class="p-label diet-legend-title ink-accent">Dietary key</p>
+    <p class="p-body diet-legend-keys">
+        {%- for d in menu.diets %}<span class="diet-mark">{{ d.code }}</span>&nbsp;{{ d.name }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+    </p>
+    <p class="p-body diet-legend-note"><span class="diet-mark">*</span> we can make it that way. Just ask.</p>
+    {#- Separate paragraph, not tacked onto the line above, because the two
+        have different lifetimes: the asterisk note explains marks and goes
+        when they do, the shared-kitchen caveat is a liability line that
+        prints either way. -#}
+    <p class="p-body diet-legend-caveat">{{ menu.dietNote }}</p>
+</div>
+{%- endmacro %}
 
 {%- macro category(c) %}
 <div class="menu-cat">
@@ -45,6 +83,7 @@ studioOrder: 20
         <li class="menu-item">
             <div class="menu-item-head">
                 <span class="menu-item-name p-body">{{ item.name }}
+                    {{- dietMarks(item) }}
                     {#- Screen and PNG only, never printed — see .price-review in
                         the stylesheet and the _note_price_review in menu.json.
                         Marks a price carried over from the old menu that has not
@@ -81,7 +120,17 @@ studioOrder: 20
    itself, and mislabelling a panel costs a whole print run — so the roles are
    called out here, where they are visible while proofing in the browser and
    gone from the export and the print. #}
-<div class="trifold-stack">
+{#- `diets-unconfirmed` is what keeps the PDF honest. /menu links this
+    piece as a printable menu, and the PDF is the PRINT rendering — so
+    while menu.json's `dietsConfirmed` is false the marks come off the
+    printed sheet the same way they are off the website, and only the PNG
+    proof still shows them for the client to check. Exactly the contract
+    .price-review already has: loud on the proof, absent from the paper. -#}
+<div class="trifold-stack{% if not menu.dietsConfirmed %} diets-unconfirmed{% endif %}">
+
+    {%- if not menu.dietsConfirmed %}
+    <p class="fold-legend fold-legend--review fold-legend--warn">Dietary marks are drafted from the ingredient lists and are <strong>not kitchen-confirmed</strong> &mdash; do not send this to a printer until they are. Set <code>dietsConfirmed</code> in menu.json to clear this. Screen and PNG proof only.</p>
+    {%- endif %}
 
     <p class="fold-legend fold-legend--review">A red <span class="price-review">&bull;</span> marks a price still to be re-costed. Screen and PNG proof only &mdash; it never prints.</p>
 
@@ -111,6 +160,9 @@ studioOrder: 20
         <section class="panel panel-flap">
             {{ category(breakfast) }}
             {{ category(breakfastSides) }}
+
+            <div class="panel-spacer"></div>
+            {{ dietLegend() }}
         </section>
 
         <section class="panel panel-back">
@@ -127,7 +179,7 @@ studioOrder: 20
 
             <div class="panel-note">
                 <p class="p-label panel-note-label ink-accent">Catering &amp; meal prep</p>
-                <p class="p-body panel-note-body">Trays, box lunches and full-service catering for offices, churches, funerals and family gatherings. Call ahead or ask at the counter &mdash; we will build a menu around your date.</p>
+                <p class="p-body panel-note-body">Trays, box lunches and full-service catering for offices, churches, funerals and family gatherings. Call ahead or ask at the counter and we will build a menu around your date.</p>
             </div>
 
             <div class="panel-spacer"></div>
@@ -220,6 +272,9 @@ studioOrder: 20
         <section class="panel">
             {{ category(burgers) }}
             {{ category(drinks) }}
+
+            <div class="panel-spacer"></div>
+            {{ dietLegend() }}
         </section>
     </div>
 

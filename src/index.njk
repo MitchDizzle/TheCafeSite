@@ -2,7 +2,7 @@
 layout: layouts/base.njk
 title: "The Café | Catering & Meal Prep"
 description: "The Cafe – Professional catering and meal prep services. Crafted with care for every occasion."
-ogTitle: "The Café | Catering & Meal Prep — Leavenworth, KS"
+ogTitle: "The Café | Catering & Meal Prep in Leavenworth, KS"
 ogDescription: "Professional catering and meal prep services in Leavenworth, Kansas. Crafted with care for every occasion."
 pageCss: "/assets/css/home.css"
 # Gateway page: no nav, no footer, so the shared nav/footer JS has nothing to do.
@@ -35,7 +35,7 @@ headExtra: |
       </script>
 ---
 <div class="construction-banner" role="note">
-    Pardon our crumbs — this website is still under construction. Some details may change.
+    Pardon our crumbs. This site is still under construction, so some details may change.
 </div>
 
 <main class="hero" role="main">
@@ -135,9 +135,25 @@ headExtra: |
             l 10,0
             " fill="none" stroke="var(--cream)" stroke-width="1" transform="scale(-1,-1) translate(-400,-60)" pathLength="1"/>
         </svg>
+        {#- Two buttons, never three. This is the gateway: a third choice
+            here costs more than it adds, and the row wraps badly on a phone.
+
+            So ordering and the menu take the buttons, and "about us" moved
+            below the phone number as a plain link — someone who wants the
+            cafe's story will find it there, and they are not the visitor
+            this screen is built for.
+
+            Order Online renders only when site.ordering.url is filled in,
+            and takes the primary fill when it does; until the Square site
+            exists there is no button rather than a dead one. #}
         <nav class="hero-actions" aria-label="Main navigation">
-            <a href="contact" class="btn btn-primary">Contact & Catering</a>
-            <a href="about"   class="btn btn-ghost">Learn More</a>
+            {%- if site.ordering.url %}
+            <a href="{{ site.ordering.url }}" class="btn btn-primary">{{ site.ordering.label }}</a>
+            <a href="menu"    class="btn btn-ghost">See the Menu</a>
+            {%- else %}
+            <a href="menu"    class="btn btn-primary">See the Menu</a>
+            {%- endif %}
+            <a href="contact" class="btn btn-ghost">Contact &amp; Catering</a>
         </nav>
         <div class="hero-subspace">
             <p class="hero-subtitle">
@@ -146,6 +162,7 @@ headExtra: |
                 <a href="https://maps.google.com/?q=417+S+6th+St,+Leavenworth,+KS+66048">417 S 6th St, Leavenworth, KS 66048</a>
             </p>
         </div>
+        <p class="hero-more"><a href="about">More about us</a></p>
     </div>
 
     <!-- Plain buttons, not role="tab": there are no tabpanels to own, and the

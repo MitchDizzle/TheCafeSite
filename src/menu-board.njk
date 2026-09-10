@@ -1,0 +1,138 @@
+---
+layout: layouts/base.njk
+title: "Menu Board | The Café"
+description: "In-store menu board for The Café. Not part of the public site."
+pageCss: "/assets/css/menu-board.css"
+bodyClass: board-body
+
+# Unlisted, not private. It is off the nav, off the sitemap, and told not to
+# be indexed — but this is a public repo on a public host, so anyone with the
+# URL can open it. Nothing sensitive goes on this page for that reason.
+noindex: true
+robots: "noindex, nofollow"
+
+# No nav, no footer, no construction banner, and nothing for main.js to do —
+# this renders on a TV with no keyboard and no mouse.
+noSiteJs: true
+---
+{#- ===========================================================
+    /menu-board — the in-store screen
+
+    Built for a 1920 x 1080 TV running a browser in fullscreen (F11) off the
+    mini PC in the back. Same data as /menu and the printed tri-fold, laid
+    out for someone reading it from across a room rather than from a phone
+    at arm's length.
+
+    HOW IT SCALES. There is no fixed 1920px canvas and no JavaScript. The
+    root font-size is tied to the viewport (see menu-board.css) and every
+    length on the page is in rem, so the layout is proportionally identical
+    at 1080p, at 4K, and in a small window while you are checking it on a
+    laptop. Nothing to configure on the mini PC beyond opening the URL and
+    pressing F11.
+
+    WHAT IS DELIBERATELY MISSING. No item descriptions: at the size they
+    would have to be, nobody standing at the counter can read them, and a
+    board that is too dense reads as noise. The board is names and prices —
+    what a person scanning a wall needs — and the descriptions live on
+    /menu and on the tri-fold for anyone who wants them.
+
+    COLUMN ASSIGNMENT is by hand, below, not automatic. Four columns of
+    12/13/15/14 items balance to roughly equal height; a `columns: 4` flow
+    would rebalance itself the moment an item is added and move half the
+    menu to a different part of the wall overnight. Regulars learn where
+    their order lives. If you add items, re-balance these lists on purpose.
+    =========================================================== #}
+
+{% from "partials/diet-marks.njk" import dietMarks %}
+
+{%- set breakfast = (menu.categories | where("id", "breakfast"))[0] %}
+{%- set breakfastSides = (menu.categories | where("id", "breakfast_sides"))[0] %}
+{%- set wraps = (menu.categories | where("id", "wraps"))[0] %}
+{%- set sandwiches = (menu.categories | where("id", "sandwiches"))[0] %}
+{%- set burgers = (menu.categories | where("id", "burgers"))[0] %}
+{%- set salads = (menu.categories | where("id", "salads"))[0] %}
+{%- set soup = (menu.categories | where("id", "soup"))[0] %}
+{%- set sides = (menu.categories | where("id", "sides"))[0] %}
+{%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
+
+{%- macro category(c) %}
+<section class="bcat">
+    <h2 class="bcat-name">{{ c.name }}</h2>
+    {%- if c.sizing %}
+    <p class="bcat-sizing">
+        {%- for s in c.sizing %}{{ s.size }} {{ s.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+    </p>
+    {%- endif %}
+    <ul class="bitems">
+        {%- for item in c.items %}
+        <li class="bitem">
+            <span class="bitem-name">{{ item.name }}{% if menu.dietsConfirmed %}{{ dietMarks(item, menu.diets) }}{% endif %}</span>
+            {#- No leader on a row with no price of its own: the salads are
+                priced by size on the category line above, and dots running out
+                to blank space read as a price somebody forgot to fill in. -#}
+            {%- if item.price or item.prices or item.variants %}
+            <span class="bitem-fill" aria-hidden="true"></span>
+            {%- endif %}
+            {%- if item.price %}
+            <span class="bitem-price">{{ item.price | money }}</span>
+            {%- elif item.prices %}
+            <span class="bitem-price">
+                {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
+            </span>
+            {%- elif item.variants %}
+            <span class="bitem-price">
+                {%- for v in item.variants %}{{ v.size }} {{ v.price | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
+            </span>
+            {%- endif %}
+        </li>
+        {%- endfor %}
+    </ul>
+</section>
+{%- endmacro %}
+
+<main class="board">
+
+    <header class="board-head">
+        <div class="board-mark">
+            {% inlineSvg "/assets/thecafe.svg", "board-wordmark", site.name %}
+        </div>
+        <p class="board-tagline">Breakfast &amp; Lunch &middot; Catering &amp; Meal Prep</p>
+        <p class="board-hours">{{ site.opening.hoursDays }} &nbsp;&middot;&nbsp; {{ site.opening.opens.time }} {{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }} {{ site.opening.closes.meridiem }}</p>
+    </header>
+
+    <div class="board-grid">
+        <div class="board-col">
+            {{ category(breakfast) }}
+            {{ category(breakfastSides) }}
+        </div>
+        <div class="board-col">
+            {{ category(wraps) }}
+            {{ category(sandwiches) }}
+            {{ category(soup) }}
+        </div>
+        <div class="board-col">
+            {{ category(burgers) }}
+            {{ category(drinks) }}
+        </div>
+        <div class="board-col">
+            {{ category(salads) }}
+            {{ category(sides) }}
+        </div>
+    </div>
+
+    <footer class="board-foot">
+        {#- The key rides with the marks. While menu.json's `dietsConfirmed`
+            is false there are no marks on this board, so a key explaining
+            them would be explaining nothing. -#}
+        {%- if menu.dietsConfirmed %}
+        <p class="board-key">
+            {%- for d in menu.diets %}<span class="diet-mark">{{ d.code }}</span> {{ d.name }} &nbsp;&nbsp;{% endfor -%}
+            <span class="diet-mark">*</span> on request
+        </p>
+        {%- else %}
+        <p class="board-key">Ask us about gluten free, vegetarian and low sodium options.</p>
+        {%- endif %}
+        <p class="board-contact">{{ site.phone }} &nbsp;&middot;&nbsp; {{ site.social.website }}</p>
+    </footer>
+
+</main>

@@ -58,6 +58,22 @@ p { max-width: 65ch; }
 
 /* ── Layout helpers ───────────────────────────────────────── */
 
+/* Present to assistive technology, absent from the page. Used where a
+   heading is needed for document structure but would be noise on screen.
+   Not `display: none`, which removes it from the accessibility tree too. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
 .container {
     width: 100%;
     max-width: var(--max-width);
@@ -105,9 +121,16 @@ p { max-width: 65ch; }
     color: var(--cream);
 }
 
+/* Transparent fill, so the button takes the colour of whatever it sits on.
+   Every .section--alt ground on this site is --cream-alt, and the label was
+   --cream: near-white text on a near-white panel, legible only by its red
+   border. --accent-dark instead, which is 6.3:1 on that ground; plain
+   --accent would clear AA at 4.8:1 but this label is uppercase 14px with
+   letterspacing, and small type is where a borderline ratio actually fails
+   somebody. Hover fills with --accent and flips the label back to cream. */
 .btn-outline {
     background: transparent;
-    color: var(--cream);
+    color: var(--accent-dark);
     border-color: var(--accent);
 }
 .btn-outline:hover {

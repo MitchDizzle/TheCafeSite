@@ -1,13 +1,23 @@
 {
   "_updated": "2026-08-21",
   "_note": "Items with 'verify: true' had handwriting that was difficult to read precisely — confirm before publishing.",
+  "_note_no_fryer": "There is no fryer. The kitchen is deli-style and nothing on this menu is deep-fried: the Fried Potatoes are oven-baked and the Chips come out of a bag. Both carry that as a description because the announcement post says 'no fried foods' and a customer reading 'Fried Potatoes' underneath it will otherwise assume we contradicted ourselves. Do not add a fried item without settling that first.",
   "_note_price_review": "Items with 'priceReview: true' are priced under $2.00 and are known to be stale — they date from the old menu and have not been re-costed yet. The tri-fold marks them with a red bullet ON SCREEN AND IN THE PNG EXPORT ONLY; the marker is hidden in print, so a proof shows the open questions but a real sheet never ships with them. Set the price and delete the flag.",
+  "_note_diet": "Dietary marks are a data feature, not a nutrition claim. `diet` lists what an item IS as served; `dietOnRequest` lists what the kitchen can make it into if asked (drop the meat, hold the toast) and prints with an asterisk. Codes must exist in the `diets` registry below. The marks drafted here were read off the ingredient lists on this menu and have NOT been confirmed by the kitchen — `dietsConfirmed` is false, which puts a warning on the proof. Two deliberate omissions: drinks carry no marks (marking every bottle of water vegetarian is noise), and cured meats, bagged chips and bottled dressings are left unmarked because gluten and sodium in those come from a supplier label nobody has read yet. Add marks only from a label or the kitchen, never from a guess. While `dietsConfirmed` is false the PUBLIC /menu page renders no marks at all — no key, no filter, no data attributes, no suitableForDiet — and says so in plain words instead. The tri-fold still shows them, because that is the proof the client reads in order to confirm them.",
+  "dietsConfirmed": false,
+  "_note_diet_schema": "`schema` is the schema.org RestrictedDiet the code maps to. /menu emits it as suitableForDiet on each item, which is how Google reads a dietary claim — so a code without one is invisible to search, and a WRONG one is a machine-readable false claim. Only `diet` items are emitted, never `dietOnRequest`: 'we can make it that way' is not something structured data can express, and publishing it as though it were would say the item ships gluten-free when it does not.",
+  "diets": [
+    { "code": "GF", "name": "Gluten free", "schema": "https://schema.org/GlutenFreeDiet" },
+    { "code": "V", "name": "Vegetarian", "schema": "https://schema.org/VegetarianDiet" },
+    { "code": "LS", "name": "Low sodium", "schema": "https://schema.org/LowSaltDiet" }
+  ],
+  "dietNote": "Prepared in a shared kitchen. We are not a certified gluten-free facility and cannot promise against cross-contact. Please tell us about an allergy when you order.",
   "categories": [
     {
       "id": "breakfast",
       "name": "Breakfast",
       "_note_build": "The build-your-own filling list used to be repeated verbatim on the burrito and on both omelets. It is one note on the category now — same options, stated once, which is also how the sandwiches category reads.",
-      "note": "Burritos and omelets are build-your-own — choose from bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
+      "note": "Burritos and omelets are build-your-own. Choose from bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
       "items": [
         {
           "name": "Full Biscuit & Gravy",
@@ -20,20 +30,24 @@
         {
           "name": "Big Breakfast",
           "description": "2 eggs, potatoes, meat & toast",
+          "dietOnRequest": ["GF"],
           "price": 10.00
         },
         {
           "name": "Burrito",
+          "dietOnRequest": ["V"],
           "price": 9.00
         },
         {
           "_note_prices": "One line, two sizes. `prices` renders as '$9.00 / $11.00' in the same order as the sizes in the name — 2 egg first, 3 egg second — so the mapping is implied rather than labelled twice.",
           "name": "2 / 3 Egg Omelet",
+          "dietOnRequest": ["V", "GF"],
           "prices": [9.00, 11.00]
         },
         {
           "name": "Breakfast Sandwich",
           "description": "One egg, cheese & choice of bacon, sausage or ham. Served on biscuit, croissant, or English muffin (wheat, white, rye or 12 grain).",
+          "dietOnRequest": ["V"],
           "price": 8.00
         }
       ]
@@ -42,12 +56,12 @@
       "id": "breakfast_sides",
       "name": "Breakfast Sides",
       "items": [
-        { "name": "Toast, Biscuit or English Muffin", "price": 2.50 },
+        { "name": "Toast, Biscuit or English Muffin", "diet": ["V"], "price": 2.50 },
         { "name": "Bacon (4 slices)", "price": 4.50 },
         { "name": "Sausage Patty", "price": 3.00 },
-        { "name": "Fried Potatoes", "price": 1.25, "priceReview": true },
+        { "name": "Fried Potatoes", "description": "Oven-baked", "diet": ["V", "GF", "LS"], "price": 1.25, "priceReview": true },
         { "name": "Side of Gravy", "price": 1.25, "priceReview": true },
-        { "name": "Bagel with Cream Cheese", "price": 1.25, "priceReview": true }
+        { "name": "Bagel with Cream Cheese", "diet": ["V"], "price": 1.25, "priceReview": true }
       ]
     },
     {
@@ -86,6 +100,7 @@
         },
         {
           "name": "Veggie Wrap",
+          "diet": ["V"],
           "price": 6.00
         }
       ]
@@ -109,6 +124,7 @@
         },
         {
           "name": "Grilled Cheese",
+          "diet": ["V"],
           "price": 5.00
         }
       ]
@@ -171,6 +187,7 @@
     {
       "id": "salads",
       "name": "Salads",
+      "note": "Any salad can be built without the meat, or with the dressing on the side. Just ask.",
       "sizing": [
         { "size": "Full", "price": 12.00 },
         { "size": "Half", "price": 7.00 }
@@ -203,6 +220,7 @@
         {
           "name": "Dinner Salad",
           "description": "Greens, tomato, olives, mushrooms, red onion & cheddar cheese",
+          "diet": ["V", "GF"],
           "price": 4.00
         }
       ]
@@ -219,13 +237,13 @@
       "id": "sides",
       "name": "Sides",
       "items": [
-        { "name": "Potato Salad", "price": 3.00 },
-        { "name": "Pasta Salad", "price": 3.00 },
-        { "name": "Cucumber Salad", "price": 3.00 },
-        { "name": "Tortellini Salad", "price": 3.00 },
-        { "name": "Cottage Cheese", "price": 3.00 },
+        { "name": "Potato Salad", "diet": ["V", "GF"], "price": 3.00 },
+        { "name": "Pasta Salad", "diet": ["V"], "price": 3.00 },
+        { "name": "Cucumber Salad", "diet": ["V", "GF", "LS"], "price": 3.00 },
+        { "name": "Tortellini Salad", "diet": ["V"], "price": 3.00 },
+        { "name": "Cottage Cheese", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Salad of the Day", "price": 3.00 },
-        { "name": "Chips", "price": 1.25, "priceReview": true }
+        { "name": "Chips", "description": "Bagged", "diet": ["V"], "price": 1.25, "priceReview": true }
       ]
     },
     {

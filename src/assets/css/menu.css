@@ -1,0 +1,335 @@
+/* ============================================================
+   Menu — /menu
+   Page: src/menu.njk
+
+   The printed tri-fold's stylesheet (menu-trifold.css) is a fixed artboard
+   measured in inches. This one is a responsive page in rem, and the two
+   deliberately do not share code: the same item on paper and on a phone
+   wants different type sizes, a different column count, and — on paper
+   only — a dot leader. What they DO share is the data and the meaning of
+   the marks, which lives in src/_data/menu.json.
+   ============================================================ */
+
+/* Shared idiom on this site: a tight lede under the h1. */
+.menu-lede {
+    margin-top: 0.75rem;
+    max-width: 60ch;
+}
+
+/* ── The facts a phone came here for ──────────────────────────
+   Hours, phone, address, above the food. Somebody checking a menu at
+   6:40am is deciding whether the door is open, not what to eat. */
+
+.menu-facts {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+}
+
+.menu-fact {
+    margin: 0;
+}
+
+.menu-fact-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+}
+
+/* ── Dietary key, filter, caveats ─────────────────────────────
+   The whole reason this page beats a photo of the paper menu. */
+
+.menu-diet-heading {
+    max-width: 24ch;
+}
+
+.diet-key {
+    margin-top: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.75rem;
+}
+
+.diet-key-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.diet-key-row dd {
+    margin: 0;
+}
+
+/* The mark itself. Teal rather than the red accent: red is this site's
+   "this is a link, press it" colour and these are not pressable. In the
+   filter chips below the same element sits inside something that IS
+   pressable, and inherits the chip's colour instead. */
+.diet-mark {
+    font-weight: 900;
+    font-size: 0.8em;
+    letter-spacing: 0.04em;
+    color: var(--teal);
+    /* abbr's dotted underline reads as a spelling error at this size. */
+    text-decoration: none;
+    border-bottom: 0;
+}
+
+.diet-marks {
+    margin-left: 0.4em;
+    white-space: nowrap;
+}
+
+.diet-marks .diet-mark {
+    vertical-align: 0.35em;
+}
+
+.diet-marks .diet-mark + .diet-mark {
+    margin-left: 0.25em;
+}
+
+/* "GF*" — the kitchen will make it that way if asked, rather than it
+   already being that way. Lighter, and the asterisk carries the same
+   distinction for anyone who cannot see the weight difference. */
+.diet-mark--request {
+    opacity: 0.65;
+}
+
+/* Stands in for the key and the filter while menu.json's `dietsConfirmed`
+   is false. Sized like real copy rather than like a disclaimer — it is the
+   answer to the heading above it right now, not a footnote to one. */
+.diet-pending {
+    margin-top: 1.25rem;
+    max-width: 62ch;
+    line-height: 1.6;
+}
+
+.menu-order {
+    margin-top: 1.5rem;
+}
+
+.diet-filter {
+    margin-top: 1.75rem;
+}
+
+.diet-filter-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+    margin: 0 0 0.6rem;
+}
+
+.diet-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+/* Deliberately large for a chip. This audience skews older and is often
+   on a phone — 44px of target is the floor, not the aspiration. */
+.diet-chip,
+.diet-clear {
+    font: inherit;
+    font-size: 0.95rem;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: 2px solid var(--teal);
+    background: transparent;
+    color: var(--teal);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.diet-chip:hover,
+.diet-clear:hover {
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
+.diet-chip:focus-visible,
+.diet-clear:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+}
+
+/* Pressed state is filled AND announced by aria-pressed — colour alone
+   would not say "on" to anyone who cannot see it. */
+.diet-chip.is-on {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: var(--cream);
+}
+
+.diet-chip .diet-mark {
+    color: inherit;
+}
+
+.diet-clear {
+    border-style: dashed;
+    border-color: var(--text-dark);
+    color: var(--text-dark);
+}
+
+.diet-caveat {
+    margin-top: 1.5rem;
+    max-width: 62ch;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* ── The menu itself ──────────────────────────────────────────
+   Columns, not one long scroll, on anything wide enough. Categories are
+   independent blocks, so masonry-ish column flow is right and no item
+   should ever be split across a column break. */
+
+.menu-grid {
+    margin-top: 1rem;
+}
+
+@media (min-width: 700px) {
+    .menu-grid {
+        columns: 2;
+        column-gap: 3rem;
+    }
+}
+
+@media (min-width: 1100px) {
+    .menu-grid {
+        columns: 3;
+    }
+}
+
+.menu-cat {
+    break-inside: avoid;
+    /* `break-inside: avoid` is advisory when a block is taller than the
+       column; the margin keeps the categories apart either way. */
+    margin-bottom: 2.5rem;
+}
+
+.menu-cat-name {
+    font-size: 1.35rem;
+    color: var(--teal);
+}
+
+.menu-cat-note,
+.menu-cat-sizing {
+    margin-top: 0.35rem;
+    font-size: 0.875rem;
+}
+
+.menu-cat-note {
+    font-style: italic;
+    opacity: 0.85;
+}
+
+.menu-cat-sizing {
+    font-weight: 700;
+    color: var(--accent-dark);
+}
+
+.menu-items {
+    list-style: none;
+    margin: 0.9rem 0 0;
+    padding: 0;
+}
+
+.menu-item {
+    break-inside: avoid;
+}
+
+.menu-item + .menu-item {
+    margin-top: 0.8rem;
+}
+
+.menu-item-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.menu-item-name {
+    font-weight: 700;
+}
+
+/* Dot leader. Paper convention, kept here because the price sits hard
+   right and the eye needs the bridge — same reason as on the tri-fold. */
+.menu-item-fill {
+    flex: 1;
+    border-bottom: 1px dotted rgba(34, 50, 58, 0.3);
+    transform: translateY(-0.25em);
+}
+
+.menu-item-price {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.menu-item-desc {
+    margin-top: 0.15rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    opacity: 0.8;
+}
+
+/* Filter result count. A live region, so it must occupy space rather than
+   flash — it stays put and only its text changes. */
+.menu-result {
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--teal);
+    background: rgba(var(--accent-rgb), 0.06);
+    font-size: 0.95rem;
+}
+
+.menu-print {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+}
+
+.menu-print-hint {
+    font-size: 0.875rem;
+    opacity: 0.75;
+}
+
+.menu-updated {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.menu-cta-copy {
+    margin-top: 0.75rem;
+    max-width: 60ch;
+}
+
+.menu-cta-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .diet-chip,
+    .diet-clear {
+        transition: none;
+    }
+}
+
+/* The "prices may change" line, directly under the lede. Set as normal copy
+   rather than as small print: it is there to be read before somebody scrolls
+   a list of prices, and small print under the fold would not be. */
+.menu-note {
+    margin-top: 0.75rem;
+    max-width: 60ch;
+    font-weight: 700;
+    color: var(--accent-dark);
+}

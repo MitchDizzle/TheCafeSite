@@ -21,6 +21,18 @@
     "website": "lvcafetogo.com"
   },
 
+  "_comment_owners": "The two names on the door. On the opening post because a small-town reopening is shared for the people, not the premises — friends and family scrolling past recognise a name long before they read an address. Bios and photos are still outstanding: src/team.njk is a placeholder.",
+  "owners": [
+    { "name": "Terry Booker" },
+    { "name": "Dalton Watkins" }
+  ],
+
+  "_comment_ordering": "Square Online, the hosted pickup-ordering site. `url` is the squaresite.com address from square-setup.md §7 in the CafeWork repo, and it is EMPTY UNTIL THAT SITE EXISTS — every Order Online button on this site is conditional on it, so an empty string means no button rather than a button that 404s. A custom domain needs a paid Square plan we deliberately skip, so this will stay an off-domain link; that is a known tradeoff, not an oversight.",
+  "ordering": {
+    "url": "",
+    "label": "Order Online"
+  },
+
   "_comment_opening": "Opening day. Read by the front door banner and the Facebook pieces in /studio/ so the date is stated once. Not billed as a grand opening — the kitchen is still transitioning off the old contract, so the doors open first and a grand opening comes later.",
   "opening": {
     "date": "2026-10-05",
@@ -36,5 +48,5 @@
 
   "_comment_construction": "Set to false to remove the under-construction banner from every page at once.",
   "underConstruction": true,
-  "constructionNotice": "Pardon our crumbs — this website is still under construction. Some details may change."
+  "constructionNotice": "Pardon our crumbs. This site is still under construction, so some details may change."
 }
