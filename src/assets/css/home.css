@@ -170,6 +170,31 @@
             margin-top: 0.25rem;
         }
         
+        /* "More about us", under the contact block. Deliberately a link and
+           not a third button: it is the least urgent thing on this screen,
+           and the gateway's job is to get somebody to the menu, the order
+           page, or the phone. Underlined rather than colour-only, because
+           on this ground nothing else marks it as a link. */
+        .hero-more {
+            margin-top: 0.9rem;
+            font-family: 'Lato', sans-serif;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero-more a {
+            color: var(--cream);
+            opacity: 0.8;
+            text-decoration: underline;
+            text-underline-offset: 0.35em;
+        }
+
+        .hero-more a:hover,
+        .hero-more a:focus-visible {
+            opacity: 1;
+        }
+
         .filigree-subspace {
             display: block; 
             flex-direction: column;

@@ -32,6 +32,25 @@
     opacity: 0.75;
 }
 
+/* Proof-only warning that the dietary marks have not been confirmed by the
+   kitchen yet (menu.json's `dietsConfirmed`). Louder than .fold-legend
+   because a wrong GF mark is the one error on this sheet that can hurt
+   somebody, and it must be impossible to scroll past on a proof. */
+.fold-legend--warn {
+    color: var(--mint);
+    background: rgba(var(--accent-rgb), 0.22);
+    border-left: 3px solid var(--accent);
+    border-radius: 0.03in;
+    padding: 0.08in 0.12in;
+    opacity: 1;
+    margin-bottom: 0.1in;
+}
+
+.fold-legend--warn code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    text-transform: none;
+}
+
 .fold-legend--review {
     margin-bottom: -0.2in;
 }
@@ -60,6 +79,35 @@
     .price-review {
         display: none;
     }
+
+    /* The dietary marks are for the customer holding the sheet, so unlike
+       the proofing furniture above they normally DO print.
+
+       The exception is while they are unconfirmed. /menu links this piece's
+       PDF as a printable menu, and the PDF is this print rendering — so an
+       unconfirmed mark left in here would walk straight past the gate on
+       the website and out onto a sheet of paper in somebody's hand, which
+       is the worst of the three places for it to be. The PNG proof is a
+       screen rendering and is not affected: the client still sees the marks
+       there, which is the whole point of the proof.
+
+       The shared-kitchen caveat is NOT hidden. It is the one line here that
+       matters more, not less, when we are not marking anything. */
+    .diets-unconfirmed .menu-item-diet,
+    .diets-unconfirmed .diet-legend-title,
+    .diets-unconfirmed .diet-legend-keys,
+    .diets-unconfirmed .diet-legend-note {
+        display: none;
+    }
+}
+
+.diet-legend-caveat {
+    font-size: 0.08in;
+    line-height: 1.35;
+    font-style: italic;
+    color: var(--text-dark);
+    opacity: 0.75;
+    margin-top: 0.04in;
 }
 
 .fold-line {
@@ -367,6 +415,74 @@
 .menu-item-price {
     font-size: 0.12in;
     white-space: nowrap;
+}
+
+/* ── Dietary marks ────────────────────────────────────────────
+   GF / V / LS set right after the item name, and the key that decodes them
+   at the foot of one panel per sheet. Teal, not the red accent: red is this
+   brand's "look here" colour and there are up to three marks per line — in
+   red they would out-shout the item names and turn the panel into a rash.
+   Small caps size, but never below 0.075in, which is about the floor for
+   legibility on a photocopy of this sheet. */
+
+.menu-item-diet {
+    /* The leading space is the only gap — the name span's own whitespace is
+       collapsed away by the template's `{{-` trim. */
+    margin-left: 0.04in;
+    white-space: nowrap;
+}
+
+.diet-mark {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.078in;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: var(--teal);
+    /* abbr's default underline reads as a typo at this size. */
+    text-decoration: none;
+    border: none;
+    vertical-align: 0.35em;
+}
+
+.diet-mark + .diet-mark {
+    margin-left: 0.03in;
+}
+
+/* "GF*" — the kitchen will make it that way if asked, as opposed to it
+   already being that way. Lighter so the eye separates the two at a glance
+   without needing the key, and the asterisk carries it in black and white. */
+.diet-mark--request {
+    opacity: 0.6;
+}
+
+.diet-legend {
+    border-top: 1px solid #ddd;
+    padding-top: 0.08in;
+}
+
+.diet-legend-title {
+    font-size: 0.09in;
+}
+
+.diet-legend-keys {
+    font-size: 0.09in;
+    margin-top: 0.04in;
+}
+
+/* Inside the key the marks sit on the baseline with their own words, so the
+   superscript lift that works next to an item name is wrong here. */
+.diet-legend .diet-mark {
+    vertical-align: baseline;
+    font-size: 0.095in;
+}
+
+.diet-legend-note {
+    font-size: 0.08in;
+    line-height: 1.35;
+    font-style: italic;
+    color: var(--text-dark);
+    opacity: 0.75;
+    margin-top: 0.04in;
 }
 
 .menu-item-desc {

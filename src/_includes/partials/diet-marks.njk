@@ -1,0 +1,38 @@
+{#- ===========================================================
+    Dietary marks — GF / V / LS, rendered next to an item name.
+
+    Shared by the HTML surfaces that show the menu to a customer: /menu and
+    the 1080p kitchen-facing board. Both call it through the same gate.
+
+        {% from "partials/diet-marks.njk" import dietMarks %}
+        {%- if menu.dietsConfirmed %}{{ dietMarks(item, menu.diets) }}{% endif %}
+
+    THE GATE IS THE CALLER'S JOB and it is not optional on anything a
+    customer reads. menu.json's `dietsConfirmed` is false until the kitchen
+    has signed off on the classifications; a gluten-free badge is a claim
+    somebody plans a meal around, and "we think so" is not a thing to say
+    to a person with coeliac disease. The macro is left ungated so that the
+    one surface that SHOULD show unconfirmed marks can: the /studio/
+    tri-fold, which is the proof the client reads in order to confirm them,
+    and which carries its own red not-kitchen-confirmed banner. That piece
+    keeps its own copy of this markup — it is a fixed print artboard with
+    its own class names and its own print rules, and folding it in here
+    would couple a paper proof to a web page for no gain.
+
+    `diets` is passed in rather than read from context so the macro has no
+    hidden dependency on a global; the order of that registry is what makes
+    GF/V/LS always read left to right the same way, everywhere.
+    =========================================================== -#}
+{%- macro dietMarks(item, diets) -%}
+{%- set served = item.diet or [] -%}
+{%- set onRequest = item.dietOnRequest or [] -%}
+{%- if served.length or onRequest.length -%}
+<span class="diet-marks">
+    {%- for d in diets -%}
+        {%- if d.code in served %}<abbr class="diet-mark" title="{{ d.name }}">{{ d.code }}</abbr>
+        {%- elif d.code in onRequest %}<abbr class="diet-mark diet-mark--request" title="{{ d.name }} on request">{{ d.code }}*</abbr>
+        {%- endif -%}
+    {%- endfor -%}
+</span>
+{%- endif -%}
+{%- endmacro -%}

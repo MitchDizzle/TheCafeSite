@@ -2,6 +2,7 @@
   "_comment": "Root-absolute hrefs so one partial serves every page including 404.html, which Apache renders at whatever path was requested. .htaccess rewrites the extensionless form to the real file.",
 
   "primary": [
+    { "label": "Menu",     "href": "/menu" },
     { "label": "Catering", "href": "/catering" },
     { "label": "Gallery",  "href": "/gallery" },
     { "label": "Contact",  "href": "/contact", "cta": true }
@@ -9,6 +10,7 @@
 
   "footer": [
     { "label": "About",    "href": "/about" },
+    { "label": "Menu",     "href": "/menu" },
     { "label": "Catering", "href": "/catering" },
     { "label": "Team",     "href": "/team" },
     { "label": "Gallery",  "href": "/gallery" },

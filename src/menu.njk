@@ -1,0 +1,380 @@
+---
+layout: layouts/page.njk
+title: "Menu | The Café"
+description: "Breakfast and lunch at The Café in Leavenworth, KS. Biscuits and gravy, omelets, wraps, sandwiches, burgers, salads and daily soup."
+ogDescription: "Breakfast and lunch in Leavenworth, KS. Call ahead and we will have it waiting."
+pageCss: "/assets/css/menu.css"
+---
+{#- ===========================================================
+    /menu
+
+    Same data as the printed tri-fold (src/_data/menu.json), a different
+    job. The tri-fold is read at a table with the food already in front of
+    you; this page is read on a phone, usually while deciding whether to
+    come at all — so it leads with hours and the phone number, and it does
+    the one thing paper cannot: filter itself down to what somebody is
+    actually able to eat.
+
+    The dietary marks and their meanings come from menu.json's `diets`
+    registry, not from anything hard-coded here or in the script below.
+    Add a code there and it appears in the key, in the filter, and in the
+    structured data without this file changing.
+    =========================================================== #}
+
+{#- The marks come from a shared partial so /menu and the 1080p board
+    cannot drift apart on the one thing that must not drift: which code
+    means what, and in what order. The gate below is this page's, not the
+    partial's — see the comment in the partial for why the tri-fold is
+    allowed to render marks that this page is not. -#}
+{% from "partials/diet-marks.njk" import dietMarks %}
+
+<section class="section menu-intro" aria-labelledby="menu-heading">
+    <div class="container">
+        <h1 id="menu-heading">Menu</h1>
+        <p class="menu-lede">Breakfast and lunch, made to order. Everything is available to go. Call ahead and we&rsquo;ll have it waiting.</p>
+
+        {#- Prices on this page are the old menu's, and some of them are still
+            being re-costed (see menu.json's priceReview flag). Saying so up
+            here rather than in small print at the foot: somebody who drives
+            over expecting $8.00 and pays $9.00 remembers that, and the note
+            costs one line. Delete it once the cafe is open and the prices
+            have settled. -#}
+        <p class="menu-note">Prices may change closer to our opening on {{ site.opening.monthDay }}.</p>
+
+        {%- if site.ordering.url %}
+        <p class="menu-order">
+            <a href="{{ site.ordering.url }}" class="btn btn-primary">{{ site.ordering.label }} for pickup</a>
+        </p>
+        {%- endif %}
+
+        <div class="menu-facts">
+            <p class="menu-fact"><span class="menu-fact-label">Hours</span> {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}</p>
+            <p class="menu-fact"><span class="menu-fact-label">Call</span> <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a></p>
+            <p class="menu-fact"><span class="menu-fact-label">Find us</span> <a href="https://maps.google.com/?q=417+S+6th+St,+Leavenworth,+KS+66048">{{ site.address.street }}, {{ site.address.locality }}</a></p>
+        </div>
+    </div>
+</section>
+
+{#- ── Dietary key and filter ──────────────────────────────────
+    The key is plain HTML and is the whole feature with JavaScript off:
+    the marks are already on the items, so a reader can decode them and
+    scroll. The filter buttons are BUILT BY the script at the foot of this
+    page and are deliberately absent from the markup — a control that does
+    nothing is worse than no control, and this is not the audience to hand
+    a dead button to. -#}
+<section class="section section--alt menu-diet" aria-labelledby="diet-heading">
+    <div class="container">
+        <h2 id="diet-heading" class="menu-diet-heading">Eating gluten free, vegetarian or low sodium?</h2>
+
+        {%- if menu.dietsConfirmed %}
+        <dl class="diet-key">
+            {%- for d in menu.diets %}
+            <div class="diet-key-row">
+                <dt><span class="diet-mark">{{ d.code }}</span></dt>
+                <dd>{{ d.name }}</dd>
+            </div>
+            {%- endfor %}
+            <div class="diet-key-row">
+                <dt><span class="diet-mark">*</span></dt>
+                <dd>We can make it that way. Just ask</dd>
+            </div>
+        </dl>
+
+        {#- The filter's mount point. Empty in the HTML; the script fills it.
+            Absent entirely while the marks are gated, which is also what
+            stops the script from building chips — it returns on a missing
+            mount rather than needing its own copy of the flag. -#}
+        <div class="diet-filter" data-diet-filter hidden></div>
+        {%- else %}
+        {#- The unconfirmed state. It still answers the question in the
+            heading — just with a phone number instead of a badge, which is
+            the honest answer until the kitchen has been through the list.
+            Setting `dietsConfirmed` in menu.json swaps this for the key,
+            the filter, and the marks on every item. -#}
+        <p class="diet-pending">
+            We are still working out which items are gluten free, vegetarian and low sodium. We would rather tell you nothing than tell you wrong.
+            <a href="tel:{{ site.phoneHref }}">Call us at {{ site.phone }}</a> and we will talk you through what the kitchen can make for you.
+        </p>
+        {%- endif %}
+
+        <p class="diet-caveat">{{ menu.dietNote }}</p>
+    </div>
+</section>
+
+<section class="section menu-body" aria-labelledby="menu-list-heading">
+    <div class="container">
+        <h2 id="menu-list-heading" class="visually-hidden">Full menu</h2>
+
+        {#- Live region for the filter. Empty and silent until the script has
+            a result count to announce. -#}
+        <p class="menu-result" data-menu-result role="status" aria-live="polite" hidden></p>
+
+        <div class="menu-grid">
+            {%- for c in menu.categories %}
+            <section class="menu-cat" data-menu-cat aria-labelledby="cat-{{ c.id }}">
+                <h3 class="menu-cat-name" id="cat-{{ c.id }}">{{ c.name }}</h3>
+                {%- if c.note %}
+                <p class="menu-cat-note">{{ c.note }}</p>
+                {%- endif %}
+                {%- if c.sizing %}
+                <p class="menu-cat-sizing">
+                    {%- for s in c.sizing %}{{ s.size }} {{ s.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+                </p>
+                {%- endif %}
+
+                <ul class="menu-items" role="list">
+                    {%- for item in c.items %}
+                    {#- data-diet / data-diet-request are the filter's input,
+                        and they carry the same gate as the marks: an
+                        unconfirmed classification sitting in view-source is
+                        still published, even with nothing drawn on screen. -#}
+                    <li class="menu-item"
+                        {%- if menu.dietsConfirmed %}
+                        {%- if item.diet %} data-diet="{{ item.diet | join(" ") }}"{% endif %}
+                        {%- if item.dietOnRequest %} data-diet-request="{{ item.dietOnRequest | join(" ") }}"{% endif %}
+                        {%- endif %}>
+                        <div class="menu-item-head">
+                            <span class="menu-item-name">{{ item.name }}{% if menu.dietsConfirmed %}{{ dietMarks(item, menu.diets) }}{% endif %}</span>
+                            <span class="menu-item-fill" aria-hidden="true"></span>
+                            {%- if item.price %}
+                            <span class="menu-item-price">{{ item.price | money }}</span>
+                            {%- elif item.prices %}
+                            <span class="menu-item-price">
+                                {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
+                            </span>
+                            {%- elif item.variants %}
+                            <span class="menu-item-price">
+                                {%- for v in item.variants %}{{ v.size }} {{ v.price | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
+                            </span>
+                            {%- endif %}
+                        </div>
+                        {%- if item.description %}
+                        <p class="menu-item-desc">{{ item.description }}</p>
+                        {%- endif %}
+                    </li>
+                    {%- endfor %}
+                </ul>
+            </section>
+            {%- endfor %}
+        </div>
+
+        {#- The tri-fold's own PDF, the same file /studio/downloads/ serves.
+            It is built by `npm run build` (the export half), NOT by
+            `npm start` — so this link 404s on a dev server until a full
+            build has run once. Production always has it, because _site/ is
+            what gets uploaded and the build always exports.
+
+            Not a `download` attribute: on a phone that forces a save
+            instead of opening the viewer, and most people tapping this want
+            to look at it, not file it. -#}
+        <p class="menu-print">
+            <a href="/studio/downloads/menu-trifold.pdf" class="btn btn-outline">Print this menu (PDF)</a>
+            <span class="menu-print-hint">Two sides. Print double-sided, then fold in thirds.</span>
+        </p>
+
+        <p class="menu-updated">Menu last updated {{ menu._updated }}.</p>
+    </div>
+</section>
+
+<section class="section section--alt menu-cta" aria-labelledby="menu-cta-heading">
+    <div class="container">
+        <h2 id="menu-cta-heading">Feeding a crowd?</h2>
+        <p class="menu-cta-copy">Trays, box lunches and full-service catering for offices, churches, funerals and family gatherings, built around your date and your guests&rsquo; needs.</p>
+        <p class="menu-cta-actions">
+            <a href="/catering" class="btn btn-primary">Catering &amp; booking</a>
+            <a href="tel:{{ site.phoneHref }}" class="btn btn-outline">Call {{ site.phone }}</a>
+        </p>
+    </div>
+</section>
+
+<script>
+/* Dietary filter — progressive enhancement.
+ *
+ * The control is built here rather than written into the template so the
+ * page never ships a button that does nothing. Codes and labels are read
+ * back out of the rendered key, so menu.json stays the single source: add
+ * a diet there and a chip appears here on the next build, no JS change.
+ *
+ * Selections are ANDed, not ORed. Somebody who taps both "Gluten free" and
+ * "Vegetarian" needs an item that is both, and showing the union would
+ * hand them a list of things they cannot eat — the one failure mode this
+ * feature must not have.
+ *
+ * On-request marks DO match. "We can make it without the meat" is a real
+ * answer to "what can I eat here", and the asterisk on the item says which
+ * kind of answer it is.
+ */
+(function () {
+    var mount = document.querySelector('[data-diet-filter]');
+    var result = document.querySelector('[data-menu-result]');
+    if (!mount || !result) return;
+
+    var items = Array.prototype.slice.call(document.querySelectorAll('.menu-item'));
+    var cats = Array.prototype.slice.call(document.querySelectorAll('[data-menu-cat]'));
+
+    // The trailing "*" row of the key is the on-request note, not a diet.
+    var diets = Array.prototype.slice.call(document.querySelectorAll('.diet-key-row'))
+        .map(function (row) {
+            return {
+                code: row.querySelector('.diet-mark').textContent.trim(),
+                name: row.querySelector('dd').textContent.trim()
+            };
+        })
+        .filter(function (d) { return d.code !== '*'; });
+    if (!diets.length || !items.length) return;
+
+    var active = [];
+
+    function codes(el, attr) {
+        var v = el.getAttribute(attr);
+        return v ? v.split(' ') : [];
+    }
+
+    function apply() {
+        var shown = 0;
+        items.forEach(function (el) {
+            var has = codes(el, 'data-diet').concat(codes(el, 'data-diet-request'));
+            var ok = active.every(function (code) { return has.indexOf(code) !== -1; });
+            el.hidden = !ok;
+            if (ok) shown++;
+        });
+
+        // A category with every item filtered out is a heading over nothing.
+        cats.forEach(function (cat) {
+            cat.hidden = !Array.prototype.slice.call(cat.querySelectorAll('.menu-item'))
+                .some(function (el) { return !el.hidden; });
+        });
+
+        if (!active.length) {
+            result.hidden = true;
+            result.textContent = '';
+            return;
+        }
+
+        var names = active.map(function (code) {
+            var match = diets.filter(function (d) { return d.code === code; })[0];
+            return match ? match.name.toLowerCase() : code;
+        }).join(' and ');
+
+        result.hidden = false;
+        result.textContent = shown
+            ? shown + (shown === 1 ? ' item is' : ' items are') + ' marked ' + names + '. An asterisk means we make it that way on request.'
+            : 'Nothing is marked ' + names + ' yet. Call us and we will tell you what the kitchen can do.';
+    }
+
+    function chip(diet) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'diet-chip';
+        button.setAttribute('aria-pressed', 'false');
+
+        var mark = document.createElement('span');
+        mark.className = 'diet-mark';
+        mark.textContent = diet.code;
+        button.appendChild(mark);
+        button.appendChild(document.createTextNode(' ' + diet.name));
+
+        button.addEventListener('click', function () {
+            var i = active.indexOf(diet.code);
+            var on = i === -1;
+            if (on) { active.push(diet.code); } else { active.splice(i, 1); }
+            button.setAttribute('aria-pressed', on ? 'true' : 'false');
+            button.classList.toggle('is-on', on);
+            clear.hidden = active.length === 0;
+            apply();
+        });
+        return button;
+    }
+
+    var label = document.createElement('p');
+    label.className = 'diet-filter-label';
+    label.id = 'diet-filter-label';
+    label.textContent = 'Show me only:';
+
+    var group = document.createElement('div');
+    group.className = 'diet-chips';
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-labelledby', 'diet-filter-label');
+    diets.forEach(function (diet) { group.appendChild(chip(diet)); });
+
+    var clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'diet-clear';
+    clear.textContent = 'Show everything';
+    clear.hidden = true;
+    clear.addEventListener('click', function () {
+        active = [];
+        Array.prototype.slice.call(group.querySelectorAll('.diet-chip')).forEach(function (button) {
+            button.setAttribute('aria-pressed', 'false');
+            button.classList.remove('is-on');
+        });
+        clear.hidden = true;
+        apply();
+    });
+    group.appendChild(clear);
+
+    mount.appendChild(label);
+    mount.appendChild(group);
+    mount.hidden = false;
+}());
+</script>
+
+{#- ── Structured data ─────────────────────────────────────────
+    schema.org Menu, hung off the FoodEstablishment that index.njk already
+    declares at #business, so the two are one record rather than two
+    unrelated things on the same domain.
+
+    `suitableForDiet` is the machine-readable half of the marks above, and
+    the reason menu.json's diets carry a `schema` URL. Only `diet` is
+    emitted — never `dietOnRequest`. "We can make it that way" has no
+    representation in this vocabulary, and publishing it here would state
+    flatly that the item ships gluten-free when it does not.
+
+    Every string goes through `dump` so a quote or an apostrophe in an item
+    name cannot break the JSON; `safe` then stops Nunjucks re-escaping the
+    quotes dump just added into &quot; inside a <script>. -#}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Menu",
+  "@id": "{{ site.url }}/menu#menu",
+  "name": "The Café menu",
+  "url": "{{ site.url }}/menu",
+  "inLanguage": "en-US",
+  "provider": { "@id": "{{ site.url }}/#business" },
+  "hasMenuSection": [
+    {%- for c in menu.categories %}
+    {
+      "@type": "MenuSection",
+      "name": {{ c.name | dump | safe }},
+      {%- if c.note %}
+      "description": {{ c.note | dump | safe }},
+      {%- endif %}
+      "hasMenuItem": [
+        {%- for item in c.items %}
+        {
+          "@type": "MenuItem",
+          "name": {{ item.name | dump | safe }}
+          {%- if item.description %},
+          "description": {{ item.description | dump | safe }}
+          {%- endif %}
+          {%- if item.price %},
+          "offers": { "@type": "Offer", "price": "{{ item.price | money | replace("$", "") }}", "priceCurrency": "USD" }
+          {%- endif %}
+          {%- if menu.dietsConfirmed and item.diet %},
+          {#- Collected first, then printed. Deciding the separator inside the
+              diets loop keys `loop.last` to the registry rather than to the
+              codes this item actually carries, which trails a comma into the
+              JSON any time the last registered diet is not one of them. -#}
+          {%- set schemas = [] %}
+          {%- for d in menu.diets %}{% if d.code in item.diet %}{% set _ = schemas.push(d.schema) %}{% endif %}{% endfor %}
+          "suitableForDiet": [{% for s in schemas %}"{{ s }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+          {%- endif %}
+        }{% if not loop.last %},{% endif %}
+        {%- endfor %}
+      ]
+    }{% if not loop.last %},{% endif %}
+    {%- endfor %}
+  ]
+}
+</script>
