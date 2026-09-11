@@ -1,6 +1,14 @@
 <footer class="footer" aria-label="Site footer">
     <div class="footer__inner">
         <p class="footer__brand">{{ site.name }}</p>
+        {# Hours, phone and address, once, on every inner page. Read from
+           site.json, so a change to the hours or the number is one edit. #}
+        {%- set mapsQuery = site.address.street + ", " + site.address.locality + ", " + site.address.region + " " + site.address.postalCode %}
+        <address class="footer__contact">
+            <p class="footer__fact"><span class="footer__label">Hours</span> {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}</p>
+            <p class="footer__fact"><span class="footer__label">Call</span> <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a></p>
+            <p class="footer__fact"><span class="footer__label">Find us</span> <a href="https://maps.google.com/?q={{ mapsQuery | urlencode }}">{{ site.address.street }}, {{ site.address.locality }}</a></p>
+        </address>
         <ul class="footer__links" role="list">
             {%- for item in nav.footer %}
             <li><a href="{{ item.href }}">{{ item.label }}</a></li>

@@ -16,30 +16,6 @@
     max-width: 60ch;
 }
 
-/* ── The facts a phone came here for ──────────────────────────
-   Hours, phone, address, above the food. Somebody checking a menu at
-   6:40am is deciding whether the door is open, not what to eat. */
-
-.menu-facts {
-    margin-top: 1.5rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 2rem;
-}
-
-.menu-fact {
-    margin: 0;
-}
-
-.menu-fact-label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent-dark);
-}
-
 /* ── Dietary key, filter, caveats ─────────────────────────────
    The whole reason this page beats a photo of the paper menu. */
 
@@ -187,8 +163,10 @@
    independent blocks, so masonry-ish column flow is right and no item
    should ever be split across a column break. */
 
+/* Clear space between the intro lines and the first category, now that
+   the two share a section rather than being split by a section's padding. */
 .menu-grid {
-    margin-top: 1rem;
+    margin-top: 2.5rem;
 }
 
 @media (min-width: 700px) {
@@ -234,7 +212,7 @@
 
 .menu-items {
     list-style: none;
-    margin: 0.9rem 0 0;
+    margin: 1.25rem 0 0;
     padding: 0;
 }
 

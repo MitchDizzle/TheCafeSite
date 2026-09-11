@@ -1,7 +1,8 @@
 {
-  "_updated": "2026-08-21",
+  "_updated": "2026-09-11",
   "_note": "Items with 'verify: true' had handwriting that was difficult to read precisely — confirm before publishing.",
-  "_note_no_fryer": "There is no fryer. The kitchen is deli-style and nothing on this menu is deep-fried: the Fried Potatoes are oven-baked and the Chips come out of a bag. Both carry that as a description because the announcement post says 'no fried foods' and a customer reading 'Fried Potatoes' underneath it will otherwise assume we contradicted ourselves. Do not add a fried item without settling that first.",
+  "_note_no_fryer": "There is no fryer. The kitchen is deli-style and nothing on this menu is deep-fried: the Fried Potatoes are pan-fried on the flat-top, and the chips come out of a bag. Do not add a deep-fried item without settling that first.",
+  "_note_serving": "`serving` is an optional per-category time window ('Serving until 11am'). Breakfast stops at 11 and soup starts at 11 so the kitchen has time to change over; every menu template prints it next to the category name.",
   "_note_price_review": "Items with 'priceReview: true' are priced under $2.00 and are known to be stale — they date from the old menu and have not been re-costed yet. The tri-fold marks them with a red bullet ON SCREEN AND IN THE PNG EXPORT ONLY; the marker is hidden in print, so a proof shows the open questions but a real sheet never ships with them. Set the price and delete the flag.",
   "_note_diet": "Dietary marks are a data feature, not a nutrition claim. `diet` lists what an item IS as served; `dietOnRequest` lists what the kitchen can make it into if asked (drop the meat, hold the toast) and prints with an asterisk. Codes must exist in the `diets` registry below. The marks drafted here were read off the ingredient lists on this menu and have NOT been confirmed by the kitchen — `dietsConfirmed` is false, which puts a warning on the proof. Two deliberate omissions: drinks carry no marks (marking every bottle of water vegetarian is noise), and cured meats, bagged chips and bottled dressings are left unmarked because gluten and sodium in those come from a supplier label nobody has read yet. Add marks only from a label or the kitchen, never from a guess. While `dietsConfirmed` is false the PUBLIC /menu page renders no marks at all — no key, no filter, no data attributes, no suitableForDiet — and says so in plain words instead. The tri-fold still shows them, because that is the proof the client reads in order to confirm them.",
   "dietsConfirmed": false,
@@ -16,6 +17,7 @@
     {
       "id": "breakfast",
       "name": "Breakfast",
+      "serving": "Serving until 11am",
       "_note_build": "The build-your-own filling list used to be repeated verbatim on the burrito and on both omelets. It is one note on the category now — same options, stated once, which is also how the sandwiches category reads.",
       "note": "Burritos and omelets are build-your-own. Choose from bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
       "items": [
@@ -59,9 +61,8 @@
         { "name": "Toast, Biscuit or English Muffin", "diet": ["V"], "price": 2.50 },
         { "name": "Bacon (4 slices)", "price": 4.50 },
         { "name": "Sausage Patty", "price": 3.00 },
-        { "name": "Fried Potatoes", "description": "Oven-baked", "diet": ["V", "GF", "LS"], "price": 1.25, "priceReview": true },
-        { "name": "Side of Gravy", "price": 1.25, "priceReview": true },
-        { "name": "Bagel with Cream Cheese", "diet": ["V"], "price": 1.25, "priceReview": true }
+        { "name": "Fried Potatoes", "diet": ["V", "GF", "LS"], "price": 2.50 },
+        { "name": "Side of Gravy", "price": 2.00 }
       ]
     },
     {
@@ -228,6 +229,7 @@
     {
       "id": "soup",
       "name": "Soup of the Day",
+      "serving": "Starting at 11am",
       "items": [
         { "name": "Cup", "price": 5.00 },
         { "name": "Bowl", "price": 7.00 }
@@ -243,22 +245,15 @@
         { "name": "Tortellini Salad", "diet": ["V"], "price": 3.00 },
         { "name": "Cottage Cheese", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Salad of the Day", "price": 3.00 },
-        { "name": "Chips", "description": "Bagged", "diet": ["V"], "price": 1.25, "priceReview": true }
+        { "name": "Bagged Chips", "diet": ["V"], "price": 2.00 }
       ]
     },
     {
       "id": "drinks",
       "name": "Drinks",
       "items": [
-        {
-          "name": "Iced Tea",
-          "priceReview": true,
-          "variants": [
-            { "size": "Large", "price": 1.40 },
-            { "size": "Small", "price": 1.25 }
-          ]
-        },
-        { "name": "Bottle Water", "price": 1.50, "priceReview": true },
+        { "name": "Iced Tea / Fountain Drink", "price": 2.00 },
+        { "name": "Bottle Water", "price": 1.50 },
         { "name": "Bottle Tea", "price": 3.00 },
         { "name": "Bottle Juice", "price": 4.00 },
         { "name": "Bottle Soda", "price": 3.00 }

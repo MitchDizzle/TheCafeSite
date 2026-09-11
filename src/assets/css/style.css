@@ -301,6 +301,60 @@ p { max-width: 65ch; }
     color: var(--cream);
 }
 
+/* Hours, phone, address. Full cream, full size — this is the part of the
+   footer people actually come looking for, so it is not dimmed like the
+   link list below it. Labels in mint (6.5:1 on teal-dark); never the red
+   accent, which is 1.3:1 on this ground.
+
+   Three EQUAL columns rather than a wrapping flex row: the three facts are
+   different widths, and in a flex row that pushes the middle one ("Call")
+   off the centre line the brand name sits on. Equal columns pin it there.
+   Stacked on phones, where there is no row to align. */
+.footer__contact {
+    font-style: normal;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    width: 100%;
+}
+
+@media (min-width: 48rem) {
+    .footer__contact {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 2rem;
+        max-width: 60rem;
+    }
+}
+
+.footer__fact {
+    margin: 0;
+    color: var(--cream);
+}
+
+.footer__label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mint);
+}
+
+.footer__fact a {
+    color: var(--cream);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+.footer__fact a:hover {
+    color: var(--mint);
+}
+
+.footer__fact a:focus-visible {
+    outline: 3px solid var(--mint);
+    outline-offset: 3px;
+}
+
 .footer__links {
     display: flex;
     gap: 1.5rem;

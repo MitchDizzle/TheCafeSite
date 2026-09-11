@@ -58,6 +58,9 @@ noSiteJs: true
 {%- macro category(c) %}
 <section class="bcat">
     <h2 class="bcat-name">{{ c.name }}</h2>
+    {%- if c.serving %}
+    <p class="bcat-sizing bcat-serving">{{ c.serving }}</p>
+    {%- endif %}
     {%- if c.sizing %}
     <p class="bcat-sizing">
         {%- for s in c.sizing %}{{ s.size }} {{ s.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}

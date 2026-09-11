@@ -70,6 +70,9 @@ studioOrder: 20
 {%- macro category(c) %}
 <div class="menu-cat">
     <h3 class="menu-cat-name p-display ink-teal">{{ c.name }}</h3>
+    {%- if c.serving %}
+    <p class="menu-cat-sizing menu-cat-serving p-label ink-accent">{{ c.serving }}</p>
+    {%- endif %}
     {%- if c.note %}
     <p class="menu-cat-note p-body">{{ c.note }}</p>
     {%- endif %}

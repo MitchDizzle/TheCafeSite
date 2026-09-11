@@ -10,10 +10,11 @@ pageCss: "/assets/css/menu.css"
 
     Same data as the printed tri-fold (src/_data/menu.json), a different
     job. The tri-fold is read at a table with the food already in front of
-    you; this page is read on a phone, usually while deciding whether to
-    come at all — so it leads with hours and the phone number, and it does
-    the one thing paper cannot: filter itself down to what somebody is
-    actually able to eat.
+    you; this page is read on a phone, usually while deciding what to
+    order — so the food comes first, straight under the heading. Hours,
+    phone and address are in the site footer, not repeated here. The
+    dietary explanation sits below the list, but its filter (once marks are
+    confirmed) sits above it, next to the items it hides.
 
     The dietary marks and their meanings come from menu.json's `diets`
     registry, not from anything hard-coded here or in the script below.
@@ -28,7 +29,7 @@ pageCss: "/assets/css/menu.css"
     allowed to render marks that this page is not. -#}
 {% from "partials/diet-marks.njk" import dietMarks %}
 
-<section class="section menu-intro" aria-labelledby="menu-heading">
+<section class="section menu-body" aria-labelledby="menu-heading">
     <div class="container">
         <h1 id="menu-heading">Menu</h1>
         <p class="menu-lede">Breakfast and lunch, made to order. Everything is available to go. Call ahead and we&rsquo;ll have it waiting.</p>
@@ -47,62 +48,17 @@ pageCss: "/assets/css/menu.css"
         </p>
         {%- endif %}
 
-        <div class="menu-facts">
-            <p class="menu-fact"><span class="menu-fact-label">Hours</span> {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}</p>
-            <p class="menu-fact"><span class="menu-fact-label">Call</span> <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a></p>
-            <p class="menu-fact"><span class="menu-fact-label">Find us</span> <a href="https://maps.google.com/?q=417+S+6th+St,+Leavenworth,+KS+66048">{{ site.address.street }}, {{ site.address.locality }}</a></p>
-        </div>
-    </div>
-</section>
-
-{#- ── Dietary key and filter ──────────────────────────────────
-    The key is plain HTML and is the whole feature with JavaScript off:
-    the marks are already on the items, so a reader can decode them and
-    scroll. The filter buttons are BUILT BY the script at the foot of this
-    page and are deliberately absent from the markup — a control that does
-    nothing is worse than no control, and this is not the audience to hand
-    a dead button to. -#}
-<section class="section section--alt menu-diet" aria-labelledby="diet-heading">
-    <div class="container">
-        <h2 id="diet-heading" class="menu-diet-heading">Eating gluten free, vegetarian or low sodium?</h2>
-
+        {#- The filter's mount point, above the list it filters: tapping a
+            chip hides items, and that has to happen in view, not somewhere
+            the reader scrolled past. Empty in the HTML; the script at the
+            foot builds the buttons, so there is never a dead control. Absent
+            entirely while the marks are gated, which is also what stops the
+            script building chips — it returns on a missing mount rather than
+            needing its own copy of the flag. -#}
         {%- if menu.dietsConfirmed %}
-        <dl class="diet-key">
-            {%- for d in menu.diets %}
-            <div class="diet-key-row">
-                <dt><span class="diet-mark">{{ d.code }}</span></dt>
-                <dd>{{ d.name }}</dd>
-            </div>
-            {%- endfor %}
-            <div class="diet-key-row">
-                <dt><span class="diet-mark">*</span></dt>
-                <dd>We can make it that way. Just ask</dd>
-            </div>
-        </dl>
-
-        {#- The filter's mount point. Empty in the HTML; the script fills it.
-            Absent entirely while the marks are gated, which is also what
-            stops the script from building chips — it returns on a missing
-            mount rather than needing its own copy of the flag. -#}
         <div class="diet-filter" data-diet-filter hidden></div>
-        {%- else %}
-        {#- The unconfirmed state. It still answers the question in the
-            heading — just with a phone number instead of a badge, which is
-            the honest answer until the kitchen has been through the list.
-            Setting `dietsConfirmed` in menu.json swaps this for the key,
-            the filter, and the marks on every item. -#}
-        <p class="diet-pending">
-            We are still working out which items are gluten free, vegetarian and low sodium. We would rather tell you nothing than tell you wrong.
-            <a href="tel:{{ site.phoneHref }}">Call us at {{ site.phone }}</a> and we will talk you through what the kitchen can make for you.
-        </p>
         {%- endif %}
 
-        <p class="diet-caveat">{{ menu.dietNote }}</p>
-    </div>
-</section>
-
-<section class="section menu-body" aria-labelledby="menu-list-heading">
-    <div class="container">
         <h2 id="menu-list-heading" class="visually-hidden">Full menu</h2>
 
         {#- Live region for the filter. Empty and silent until the script has
@@ -113,6 +69,9 @@ pageCss: "/assets/css/menu.css"
             {%- for c in menu.categories %}
             <section class="menu-cat" data-menu-cat aria-labelledby="cat-{{ c.id }}">
                 <h3 class="menu-cat-name" id="cat-{{ c.id }}">{{ c.name }}</h3>
+                {%- if c.serving %}
+                <p class="menu-cat-sizing menu-cat-serving">{{ c.serving }}</p>
+                {%- endif %}
                 {%- if c.note %}
                 <p class="menu-cat-note">{{ c.note }}</p>
                 {%- endif %}
@@ -176,7 +135,48 @@ pageCss: "/assets/css/menu.css"
     </div>
 </section>
 
-<section class="section section--alt menu-cta" aria-labelledby="menu-cta-heading">
+{#- ── Dietary key ─────────────────────────────────────────────
+    Below the food, so the items are the first thing on screen. The key is
+    plain HTML and is the whole feature with JavaScript off: the marks are
+    already on the items, so a reader can decode them here and scroll back.
+    The script reads its codes and labels out of this key, so it must stay
+    rendered whenever the filter mount above is. -#}
+<section class="section section--alt menu-diet" aria-labelledby="diet-heading">
+    <div class="container">
+        <h2 id="diet-heading" class="menu-diet-heading">Eating gluten free, vegetarian or low sodium?</h2>
+
+        {%- if menu.dietsConfirmed %}
+        <dl class="diet-key">
+            {%- for d in menu.diets %}
+            <div class="diet-key-row">
+                <dt><span class="diet-mark">{{ d.code }}</span></dt>
+                <dd>{{ d.name }}</dd>
+            </div>
+            {%- endfor %}
+            <div class="diet-key-row">
+                <dt><span class="diet-mark">*</span></dt>
+                <dd>We can make it that way. Just ask</dd>
+            </div>
+        </dl>
+        {%- else %}
+        {#- The unconfirmed state. It still answers the question in the
+            heading — just with a phone number instead of a badge, which is
+            the honest answer until the kitchen has been through the list.
+            Setting `dietsConfirmed` in menu.json swaps this for the key,
+            the filter above the list, and the marks on every item. -#}
+        <p class="diet-pending">
+            We are still working out which items are gluten free, vegetarian and low sodium. We would rather tell you nothing than tell you wrong.
+            <a href="tel:{{ site.phoneHref }}">Call us at {{ site.phone }}</a> and we will talk you through what the kitchen can make for you.
+        </p>
+        {%- endif %}
+
+        <p class="diet-caveat">{{ menu.dietNote }}</p>
+    </div>
+</section>
+
+{#- Plain ground, not --alt: the dietary section above now carries the alt
+    ground, and two alt sections back to back read as one. -#}
+<section class="section menu-cta" aria-labelledby="menu-cta-heading">
     <div class="container">
         <h2 id="menu-cta-heading">Feeding a crowd?</h2>
         <p class="menu-cta-copy">Trays, box lunches and full-service catering for offices, churches, funerals and family gatherings, built around your date and your guests&rsquo; needs.</p>
