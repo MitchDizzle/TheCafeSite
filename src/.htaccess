@@ -80,9 +80,16 @@ ErrorDocument 404 /404.html
 <IfModule mod_setenvif.c>
     SetEnvIf Request_URI "^/studio/downloads/" STUDIO_EXPORT
 </IfModule>
+#
+# NOT `Header always` here, unlike the X-Robots-Tag block below. `always`
+# writes to the error-headers table, which is a SEPARATE table from the one
+# mod_expires writes to — so it appends rather than replaces, and the first
+# attempt at this shipped two contradictory Cache-Control headers with the
+# 30-day Expires still attached. Plain `Header set`/`unset` edits the normal
+# table and applies to 2xx/3xx responses, which is exactly this case.
 <IfModule mod_headers.c>
-    Header always set Cache-Control "no-cache, must-revalidate" env=STUDIO_EXPORT
-    Header always unset Expires env=STUDIO_EXPORT
+    Header set Cache-Control "no-cache, must-revalidate" env=STUDIO_EXPORT
+    Header unset Expires env=STUDIO_EXPORT
 </IfModule>
 
 # ── Private studio board ────────────────────────────────────
