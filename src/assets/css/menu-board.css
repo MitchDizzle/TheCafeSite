@@ -170,6 +170,42 @@ html {
     color: var(--mint);
 }
 
+/* ── Build-your-own columns ──────────────────────────────
+   The kids meals. One price on the category line above, then the mains and
+   the sides side by side — two short columns scan faster from across the
+   room than six rows all repeating $6.00. See _note_picks in menu.json.
+   Every length here is in rem, like everything else on this board: a px
+   value in this file is a bug. */
+
+.bpicks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}
+
+.bpick-label {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mint);
+    opacity: 0.8;
+    margin: 0 0 0.1rem;
+}
+
+.bpick-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.bpick-option {
+    font-family: 'Lato', sans-serif;
+    font-size: 1.15rem;
+    line-height: 1.6;
+}
+
 /* Marks. Mint on teal like the prices — the red accent is unreadable on
    this ground (1.3:1) and is never put on it anywhere on this site. */
 .diet-marks {

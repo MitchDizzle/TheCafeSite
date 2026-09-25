@@ -202,7 +202,10 @@
 
 .menu-cat-note {
     font-style: italic;
-    opacity: 0.85;
+    /* 0.85 was the old value. Raised for the same reason as the item
+       descriptions below: this audience skews older and an italic line at
+       fractional opacity is the first thing to go. */
+    opacity: 0.92;
 }
 
 .menu-cat-sizing {
@@ -247,11 +250,50 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* Descriptions are set at full body size, not shrunk.
+   They used to be 0.875rem at 0.8 opacity, which is where a menu loses an
+   older reader: "Green chili, pepper jack cheese, jalapeno mayo" is the part
+   somebody actually needs in order to decide, and it was the smallest and
+   palest type on the page. 1rem at 0.92 keeps the name/description hierarchy
+   (the name is bold, the description is not) while clearing roughly 7:1
+   contrast on cream. There is no layout cost: this page reflows. */
 .menu-item-desc {
-    margin-top: 0.15rem;
+    margin-top: 0.2rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    opacity: 0.92;
+    max-width: 44ch;
+}
+
+/* ── Build-your-own columns ───────────────────────────────────
+   The kids meals: one category price above, then the mains and the sides
+   side by side. See _note_picks in src/_data/menu.json. Stacks below 420px
+   rather than squeezing two columns into a phone's width. */
+
+.menu-picks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1rem 1.5rem;
+    margin-top: 1rem;
+}
+
+.menu-pick-label {
+    font-family: 'Lato', sans-serif;
     font-size: 0.875rem;
-    line-height: 1.45;
-    opacity: 0.8;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+}
+
+.menu-pick-list {
+    list-style: none;
+    margin-top: 0.4rem;
+}
+
+.menu-pick-option {
+    font-size: 1rem;
+    line-height: 1.6;
 }
 
 /* Filter result count. A live region, so it must occupy space rather than

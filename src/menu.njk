@@ -81,6 +81,7 @@ pageCss: "/assets/css/menu.css"
                 </p>
                 {%- endif %}
 
+                {%- if c.items %}
                 <ul class="menu-items" role="list">
                     {%- for item in c.items %}
                     {#- data-diet / data-diet-request are the filter's input,
@@ -113,6 +114,27 @@ pageCss: "/assets/css/menu.css"
                     </li>
                     {%- endfor %}
                 </ul>
+                {%- endif %}
+
+                {#- A build-your-own category — see _note_picks in menu.json.
+                    Columns of options under the one category price, instead of
+                    a priced row per combination. No diet marks and no filter
+                    hooks here: the filter works on .menu-item, and a pick is
+                    not an item you can order on its own. -#}
+                {%- if c.picks %}
+                <div class="menu-picks">
+                    {%- for p in c.picks %}
+                    <div class="menu-pick">
+                        <p class="menu-pick-label">{{ p.label }}</p>
+                        <ul class="menu-pick-list" role="list">
+                            {%- for o in p.options %}
+                            <li class="menu-pick-option">{{ o }}</li>
+                            {%- endfor %}
+                        </ul>
+                    </div>
+                    {%- endfor %}
+                </div>
+                {%- endif %}
             </section>
             {%- endfor %}
         </div>
@@ -129,6 +151,18 @@ pageCss: "/assets/css/menu.css"
         <p class="menu-print">
             <a href="/studio/downloads/menu-trifold.pdf" class="btn btn-outline">Print this menu (PDF)</a>
             <span class="menu-print-hint">Two sides. Print double-sided, then fold in thirds.</span>
+        </p>
+
+        {#- The same menu, set large. Offered as its own link rather than
+            hidden behind the tri-fold, because somebody who needs it is
+            exactly the person least likely to go hunting: it says what it is
+            and what it costs (three sheets) on the face of the link. Built
+            by the same `npm run build` export half as the tri-fold above, so
+            it has the same dev-server caveat — it 404s until a full build
+            has run once. -#}
+        <p class="menu-print">
+            <a href="/studio/downloads/menu-large-print.pdf" class="btn btn-outline">Print this menu in large type (PDF)</a>
+            <span class="menu-print-hint">Three pages, plain paper. Nothing to fold.</span>
         </p>
 
         <p class="menu-updated">Menu last updated {{ menu._updated }}.</p>
@@ -350,6 +384,14 @@ pageCss: "/assets/css/menu.css"
       {%- if c.note %}
       "description": {{ c.note | dump | safe }},
       {%- endif %}
+      {#- A `picks` category has no priced rows of its own, so its options are
+          flattened into MenuItems here — a MenuSection published with an empty
+          hasMenuItem is a section Google reads as having nothing in it. The
+          names are collected first so `loop.last` keys to the flat list rather
+          than to the inner loop, which would trail a comma after every column
+          but the last. -#}
+      {%- set pickNames = [] %}
+      {%- for p in c.picks %}{% for o in p.options %}{% set _ = pickNames.push(o) %}{% endfor %}{% endfor %}
       "hasMenuItem": [
         {%- for item in c.items %}
         {
@@ -372,6 +414,14 @@ pageCss: "/assets/css/menu.css"
           {%- endif %}
         }{% if not loop.last %},{% endif %}
         {%- endfor %}
+        {%- if pickNames.length %}{% if c.items %},{% endif %}
+        {%- for o in pickNames %}
+        {
+          "@type": "MenuItem",
+          "name": {{ o | dump | safe }}
+        }{% if not loop.last %},{% endif %}
+        {%- endfor %}
+        {%- endif %}
       ]
     }{% if not loop.last %},{% endif %}
     {%- endfor %}

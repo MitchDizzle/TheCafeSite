@@ -1,10 +1,13 @@
 {
-  "_updated": "2026-09-11",
+  "_updated": "2026-09-25",
   "_note": "Items with 'verify: true' had handwriting that was difficult to read precisely — confirm before publishing.",
-  "_note_no_fryer": "There is no fryer. The kitchen is deli-style and nothing on this menu is deep-fried: the Fried Potatoes are pan-fried on the flat-top, and the chips come out of a bag. Do not add a deep-fried item without settling that first.",
+  "_note_no_fryer": "There is no fryer. The kitchen is deli-style and nothing on this menu is deep-fried: the Fried Potatoes are pan-fried on the flat-top, the kids' tater tots and chicken strips come off the flat-top or out of the oven, and the chips come out of a bag. Do not add a deep-fried item without settling that first.",
   "_note_serving": "`serving` is an optional per-category time window ('Serving until 11am'). Breakfast stops at 11 and soup starts at 11 so the kitchen has time to change over; every menu template prints it next to the category name.",
   "_note_price_review": "Items with 'priceReview: true' are priced under $2.00 and are known to be stale — they date from the old menu and have not been re-costed yet. The tri-fold marks them with a red bullet ON SCREEN AND IN THE PNG EXPORT ONLY; the marker is hidden in print, so a proof shows the open questions but a real sheet never ships with them. Set the price and delete the flag.",
-  "_note_diet": "Dietary marks are a data feature, not a nutrition claim. `diet` lists what an item IS as served; `dietOnRequest` lists what the kitchen can make it into if asked (drop the meat, hold the toast) and prints with an asterisk. Codes must exist in the `diets` registry below. The marks drafted here were read off the ingredient lists on this menu and have NOT been confirmed by the kitchen — `dietsConfirmed` is false, which puts a warning on the proof. Two deliberate omissions: drinks carry no marks (marking every bottle of water vegetarian is noise), and cured meats, bagged chips and bottled dressings are left unmarked because gluten and sodium in those come from a supplier label nobody has read yet. Add marks only from a label or the kitchen, never from a guess. While `dietsConfirmed` is false the PUBLIC /menu page renders no marks at all — no key, no filter, no data attributes, no suitableForDiet — and says so in plain words instead. The tri-fold still shows them, because that is the proof the client reads in order to confirm them.",
+  "_note_flat_price": "A category whose items all cost the same carries ONE `sizing` line (wraps, kids meals) instead of repeating the number on every row — the same mechanism the salads use for Full/Half. Changing that price is then a one-line edit and there is no way for two rows to disagree. An item inside such a category may still carry its own `price`, which wins and prints on its row: that is how the two plates sit under the salads' Full/Half line. Trade-off, accepted: an item with no price of its own emits no schema.org Offer.",
+  "_note_picks": "`picks` is a build-your-own category: a list of columns, each with a `label` and its `options`, printed side by side instead of as priced rows. It exists for the kids meals, where three mains x three sides as priced rows would be six rows all saying $6.00. A category with `picks` and no `items` is legal — every template guards the item list — and the JSON-LD flattens the options into MenuItems so the section is never published empty.",
+  "_note_hot_cold": "Sandwiches are split into two categories, not one. 'Cold Sandwiches' is the deli case; 'Hot Sandwiches' is the griddle, and it sits beside 'Burgers or Chicken' on every layout because it is cooked on the same flat-top and a customer choosing between a Patty Melt and a Reuben is making one decision. The Clubhouse, Reuben and Philly were previously tacked onto the foot of the burgers category, which made 'or Chicken' untrue for three of its rows. Do not merge these two back together.",
+  "_note_diet": "Dietary marks are a data feature, not a nutrition claim. `diet` lists what an item IS as served; `dietOnRequest` lists what the kitchen can make it into if asked (drop the meat, hold the toast) and prints with an asterisk. Codes must exist in the `diets` registry below. The marks drafted here were read off the ingredient lists on this menu and have NOT been confirmed by the kitchen — `dietsConfirmed` is false, which puts a warning on the proof. Two deliberate omissions: drinks carry no marks (marking every bottle of water vegetarian is noise), and cured meats, bagged chips and bottled dressings are left unmarked because gluten and sodium in those come from a supplier label nobody has read yet. The gluten free wrap is called out in the wraps category note rather than as a GF mark on seven rows: the wrap itself is gluten free, the fillings have not been checked. Add marks only from a label or the kitchen, never from a guess. While `dietsConfirmed` is false the PUBLIC /menu page renders no marks at all — no key, no filter, no data attributes, no suitableForDiet — and says so in plain words instead. The tri-fold still shows them, because that is the proof the client reads in order to confirm them.",
   "dietsConfirmed": false,
   "_note_diet_schema": "`schema` is the schema.org RestrictedDiet the code maps to. /menu emits it as suitableForDiet on each item, which is how Google reads a dietary claim — so a code without one is invisible to search, and a WRONG one is a machine-readable false claim. Only `diet` items are emitted, never `dietOnRequest`: 'we can make it that way' is not something structured data can express, and publishing it as though it were would say the item ships gluten-free when it does not.",
   "diets": [
@@ -18,7 +21,7 @@
       "id": "breakfast",
       "name": "Breakfast",
       "serving": "Serving until 11am",
-      "_note_build": "The build-your-own filling list used to be repeated verbatim on the burrito and on both omelets. It is one note on the category now — same options, stated once, which is also how the sandwiches category reads.",
+      "_note_build": "The build-your-own filling list used to be repeated verbatim on the burrito and on both omelets. It is one note on the category now — same options, stated once, which is also how the sandwiches categories read.",
       "note": "Burritos and omelets are build-your-own. Choose from bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
       "items": [
         {
@@ -36,9 +39,14 @@
           "price": 10.00
         },
         {
+          "name": "Croissant & 2 Eggs",
+          "dietOnRequest": ["V"],
+          "price": 8.00
+        },
+        {
           "name": "Burrito",
           "dietOnRequest": ["V"],
-          "price": 9.00
+          "price": 8.00
         },
         {
           "_note_prices": "One line, two sizes. `prices` renders as '$9.00 / $11.00' in the same order as the sizes in the name — 2 egg first, 3 egg second — so the mapping is implied rather than labelled twice.",
@@ -48,9 +56,9 @@
         },
         {
           "name": "Breakfast Sandwich",
-          "description": "One egg, cheese & choice of bacon, sausage or ham. Served on biscuit, croissant, or English muffin (wheat, white, rye or 12 grain).",
+          "description": "One egg, cheese & choice of bacon, sausage or ham. Served on a biscuit or English muffin (wheat, white, rye or 12 grain).",
           "dietOnRequest": ["V"],
-          "price": 8.00
+          "price": 6.50
         }
       ]
     },
@@ -68,48 +76,45 @@
     {
       "id": "wraps",
       "name": "Wraps",
+      "note": "Choice of tortilla, spinach or tomato wrap. The spinach wrap is our gluten free option — ask and we will build any of these on it.",
+      "sizing": [
+        { "size": "Any wrap", "price": 8.50 }
+      ],
       "items": [
         {
           "name": "Chicken Bacon Wrap",
-          "description": "Chicken, bacon, greens, tomato, ranch & cheese",
-          "price": 9.00
+          "description": "Chicken, bacon, greens, tomato, ranch & cheese"
         },
         {
           "name": "Clubhouse Wrap",
-          "description": "Turkey, ham, bacon, greens, tomato, ranch & cheese",
-          "price": 9.00
+          "description": "Turkey, ham, bacon, greens, tomato, ranch & cheese"
         },
         {
           "name": "Buffalo Chicken Wrap",
-          "description": "Buffalo chicken, greens, tomato, ranch & cheese",
-          "price": 9.00
+          "description": "Buffalo chicken, greens, tomato, ranch & cheese"
         },
         {
           "name": "Cordon Bleu Wrap",
-          "description": "Chicken, ham, greens, tomato, Swiss cheese & dijon mustard",
-          "price": 9.00
+          "description": "Chicken, ham, greens, tomato, Swiss cheese & dijon mustard"
         },
         {
           "name": "Asian Chicken Wrap",
-          "description": "Chicken, greens, tomato, almonds & sesame dressing",
-          "price": 9.00
+          "description": "Chicken, greens, tomato, almonds & sesame dressing"
         },
         {
           "name": "Caesar Chicken Wrap",
-          "description": "Chicken, greens, tomato, parmesan cheese & caesar dressing",
-          "price": 9.00
+          "description": "Chicken, greens, tomato, parmesan cheese & caesar dressing"
         },
         {
           "name": "Veggie Wrap",
-          "diet": ["V"],
-          "price": 6.00
+          "diet": ["V"]
         }
       ]
     },
     {
       "id": "sandwiches",
-      "name": "Sandwiches",
-      "note": "All sandwiches served with lettuce, tomato, pickle, onion & cheese on wheat, white, rye, 12 grain or croissant.",
+      "name": "Cold Sandwiches",
+      "note": "Served with lettuce, tomato, pickle, onion & cheese on wheat, white, rye, 12 grain or croissant.",
       "items": [
         {
           "name": "Turkey Sandwich",
@@ -124,63 +129,80 @@
           "price": 8.00
         },
         {
+          "name": "Chicken Salad Sandwich",
+          "price": 8.00
+        },
+        {
+          "name": "Tuna Salad Sandwich",
+          "price": 8.00
+        }
+      ]
+    },
+    {
+      "id": "hot_sandwiches",
+      "name": "Hot Sandwiches",
+      "note": "Off the griddle. Each one comes on the bread named below.",
+      "items": [
+        {
           "name": "Grilled Cheese",
+          "description": "American cheese on wheat, white, rye or 12 grain",
           "diet": ["V"],
           "price": 5.00
+        },
+        {
+          "name": "Clubhouse Sandwich",
+          "description": "Turkey, ham, bacon, cheese, lettuce, tomato & mayo on toast",
+          "price": 10.00
+        },
+        {
+          "name": "Reuben Sandwich",
+          "description": "Corn beef, Swiss cheese & thousand island dressing on grilled rye",
+          "price": 10.00
+        },
+        {
+          "name": "Philly Steak Sandwich",
+          "description": "Steak, onions, peppers, mushroom & mozzarella cheese on French roll",
+          "price": 11.00
         }
       ]
     },
     {
       "id": "burgers",
       "name": "Burgers or Chicken",
+      "_note_or_chicken": "Every row names both proteins ('… or Chicken') rather than leaving it to the category heading: this category is read one line at a time on a board from across the room, and on a phone the heading has scrolled out of view by the third item. The note below deliberately does NOT repeat it.",
       "note": "Served on Kaiser roll or wheat bun with lettuce, tomato, pickle & onion.",
       "items": [
         {
-          "name": "Hamburger",
+          "name": "Hamburger or Chicken",
           "price": 8.00
         },
         {
-          "name": "Cheeseburger",
+          "name": "Cheeseburger or Chicken",
           "price": 8.50
         },
         {
-          "name": "Navajo Burger",
+          "name": "Navajo Burger or Chicken",
           "description": "Green chili, pepper jack cheese, jalapeno mayo",
-          "price": 11.00
-        },
-        {
-          "name": "Bacon Cheese Burger",
-          "description": "4 strips bacon & American cheese",
-          "price": 11.00
-        },
-        {
-          "name": "Mushroom Swiss Burger",
-          "description": "Mushrooms & Swiss cheese",
-          "price": 11.00
-        },
-        {
-          "name": "Cordon Bleu Burger",
-          "description": "Ham & Swiss cheese",
-          "price": 11.00
-        },
-        {
-          "name": "Patty Melt",
-          "description": "Swiss cheese & grilled onions on dark rye. Choice of hamburger or chicken.",
-          "price": 11.00
-        },
-        {
-          "name": "Philly Steak Sandwich",
-          "description": "Steak, onions, peppers, mushroom & mozzarella cheese on French roll",
-          "price": 11.00
-        },
-        {
-          "name": "Reuben Sandwich",
-          "description": "Corn beef, Swiss cheese & thousand island dressing on grilled dark rye",
           "price": 10.00
         },
         {
-          "name": "Clubhouse Sandwich",
-          "description": "Turkey, ham, bacon, cheese, lettuce, tomato & mayo on toast",
+          "name": "Bacon Cheese Burger or Chicken",
+          "description": "4 strips bacon & American cheese",
+          "price": 10.00
+        },
+        {
+          "name": "Mushroom Swiss Burger or Chicken",
+          "description": "Mushrooms & Swiss cheese",
+          "price": 10.00
+        },
+        {
+          "name": "Cordon Bleu Burger or Chicken",
+          "description": "Ham & Swiss cheese",
+          "price": 10.00
+        },
+        {
+          "name": "Patty Melt or Chicken",
+          "description": "American & Swiss cheese, grilled onions, on rye",
           "price": 10.00
         }
       ]
@@ -207,20 +229,23 @@
           "description": "Greens, turkey, ham, tomato, egg, cheddar & parmesan cheese"
         },
         {
-          "name": "Cobb Salad",
-          "description": "Greens, chicken, bacon, tomato, egg, olives & parmesan cheese"
-        },
-        {
-          "name": "Broccoli Chicken Salad",
-          "description": "Greens, chicken, bacon, broccoli, almonds & dressing"
-        },
-        {
           "name": "Taco Salad",
           "description": "Chips, greens, taco meat, cheese, tomato, onions, olives, jalapeno, salsa & sour cream"
         },
         {
+          "_note_plate_price": "The two plates carry their own price because they come one size only — the Full/Half line above does not apply to them. $12.00 matches a Full salad on purpose.",
+          "name": "Salad Plate",
+          "description": "Chicken or tuna salad with cottage cheese on a bed of lettuce, with fruit",
+          "price": 12.00
+        },
+        {
+          "name": "Healthy Plate",
+          "description": "Grilled chicken or hamburger patty, cottage cheese, hard boiled egg & tomato slices",
+          "price": 12.00
+        },
+        {
           "name": "Dinner Salad",
-          "description": "Greens, tomato, olives, mushrooms, red onion & cheddar cheese",
+          "description": "Greens, tomato, red onion & parmesan cheese",
           "diet": ["V", "GF"],
           "price": 4.00
         }
@@ -236,6 +261,18 @@
       ]
     },
     {
+      "id": "kids",
+      "name": "Kids Meals",
+      "sizing": [
+        { "size": "Each", "price": 6.00 }
+      ],
+      "note": "One main and one side.",
+      "picks": [
+        { "label": "Pick a main", "options": ["Corn Dog", "Chicken Strips", "Hamburger"] },
+        { "label": "Pick a side", "options": ["Cinnamon Apples", "Mac & Cheese", "Tater Tots"] }
+      ]
+    },
+    {
       "id": "sides",
       "name": "Sides",
       "items": [
@@ -245,7 +282,7 @@
         { "name": "Tortellini Salad", "diet": ["V"], "price": 3.00 },
         { "name": "Cottage Cheese", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Salad of the Day", "price": 3.00 },
-        { "name": "Bagged Chips", "diet": ["V"], "price": 2.00 }
+        { "name": "Chips", "description": "Regular, BBQ, Cheetos, Doritos", "diet": ["V"], "price": 1.75 }
       ]
     },
     {
@@ -254,8 +291,8 @@
       "items": [
         { "name": "Iced Tea / Fountain Drink", "price": 2.00 },
         { "name": "Bottle Water", "price": 1.50 },
-        { "name": "Bottle Tea", "price": 3.00 },
-        { "name": "Bottle Juice", "price": 4.00 },
+        { "name": "Bottle Tea", "price": 2.00 },
+        { "name": "Bottle Juice", "price": 3.00 },
         { "name": "Bottle Soda", "price": 3.00 }
       ]
     }

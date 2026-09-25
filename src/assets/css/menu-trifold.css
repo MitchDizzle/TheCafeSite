@@ -109,6 +109,27 @@
     opacity: 0.75;
     margin-top: 0.04in;
 }
+/* The inside sheet's key, compacted onto two lines. The flap panel has room
+   for the full block and prints it; this sheet does not, and a key that
+   pushes the last category off the fold is worse than a terse one. Same
+   words, no title, no line breaks between the codes. */
+.diet-legend--compact {
+    padding-top: 0.07in;
+}
+
+.diet-legend--compact .diet-legend-keys {
+    font-size: 0.082in;
+    margin-top: 0;
+}
+
+.diet-legend--compact .diet-mark {
+    font-size: 0.085in;
+}
+
+.diet-legend--compact .diet-legend-caveat {
+    font-size: 0.073in;
+    margin-top: 0.03in;
+}
 
 .fold-line {
     position: absolute;
@@ -363,8 +384,12 @@
 /* ── Menu categories, shared by every panel on the inside spread
        and the flap panel's Sides/Drinks callout ─────────────── */
 
+/* Category and row spacing was loosened when this sheet had eight categories
+   on it. It now has eleven (hot/cold sandwiches split, kids meals added), and
+   the space between rows is the cheapest thing on the sheet to give back —
+   cheaper than type size, which is the one thing here that must not shrink. */
 .menu-cat + .menu-cat {
-    margin-top: 0.22in;
+    margin-top: 0.15in;
 }
 
 .menu-cat-name {
@@ -372,10 +397,12 @@
 }
 
 .menu-cat-note {
-    font-size: 0.1in;
+    font-size: 0.105in;
     font-style: italic;
     color: var(--text-dark);
-    opacity: 0.8;
+    /* Was 0.8. Opacity is the cheapest legibility fix on a fixed-height
+       panel — it buys contrast without buying a single extra line. */
+    opacity: 0.9;
     margin-top: 0.03in;
 }
 
@@ -386,11 +413,11 @@
 
 .menu-items {
     list-style: none;
-    margin-top: 0.1in;
+    margin-top: 0.08in;
 }
 
 .menu-item + .menu-item {
-    margin-top: 0.09in;
+    margin-top: 0.06in;
 }
 
 .menu-item-head {
@@ -485,10 +512,47 @@
     margin-top: 0.04in;
 }
 
+/* Descriptions. The size is set by how much menu fits on six panels, not by
+   what is comfortable to read — this sheet is full, and every 0.01in here
+   costs about a line and a half per panel. What DID change is the contrast:
+   0.75 opacity was pale grey at under 7pt, which is where an older reader
+   loses the part of the row they actually need. 0.9 is free — it buys
+   contrast without buying a single extra line.
+
+   For anyone who needs the type genuinely bigger, the answer is a different
+   piece, not a smaller fold: /studio/menu-large-print is the same data at
+   about 10pt on two columns. Re-proof the export after touching any number
+   in this block — panels are a fixed 8.5in and clip rather than reflow. */
 .menu-item-desc {
-    font-size: 0.095in;
-    line-height: 1.35;
+    font-size: 0.098in;
+    line-height: 1.3;
     color: var(--text-dark);
-    opacity: 0.75;
+    opacity: 0.9;
     margin-top: 0.02in;
+}
+
+/* ── Build-your-own columns ───────────────────────────────────
+   The kids meals. See _note_picks in src/_data/menu.json: three mains and
+   three sides as priced rows would be six rows all reading $6.00, which on a
+   panel this size is six rows of nothing. */
+
+.menu-picks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.1in;
+    margin-top: 0.1in;
+}
+
+.menu-pick-label {
+    font-size: 0.09in;
+}
+
+.menu-pick-list {
+    list-style: none;
+    margin-top: 0.04in;
+}
+
+.menu-pick-option {
+    font-size: 0.115in;
+    line-height: 1.45;
 }

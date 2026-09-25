@@ -1,0 +1,255 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Menu, large print"
+canvasW: "8.5in"
+canvasH: "11in"
+pageSize: "8.5in 11in"
+pageCss: "/assets/css/menu-large-print.css"
+
+tags: studio
+studioTitle: "Menu — large print"
+studioCategory: "Menus"
+studioSize: "8.5 × 11 in portrait · 3 pages, plain paper · no fold"
+studioNote: "The tri-fold at a size that can be read without glasses. Same data (src/_data/menu.json), so it can never disagree with the tri-fold, the website or the board — but no folds, two columns per page instead of three panels, and item descriptions at roughly 10pt instead of 7pt. Three plain sheets, single-sided, or duplex on two — unlike the tri-fold it does not matter which edge it flips on, and there is nothing to fold. Page 1 is breakfast and the cold case, page 2 the griddle and the salads, page 3 the kids meals, sides, drinks and where to find us. It is three pages rather than two because it is set at a size that can actually be read; squeezing it onto two would just rebuild the tri-fold. Re-check menu.json's dietary note before a real print run — the GF/V/LS marks are drafted from ingredient lists, not confirmed by the kitchen, and the proof says so in red until `dietsConfirmed` is set."
+studioW: 816
+studioH: 3560
+studioOrder: 21
+---
+
+{#- ===========================================================
+    Menu — large print
+
+    WHY THIS EXISTS. The tri-fold is a good piece of paper and it is also
+    about as small as type can honestly go: three panels on a letter sheet
+    puts item descriptions near 7pt, and this cafe's customers skew older.
+    Rather than wreck the tri-fold trying to make it do both jobs — its
+    panels are a fixed height and do not scroll, so bigger type there means
+    clipped text, not a longer panel — this is a second piece with the same
+    data and a different geometry.
+
+    TWO COLUMNS, NOT THREE, on a portrait sheet, and THREE SHEETS rather
+    than two. That is where the room for bigger type comes from; there is no
+    other trick here. Descriptions run about 10pt against the tri-fold's
+    7.5pt, at full contrast rather than the 0.75 opacity a dense panel needs.
+
+    The page count is the honest cost of the type size, and it is the right
+    trade for this piece: a large-print menu squeezed back onto two sheets is
+    just the tri-fold again. Plain paper, no folding, so an extra sheet costs
+    a sheet. The first proof of this piece WAS two pages and clipped three
+    categories off the bottom - a fixed artboard clips, it does not reflow.
+
+    SAME DATA, so this cannot drift from the tri-fold, /menu or the board.
+    Everything below reads src/_data/menu.json. If you find yourself typing
+    an item name into this file, stop — it belongs in the data.
+
+    COLUMN ASSIGNMENT is by hand at the foot of this file, like the board's.
+    The sheet does not scroll: a column that overruns 11in is clipped, not
+    continued. If you add items, move a whole category and re-proof the
+    export.
+    =========================================================== #}
+
+{%- set breakfast = (menu.categories | where("id", "breakfast"))[0] %}
+{%- set breakfastSides = (menu.categories | where("id", "breakfast_sides"))[0] %}
+{%- set wraps = (menu.categories | where("id", "wraps"))[0] %}
+{%- set sandwiches = (menu.categories | where("id", "sandwiches"))[0] %}
+{%- set hotSandwiches = (menu.categories | where("id", "hot_sandwiches"))[0] %}
+{%- set burgers = (menu.categories | where("id", "burgers"))[0] %}
+{%- set salads = (menu.categories | where("id", "salads"))[0] %}
+{%- set soup = (menu.categories | where("id", "soup"))[0] %}
+{%- set kids = (menu.categories | where("id", "kids"))[0] %}
+{%- set sides = (menu.categories | where("id", "sides"))[0] %}
+{%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
+
+{#- The marks, the key and the category renderer are the tri-fold's, class
+    for class, on purpose: the stylesheet is what differs between the two
+    pieces, not the markup. Copying the markup means copying the decisions
+    about mark order and about `diet` versus `dietOnRequest`, and two copies
+    of a decision is one copy too many. -#}
+{%- macro dietMarks(item) %}
+{%- set served = item.diet or [] %}
+{%- set onRequest = item.dietOnRequest or [] %}
+{%- if served.length or onRequest.length -%}
+<span class="menu-item-diet">
+    {%- for d in menu.diets -%}
+        {%- if d.code in served %}<abbr class="diet-mark" title="{{ d.name }}">{{ d.code }}</abbr>
+        {%- elif d.code in onRequest %}<abbr class="diet-mark diet-mark--request" title="{{ d.name }} on request">{{ d.code }}*</abbr>
+        {%- endif -%}
+    {%- endfor -%}
+</span>
+{%- endif %}
+{%- endmacro %}
+
+{%- macro dietLegend() %}
+<div class="diet-legend">
+    <p class="p-label diet-legend-title ink-accent">Dietary key</p>
+    <p class="p-body diet-legend-keys">
+        {%- for d in menu.diets %}<span class="diet-mark">{{ d.code }}</span>&nbsp;{{ d.name }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+    </p>
+    <p class="p-body diet-legend-note"><span class="diet-mark">*</span> we can make it that way. Just ask.</p>
+    <p class="p-body diet-legend-caveat">{{ menu.dietNote }}</p>
+</div>
+{%- endmacro %}
+
+{%- macro category(c) %}
+<div class="menu-cat">
+    <h3 class="menu-cat-name p-display ink-teal">{{ c.name }}</h3>
+    {%- if c.serving %}
+    <p class="menu-cat-sizing menu-cat-serving p-label ink-accent">{{ c.serving }}</p>
+    {%- endif %}
+    {%- if c.note %}
+    <p class="menu-cat-note p-body">{{ c.note }}</p>
+    {%- endif %}
+    {%- if c.sizing %}
+    <p class="menu-cat-sizing p-label ink-accent">
+        {%- for s in c.sizing %}{{ s.size }} {{ s.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+    </p>
+    {%- endif %}
+    {%- if c.items %}
+    <ul class="menu-items">
+        {%- for item in c.items %}
+        <li class="menu-item">
+            <div class="menu-item-head">
+                <span class="menu-item-name p-body">{{ item.name }}
+                    {{- dietMarks(item) }}
+                    {%- if item.priceReview %}<span class="price-review" title="Price not re-costed yet">&bull;</span>{% endif -%}
+                </span>
+                <span class="menu-item-fill" aria-hidden="true"></span>
+                {%- if item.price %}
+                <span class="menu-item-price p-body">{{ item.price | money }}</span>
+                {%- elif item.prices %}
+                <span class="menu-item-price p-body">
+                    {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
+                </span>
+                {%- elif item.variants %}
+                <span class="menu-item-price p-body">
+                    {%- for v in item.variants %}{{ v.size }} {{ v.price | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
+                </span>
+                {%- endif %}
+            </div>
+            {%- if item.description %}
+            <p class="menu-item-desc p-body">{{ item.description }}</p>
+            {%- endif %}
+        </li>
+        {%- endfor %}
+    </ul>
+    {%- endif %}
+    {%- if c.picks %}
+    <div class="menu-picks">
+        {%- for p in c.picks %}
+        <div class="menu-pick">
+            <p class="menu-pick-label p-label ink-accent">{{ p.label }}</p>
+            <ul class="menu-pick-list">
+                {%- for o in p.options %}
+                <li class="menu-pick-option p-body">{{ o }}</li>
+                {%- endfor %}
+            </ul>
+        </div>
+        {%- endfor %}
+    </div>
+    {%- endif %}
+</div>
+{%- endmacro %}
+
+<div class="lp-stack{% if not menu.dietsConfirmed %} diets-unconfirmed{% endif %}">
+
+    {%- if not menu.dietsConfirmed %}
+    <p class="fold-legend fold-legend--review fold-legend--warn">Dietary marks are drafted from the ingredient lists and are <strong>not kitchen-confirmed</strong> &mdash; do not send this to a printer until they are. Set <code>dietsConfirmed</code> in menu.json to clear this. Screen and PNG proof only.</p>
+    {%- endif %}
+
+    <p class="fold-legend fold-legend--review">A red <span class="price-review">&bull;</span> marks a price still to be re-costed. Screen and PNG proof only &mdash; it never prints.</p>
+
+    <p class="fold-legend">Page 1 &mdash; masthead, breakfast &amp; the cold case</p>
+
+    {#- PAGE 1. Carries the masthead, because a sheet handed across a counter
+        has to say whose menu it is even when page 2 walks off on its own —
+        which is also why page 2 repeats the name in a thin rule at its head. -#}
+    <div class="canvas lp-canvas">
+        <header class="lp-head">
+            <div class="wordmark wordmark--ink lp-wordmark">
+                {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+            </div>
+            <div class="lp-head-meta">
+                <p class="p-display-italic lp-tagline ink-teal">Breakfast &amp; Lunch</p>
+                <p class="p-body lp-head-line">{{ site.opening.hoursDays }} &middot; {{ site.opening.opens.time }} {{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }} {{ site.opening.closes.meridiem }}</p>
+                <p class="p-body lp-head-line lp-head-phone ink-teal">{{ site.phone }} &middot; {{ site.address.street }}</p>
+            </div>
+        </header>
+
+        <div class="lp-cols">
+            <div class="lp-col">
+                {{ category(breakfast) }}
+                {{ category(breakfastSides) }}
+
+                <div class="panel-spacer"></div>
+                {{ dietLegend() }}
+            </div>
+            <div class="lp-col">
+                {{ category(wraps) }}
+                {{ category(sandwiches) }}
+            </div>
+        </div>
+    </div>
+
+    <p class="fold-legend">Page 2 &mdash; the griddle &amp; the salads</p>
+
+    {#- PAGE 2. Burgers and the hot sandwiches share a column — same
+        flat-top, one decision (see _note_hot_cold in menu.json). -#}
+    <div class="canvas lp-canvas">
+        <header class="lp-head lp-head--run">
+            <p class="p-display lp-runhead ink-teal">{{ site.name }} &middot; Menu</p>
+            <p class="p-body lp-head-line lp-head-phone ink-teal">{{ site.phone }} &middot; {{ site.social.website }}</p>
+        </header>
+
+        <div class="lp-cols">
+            <div class="lp-col">
+                {{ category(burgers) }}
+                {{ category(hotSandwiches) }}
+            </div>
+            <div class="lp-col">
+                {{ category(salads) }}
+                {{ category(soup) }}
+            </div>
+        </div>
+    </div>
+
+    <p class="fold-legend">Page 3 &mdash; kids, sides, drinks &amp; where to find us</p>
+
+    {#- PAGE 3. The lightest of the three, deliberately: it is the page that
+        ends up face-up on a table, so it carries the contact block rather
+        than another dense column. Do not "fill" it by pulling a category
+        forward from page 2 - the space IS the large print. -#}
+    <div class="canvas lp-canvas">
+        <header class="lp-head lp-head--run">
+            <p class="p-display lp-runhead ink-teal">{{ site.name }} &middot; Menu</p>
+            <p class="p-body lp-head-line lp-head-phone ink-teal">{{ site.phone }} &middot; {{ site.social.website }}</p>
+        </header>
+
+        <div class="lp-cols">
+            <div class="lp-col">
+                {{ category(kids) }}
+                {{ category(sides) }}
+            </div>
+            <div class="lp-col">
+                {{ category(drinks) }}
+
+                <div class="panel-spacer"></div>
+
+                <div class="lp-visit">
+                    <p class="p-label lp-foot-label ink-accent">Visit us</p>
+                    <p class="p-display lp-visit-hours ink-teal">{{ site.opening.hoursDays }}</p>
+                    <p class="p-display lp-visit-hours ink-teal">{{ site.opening.opens.time }} <span class="ampm">{{ site.opening.opens.meridiem }}</span> &ndash; {{ site.opening.closes.time }} <span class="ampm">{{ site.opening.closes.meridiem }}</span></p>
+                    <p class="p-display lp-visit-phone ink-teal">{{ site.phone }}</p>
+                    <p class="p-body lp-visit-line">{{ site.address.street }}</p>
+                    <p class="p-body lp-visit-line">{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
+                    <p class="p-body lp-visit-line">{{ site.social.website }}</p>
+                </div>
+
+                <div class="lp-foot">
+                    <p class="p-label lp-foot-label ink-accent">Catering &amp; meal prep</p>
+                    <p class="p-body lp-foot-body">Trays, box lunches and full-service catering for offices, churches, funerals and family gatherings. Call ahead or ask at the counter.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

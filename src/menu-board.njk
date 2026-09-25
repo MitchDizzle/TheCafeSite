@@ -36,8 +36,8 @@ noSiteJs: true
     what a person scanning a wall needs — and the descriptions live on
     /menu and on the tri-fold for anyone who wants them.
 
-    COLUMN ASSIGNMENT is by hand, below, not automatic. Four columns of
-    12/13/15/14 items balance to roughly equal height; a `columns: 4` flow
+    COLUMN ASSIGNMENT is by hand, below, not automatic. Four columns of roughly
+    12/14/16/18 rendered lines balance to roughly equal height; a `columns: 4` flow
     would rebalance itself the moment an item is added and move half the
     menu to a different part of the wall overnight. Regulars learn where
     their order lives. If you add items, re-balance these lists on purpose.
@@ -49,9 +49,11 @@ noSiteJs: true
 {%- set breakfastSides = (menu.categories | where("id", "breakfast_sides"))[0] %}
 {%- set wraps = (menu.categories | where("id", "wraps"))[0] %}
 {%- set sandwiches = (menu.categories | where("id", "sandwiches"))[0] %}
+{%- set hotSandwiches = (menu.categories | where("id", "hot_sandwiches"))[0] %}
 {%- set burgers = (menu.categories | where("id", "burgers"))[0] %}
 {%- set salads = (menu.categories | where("id", "salads"))[0] %}
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
+{%- set kids = (menu.categories | where("id", "kids"))[0] %}
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
 
@@ -66,6 +68,7 @@ noSiteJs: true
         {%- for s in c.sizing %}{{ s.size }} {{ s.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
     </p>
     {%- endif %}
+    {%- if c.items %}
     <ul class="bitems">
         {%- for item in c.items %}
         <li class="bitem">
@@ -90,6 +93,23 @@ noSiteJs: true
         </li>
         {%- endfor %}
     </ul>
+    {%- endif %}
+    {#- Build-your-own — see _note_picks in menu.json. Two short columns read
+        faster from across a room than six rows all carrying the same price. -#}
+    {%- if c.picks %}
+    <div class="bpicks">
+        {%- for p in c.picks %}
+        <div class="bpick">
+            <p class="bpick-label">{{ p.label }}</p>
+            <ul class="bpick-list">
+                {%- for o in p.options %}
+                <li class="bpick-option">{{ o }}</li>
+                {%- endfor %}
+            </ul>
+        </div>
+        {%- endfor %}
+    </div>
+    {%- endif %}
 </section>
 {%- endmacro %}
 
@@ -113,12 +133,17 @@ noSiteJs: true
             {{ category(sandwiches) }}
             {{ category(soup) }}
         </div>
+        {#- Everything off the griddle in one column. See _note_hot_cold in
+            menu.json: the hot sandwiches belong beside the burgers, not with
+            the deli case in the column to the left. -#}
         <div class="board-col">
             {{ category(burgers) }}
+            {{ category(hotSandwiches) }}
             {{ category(drinks) }}
         </div>
         <div class="board-col">
             {{ category(salads) }}
+            {{ category(kids) }}
             {{ category(sides) }}
         </div>
     </div>

@@ -1,0 +1,386 @@
+/* ============================================================
+   Menu — large print, 8.5 × 11 in portrait, 3 pages
+   Piece: src/studio/menu-large-print.njk
+
+   The same menu as menu-trifold.css at a size that can be read without
+   glasses. Two columns on a portrait sheet instead of three panels on a
+   landscape one, and three sheets instead of two; that is the whole source
+   of the extra room, and the numbers below spend all of it on type size and
+   leading.
+
+   SIZES, for reference against the tri-fold:
+
+                        tri-fold      here
+     category name      0.19in        0.255in   (~13.7pt → ~18.4pt)
+     item name          0.125in       0.165in   (~9pt   → ~11.9pt)
+     description        0.098in       0.14in    (~7pt   → ~10pt)
+     category note      0.105in       0.13in
+
+   Descriptions here are a solid lightened ink rather than the tri-fold's
+   0.9 opacity on black: a dense panel needs that tonal step to keep names
+   and descriptions apart, a roomy column gets the separation from weight and
+   leading instead. Weight is the safer signal — a photocopier throws
+   opacity away and keeps bold.
+
+   Every length is in absolute inches. This is a fixed artboard.
+   ============================================================ */
+
+.lp-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4in;
+}
+
+.lp-canvas {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    /* 0.45in all round. Below about 0.4in a consumer inkjet starts clipping,
+       and this piece is meant to be printable on the machine in the office
+       rather than at a print shop. */
+    padding: 0.45in 0.5in;
+}
+
+/* ── Masthead (page 1) and running head (page 2) ─────────────── */
+
+.lp-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.3in;
+    border-bottom: 2px solid var(--teal);
+    padding-bottom: 0.12in;
+    margin-bottom: 0.22in;
+}
+
+.lp-wordmark {
+    width: 2.6in;
+    flex: 0 0 auto;
+}
+
+.lp-head-meta {
+    text-align: right;
+}
+
+.lp-tagline {
+    font-size: 0.19in;
+}
+
+.lp-head-line {
+    font-size: 0.125in;
+    line-height: 1.5;
+    color: var(--text-dark);
+}
+
+.lp-head-phone {
+    font-weight: 700;
+}
+
+/* Pages 2 and 3 get a rule with the name in it, not a second masthead: the
+   sheets get separated and a page with no name on it is a mystery, but the
+   full wordmark three times reads as three menus. */
+.lp-head--run {
+    align-items: baseline;
+    border-bottom-width: 1px;
+    padding-bottom: 0.08in;
+    margin-bottom: 0.18in;
+}
+
+.lp-runhead {
+    font-size: 0.17in;
+}
+
+/* ── Two columns ──────────────────────────────────────────────
+   Hand-assigned in the template, not a CSS `columns` flow. The sheet does
+   not scroll, so an overrun is clipped text rather than a longer page, and
+   a flow would silently move half the menu to the other column the moment
+   an item is added. */
+
+.lp-cols {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* The gutter doubles as the visual separator — no rule between the
+       columns. A vertical hairline down a menu adds ink and reads as a
+       table, which this is not. */
+    column-gap: 0.42in;
+    min-height: 0;
+}
+
+.lp-col {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Pushes the dietary key / catering note to the foot of its column, the same
+   job .panel-spacer does on the tri-fold and the door banner. */
+.panel-spacer {
+    flex: 1;
+    min-height: 0.16in;
+}
+
+/* ── Proofing furniture ───────────────────────────────────────
+   Identical contract to the tri-fold's: loud on screen and in the PNG,
+   absent from the print. Duplicated here rather than shared because the two
+   stylesheets are never loaded together and a shared file for six
+   declarations is a file to go looking for. */
+
+.fold-legend {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cream);
+    opacity: 0.75;
+}
+
+.fold-legend--warn {
+    color: var(--mint);
+    background: rgba(var(--accent-rgb), 0.22);
+    border-left: 3px solid var(--accent);
+    border-radius: 0.03in;
+    padding: 0.08in 0.12in;
+    opacity: 1;
+    margin-bottom: 0.1in;
+}
+
+.fold-legend--warn code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    text-transform: none;
+}
+
+.fold-legend--review {
+    margin-bottom: -0.2in;
+}
+
+.fold-legend strong {
+    font-weight: 900;
+    opacity: 1;
+}
+
+.price-review {
+    color: var(--accent);
+    font-weight: 900;
+    margin-left: 0.03in;
+}
+
+@media print {
+    .lp-canvas:not(:last-child) {
+        break-after: page;
+    }
+    .fold-legend,
+    .price-review {
+        display: none;
+    }
+    /* Unconfirmed marks come off the paper, exactly as on the tri-fold: the
+       PDF is this print rendering and /studio/downloads/ publishes it, so a
+       mark left in here would walk past the same gate the website has. The
+       PNG proof is a screen rendering and keeps them, which is the point of
+       the proof. The shared-kitchen caveat is NOT hidden — it matters more
+       when nothing is marked, not less. */
+    .diets-unconfirmed .menu-item-diet,
+    .diets-unconfirmed .diet-legend-title,
+    .diets-unconfirmed .diet-legend-keys,
+    .diets-unconfirmed .diet-legend-note {
+        display: none;
+    }
+}
+
+/* ── Categories ───────────────────────────────────────────────── */
+
+.menu-cat + .menu-cat {
+    margin-top: 0.24in;
+}
+
+.menu-cat-name {
+    font-size: 0.255in;
+    line-height: 1.1;
+}
+
+.menu-cat-note {
+    font-size: 0.13in;
+    line-height: 1.4;
+    font-style: italic;
+    color: var(--text-dark);
+    opacity: 0.92;
+    margin-top: 0.05in;
+}
+
+.menu-cat-sizing {
+    font-size: 0.145in;
+    margin-top: 0.05in;
+}
+
+.menu-items {
+    list-style: none;
+    margin-top: 0.12in;
+}
+
+.menu-item + .menu-item {
+    margin-top: 0.115in;
+}
+
+.menu-item-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.1in;
+}
+
+.menu-item-name {
+    font-size: 0.165in;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.menu-item-fill {
+    flex: 1;
+    /* Darker than the tri-fold's #ccc. A leader the reader cannot follow is
+       worse than no leader, and this sheet exists for readers who are
+       losing the faint one. */
+    border-bottom: 1px dotted #aaa;
+    transform: translateY(-0.25em);
+}
+
+.menu-item-price {
+    font-size: 0.165in;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* The point of the whole piece: ~10pt, full contrast, generous leading, and
+   a measure short enough that the eye finds the next line. #4a5a63 is
+   --text-dark lightened just enough to sit below a bold name in the
+   hierarchy without going pale. */
+.menu-item-desc {
+    font-size: 0.14in;
+    line-height: 1.45;
+    color: #4a5a63;
+    margin-top: 0.04in;
+    max-width: 3.1in;
+}
+
+/* ── Build-your-own columns (kids meals) ─────────────────────── */
+
+.menu-picks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.14in;
+    margin-top: 0.12in;
+}
+
+.menu-pick-label {
+    font-size: 0.115in;
+}
+
+.menu-pick-list {
+    list-style: none;
+    margin-top: 0.05in;
+}
+
+.menu-pick-option {
+    font-size: 0.15in;
+    line-height: 1.5;
+}
+
+/* ── Dietary marks and key ───────────────────────────────────── */
+
+.menu-item-diet {
+    margin-left: 0.05in;
+    white-space: nowrap;
+}
+
+.diet-mark {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.1in;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: var(--teal);
+    text-decoration: none;
+    border: none;
+    vertical-align: 0.35em;
+}
+
+.diet-mark + .diet-mark {
+    margin-left: 0.04in;
+}
+
+.diet-mark--request {
+    opacity: 0.6;
+}
+
+.diet-legend {
+    border-top: 1px solid #ccc;
+    padding-top: 0.11in;
+}
+
+.diet-legend-title {
+    font-size: 0.115in;
+}
+
+.diet-legend-keys {
+    font-size: 0.125in;
+    line-height: 1.5;
+    margin-top: 0.05in;
+}
+
+.diet-legend .diet-mark {
+    vertical-align: baseline;
+    font-size: 0.13in;
+}
+
+.diet-legend-note,
+.diet-legend-caveat {
+    font-size: 0.115in;
+    line-height: 1.45;
+    font-style: italic;
+    color: #4a5a63;
+    margin-top: 0.05in;
+}
+
+/* ── Visit-us block, foot of page 3 ─────────────────────── */
+
+.lp-visit {
+    border-top: 1px solid #ccc;
+    padding-top: 0.13in;
+    margin-bottom: 0.22in;
+}
+
+.lp-visit-hours {
+    font-size: 0.185in;
+    line-height: 1.3;
+    margin-top: 0.05in;
+}
+
+.lp-visit-phone {
+    font-size: 0.22in;
+    margin-top: 0.1in;
+}
+
+.lp-visit-line {
+    font-size: 0.135in;
+    line-height: 1.5;
+    color: var(--text-dark);
+}
+
+/* Playfair has no true small caps, so am/pm is sized down by hand - the same
+   treatment the tri-fold cover gives it. */
+.ampm {
+    font-size: 0.6em;
+}
+
+/* ── Catering note, foot of page 3 ───────────────────────── */
+
+.lp-foot {
+    border-top: 1px solid #ccc;
+    padding-top: 0.11in;
+}
+
+.lp-foot-label {
+    font-size: 0.115in;
+}
+
+.lp-foot-body {
+    font-size: 0.125in;
+    line-height: 1.45;
+    color: #4a5a63;
+    margin-top: 0.05in;
+}

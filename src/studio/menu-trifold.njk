@@ -10,7 +10,7 @@ tags: studio
 studioTitle: "Menu — tri-fold"
 studioCategory: "Menus"
 studioSize: "11 × 8.5 in landscape · duplex, 2 pages · letter-fold"
-studioNote: "Print duplex, flip on SHORT edge, then letter-fold: right third in first, left third over it. Sheet 1 left-to-right is tuck flap / back cover / front cover; the cover doubles as a flyer (hours, address, phone, both links). Breakfast lives on the tuck flap, so it is what a customer reads the instant the cover lifts; the inside sheet is lunch. Re-check src/_data/menu.json's handwriting note before a real print run — and its dietary note: the GF/V/LS marks are drafted from ingredient lists, not confirmed by the kitchen, and the proof says so in red until `dietsConfirmed` is set."
+studioNote: "Print duplex, flip on SHORT edge, then letter-fold: right third in first, left third over it. Sheet 1 left-to-right is tuck flap / back cover / front cover; the cover doubles as a flyer (hours, address, phone, both links). Breakfast lives on the tuck flap, so it is what a customer reads the instant the cover lifts; the inside sheet is lunch. Sandwiches are split cold/hot — the hot ones share the griddle panel with the burgers. Re-check src/_data/menu.json's handwriting note before a real print run — and its dietary note: the GF/V/LS marks are drafted from ingredient lists, not confirmed by the kitchen, and the proof says so in red until `dietsConfirmed` is set."
 studioW: 1056
 studioH: 1940
 studioOrder: 20
@@ -23,9 +23,11 @@ studioOrder: 20
 {%- set breakfastSides = (menu.categories | where("id", "breakfast_sides"))[0] %}
 {%- set wraps = (menu.categories | where("id", "wraps"))[0] %}
 {%- set sandwiches = (menu.categories | where("id", "sandwiches"))[0] %}
+{%- set hotSandwiches = (menu.categories | where("id", "hot_sandwiches"))[0] %}
 {%- set burgers = (menu.categories | where("id", "burgers"))[0] %}
 {%- set salads = (menu.categories | where("id", "salads"))[0] %}
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
+{%- set kids = (menu.categories | where("id", "kids"))[0] %}
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
 
@@ -52,13 +54,18 @@ studioOrder: 20
     customer cannot decode is worse than no mark. The shared-kitchen line is
     the one part of this piece that is there for liability rather than for
     reading — it prints. -#}
-{%- macro dietLegend() %}
-<div class="diet-legend">
+{%- macro dietLegend(compact=false) %}
+<div class="diet-legend{% if compact %} diet-legend--compact{% endif %}">
+    {%- if not compact %}
     <p class="p-label diet-legend-title ink-accent">Dietary key</p>
+    {%- endif %}
     <p class="p-body diet-legend-keys">
         {%- for d in menu.diets %}<span class="diet-mark">{{ d.code }}</span>&nbsp;{{ d.name }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+        {%- if compact %} &middot; <span class="diet-mark">*</span>&nbsp;on request{% endif -%}
     </p>
+    {%- if not compact %}
     <p class="p-body diet-legend-note"><span class="diet-mark">*</span> we can make it that way. Just ask.</p>
+    {%- endif %}
     {#- Separate paragraph, not tacked onto the line above, because the two
         have different lifetimes: the asterisk note explains marks and goes
         when they do, the shared-kitchen caveat is a liability line that
@@ -81,6 +88,7 @@ studioOrder: 20
         {%- for s in c.sizing %}{{ s.size }} {{ s.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
     </p>
     {%- endif %}
+    {%- if c.items %}
     <ul class="menu-items">
         {%- for item in c.items %}
         <li class="menu-item">
@@ -116,6 +124,26 @@ studioOrder: 20
         </li>
         {%- endfor %}
     </ul>
+    {%- endif %}
+
+    {#- A build-your-own category (see _note_picks in menu.json): columns of
+        options under one category price, rather than one priced row per
+        combination. Two columns of three is the kids meal; the grid does not
+        care how many there are. -#}
+    {%- if c.picks %}
+    <div class="menu-picks">
+        {%- for p in c.picks %}
+        <div class="menu-pick">
+            <p class="menu-pick-label p-label ink-accent">{{ p.label }}</p>
+            <ul class="menu-pick-list">
+                {%- for o in p.options %}
+                <li class="menu-pick-option p-body">{{ o }}</li>
+                {%- endfor %}
+            </ul>
+        </div>
+        {%- endfor %}
+    </div>
+    {%- endif %}
 </div>
 {%- endmacro %}
 
@@ -249,14 +277,27 @@ studioOrder: 20
         </section>
     </div>
 
-    <p class="fold-legend">Sheet 2 &mdash; inside (opened flat) &middot; salads &amp; soup &middot; wraps &amp; sandwiches &middot; griddle &amp; drinks</p>
+    <p class="fold-legend">Sheet 2 &mdash; inside (opened flat) &middot; salads, soup &amp; kids &middot; wraps, cold sandwiches &amp; drinks &middot; griddle &amp; sides</p>
 
     {#- INSIDE SHEET — the rest of the menu, read left to right once the
         piece is open flat. Breakfast is NOT here; it is on the outside
         sheet's tuck flap, which is what a customer sees first. This sheet is
-        lunch, running light to heavy: salads and soup, then wraps and
-        sandwiches, then the griddle. Drinks close it out on the right.
-        Do not reorder these without re-reading the fold note above. -#}
+        lunch, running cold to hot: salads, soup and the kids meals, then the
+        wraps and the deli case, then everything off the griddle.
+        Do not reorder these without re-reading the fold note above.
+
+        PANEL BALANCE is by hand and was re-struck when the kids meals, the
+        two plates and the hot/cold sandwich split arrived. The three panels
+        were re-struck again after the first proof overran. Drinks sit with the
+        deli case and the sides sit with the griddle purely for fit — neither
+        is a category that has to be anywhere in particular. If you add items, move a whole
+        CATEGORY between panels rather than letting one panel overrun — a
+        category split across a fold is the one failure this layout cannot
+        absorb. Panels do not scroll; check the proof.
+
+        The dietary key moved to the LEFT panel of this sheet. It used to sit
+        under the griddle on the right, but that panel now carries the hot
+        sandwiches as well as the burgers and has no room below them. -#}
     <div class="canvas trifold-canvas">
         <div class="fold-line" style="left: 33.333%"></div>
         <div class="fold-line" style="left: 66.667%"></div>
@@ -264,20 +305,27 @@ studioOrder: 20
         <section class="panel">
             {{ category(salads) }}
             {{ category(soup) }}
+            {{ category(kids) }}
+
+            <div class="panel-spacer"></div>
+            {{ dietLegend(true) }}
         </section>
 
         <section class="panel">
             {{ category(wraps) }}
             {{ category(sandwiches) }}
-            {{ category(sides) }}
+            {{ category(drinks) }}
         </section>
 
+        {#- Burgers and hot sandwiches share this panel on purpose: same
+            flat-top, and a customer deciding between a Patty Melt and a
+            Reuben is making one decision, not two. See _note_hot_cold.
+            The sides follow them for the same reason a side is ordered:
+            with something off the griddle. -#}
         <section class="panel">
             {{ category(burgers) }}
-            {{ category(drinks) }}
-
-            <div class="panel-spacer"></div>
-            {{ dietLegend() }}
+            {{ category(hotSandwiches) }}
+            {{ category(sides) }}
         </section>
     </div>
 
