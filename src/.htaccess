@@ -52,6 +52,37 @@ ErrorDocument 404 /404.html
     ExpiresByType image/png "access plus 30 days"
     ExpiresByType image/webp "access plus 30 days"
     ExpiresByType image/svg+xml "access plus 30 days"
+    # PDFs are menus and flyers. They are replaced in place under the same
+    # filename, so they revalidate rather than sit in a cache for a month.
+    ExpiresByType application/pdf "access plus 0 seconds"
+</IfModule>
+
+# ── Exported studio artwork ─────────────────────────────
+# /studio/downloads/ is written by scripts/export-studio.js under STABLE
+# filenames: menu-trifold.pdf is the same URL after every build, with
+# different bytes inside it. The stable name is deliberate — these are links
+# now, and one that works today has to work after the next build — but it
+# means a long cache life here is exactly wrong. The generic image rule above
+# would pin a PNG proof for 30 days, and before this block a PDF had no rule
+# at all and fell back to the browser's own heuristic freshness. That is how
+# somebody prints a menu that is a version behind while the server has the
+# right one.
+#
+# The `bust` filter cannot cover these the way it covers CSS and JS: it
+# hashes files out of src/, and these are generated into _site/ AFTER
+# Eleventy has run, so at build time there is nothing to hash.
+#
+# no-cache does NOT mean "do not store" — it means revalidate before use. The
+# browser keeps the file and an unchanged one costs a 304, not a re-download.
+# Expires has to be unset explicitly: mod_expires sets it from the rules
+# above, and a stale Expires date beside a no-cache Cache-Control is the kind
+# of disagreement old proxies resolve the wrong way.
+<IfModule mod_setenvif.c>
+    SetEnvIf Request_URI "^/studio/downloads/" STUDIO_EXPORT
+</IfModule>
+<IfModule mod_headers.c>
+    Header always set Cache-Control "no-cache, must-revalidate" env=STUDIO_EXPORT
+    Header always unset Expires env=STUDIO_EXPORT
 </IfModule>
 
 # ── Private studio board ────────────────────────────────────
