@@ -47,7 +47,10 @@
     </style>
     {{ headExtra | safe }}
 </head>
-<body class="piece-body">
+{#- `pageSize` means this piece is destined for paper, which changes how its
+    PROOF should look: white ground, not the dark screen offcut. See
+    .piece-body--paper in piece.css. Social pieces keep the dark ground. -#}
+<body class="piece-body{% if pageSize %} piece-body--paper{% endif %}">
 {{ content | safe }}
 </body>
 </html>

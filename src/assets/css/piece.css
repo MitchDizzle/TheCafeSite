@@ -27,6 +27,33 @@
     line-height: 1.5;
 }
 
+/* A piece headed for paper proofs on white.
+
+   The dark offcut above is right for a social piece — it frames a square of
+   artwork that will sit in a feed. It is wrong for a menu: it makes the PNG
+   look nothing like the sheet, and the downloads page offers that PNG right
+   next to the PDF, so somebody printing "the menu" can easily print a dark
+   slab of ink on every margin. The PDF was always white; this makes the
+   proof tell the same truth.
+
+   The hairline is what the dark ground used to do for free — show where the
+   sheet ends. It is a box-shadow rather than a border so it costs no layout.
+
+   @media screen is load-bearing, not tidiness. The print block below zeroes
+   `.canvas` box-shadow, but `.piece-body--paper .canvas` outranks a bare
+   `.canvas` — so without this wrapper the hairline SURVIVES into the PDF and
+   prints a grey rectangle around the edge of every sheet. It did, on the
+   first build of this change. */
+.piece-body--paper {
+    background: #fff;
+}
+
+@media screen {
+    .piece-body--paper .canvas {
+        box-shadow: 0 0 0 1px #d3d9dc;
+    }
+}
+
 /* Width/height come from the layout's inline <style>, driven by the
    canvasW / canvasH front matter. */
 .canvas {

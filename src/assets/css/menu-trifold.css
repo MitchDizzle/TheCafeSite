@@ -24,12 +24,14 @@
 /* Proofing label above each artboard. There is no bleed room to print panel
    roles on the sheet, and a mislabelled panel costs a whole print run — so
    the roles are stated on screen and removed from the print. */
+/* Proof furniture, set for the WHITE ground this piece proofs on (see
+   .piece-body--paper in piece.css). It used to be cream on dark slate; on
+   white that is invisible ink, and one of these is a safety warning. */
 .fold-legend {
     font-size: 12px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--cream);
-    opacity: 0.75;
+    color: #5a6a72;
 }
 
 /* Proof-only warning that the dietary marks have not been confirmed by the
@@ -37,8 +39,8 @@
    because a wrong GF mark is the one error on this sheet that can hurt
    somebody, and it must be impossible to scroll past on a proof. */
 .fold-legend--warn {
-    color: var(--mint);
-    background: rgba(var(--accent-rgb), 0.22);
+    color: var(--accent-dark);
+    background: rgba(var(--accent-rgb), 0.08);
     border-left: 3px solid var(--accent);
     border-radius: 0.03in;
     padding: 0.08in 0.12in;
