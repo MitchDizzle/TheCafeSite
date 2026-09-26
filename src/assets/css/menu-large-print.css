@@ -246,6 +246,35 @@
     white-space: nowrap;
 }
 
+/* Variant rows. See menu-trifold.css — same idea, this piece's sizes. The
+   name stays at the description's ink rather than the item name's black, so
+   the row reads as a qualifier on the item above it. */
+.menu-variants {
+    list-style: none;
+    margin-top: 0.05in;
+    padding-left: 0.18in;
+}
+
+.menu-variant {
+    display: flex;
+    align-items: baseline;
+    gap: 0.08in;
+}
+
+.menu-variant + .menu-variant {
+    margin-top: 0.04in;
+}
+
+.menu-variant-name {
+    font-size: 0.14in;
+    font-style: italic;
+    color: #4a5a63;
+}
+
+.menu-variant .menu-item-price {
+    font-size: 0.145in;
+}
+
 /* The point of the whole piece: ~10pt, full contrast, generous leading, and
    a measure short enough that the eye finds the next line. #4a5a63 is
    --text-dark lightened just enough to sit below a bold name in the
@@ -334,6 +363,17 @@
     font-style: italic;
     color: #4a5a63;
     margin-top: 0.05in;
+}
+
+/* The consumer advisory — upright and at full ink, unlike the italic caveat
+   above it. This piece exists for people who are having trouble reading, and
+   this is the line it would be worst to lose. Deliberately absent from the
+   @media print and .diets-unconfirmed blocks: it always prints. */
+.diet-legend-advisory {
+    font-size: 0.12in;
+    line-height: 1.45;
+    color: var(--text-dark);
+    margin-top: 0.08in;
 }
 
 /* ── Visit-us block, foot of page 3 ─────────────────────── */

@@ -95,21 +95,35 @@ pageCss: "/assets/css/menu.css"
                         {%- endif %}>
                         <div class="menu-item-head">
                             <span class="menu-item-name">{{ item.name }}{% if menu.dietsConfirmed %}{{ dietMarks(item, menu.diets) }}{% endif %}</span>
+                            {%- if not item.variants %}
                             <span class="menu-item-fill" aria-hidden="true"></span>
+                            {%- endif %}
                             {%- if item.price %}
                             <span class="menu-item-price">{{ item.price | money }}</span>
                             {%- elif item.prices %}
                             <span class="menu-item-price">
                                 {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
                             </span>
-                            {%- elif item.variants %}
-                            <span class="menu-item-price">
-                                {%- for v in item.variants %}{{ v.size }} {{ v.price | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
-                            </span>
                             {%- endif %}
                         </div>
                         {%- if item.description %}
                         <p class="menu-item-desc">{{ item.description }}</p>
+                        {%- endif %}
+                        {#- One priced row per variant, indented under the item.
+                            Inside the same <li> on purpose: the dietary filter
+                            hides whole .menu-item elements, and a variant split
+                            out into its own row would survive a filter that hid
+                            the thing it is a variant of. -#}
+                        {%- if item.variants %}
+                        <ul class="menu-variants" role="list">
+                            {%- for v in item.variants %}
+                            <li class="menu-variant">
+                                <span class="menu-variant-name">{{ v.size }}</span>
+                                <span class="menu-item-fill" aria-hidden="true"></span>
+                                <span class="menu-item-price">{{ v.price | money }}</span>
+                            </li>
+                            {%- endfor %}
+                        </ul>
                         {%- endif %}
                     </li>
                     {%- endfor %}
@@ -205,6 +219,13 @@ pageCss: "/assets/css/menu.css"
         {%- endif %}
 
         <p class="diet-caveat">{{ menu.dietNote }}</p>
+
+        {#- The consumer advisory. Rendered unconditionally — unlike everything
+            else in this section it is not about the dietary marks and does not
+            wait on dietsConfirmed. Marked up as its own <p> rather than tacked
+            onto the caveat above so it survives any future restructuring of the
+            marks, which it must outlive. -#}
+        <p class="diet-advisory">{{ menu.healthNote }}</p>
     </div>
 </section>
 
@@ -402,6 +423,26 @@ pageCss: "/assets/css/menu.css"
           {%- endif %}
           {%- if item.price %},
           "offers": { "@type": "Offer", "price": "{{ item.price | money | replace("$", "") }}", "priceCurrency": "USD" }
+          {#- An item priced only by variant still has a price — the lowest one
+              a customer can pay for it. Emitting nothing would publish the
+              Breakfast Sandwich as an item with no price at all, which is worse
+              than publishing "from $6.50". lowPrice/highPrice is the vocabulary
+              for exactly this, so the range goes out rather than one end of it. -#}
+          {%- elif item.variants %},
+          {#- Nunjucks has no min/max filter (that is Jinja2), and a `set`
+              inside a loop does not escape the loop's scope — hence the
+              push-then-sort, which is the same shape the diets block above
+              uses for the same reason. -#}
+          {%- set vprices = [] %}
+          {%- for v in item.variants %}{% set _ = vprices.push(v.price) %}{% endfor %}
+          {%- set vsorted = vprices | sort %}
+          "offers": {
+            "@type": "AggregateOffer",
+            "lowPrice": "{{ vsorted | first | money | replace("$", "") }}",
+            "highPrice": "{{ vsorted | last | money | replace("$", "") }}",
+            "offerCount": {{ item.variants | length }},
+            "priceCurrency": "USD"
+          }
           {%- endif %}
           {%- if menu.dietsConfirmed and item.diet %},
           {#- Collected first, then printed. Deciding the separator inside the

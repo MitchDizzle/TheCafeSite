@@ -101,6 +101,18 @@
     }
 }
 
+/* The consumer advisory. Not italic like the caveat above it and not at the
+   caveat's reduced opacity: it is a warning, and the one line in this block
+   that has to survive a photocopy of a photocopy. Note what is NOT here — no
+   rule inside `.diets-unconfirmed` and none inside @media print. It prints
+   under every condition this sheet has. */
+.diet-legend-advisory {
+    font-size: 0.075in;
+    line-height: 1.35;
+    color: var(--text-dark);
+    margin-top: 0.04in;
+}
+
 .diet-legend-caveat {
     font-size: 0.08in;
     line-height: 1.35;
@@ -387,9 +399,19 @@
 /* Category and row spacing was loosened when this sheet had eight categories
    on it. It now has eleven (hot/cold sandwiches split, kids meals added), and
    the space between rows is the cheapest thing on the sheet to give back —
-   cheaper than type size, which is the one thing here that must not shrink. */
+   cheaper than type size, which is the one thing here that must not shrink.
+
+   NO margin here. A .menu-cat is a direct child of .panel, which is a flex
+   column with `gap: 0.18in` — and flex items do not collapse margins against
+   the gap, they stack on top of it. This rule was therefore adding its margin
+   to the gap and spacing categories at 0.33in while reading as though it set
+   the whole distance. Removing it is what made room for the consumer advisory
+   at the foot of the panel. The gap alone is the spacing; change it there.
+
+   The same selector in menu-large-print.css DOES carry a margin, because
+   .lp-col sets no gap of its own. */
 .menu-cat + .menu-cat {
-    margin-top: 0.15in;
+    margin-top: 0;
 }
 
 .menu-cat-name {
@@ -442,6 +464,38 @@
 .menu-item-price {
     font-size: 0.12in;
     white-space: nowrap;
+}
+
+/* Variant rows — one priced line per option, indented under the item.
+   Same row mechanics as .menu-item-head (name, leader, price) at a step down
+   in size, so they read as belonging to the item above rather than as items
+   of their own. Indent is deliberate and small: enough to subordinate them,
+   not so much that the prices stop lining up with the column. */
+.menu-variants {
+    list-style: none;
+    margin-top: 0.03in;
+    padding-left: 0.12in;
+}
+
+.menu-variant {
+    display: flex;
+    align-items: baseline;
+    gap: 0.06in;
+}
+
+.menu-variant + .menu-variant {
+    margin-top: 0.02in;
+}
+
+.menu-variant-name {
+    font-size: 0.105in;
+    font-style: italic;
+    color: var(--text-dark);
+    opacity: 0.9;
+}
+
+.menu-variant .menu-item-price {
+    font-size: 0.11in;
 }
 
 /* ── Dietary marks ────────────────────────────────────────────

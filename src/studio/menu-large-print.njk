@@ -87,6 +87,11 @@ studioOrder: 21
     </p>
     <p class="p-body diet-legend-note"><span class="diet-mark">*</span> we can make it that way. Just ask.</p>
     <p class="p-body diet-legend-caveat">{{ menu.dietNote }}</p>
+    {#- The consumer advisory. Its own paragraph, and the LAST one, because it
+        is the only line in this block that is not about us — the rest explain
+        our marks and our kitchen, this one is a warning. It prints on every
+        sheet and is never gated behind dietsConfirmed: see _note_health. -#}
+    <p class="p-body diet-legend-advisory">{{ menu.healthNote }}</p>
 </div>
 {%- endmacro %}
 
@@ -113,21 +118,33 @@ studioOrder: 21
                     {{- dietMarks(item) }}
                     {%- if item.priceReview %}<span class="price-review" title="Price not re-costed yet">&bull;</span>{% endif -%}
                 </span>
+                {%- if not item.variants %}
                 <span class="menu-item-fill" aria-hidden="true"></span>
+                {%- endif %}
                 {%- if item.price %}
                 <span class="menu-item-price p-body">{{ item.price | money }}</span>
                 {%- elif item.prices %}
                 <span class="menu-item-price p-body">
                     {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
                 </span>
-                {%- elif item.variants %}
-                <span class="menu-item-price p-body">
-                    {%- for v in item.variants %}{{ v.size }} {{ v.price | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
-                </span>
                 {%- endif %}
             </div>
             {%- if item.description %}
             <p class="menu-item-desc p-body">{{ item.description }}</p>
+            {%- endif %}
+            {#- One indented priced row per variant — see the note in
+                menu-trifold.njk for why this is not a string in the price
+                column. -#}
+            {%- if item.variants %}
+            <ul class="menu-variants">
+                {%- for v in item.variants %}
+                <li class="menu-variant">
+                    <span class="menu-variant-name p-body">{{ v.size }}</span>
+                    <span class="menu-item-fill" aria-hidden="true"></span>
+                    <span class="menu-item-price p-body">{{ v.price | money }}</span>
+                </li>
+                {%- endfor %}
+            </ul>
             {%- endif %}
         </li>
         {%- endfor %}

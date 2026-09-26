@@ -119,7 +119,7 @@ html {
 
 .bcat-name {
     font-family: 'Playfair Display', serif;
-    font-size: 1.7rem;
+    font-size: 1.55rem;
     font-weight: 700;
     color: var(--mint);
     line-height: 1.1;
@@ -145,8 +145,19 @@ html {
     align-items: baseline;
     gap: 0.4rem;
     font-family: 'Lato', sans-serif;
-    font-size: 1.28rem;
-    line-height: 1.75;
+    /* Was 1.28rem / 1.75. The board went over capacity when the menu grew:
+       the sandwiches split into two categories, the kids meals arrived, and
+       the burgers took "or Chicken" into every name — which at the old size
+       wrapped "Bacon Cheese Burger or Chicken" onto two lines and pushed
+       three columns off the bottom of a 1080p screen.
+
+       This is the trade the board makes, and it is the right way round:
+       slightly smaller type that is all visible beats larger type where the
+       last four items are behind the footer. If it has to come down again,
+       the menu is too long for four columns — add a fifth or take something
+       off, do NOT keep shrinking this. */
+    font-size: 1.12rem;
+    line-height: 1.6;
 }
 
 .bitem-name {
@@ -168,6 +179,17 @@ html {
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
     color: var(--mint);
+}
+
+/* A variant row: same row as any other item, stepped in and down so it reads
+   as an option on the line above rather than as a separate thing to order.
+   Still a full row with a leader and a price, because from across the room
+   that is the only shape a reader can scan. rem, like everything here. */
+.bitem--variant {
+    padding-left: 1.1rem;
+    font-size: 0.98rem;
+    font-style: italic;
+    opacity: 0.88;
 }
 
 /* ── Build-your-own columns ──────────────────────────────
@@ -202,8 +224,29 @@ html {
 
 .bpick-option {
     font-family: 'Lato', sans-serif;
-    font-size: 1.15rem;
-    line-height: 1.6;
+    font-size: 1.02rem;
+    line-height: 1.5;
+}
+
+/* The consumer advisory in the board footer. Smaller than the contact line
+   below it — it is required, not promotional — but cream rather than a
+   dimmed cream, because at TV viewing distance opacity is the difference
+   between small and illegible. rem like everything else on this board. */
+.board-advisory {
+    /* Full-width line of its own, above the key/contact row — see the markup
+       note in menu-board.njk. A plain block in a plain block; no flex.
+
+       It still sets over two lines, and that is style.css's `p { max-width:
+       65ch }` doing its job, not a bug to chase. Do not override it: one
+       1840px line is a terrible measure to read, and two lines at 65ch is
+       why this is legible from the far side of the room. (That cap is also
+       what quietly defeated an earlier attempt to give this its own line
+       with flex-basis: 100% — the basis was 100%, the max-width was not.) */
+    font-family: 'Lato', sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--cream);
+    margin: 0 0 0.45rem;
 }
 
 /* Marks. Mint on teal like the prices — the red accent is unreadable on
@@ -233,14 +276,17 @@ html {
 /* ── Foot ─────────────────────────────────────────────────── */
 
 .board-foot {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 2rem;
     padding-top: 0.7rem;
     border-top: 1px solid rgba(250, 247, 242, 0.25);
     font-family: 'Lato', sans-serif;
     font-size: 1rem;
+}
+
+.board-foot-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2rem;
 }
 
 .board-key {

@@ -15,6 +15,8 @@
     { "code": "V", "name": "Vegetarian", "schema": "https://schema.org/VegetarianDiet" },
     { "code": "LS", "name": "Low sodium", "schema": "https://schema.org/LowSaltDiet" }
   ],
+  "_note_health": "The consumer advisory. This is the FDA Food Code's REMINDER — the general statement that undercooked animal foods carry a risk. It is triggered by eggs cooked to order (the omelets, the over-easy egg on a breakfast sandwich) and by burgers cooked to a customer's temperature, which is most of what this kitchen sells before 11am and a good deal of what it sells after. Seafood and shellfish are deliberately NOT in the wording: nothing on this menu is raw seafood, the tuna is canned, and listing foods a kitchen does not serve trains people to skip the line. Put them back the day a raw item goes on. The advisory has a SECOND half the Food Code calls the DISCLOSURE — marking WHICH items can be served raw or undercooked, usually with an asterisk on the item. That half is NOT implemented: it needs the kitchen to say which items they will cook to order, and a guessed asterisk is worse than none. Ask before adding it. Unlike the dietary marks, this is not gated behind dietsConfirmed and it is never proof-only. It prints, on every surface, always. It is the one line on this menu that exists for somebody who could get hurt.",
+  "healthNote": "Consuming raw or undercooked meats, poultry or eggs may increase your risk of foodborne illness, especially if you have certain medical conditions.",
   "dietNote": "Prepared in a shared kitchen. We are not a certified gluten-free facility and cannot promise against cross-contact. Please tell us about an allergy when you order.",
   "categories": [
     {
@@ -39,11 +41,6 @@
           "price": 10.00
         },
         {
-          "name": "Croissant & 2 Eggs",
-          "dietOnRequest": ["V"],
-          "price": 8.00
-        },
-        {
           "name": "Burrito",
           "dietOnRequest": ["V"],
           "price": 8.00
@@ -55,10 +52,14 @@
           "prices": [9.00, 11.00]
         },
         {
+          "_note_variants": "The croissant is a version of this sandwich, not a second item: same fillings, a better roll and two eggs instead of one, which is what the extra $1.50 buys. `variants` rather than `prices` because the two are not sizes and the difference cannot be read off the item name — each option prints its own words. It also has to work on /menu-board, which prints no descriptions: an upgrade explained only in a description is invisible on the wall.",
           "name": "Breakfast Sandwich",
-          "description": "One egg, cheese & choice of bacon, sausage or ham. Served on a biscuit or English muffin (wheat, white, rye or 12 grain).",
+          "description": "One egg, cheese & choice of bacon, sausage or ham. Served on a biscuit or English muffin (wheat, white, rye or 12 grain), or on a croissant with two eggs.",
           "dietOnRequest": ["V"],
-          "price": 6.50
+          "variants": [
+            { "size": "Biscuit or muffin", "price": 6.50 },
+            { "size": "Croissant, 2 eggs", "price": 8.00 }
+          ]
         }
       ]
     },
@@ -150,9 +151,9 @@
           "price": 5.00
         },
         {
-          "name": "Clubhouse Sandwich",
-          "description": "Turkey, ham, bacon, cheese, lettuce, tomato & mayo on toast",
-          "price": 10.00
+          "name": "Philly Steak Sandwich",
+          "description": "Steak, onions, peppers, mushroom & mozzarella cheese on French roll",
+          "price": 11.00
         },
         {
           "name": "Reuben Sandwich",
@@ -160,9 +161,9 @@
           "price": 10.00
         },
         {
-          "name": "Philly Steak Sandwich",
-          "description": "Steak, onions, peppers, mushroom & mozzarella cheese on French roll",
-          "price": 11.00
+          "name": "Clubhouse Sandwich",
+          "description": "Turkey, ham, bacon, cheese, lettuce, tomato & mayo on toast",
+          "price": 10.00
         }
       ]
     },
@@ -266,7 +267,7 @@
       "sizing": [
         { "size": "Each", "price": 6.00 }
       ],
-      "note": "One main and one side.",
+      "note": "12 & under. One main and one side.",
       "picks": [
         { "label": "Pick a main", "options": ["Corn Dog", "Chicken Strips", "Hamburger"] },
         { "label": "Pick a side", "options": ["Cinnamon Apples", "Mac & Cheese", "Tater Tots"] }

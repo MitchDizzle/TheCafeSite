@@ -71,6 +71,11 @@ studioOrder: 20
         when they do, the shared-kitchen caveat is a liability line that
         prints either way. -#}
     <p class="p-body diet-legend-caveat">{{ menu.dietNote }}</p>
+    {#- The consumer advisory. Its own paragraph, and the LAST one, because it
+        is the only line in this block that is not about us — the rest explain
+        our marks and our kitchen, this one is a warning. It prints on every
+        sheet and is never gated behind dietsConfirmed: see _note_health. -#}
+    <p class="p-body diet-legend-advisory">{{ menu.healthNote }}</p>
 </div>
 {%- endmacro %}
 
@@ -101,25 +106,43 @@ studioOrder: 20
                         been re-costed. -#}
                     {%- if item.priceReview %}<span class="price-review" title="Price not re-costed yet">&bull;</span>{% endif -%}
                 </span>
+                {#- No leader and no price on the head row of an item priced by
+                    variant — its prices are on the rows below, and dots running
+                    out to blank space read as a price somebody forgot. -#}
+                {%- if not item.variants %}
                 <span class="menu-item-fill" aria-hidden="true"></span>
+                {%- endif %}
                 {%- if item.price %}
                 <span class="menu-item-price p-body">{{ item.price | money }}</span>
                 {%- elif item.prices %}
                 {#- One item, one line, two prices — "2 / 3 Egg Omelet · $9.00 / $11.00".
                     The order matches the sizes in the item name, so the pairing is
                     implied and neither has to be labelled twice. Unlike `variants`,
-                    which prints its own size words. -#}
+                    which prints its own size words and therefore needs its own
+                    rows — see below. -#}
                 <span class="menu-item-price p-body">
                     {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
-                </span>
-                {%- elif item.variants %}
-                <span class="menu-item-price p-body">
-                    {%- for v in item.variants %}{{ v.size }} {{ v.price | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
                 </span>
                 {%- endif %}
             </div>
             {%- if item.description %}
             <p class="menu-item-desc p-body">{{ item.description }}</p>
+            {%- endif %}
+            {#- Variants get one indented row each, not a run-on string in the
+                price column. "Biscuit or muffin $6.50 / Croissant, 2 eggs $8.00"
+                is 48 characters of nowrap text in a column about an inch wide:
+                it shoved the item name into two lines and ran off the fold.
+                A variant is a priced row, so it is drawn as one. -#}
+            {%- if item.variants %}
+            <ul class="menu-variants">
+                {%- for v in item.variants %}
+                <li class="menu-variant">
+                    <span class="menu-variant-name p-body">{{ v.size }}</span>
+                    <span class="menu-item-fill" aria-hidden="true"></span>
+                    <span class="menu-item-price p-body">{{ v.price | money }}</span>
+                </li>
+                {%- endfor %}
+            </ul>
             {%- endif %}
         </li>
         {%- endfor %}
