@@ -175,6 +175,10 @@ generated from the same front matter that puts them on the board.
 `studioExportScale` in front matter multiplies the output: `3` on an 11 x 17
 gives 3168 x 4896, about 288dpi.
 
+`studioFormat: jpg` exports a JPG instead of a PNG — for photographs, where a
+PNG is several times the size, and for recipients (newspapers) that want JPG.
+The downloads page follows it. Default is `png`.
+
 ## Getting a piece onto a phone
 
 `/studio/downloads/` — linked from the top of the board. One column,

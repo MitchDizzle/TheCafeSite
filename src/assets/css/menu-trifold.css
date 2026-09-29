@@ -594,7 +594,10 @@
 
 .menu-picks {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* One column per pick, set inline from the template: two for the kids
+       meals, four for Build Your Own. minmax(0, …) so a long option wraps
+       inside its column instead of widening it off the panel. */
+    grid-template-columns: repeat(var(--pick-cols, 2), minmax(0, 1fr));
     gap: 0.1in;
     margin-top: 0.1in;
 }
@@ -611,4 +614,113 @@
 .menu-pick-option {
     font-size: 0.115in;
     line-height: 1.45;
+}
+
+/* ── Black & white version ────────────────────────────────────
+   menu-trifold-bw.njk: the same sheets for a black-only printer or the
+   copier. Nothing here moves a category — the palette is swapped for ink by
+   redefining the tokens on the stack, so every rule above that says
+   var(--teal) or var(--accent) comes out black without being touched.
+
+   Hierarchy has to survive without hue. The red labels (serving times,
+   sizing lines, pick labels) were told apart from the teal names by colour
+   alone; in one ink they lean on what they already had — uppercase Lato
+   against Playfair names — and the rules and leaders go a step darker so a
+   copier does not drop them. */
+.trifold--bw {
+    --teal:         #000;
+    --teal-dark:    #000;
+    --accent:       #000;
+    --accent-dark:  #000;
+    --accent-rgb:   0, 0, 0;
+    --coral:        #000;
+    --text-dark:    #000;
+    /* Set again as a colour, not only as a token: body text inherits the
+       value <body> already resolved from the old --text-dark, so the token
+       alone would leave every item name in slate. */
+    color: #000;
+}
+
+/* The proof furniture keeps its red: it never prints (see @media print
+   above), and a stale-price bullet that looks like every other dot on the
+   sheet is a proof that hides the thing it exists to show. */
+.trifold--bw .fold-legend--warn,
+.trifold--bw .price-review {
+    --accent:       #C0392F;
+    --accent-dark:  #A02F26;
+    --accent-rgb:   192, 57, 47;
+}
+
+.trifold--bw .menu-item-fill {
+    border-bottom-color: #888;
+}
+
+.trifold--bw .diet-legend {
+    border-top-color: #888;
+}
+
+.trifold--bw .fold-line {
+    border-left-color: #999;
+}
+
+/* Opacity was buying contrast on cream-and-teal; on a copier it buys grey
+   speckle. Full ink for everything a customer reads. */
+.trifold--bw .menu-cat-note,
+.trifold--bw .menu-item-desc,
+.trifold--bw .menu-variant-name,
+.trifold--bw .diet-legend-note,
+.trifold--bw .diet-legend-caveat,
+.trifold--bw .cover-since {
+    opacity: 1;
+}
+
+/* "GF*" is told apart from "GF" by the asterisk, which carries it in one
+   ink; the lighter weight is a colour-version nicety that would just grey it. */
+.trifold--bw .diet-mark--request {
+    opacity: 1;
+}
+
+/* The cover title, in place of the teal wordmark box. Sized to fill the
+   same 2.97in of live width the box did, so the rest of the cover stack
+   sits where it does on the colour version. */
+.cover-title {
+    align-self: stretch;
+    padding-top: 0.1in;
+    border-bottom: 0.02in solid #000;
+    padding-bottom: 0.14in;
+}
+
+.cover-title-name {
+    font-size: 0.62in;
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+.cover-title .cover-menu {
+    margin-top: 0.08in;
+}
+
+/* The back panel without its "Visit us" block: the catering note becomes
+   the opener, so it loses the rule that separated it from the contact lines
+   above it, and takes the extra room as larger type rather than a gap. */
+.trifold--bw .panel-back .panel-note {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 0;
+}
+
+.trifold--bw .panel-back .panel-note-label {
+    font-size: 0.13in;
+}
+
+.trifold--bw .panel-back .panel-note-body {
+    font-size: 0.14in;
+    line-height: 1.5;
+}
+
+/* A sizing line wraps between pairs ("1 Meat $8.00 · 2 Meats $9.50"),
+   never inside one — a price stranded on the next line from its size
+   reads as belonging to whatever follows it. */
+.sizing-pair {
+    white-space: nowrap;
 }

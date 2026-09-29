@@ -77,7 +77,7 @@ pageCss: "/assets/css/menu.css"
                 {%- endif %}
                 {%- if c.sizing %}
                 <p class="menu-cat-sizing">
-                    {%- for s in c.sizing %}{{ s.size }} {{ s.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+                    {%- for s in c.sizing %}<span class="sizing-pair">{{ s.size }} {{ s.price | money }}</span>{% if not loop.last %} &middot; {% endif %}{% endfor -%}
                 </p>
                 {%- endif %}
 

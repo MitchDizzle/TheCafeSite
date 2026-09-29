@@ -10,7 +10,7 @@ tags: studio
 studioTitle: "Menu — large print"
 studioCategory: "Menus"
 studioSize: "8.5 × 11 in portrait · 3 pages, plain paper · no fold"
-studioNote: "The tri-fold at a size that can be read without glasses. Same data (src/_data/menu.json), so it can never disagree with the tri-fold, the website or the board — but no folds, two columns per page instead of three panels, and item descriptions at roughly 10pt instead of 7pt. Three plain sheets, single-sided, or duplex on two — unlike the tri-fold it does not matter which edge it flips on, and there is nothing to fold. Page 1 is breakfast and the cold case, page 2 the griddle and the salads, page 3 the kids meals, sides, drinks and where to find us. It is three pages rather than two because it is set at a size that can actually be read; squeezing it onto two would just rebuild the tri-fold. Re-check menu.json's dietary note before a real print run — the GF/V/LS marks are drafted from ingredient lists, not confirmed by the kitchen, and the proof says so in red until `dietsConfirmed` is set."
+studioNote: "The tri-fold at a size that can be read without glasses. Same data (src/_data/menu.json), so it can never disagree with the tri-fold, the website or the board — but no folds, two columns per page instead of three panels, and item descriptions at roughly 10pt instead of 7pt. Three plain sheets, single-sided, or duplex on two — unlike the tri-fold it does not matter which edge it flips on, and there is nothing to fold. Page 1 is breakfast and the cold case, page 2 the griddle and the salads, page 3 the kids meals, sides, build-your-own sandwiches, drinks and where to find us. It is three pages rather than two because it is set at a size that can actually be read; squeezing it onto two would just rebuild the tri-fold. Re-check menu.json's dietary note before a real print run — the GF/V/LS marks are drafted from ingredient lists, not confirmed by the kitchen, and the proof says so in red until `dietsConfirmed` is set."
 studioW: 816
 studioH: 3560
 studioOrder: 21
@@ -53,7 +53,7 @@ studioOrder: 21
 {%- set wraps = (menu.categories | where("id", "wraps"))[0] %}
 {%- set sandwiches = (menu.categories | where("id", "sandwiches"))[0] %}
 {%- set hotSandwiches = (menu.categories | where("id", "hot_sandwiches"))[0] %}
-{%- set burgers = (menu.categories | where("id", "burgers"))[0] %}
+{%- set buildSandwich = (menu.categories | where("id", "build_sandwich"))[0] %}
 {%- set salads = (menu.categories | where("id", "salads"))[0] %}
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
 {%- set kids = (menu.categories | where("id", "kids"))[0] %}
@@ -106,7 +106,7 @@ studioOrder: 21
     {%- endif %}
     {%- if c.sizing %}
     <p class="menu-cat-sizing p-label ink-accent">
-        {%- for s in c.sizing %}{{ s.size }} {{ s.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+        {%- for s in c.sizing %}<span class="sizing-pair">{{ s.size }} {{ s.price | money }}</span>{% if not loop.last %} &middot; {% endif %}{% endfor -%}
     </p>
     {%- endif %}
     {%- if c.items %}
@@ -151,7 +151,7 @@ studioOrder: 21
     </ul>
     {%- endif %}
     {%- if c.picks %}
-    <div class="menu-picks">
+    <div class="menu-picks" style="--pick-cols: {{ c.picks.length }}">
         {%- for p in c.picks %}
         <div class="menu-pick">
             <p class="menu-pick-label p-label ink-accent">{{ p.label }}</p>
@@ -209,8 +209,8 @@ studioOrder: 21
 
     <p class="fold-legend">Page 2 &mdash; the griddle &amp; the salads</p>
 
-    {#- PAGE 2. Burgers and the hot sandwiches share a column — same
-        flat-top, one decision (see _note_hot_cold in menu.json). -#}
+    {#- PAGE 2. The hot sandwiches — burgers included, one category since
+        the 2026-09-29 merge (see _note_hot_cold in menu.json). -#}
     <div class="canvas lp-canvas">
         <header class="lp-head lp-head--run">
             <p class="p-display lp-runhead ink-teal">{{ site.name }} &middot; Menu</p>
@@ -219,7 +219,6 @@ studioOrder: 21
 
         <div class="lp-cols">
             <div class="lp-col">
-                {{ category(burgers) }}
                 {{ category(hotSandwiches) }}
             </div>
             <div class="lp-col">
@@ -229,7 +228,7 @@ studioOrder: 21
         </div>
     </div>
 
-    <p class="fold-legend">Page 3 &mdash; kids, sides, drinks &amp; where to find us</p>
+    <p class="fold-legend">Page 3 &mdash; kids, sides, build your own, drinks &amp; where to find us</p>
 
     {#- PAGE 3. The lightest of the three, deliberately: it is the page that
         ends up face-up on a table, so it carries the contact block rather
@@ -247,6 +246,12 @@ studioOrder: 21
                 {{ category(sides) }}
             </div>
             <div class="lp-col">
+                {#- Build Your Own is here, not under the cold sandwiches on
+                    page 1, because page 1 is full: it clipped off the foot
+                    of that column on the first proof. This column had the
+                    room, and a sandwich built to order reads fine beside
+                    the drinks. -#}
+                {{ category(buildSandwich) }}
                 {{ category(drinks) }}
 
                 <div class="panel-spacer"></div>

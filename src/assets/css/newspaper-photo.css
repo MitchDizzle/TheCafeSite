@@ -1,0 +1,42 @@
+/* ============================================================
+   Newspaper Storefront Photo — 1024 × 1024 px, exported as JPG
+   Piece: src/studio/newspaper-photo.njk
+
+   The storefront at 417 S. 6th with the wordmark set in the sky, for
+   the October 2026 newspaper piece. The sky fills roughly the top 45%
+   of the frame, so the mark sits there with nothing behind it but
+   cloud — it never crosses the roofline or the window signage.
+   ============================================================ */
+
+.npphoto {
+    background: url("/assets/photos/storefront.jpg") center / cover no-repeat;
+}
+
+/* A soft darkening at the top only. The sky is pale blue and peach, and a
+   cream letterform on it leans entirely on the teal outline; a little teal
+   behind the mark gives the fill something to stand off. It fades out well
+   above the roof so the building keeps its true colour. */
+.npphoto-scrim {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 55%;
+    background: linear-gradient(
+        to bottom,
+        rgb(31 69 82 / 0.26) 0%,
+        rgb(31 69 82 / 0.14) 45%,
+        rgb(31 69 82 / 0) 100%
+    );
+}
+
+.npphoto-wordmark {
+    /* piece.css derives the width AND the red offset from this one value.
+       620px wide → 172px tall. Proof weight (the default), not the hero's:
+       this goes to newsprint, where a thin outline is the first thing to
+       close up. */
+    --mark-w: 620px;
+
+    position: absolute;
+    top: 205px;
+    left: 50%;
+    transform: translateX(-50%);
+}

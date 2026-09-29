@@ -15,6 +15,7 @@ eleventyExcludeFromCollections: true
         w:     piece.data.studioW,
         h:     piece.data.studioH,
         scale: piece.data.studioExportScale or 1,
+        format: piece.data.studioFormat or "png",
         print: true if piece.data.pageSize else false
      }) %}
 {%- endfor %}

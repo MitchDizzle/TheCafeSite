@@ -1,13 +1,15 @@
 {
-  "_updated": "2026-09-25",
+  "_updated": "2026-09-29",
   "_note": "Items with 'verify: true' had handwriting that was difficult to read precisely — confirm before publishing.",
   "_note_no_fryer": "There is no fryer. The kitchen is deli-style and nothing on this menu is deep-fried: the Fried Potatoes are pan-fried on the flat-top, the kids' tater tots and chicken strips come off the flat-top or out of the oven, and the chips come out of a bag. Do not add a deep-fried item without settling that first.",
   "_note_serving": "`serving` is an optional per-category time window ('Serving until 11am'). Breakfast stops at 11 and soup starts at 11 so the kitchen has time to change over; every menu template prints it next to the category name.",
   "_note_price_review": "Items with 'priceReview: true' are priced under $2.00 and are known to be stale — they date from the old menu and have not been re-costed yet. The tri-fold marks them with a red bullet ON SCREEN AND IN THE PNG EXPORT ONLY; the marker is hidden in print, so a proof shows the open questions but a real sheet never ships with them. Set the price and delete the flag.",
   "_note_flat_price": "A category whose items all cost the same carries ONE `sizing` line (wraps, kids meals) instead of repeating the number on every row — the same mechanism the salads use for Full/Half. Changing that price is then a one-line edit and there is no way for two rows to disagree. An item inside such a category may still carry its own `price`, which wins and prints on its row: that is how the two plates sit under the salads' Full/Half line. Trade-off, accepted: an item with no price of its own emits no schema.org Offer.",
   "_note_picks": "`picks` is a build-your-own category: a list of columns, each with a `label` and its `options`, printed side by side instead of as priced rows. It exists for the kids meals, where three mains x three sides as priced rows would be six rows all saying $6.00. A category with `picks` and no `items` is legal — every template guards the item list — and the JSON-LD flattens the options into MenuItems so the section is never published empty.",
-  "_note_hot_cold": "Sandwiches are split into two categories, not one. 'Cold Sandwiches' is the deli case; 'Hot Sandwiches' is the griddle, and it sits beside 'Burgers or Chicken' on every layout because it is cooked on the same flat-top and a customer choosing between a Patty Melt and a Reuben is making one decision. The Clubhouse, Reuben and Philly were previously tacked onto the foot of the burgers category, which made 'or Chicken' untrue for three of its rows. Do not merge these two back together.",
-  "_note_diet": "Dietary marks are a data feature, not a nutrition claim. `diet` lists what an item IS as served; `dietOnRequest` lists what the kitchen can make it into if asked (drop the meat, hold the toast) and prints with an asterisk. Codes must exist in the `diets` registry below. The marks drafted here were read off the ingredient lists on this menu and have NOT been confirmed by the kitchen — `dietsConfirmed` is false, which puts a warning on the proof. Two deliberate omissions: drinks carry no marks (marking every bottle of water vegetarian is noise), and cured meats, bagged chips and bottled dressings are left unmarked because gluten and sodium in those come from a supplier label nobody has read yet. The gluten free wrap is called out in the wraps category note rather than as a GF mark on seven rows: the wrap itself is gluten free, the fillings have not been checked. Add marks only from a label or the kitchen, never from a guess. While `dietsConfirmed` is false the PUBLIC /menu page renders no marks at all — no key, no filter, no data attributes, no suitableForDiet — and says so in plain words instead. The tri-fold still shows them, because that is the proof the client reads in order to confirm them.",
+  "_note_hot_cold": "Sandwiches are split into two categories, not one. 'Cold Sandwiches' is the deli case; 'Hot Sandwiches' is everything off the flat-top — the burgers AND the griddle sandwiches, merged into one category on 2026-09-29 at the client's call (they were 'Burgers or Chicken' plus a separate 'Hot Sandwiches'). The Clubhouse moved to the cold side at the same time. Every item names its DEFAULT bread — that default is what goes into Square as the item, and a bread swap is a modifier there — while the category note says the bread is a choice.",
+  "_note_build_sandwich": "'Build Your Own Sandwich' is its own category rather than rows inside Cold Sandwiches: its price line (1 / 2 / 3 meats, half) would otherwise print above the Clubhouse and read as though it priced every sandwich in the case. It uses the same `sizing` + `picks` mechanism as the kids meals. A salad (chicken, tuna, egg) counts as a meat: tuna salad & bacon is the 2-meat price. The category note says so, with that example, because the column layout alone reads as 'meat OR salad'.",
+  "_note_default_bread": "`defaultBread` is the bread a sandwich comes on when the customer does not ask — the item as it goes into Square, where any other bread is a modifier. It is DATA ONLY and prints nowhere: the menus say 'with choice of bread' instead, and a bread line on every row would overrun the tri-fold. The defaults other than the Clubhouse (white toast, from the client) and the breads already named in descriptions were picked 2026-09-29 as each sandwich's best version and are marked `verify: true` until the kitchen agrees.",
+  "_note_diet": "Dietary marks are a data feature, not a nutrition claim. `diet` lists what an item IS as served; `dietOnRequest` lists what the kitchen can make it into if asked (drop the meat, hold the toast) and prints with an asterisk. Codes must exist in the `diets` registry below. The marks drafted here were read off the ingredient lists on this menu and have NOT been confirmed by the kitchen — `dietsConfirmed` is false, which puts a warning on the proof. Two deliberate omissions: drinks carry no marks (marking every bottle of water vegetarian is noise), and cured meats, bagged chips and bottled dressings are left unmarked because gluten and sodium in those come from a supplier label nobody has read yet. No wrap is called gluten free: the spinach wrap used to be named as the gluten free option, and that was withdrawn 2026-09-29 because nobody has confirmed which wrap (if any) actually is. Put it back only from the package label. Add marks only from a label or the kitchen, never from a guess. While `dietsConfirmed` is false the PUBLIC /menu page renders no marks at all — no key, no filter, no data attributes, no suitableForDiet — and says so in plain words instead. The tri-fold still shows them, because that is the proof the client reads in order to confirm them.",
   "dietsConfirmed": false,
   "_note_diet_schema": "`schema` is the schema.org RestrictedDiet the code maps to. /menu emits it as suitableForDiet on each item, which is how Google reads a dietary claim — so a code without one is invisible to search, and a WRONG one is a machine-readable false claim. Only `diet` items are emitted, never `dietOnRequest`: 'we can make it that way' is not something structured data can express, and publishing it as though it were would say the item ships gluten-free when it does not.",
   "diets": [
@@ -28,11 +30,11 @@
       "items": [
         {
           "name": "Full Biscuit & Gravy",
-          "price": 9.00
+          "price": 8.00
         },
         {
           "name": "Half Biscuit & Gravy",
-          "price": 5.00
+          "price": 4.50
         },
         {
           "name": "Big Breakfast",
@@ -52,14 +54,11 @@
           "prices": [9.00, 11.00]
         },
         {
-          "_note_variants": "The croissant is a version of this sandwich, not a second item: same fillings, a better roll and two eggs instead of one, which is what the extra $1.50 buys. `variants` rather than `prices` because the two are not sizes and the difference cannot be read off the item name — each option prints its own words. It also has to work on /menu-board, which prints no descriptions: an upgrade explained only in a description is invisible on the wall.",
+          "_note_croissant": "The croissant version (two eggs, $8.00) was dropped 2026-09-29 — too big a sandwich. Croissants are still stocked as a bread, so it may come back in another form; it is not a variant here any more.",
           "name": "Breakfast Sandwich",
-          "description": "One egg, cheese & choice of bacon, sausage or ham. Served on a biscuit or English muffin (wheat, white, rye or 12 grain), or on a croissant with two eggs.",
+          "description": "One egg, cheese & choice of bacon, sausage or ham. Served on a biscuit or English muffin (wheat, white, rye or 12 grain).",
           "dietOnRequest": ["V"],
-          "variants": [
-            { "size": "Biscuit or muffin", "price": 6.50 },
-            { "size": "Croissant, 2 eggs", "price": 8.00 }
-          ]
+          "price": 5.50
         }
       ]
     },
@@ -70,14 +69,14 @@
         { "name": "Toast, Biscuit or English Muffin", "diet": ["V"], "price": 2.50 },
         { "name": "Bacon (4 slices)", "price": 4.50 },
         { "name": "Sausage Patty", "price": 3.00 },
-        { "name": "Fried Potatoes", "diet": ["V", "GF", "LS"], "price": 2.50 },
+        { "name": "Fried Potatoes", "diet": ["V", "GF", "LS"], "price": 3.00 },
         { "name": "Side of Gravy", "price": 2.00 }
       ]
     },
     {
       "id": "wraps",
       "name": "Wraps",
-      "note": "Choice of tortilla, spinach or tomato wrap. The spinach wrap is our gluten free option — ask and we will build any of these on it.",
+      "note": "Choice of flour (white) tortilla, spinach or tomato wrap.",
       "sizing": [
         { "size": "Any wrap", "price": 8.50 }
       ],
@@ -115,95 +114,116 @@
     {
       "id": "sandwiches",
       "name": "Cold Sandwiches",
-      "note": "Served with lettuce, tomato, pickle, onion & cheese on wheat, white, rye, 12 grain or croissant.",
+      "note": "With choice of bread.",
       "items": [
         {
-          "name": "Turkey Sandwich",
-          "price": 8.00
-        },
-        {
-          "name": "Ham Sandwich",
-          "price": 8.00
+          "name": "Clubhouse Sandwich",
+          "description": "Turkey, ham, bacon, cheese, lettuce, tomato & mayo on white toast",
+          "defaultBread": "White toast",
+          "price": 10.00
         },
         {
           "name": "BLT Sandwich",
+          "description": "Bacon, lettuce & tomato",
+          "defaultBread": "White toast",
+          "verify": true,
           "price": 8.00
         },
         {
-          "name": "Chicken Salad Sandwich",
+          "name": "Curry Chicken Salad Sandwich",
+          "defaultBread": "Croissant",
+          "verify": true,
           "price": 8.00
         },
         {
-          "name": "Tuna Salad Sandwich",
+          "name": "Walnut Tuna Salad Sandwich",
+          "defaultBread": "Wheat",
+          "verify": true,
           "price": 8.00
         }
+      ]
+    },
+    {
+      "id": "build_sandwich",
+      "name": "Build Your Own Sandwich",
+      "note": "A salad counts as a meat — tuna salad & bacon is 2 meats. Served with lettuce, tomato, pickle & onion.",
+      "sizing": [
+        { "size": "1 Meat", "price": 8.00 },
+        { "size": "2 Meats", "price": 9.50 },
+        { "size": "3 Meats", "price": 10.00 },
+        { "size": "Half", "price": 4.50 }
+      ],
+      "picks": [
+        { "label": "Meat", "options": ["Turkey", "Ham", "Bacon"] },
+        { "label": "Salad", "options": ["Chicken", "Tuna", "Egg"] },
+        { "label": "Cheese", "options": ["American", "Pepper Jack", "Colby Jack", "Provolone", "Swiss"] },
+        { "label": "Bread", "options": ["Hoagie", "Kaiser", "Croissant", "Wheat", "White", "12 Grain", "Rye"] }
       ]
     },
     {
       "id": "hot_sandwiches",
       "name": "Hot Sandwiches",
-      "note": "Off the griddle. Each one comes on the bread named below.",
-      "items": [
-        {
-          "name": "Grilled Cheese",
-          "description": "American cheese on wheat, white, rye or 12 grain",
-          "diet": ["V"],
-          "price": 5.00
-        },
-        {
-          "name": "Philly Steak Sandwich",
-          "description": "Steak, onions, peppers, mushroom & mozzarella cheese on French roll",
-          "price": 11.00
-        },
-        {
-          "name": "Reuben Sandwich",
-          "description": "Corn beef, Swiss cheese & thousand island dressing on grilled rye",
-          "price": 10.00
-        },
-        {
-          "name": "Clubhouse Sandwich",
-          "description": "Turkey, ham, bacon, cheese, lettuce, tomato & mayo on toast",
-          "price": 10.00
-        }
-      ]
-    },
-    {
-      "id": "burgers",
-      "name": "Burgers or Chicken",
-      "_note_or_chicken": "Every row names both proteins ('… or Chicken') rather than leaving it to the category heading: this category is read one line at a time on a board from across the room, and on a phone the heading has scrolled out of view by the third item. The note below deliberately does NOT repeat it.",
-      "note": "Served on Kaiser roll or wheat bun with lettuce, tomato, pickle & onion.",
+      "_note_or_chicken": "Every burger row names both proteins ('… or Chicken') rather than leaving it to a heading: this category is read one line at a time on a board from across the room, and on a phone the heading has scrolled out of view by the third item. The note below deliberately does NOT repeat it.",
+      "note": "Off the griddle, with choice of bread. Burgers come on a Kaiser roll with lettuce, tomato, pickle & onion.",
       "items": [
         {
           "name": "Hamburger or Chicken",
+          "defaultBread": "Kaiser",
           "price": 8.00
         },
         {
           "name": "Cheeseburger or Chicken",
+          "defaultBread": "Kaiser",
           "price": 8.50
         },
         {
           "name": "Navajo Burger or Chicken",
-          "description": "Green chili, pepper jack cheese, jalapeno mayo",
+          "description": "Green chile, pepper jack cheese, jalapeno mayo",
+          "defaultBread": "Kaiser",
           "price": 10.00
         },
         {
           "name": "Bacon Cheese Burger or Chicken",
           "description": "4 strips bacon & American cheese",
+          "defaultBread": "Kaiser",
           "price": 10.00
         },
         {
           "name": "Mushroom Swiss Burger or Chicken",
           "description": "Mushrooms & Swiss cheese",
+          "defaultBread": "Kaiser",
           "price": 10.00
         },
         {
           "name": "Cordon Bleu Burger or Chicken",
           "description": "Ham & Swiss cheese",
+          "defaultBread": "Kaiser",
           "price": 10.00
         },
         {
           "name": "Patty Melt or Chicken",
           "description": "American & Swiss cheese, grilled onions, on rye",
+          "defaultBread": "Rye",
+          "price": 10.00
+        },
+        {
+          "name": "Grilled Cheese",
+          "description": "American cheese",
+          "diet": ["V"],
+          "defaultBread": "White",
+          "verify": true,
+          "price": 5.00
+        },
+        {
+          "name": "Philly Steak Sandwich",
+          "description": "Steak, onions, peppers, mushroom & mozzarella cheese on hoagie roll",
+          "defaultBread": "Hoagie",
+          "price": 11.00
+        },
+        {
+          "name": "Reuben Sandwich",
+          "description": "Corn beef, Swiss cheese & thousand island dressing on grilled rye",
+          "defaultBread": "Rye",
           "price": 10.00
         }
       ]
@@ -211,7 +231,6 @@
     {
       "id": "salads",
       "name": "Salads",
-      "note": "Any salad can be built without the meat, or with the dressing on the side. Just ask.",
       "sizing": [
         { "size": "Full", "price": 12.00 },
         { "size": "Half", "price": 7.00 }
@@ -241,7 +260,7 @@
         },
         {
           "name": "Healthy Plate",
-          "description": "Grilled chicken or hamburger patty, cottage cheese, hard boiled egg & tomato slices",
+          "description": "Grilled chicken or hamburger patty, cottage cheese, hard boiled egg, tomato slices & fruit",
           "price": 12.00
         },
         {
@@ -265,12 +284,13 @@
       "id": "kids",
       "name": "Kids Meals",
       "sizing": [
-        { "size": "Each", "price": 6.00 }
+        { "size": "12 & under", "price": 6.00 }
       ],
-      "note": "12 & under. One main and one side.",
+      "_note_age": "The age limit lives on the price line, not only in the note: /menu-board prints no category notes, and the limit has to be on the wall as well as on paper.",
+      "note": "One main and one side.",
       "picks": [
-        { "label": "Pick a main", "options": ["Corn Dog", "Chicken Strips", "Hamburger"] },
-        { "label": "Pick a side", "options": ["Cinnamon Apples", "Mac & Cheese", "Tater Tots"] }
+        { "label": "Pick a main", "options": ["Corn Dog", "Chicken Strips", "Hamburger", "Grilled Cheese"] },
+        { "label": "Pick a side", "options": ["Cinnamon Apples", "Mac & Cheese", "Tater Tots", "Fresh Fruit"] }
       ]
     },
     {
@@ -283,7 +303,7 @@
         { "name": "Tortellini Salad", "diet": ["V"], "price": 3.00 },
         { "name": "Cottage Cheese", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Salad of the Day", "price": 3.00 },
-        { "name": "Chips", "description": "Regular, BBQ, Cheetos, Doritos", "diet": ["V"], "price": 1.75 }
+        { "name": "Chips", "description": "Regular, Baked Lays, BBQ, Cheetos, Doritos", "diet": ["V"], "price": 1.75 }
       ]
     },
     {
@@ -292,9 +312,7 @@
       "items": [
         { "name": "Iced Tea / Fountain Drink", "price": 2.00 },
         { "name": "Bottle Water", "price": 1.50 },
-        { "name": "Bottle Tea", "price": 2.00 },
-        { "name": "Bottle Juice", "price": 3.00 },
-        { "name": "Bottle Soda", "price": 3.00 }
+        { "name": "Bottle Juice", "price": 3.00 }
       ]
     }
   ]

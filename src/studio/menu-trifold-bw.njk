@@ -1,0 +1,22 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Menu, tri-fold (black & white)"
+canvasW: "11in"
+canvasH: "8.5in"
+pageSize: "11in 8.5in"
+pageCss: "/assets/css/menu-trifold.css"
+bw: true
+
+tags: studio
+studioTitle: "Menu — tri-fold, black & white"
+studioCategory: "Menus"
+studioSize: "11 × 8.5 in landscape · duplex, 2 pages · letter-fold · one ink"
+studioNote: "The tri-fold for a black-only printer or the copier. Same data and same fold as the colour tri-fold — print duplex, flip on SHORT edge, letter-fold — so the two can never disagree. Differences: every colour is ink, the cover title is set in type instead of the teal wordmark box (the colour tri-fold keeps the logo), and the back panel drops its 'Visit us' block, which only repeated the cover. Same dietary-marks caution as the colour piece."
+studioW: 1056
+studioH: 1940
+studioOrder: 22
+---
+
+{#- Same sheets as menu-trifold.njk; `bw: true` above is the only switch.
+    See partials/menu-trifold-sheets.njk for what it changes. -#}
+{% include "partials/menu-trifold-sheets.njk" %}

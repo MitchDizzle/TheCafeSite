@@ -242,18 +242,23 @@ function printPdf(browser, url, outFile) {
   let failed = 0;
   for (const piece of pieces) {
     const url = `http://127.0.0.1:${port}${piece.url}`;
-    const png = path.join(DOWNLOADS, `${piece.slug}.png`);
+    // PNG unless the piece asks otherwise. A photograph wants JPG — a PNG of
+    // one is several times the size for no visible gain, and a newspaper's
+    // system may not take PNG at all. Chrome picks the encoder from the
+    // extension, so the format is just the filename.
+    const ext = `.${piece.format}`;
+    const image = path.join(DOWNLOADS, `${piece.slug}${ext}`);
 
-    const ok = await shoot(browser, url, png, piece.w, piece.h, piece.scale);
+    const ok = await shoot(browser, url, image, piece.w, piece.h, piece.scale);
     if (!ok) {
       failed++;
       console.error(`  FAILED  ${piece.slug}`);
       continue;
     }
-    archive(png, ".png");
+    archive(image, ext);
 
     const px = `${piece.w * piece.scale}x${piece.h * piece.scale}`;
-    console.log(`  ${piece.slug.padEnd(26)} ${px.padEnd(12)} ${path.relative(REPO, png)}`);
+    console.log(`  ${piece.slug.padEnd(26)} ${px.padEnd(12)} ${path.relative(REPO, image)}`);
 
     // Anything with a pageSize is meant for paper, so it also gets a vector
     // PDF at that sheet size — one page per artboard, print styles applied.

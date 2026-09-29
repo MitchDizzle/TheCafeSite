@@ -276,7 +276,7 @@
 
 /* Descriptions are set at full body size, not shrunk.
    They used to be 0.875rem at 0.8 opacity, which is where a menu loses an
-   older reader: "Green chili, pepper jack cheese, jalapeno mayo" is the part
+   older reader: "Green chile, pepper jack cheese, jalapeno mayo" is the part
    somebody actually needs in order to decide, and it was the smallest and
    palest type on the page. 1rem at 0.92 keeps the name/description hierarchy
    (the name is bold, the description is not) while clearing roughly 7:1
@@ -385,4 +385,11 @@
     max-width: 60ch;
     font-weight: 700;
     color: var(--accent-dark);
+}
+
+/* A sizing line wraps between pairs ("1 Meat $8.00 · 2 Meats $9.50"),
+   never inside one — a price stranded on the next line from its size
+   reads as belonging to whatever follows it. */
+.sizing-pair {
+    white-space: nowrap;
 }

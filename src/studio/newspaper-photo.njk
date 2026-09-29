@@ -1,0 +1,29 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Newspaper Storefront Photo (1024 × 1024)"
+canvasW: "1024px"
+canvasH: "1024px"
+pageCss: "/assets/css/newspaper-photo.css"
+
+tags: studio
+studioTitle: "Newspaper Storefront Photo"
+studioCategory: "Print"
+studioSize: "1024 × 1024 px · JPG"
+studioNote: "The storefront with the wordmark in the sky, for the Leavenworth monthly paper's October piece. JPG because it is a photograph and that is what a paper's system expects. Send the plain photo alongside it in case the paper will not run an overlay on editorial."
+studioW: 1024
+studioH: 1024
+studioFormat: jpg
+studioOrder: 90
+---
+<div class="canvas npphoto">
+
+    {# The photo is a CSS background rather than an <img> so the scrim can sit
+       in the same stack without a wrapper — and because nothing about this
+       piece is responsive: it is one fixed square. #}
+    <div class="npphoto-scrim" aria-hidden="true"></div>
+
+    <div class="wordmark wordmark--light npphoto-wordmark">
+        {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+    </div>
+
+</div>

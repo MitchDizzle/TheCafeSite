@@ -103,10 +103,20 @@ html {
        equal split wrapped it onto a second line with the price stranded up
        on the first — which reads as a layout fault, not as a long name.
        Column 4 is mostly salads priced on the category line, so it has the
-       width to give away. Re-check these ratios if a long item is added. */
-    grid-template-columns: 1.14fr 0.98fr 1fr 0.88fr;
+       width to give away.
+
+       Re-struck 2026-09-29 when Build Your Own went under the hot sandwiches:
+       column 3 is the tallest column on the board now, and at 1fr "Mushroom
+       Swiss Burger or Chicken" wrapped and cost it the row it did not have.
+       Column 1 had width to spare — the muffin line still fits at 1.02fr.
+       Re-check these ratios if a long item is added. */
+    grid-template-columns: 1.02fr 0.98fr 1.1fr 0.9fr;
     gap: 0 2.2rem;
-    padding: 1.1rem 0 0.6rem;
+    /* Top padding was 1.1rem. Taken down with the category gap below when
+       the 2026-09-29 menu put columns 3 and 4 at the footer rule — spacing,
+       not type, is what gives. The board is now AT CAPACITY: the next item
+       added needs a fifth column or something off, not another squeeze. */
+    padding: 0.7rem 0 0.6rem;
 }
 
 .board-col {
@@ -114,7 +124,7 @@ html {
 }
 
 .bcat + .bcat {
-    margin-top: 1.3rem;
+    margin-top: 1.05rem;
 }
 
 .bcat-name {
@@ -201,7 +211,12 @@ html {
 
 .bpicks {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* One column per pick, set inline from the template: two for the kids
+       meals, four for Build Your Own. Each column is at least as wide as its
+       longest option (see .bpick-option's nowrap) and they share what is
+       left. On this board a wrapped "Pepper / Jack" cost a whole row, and
+       column 3 has no row to spare. */
+    grid-template-columns: repeat(var(--pick-cols, 2), minmax(max-content, 1fr));
     gap: 0.6rem;
 }
 
@@ -223,6 +238,7 @@ html {
 }
 
 .bpick-option {
+    white-space: nowrap;
     font-family: 'Lato', sans-serif;
     font-size: 1.02rem;
     line-height: 1.5;
@@ -301,5 +317,12 @@ html {
 .board-contact {
     margin: 0;
     color: var(--mint);
+    white-space: nowrap;
+}
+
+/* A sizing line wraps between pairs ("1 Meat $8.00 · 2 Meats $9.50"),
+   never inside one — a price stranded on the next line from its size
+   reads as belonging to whatever follows it. */
+.sizing-pair {
     white-space: nowrap;
 }

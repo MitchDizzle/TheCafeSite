@@ -293,7 +293,10 @@
 
 .menu-picks {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* One column per pick, set inline from the template: two for the kids
+       meals, four for Build Your Own. minmax(0, …) so a long option wraps
+       inside its column instead of widening it off the panel. */
+    grid-template-columns: repeat(var(--pick-cols, 2), minmax(0, 1fr));
     gap: 0.14in;
     margin-top: 0.12in;
 }
@@ -425,4 +428,11 @@
     line-height: 1.45;
     color: #4a5a63;
     margin-top: 0.05in;
+}
+
+/* A sizing line wraps between pairs ("1 Meat $8.00 · 2 Meats $9.50"),
+   never inside one — a price stranded on the next line from its size
+   reads as belonging to whatever follows it. */
+.sizing-pair {
+    white-space: nowrap;
 }

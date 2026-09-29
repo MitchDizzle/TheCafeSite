@@ -44,8 +44,8 @@ noSiteJs: true
     column that overruns is drawn straight over the footer rather than
     clipped, and nothing in the build catches it.
 
-    Soup sits in column 1 and the kids meals in column 2 for fit, not for
-    meaning: those two are the only categories small enough to move without
+    Drinks sit in column 1, the kids meals in column 2 and the soup in column 4
+    for fit, not for meaning: those two are the only categories small enough to move without
     unbalancing everything else.
     =========================================================== #}
 
@@ -56,7 +56,7 @@ noSiteJs: true
 {%- set wraps = (menu.categories | where("id", "wraps"))[0] %}
 {%- set sandwiches = (menu.categories | where("id", "sandwiches"))[0] %}
 {%- set hotSandwiches = (menu.categories | where("id", "hot_sandwiches"))[0] %}
-{%- set burgers = (menu.categories | where("id", "burgers"))[0] %}
+{%- set buildSandwich = (menu.categories | where("id", "build_sandwich"))[0] %}
 {%- set salads = (menu.categories | where("id", "salads"))[0] %}
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
 {%- set kids = (menu.categories | where("id", "kids"))[0] %}
@@ -71,7 +71,7 @@ noSiteJs: true
     {%- endif %}
     {%- if c.sizing %}
     <p class="bcat-sizing">
-        {%- for s in c.sizing %}{{ s.size }} {{ s.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+        {%- for s in c.sizing %}<span class="sizing-pair">{{ s.size }} {{ s.price | money }}</span>{% if not loop.last %} &middot; {% endif %}{% endfor -%}
     </p>
     {%- endif %}
     {%- if c.items %}
@@ -112,7 +112,7 @@ noSiteJs: true
     {#- Build-your-own — see _note_picks in menu.json. Two short columns read
         faster from across a room than six rows all carrying the same price. -#}
     {%- if c.picks %}
-    <div class="bpicks">
+    <div class="bpicks" style="--pick-cols: {{ c.picks.length }}">
         {%- for p in c.picks %}
         <div class="bpick">
             <p class="bpick-label">{{ p.label }}</p>
@@ -142,25 +142,27 @@ noSiteJs: true
         <div class="board-col">
             {{ category(breakfast) }}
             {{ category(breakfastSides) }}
-            {{ category(soup) }}
+            {{ category(drinks) }}
         </div>
         <div class="board-col">
             {{ category(wraps) }}
             {{ category(sandwiches) }}
             {{ category(kids) }}
         </div>
-        {#- Everything off the griddle in one column. See _note_hot_cold in
-            menu.json: the hot sandwiches belong beside the burgers, not with
-            the deli case in the column to the left. -#}
+        {#- Everything off the griddle, then Build Your Own. Build Your Own
+            belongs with the cold sandwiches, but at seven breads tall it does
+            not fit under them and the wraps; this is the only column with
+            room for it. See _note_hot_cold in menu.json. -#}
         <div class="board-col">
-            {{ category(burgers) }}
             {{ category(hotSandwiches) }}
-            {{ category(drinks) }}
+            {{ category(buildSandwich) }}
         </div>
         <div class="board-col">
             {{ category(salads) }}
             {{ category(sides) }}
+            {{ category(soup) }}
         </div>
+    </div>
     </div>
 
     {#- Two rows, not one. The advisory is a full-width line of its own above
