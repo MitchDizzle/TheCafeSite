@@ -191,7 +191,7 @@ pageCss: "/assets/css/menu.css"
     rendered whenever the filter mount above is. -#}
 <section class="section section--alt menu-diet" aria-labelledby="diet-heading">
     <div class="container">
-        <h2 id="diet-heading" class="menu-diet-heading">Eating gluten free, vegetarian or low sodium?</h2>
+        <h2 id="diet-heading" class="menu-diet-heading">Eating gluten free or vegetarian?</h2>
 
         {%- if menu.dietsConfirmed %}
         <dl class="diet-key">
@@ -213,7 +213,7 @@ pageCss: "/assets/css/menu.css"
             Setting `dietsConfirmed` in menu.json swaps this for the key,
             the filter above the list, and the marks on every item. -#}
         <p class="diet-pending">
-            We are still working out which items are gluten free, vegetarian and low sodium. We would rather tell you nothing than tell you wrong.
+            We are still working out which items are gluten free and vegetarian. We would rather tell you nothing than tell you wrong.
             <a href="tel:{{ site.phoneHref }}">Call us at {{ site.phone }}</a> and we will talk you through what the kitchen can make for you.
         </p>
         {%- endif %}
@@ -234,9 +234,9 @@ pageCss: "/assets/css/menu.css"
 <section class="section menu-cta" aria-labelledby="menu-cta-heading">
     <div class="container">
         <h2 id="menu-cta-heading">Feeding a crowd?</h2>
-        <p class="menu-cta-copy">Trays, box lunches and full-service catering for offices, churches, funerals and family gatherings, built around your date and your guests&rsquo; needs.</p>
+        <p class="menu-cta-copy">Lunch for the office, the crew or the whole family, packed and ready for pickup. For more than 10 people, give us at least 12 hours&rsquo; notice.</p>
         <p class="menu-cta-actions">
-            <a href="/catering" class="btn btn-primary">Catering &amp; booking</a>
+            <a href="/catering" class="btn btn-primary">Request catering</a>
             <a href="tel:{{ site.phoneHref }}" class="btn btn-outline">Call {{ site.phone }}</a>
         </p>
     </div>

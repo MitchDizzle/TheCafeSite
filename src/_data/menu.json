@@ -7,15 +7,14 @@
   "_note_flat_price": "A category whose items all cost the same carries ONE `sizing` line (wraps, kids meals) instead of repeating the number on every row — the same mechanism the salads use for Full/Half. Changing that price is then a one-line edit and there is no way for two rows to disagree. An item inside such a category may still carry its own `price`, which wins and prints on its row: that is how the two plates sit under the salads' Full/Half line. Trade-off, accepted: an item with no price of its own emits no schema.org Offer.",
   "_note_picks": "`picks` is a build-your-own category: a list of columns, each with a `label` and its `options`, printed side by side instead of as priced rows. It exists for the kids meals, where three mains x three sides as priced rows would be six rows all saying $6.00. A category with `picks` and no `items` is legal — every template guards the item list — and the JSON-LD flattens the options into MenuItems so the section is never published empty.",
   "_note_hot_cold": "Sandwiches are split into two categories, not one. 'Cold Sandwiches' is the deli case; 'Hot Sandwiches' is everything off the flat-top — the burgers AND the griddle sandwiches, merged into one category on 2026-09-29 at the client's call (they were 'Burgers or Chicken' plus a separate 'Hot Sandwiches'). The Clubhouse moved to the cold side at the same time. Every item names its DEFAULT bread — that default is what goes into Square as the item, and a bread swap is a modifier there — while the category note says the bread is a choice.",
-  "_note_build_sandwich": "'Build Your Own Sandwich' is its own category rather than rows inside Cold Sandwiches, so its prices never read as pricing the Clubhouse. The prices are ordinary priced rows (1 / 2 / 3 meats, half) rather than a `sizing` line: four pairs on one line wrapped mid-list on every layout and were hard to read down. The chicken, tuna and egg salads sit in the SAME column as the meats because they count as one — the layout says it, so no sentence has to. Options are `picks`, like the kids meals.",
-  "_note_default_bread": "`defaultBread` is the bread a sandwich comes on when the customer does not ask — the item as it goes into Square, where any other bread is a modifier. It is DATA ONLY and prints nowhere: the menus say 'with choice of bread' instead, and a bread line on every row would overrun the tri-fold. The defaults other than the Clubhouse (white toast, from the client) and the breads already named in descriptions were picked 2026-09-29 as each sandwich's best version and are marked `verify: true` until the kitchen agrees.",
-  "_note_diet": "Dietary marks are a data feature, not a nutrition claim. `diet` lists what an item IS as served; `dietOnRequest` lists what the kitchen can make it into if asked (drop the meat, hold the toast) and prints with an asterisk. Codes must exist in the `diets` registry below. The marks drafted here were read off the ingredient lists on this menu and have NOT been confirmed by the kitchen — `dietsConfirmed` is false, which puts a warning on the proof. Two deliberate omissions: drinks carry no marks (marking every bottle of water vegetarian is noise), and cured meats, bagged chips and bottled dressings are left unmarked because gluten and sodium in those come from a supplier label nobody has read yet. No wrap is called gluten free: the spinach wrap used to be named as the gluten free option, and that was withdrawn 2026-09-29 because nobody has confirmed which wrap (if any) actually is. Put it back only from the package label. Add marks only from a label or the kitchen, never from a guess. While `dietsConfirmed` is false the PUBLIC /menu page renders no marks at all — no key, no filter, no data attributes, no suitableForDiet — and says so in plain words instead. The tri-fold still shows them, because that is the proof the client reads in order to confirm them.",
+  "_note_build_sandwich": "'Build Your Own Sandwich' is its own category rather than rows inside Cold Sandwiches, so its prices never read as pricing the Clubhouse. The prices are ordinary priced rows (1 / 2 / 3 meats, half) rather than a `sizing` line: four pairs on one line wrapped mid-list on every layout and were hard to read down. The salads — curry chicken, walnut tuna and egg — sit in the SAME column as the meats because they count as one — the layout says it, so no sentence has to. Options are `picks`, like the kids meals. The curry chicken and walnut tuna salads are sold ONLY here: they were also separate Cold Sandwiches until 2026-09-30, removed because Build Your Own already covers them.",
+  "_note_default_bread": "`defaultBread` is the bread a sandwich comes on when the customer does not ask — the item as it goes into Square, where any other bread is a $0 modifier. It is DATA ONLY and prints nowhere: the menus say 'with choice of bread' instead, and a bread line on every row would overrun the tri-fold. The rule, from the client 2026-09-30: WHITE unless the item names its own bread (Kaiser for burgers, rye for the Reuben and Patty Melt, hoagie for the Philly). Some sandwiches default to TOASTED white (Clubhouse, BLT) — that is part of the value, so 'White toast' and 'White' are different defaults. Toasting is a Square modifier either way.",
+  "_note_diet": "Dietary marks are a data feature, not a nutrition claim. `diet` lists what an item IS as served; `dietOnRequest` lists what the kitchen can make it into if asked (drop the meat, hold the toast) and prints with an asterisk. Codes must exist in the `diets` registry below. The marks drafted here were read off the ingredient lists on this menu and have NOT been confirmed by the kitchen — `dietsConfirmed` is false, which puts a warning on the proof. Two deliberate omissions: drinks carry no marks (marking every bottle of water vegetarian is noise), and cured meats, bagged chips and bottled dressings are left unmarked because the gluten in those comes from a supplier label nobody has read yet. There is no low sodium mark: it was removed 2026-09-29 at the client's call (it was the LS code, mapped to schema.org LowSaltDiet) — do not reintroduce it without them. No wrap is called gluten free: the spinach wrap used to be named as the gluten free option, and that was withdrawn 2026-09-29 because nobody has confirmed which wrap (if any) actually is. Put it back only from the package label. Add marks only from a label or the kitchen, never from a guess. While `dietsConfirmed` is false the PUBLIC /menu page renders no marks at all — no key, no filter, no data attributes, no suitableForDiet — and says so in plain words instead. The tri-fold still shows them, because that is the proof the client reads in order to confirm them.",
   "dietsConfirmed": false,
   "_note_diet_schema": "`schema` is the schema.org RestrictedDiet the code maps to. /menu emits it as suitableForDiet on each item, which is how Google reads a dietary claim — so a code without one is invisible to search, and a WRONG one is a machine-readable false claim. Only `diet` items are emitted, never `dietOnRequest`: 'we can make it that way' is not something structured data can express, and publishing it as though it were would say the item ships gluten-free when it does not.",
   "diets": [
     { "code": "GF", "name": "Gluten free", "schema": "https://schema.org/GlutenFreeDiet" },
-    { "code": "V", "name": "Vegetarian", "schema": "https://schema.org/VegetarianDiet" },
-    { "code": "LS", "name": "Low sodium", "schema": "https://schema.org/LowSaltDiet" }
+    { "code": "V", "name": "Vegetarian", "schema": "https://schema.org/VegetarianDiet" }
   ],
   "_note_health": "The consumer advisory. This is the FDA Food Code's REMINDER — the general statement that undercooked animal foods carry a risk. It is triggered by eggs cooked to order (the omelets, the over-easy egg on a breakfast sandwich) and by burgers cooked to a customer's temperature, which is most of what this kitchen sells before 11am and a good deal of what it sells after. Seafood and shellfish are deliberately NOT in the wording: nothing on this menu is raw seafood, the tuna is canned, and listing foods a kitchen does not serve trains people to skip the line. Put them back the day a raw item goes on. The advisory has a SECOND half the Food Code calls the DISCLOSURE — marking WHICH items can be served raw or undercooked, usually with an asterisk on the item. That half is NOT implemented: it needs the kitchen to say which items they will cook to order, and a guessed asterisk is worse than none. Ask before adding it. Unlike the dietary marks, this is not gated behind dietsConfirmed and it is never proof-only. It prints, on every surface, always. It is the one line on this menu that exists for somebody who could get hurt.",
   "healthNote": "Consuming raw or undercooked meats, poultry or eggs may increase your risk of foodborne illness, especially if you have certain medical conditions.",
@@ -54,9 +53,9 @@
           "prices": [9.00, 11.00]
         },
         {
-          "_note_croissant": "The croissant version (two eggs, $8.00) was dropped 2026-09-29 — too big a sandwich. Croissants are still stocked as a bread, so it may come back in another form; it is not a variant here any more.",
+          "_note_croissant": "The menu names three bases — biscuit, croissant, English muffin — and nothing else (client, 2026-09-30). Online (Square) the other breads are offered too, as $0 choices, but the printed menus list only these three. Not to be confused with the earlier croissant VERSION (two eggs, $8.00), which was dropped 2026-09-29 as too big: the croissant here is just the bread, same sandwich, same price.",
           "name": "Breakfast Sandwich",
-          "description": "One egg, cheese & choice of bacon, sausage or ham. Served on a biscuit or English muffin (wheat, white, rye or 12 grain).",
+          "description": "One egg, cheese & choice of bacon, sausage or ham, on a biscuit, croissant or English muffin.",
           "dietOnRequest": ["V"],
           "price": 5.50
         }
@@ -69,7 +68,7 @@
         { "name": "Toast, Biscuit or English Muffin", "diet": ["V"], "price": 2.50 },
         { "name": "Bacon (4 slices)", "price": 4.50 },
         { "name": "Sausage Patty", "price": 3.00 },
-        { "name": "Fried Potatoes", "diet": ["V", "GF", "LS"], "price": 3.00 },
+        { "name": "Fried Potatoes", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Side of Gravy", "price": 2.00 }
       ]
     },
@@ -126,19 +125,6 @@
           "name": "BLT Sandwich",
           "description": "Bacon, lettuce & tomato",
           "defaultBread": "White toast",
-          "verify": true,
-          "price": 8.00
-        },
-        {
-          "name": "Curry Chicken Salad Sandwich",
-          "defaultBread": "Croissant",
-          "verify": true,
-          "price": 8.00
-        },
-        {
-          "name": "Walnut Tuna Salad Sandwich",
-          "defaultBread": "Wheat",
-          "verify": true,
           "price": 8.00
         }
       ]
@@ -154,7 +140,7 @@
         { "name": "Half Sandwich", "price": 4.50 }
       ],
       "picks": [
-        { "label": "Meats & Salads", "options": ["Turkey", "Ham", "Bacon", "Chicken Salad", "Tuna Salad", "Egg Salad"] },
+        { "label": "Meats & Salads", "options": ["Turkey", "Ham", "Bacon", "Curry Chicken Salad", "Walnut Tuna Salad", "Egg Salad"] },
         { "label": "Cheese", "options": ["American", "Pepper Jack", "Colby Jack", "Provolone", "Swiss"] },
         { "label": "Bread", "options": ["Hoagie", "Kaiser", "Croissant", "Wheat", "White", "12 Grain", "Rye"] }
       ]
@@ -210,7 +196,6 @@
           "description": "American cheese",
           "diet": ["V"],
           "defaultBread": "White",
-          "verify": true,
           "price": 5.00
         },
         {
@@ -298,7 +283,7 @@
       "items": [
         { "name": "Potato Salad", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Pasta Salad", "diet": ["V"], "price": 3.00 },
-        { "name": "Cucumber Salad", "diet": ["V", "GF", "LS"], "price": 3.00 },
+        { "name": "Cucumber Salad", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Tortellini Salad", "diet": ["V"], "price": 3.00 },
         { "name": "Cottage Cheese", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Salad of the Day", "price": 3.00 },

@@ -299,7 +299,7 @@
        is left — a wrapped "Meats & / Salads" or "Pepper / Jack" cost a
        whole line on a panel with none to spare. */
     grid-template-columns: repeat(var(--pick-cols, 2), minmax(max-content, 1fr));
-    gap: 0.14in;
+    gap: 0.14in 0.22in;
     margin-top: 0.12in;
 }
 

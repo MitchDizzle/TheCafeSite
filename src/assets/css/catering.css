@@ -53,47 +53,6 @@
 
         .form-submit { margin-top: 0.5rem; }
 
-        .form-section-heading {
-            grid-column: 1 / -1;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
-            font-weight: 400;
-            color: var(--text-dark);
-            padding-top: 0.75rem;
-            border-top: 1px solid rgba(var(--text-dark-rgb), 0.12);
-            margin-top: 0.5rem;
-        }
-
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem 1.4rem;
-            margin-top: 0.25rem;
-        }
-
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.45rem;
-            font-size: 0.88rem;
-            text-transform: none;
-            letter-spacing: 0;
-            cursor: pointer;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-            padding: 0;
-            border: none;
-            accent-color: var(--accent);
-            cursor: pointer;
-        }
-
-        .form-hint {
-            font-size: 0.78rem;
-            color: rgba(var(--text-dark-rgb), 0.55);
-        }
-
         .form-privacy {
             font-size: 0.78rem;
             color: rgba(var(--text-dark-rgb), 0.55);

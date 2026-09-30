@@ -7,7 +7,8 @@
     "start": "eleventy --serve",
     "clean": "node -e \"require('fs').rmSync('_site',{recursive:true,force:true})\"",
     "build": "npm run clean && eleventy && node scripts/export-studio.js",
-    "export": "eleventy && node scripts/export-studio.js"
+    "export": "eleventy && node scripts/export-studio.js",
+    "square": "python scripts/square-catalog.py"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0"

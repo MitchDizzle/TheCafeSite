@@ -1,5 +1,5 @@
 {#- ===========================================================
-    Dietary marks — GF / V / LS, rendered next to an item name.
+    Dietary marks — GF / V, rendered next to an item name.
 
     Shared by the HTML surfaces that show the menu to a customer: /menu and
     the 1080p kitchen-facing board. Both call it through the same gate.
@@ -21,7 +21,7 @@
 
     `diets` is passed in rather than read from context so the macro has no
     hidden dependency on a global; the order of that registry is what makes
-    GF/V/LS always read left to right the same way, everywhere.
+    GF/V always read left to right the same way, everywhere.
     =========================================================== -#}
 {%- macro dietMarks(item, diets) -%}
 {%- set served = item.diet or [] -%}

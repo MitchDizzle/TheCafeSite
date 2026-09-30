@@ -1,46 +1,56 @@
 ---
 layout: layouts/page.njk
 title: "Catering | The Café"
-description: "Book catering from The Café in Leavenworth, KS. Office lunches, meetings, and events. Send a booking request online or call to order."
-ogDescription: "Catering for offices, meetings, and events in Leavenworth, KS. Book online or call to order."
+description: "Catering from The Café in Leavenworth, KS: lunch for the office, the crew or the family, packed and ready for pickup. Call, email or send a request online."
+ogDescription: "Group lunches packed and ready for pickup in Leavenworth, KS. Call, email or send a request online."
 pageCss: "/assets/css/catering.css"
 ---
 <!-- The menu now has its own page at /menu, built from src/_data/menu.json
              and linked from the nav — the old packages/bundle markup that used to
              sit here is in git history. -->
 
-        <!-- ── Booking Form ─────────────────────────────────── -->
+<!-- Catering is SELF-SERVE PICKUP (client, 2026-09-29): a group lunch ordered
+     ahead and collected at the counter. This form only collects enough to call
+     or email the customer back — the details are settled in that conversation,
+     not here. The old full-service fields (event location, service style,
+     budget, linen / china / servers checkboxes, a 15-guest minimum) were
+     removed on purpose; do not add them back without the client. The notice
+     times and payment methods below came from the client the same day. -->
+
         <section class="section" id="inquiry" aria-labelledby="inquiry-heading">
             <div class="container">
-                <h1 id="inquiry-heading">Book a Catering</h1>
+                <h1 id="inquiry-heading">Feeding a crowd?</h1>
                 <p style="margin-top: 0.75rem; max-width: 55ch;">
-                    Tell us about your event and we'll follow up with availability and a custom quote.
+                    Lunch for the office, the crew or the whole family, packed and ready for you to pick up.
+                    Send us the basics below and we&rsquo;ll reach out to go over the details.
                 </p>
 
                 <div class="call-strip">
-                    Fastest way to book: call us at <a href="tel:+19135479994">(913) 547-9994</a>.
-                    <!-- TODO: confirm phone number + lead time with client -->
+                    <p><strong>More than 10 people?</strong> Please give us at least 12 hours&rsquo; notice.
+                    Larger custom catering needs a few weeks.</p>
+                    <p style="margin-top: 0.5rem;">We take cash, check or card. Rather talk it through? Call
+                    <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a> or email
+                    <a href="mailto:{{ site.email }}">{{ site.email }}</a>.</p>
                 </div>
 
                 <form action="https://formspree.io/f/xzdlnpnw" method="POST" novalidate
-                      data-success="Thank you! Your booking request is on its way. We'll follow up with availability and a custom quote.">
+                      data-success="Thank you! Your catering request is on its way. We'll reach out soon to go over the details.">
 
                     <!-- honeypot: humans never see or fill this -->
                     <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
                            style="position:absolute; left:-9999px;" aria-hidden="true">
-                    <input type="hidden" name="_subject" value="Catering booking request: website form">
+                    <input type="hidden" name="_subject" value="Catering request: website form">
 
                     <div class="form-grid">
 
-                        <!-- ── Contact ── -->
                         <div class="form-group">
                             <label for="name">Name <span style="color:var(--accent-dark)">*</span></label>
                             <input type="text" id="name" name="name" autocomplete="name" required placeholder="Jane Smith">
                         </div>
 
                         <div class="form-group">
-                            <label for="org">Company / Organization</label>
-                            <input type="text" id="org" name="organization" autocomplete="organization" placeholder="Optional">
+                            <label for="phone">Phone <span style="color:var(--accent-dark)">*</span></label>
+                            <input type="tel" id="phone" name="phone" autocomplete="tel" required placeholder="(555) 000-0000">
                         </div>
 
                         <div class="form-group">
@@ -49,86 +59,35 @@ pageCss: "/assets/css/catering.css"
                         </div>
 
                         <div class="form-group">
-                            <label for="phone">Phone <span style="color:var(--accent-dark)">*</span></label>
-                            <input type="tel" id="phone" name="phone" autocomplete="tel" required placeholder="(555) 000-0000">
-                        </div>
-
-                        <!-- ── Event Details ── -->
-                        <h3 class="form-section-heading">Event Details</h3>
-
-                        <div class="form-group">
-                            <label for="event-name">Name of Event</label>
-                            <input type="text" id="event-name" name="event_name" placeholder="Birthday party, corporate lunch…">
+                            <label for="org">Company / Organization</label>
+                            <input type="text" id="org" name="organization" autocomplete="organization" placeholder="Optional">
                         </div>
 
                         <div class="form-group">
-                            <label for="event-location">Event Location</label>
-                            <input type="text" id="event-location" name="event_location" placeholder="Venue or address">
+                            <label for="date">Pickup Date <span style="color:var(--accent-dark)">*</span></label>
+                            <input type="date" id="date" name="pickup_date" required>
                         </div>
 
                         <div class="form-group">
-                            <label for="date">Event Date <span style="color:var(--accent-dark)">*</span></label>
-                            <input type="date" id="date" name="event_date" required>
+                            <label for="time">Pickup Time</label>
+                            <input type="time" id="time" name="pickup_time">
                         </div>
 
                         <div class="form-group">
-                            <label for="guests">Guest Count <span style="color:var(--accent-dark)">*</span></label>
-                            <input type="number" id="guests" name="guest_count" min="15" required placeholder="Minimum 15">
-                            <span class="form-hint">Minimum 15 guests</span>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="start-time">Start Time</label>
-                            <input type="time" id="start-time" name="start_time">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="end-time">End Time</label>
-                            <input type="time" id="end-time" name="end_time">
-                        </div>
-
-                        <!-- ── Service Preferences ── -->
-                        <h3 class="form-section-heading">Service Preferences</h3>
-
-                        <div class="form-group">
-                            <label for="service-style">Style of Service</label>
-                            <select id="service-style" name="service_style">
-                                <option value="">Select one</option>
-                                <option value="Buffet">Buffet</option>
-                                <option value="Sit Down">Sit Down Dinner</option>
-                                <option value="Drop Off">Drop Off</option>
-                                <option value="Appetizer">Appetizer / Reception</option>
-                                <option value="Stations">Stations</option>
-                                <option value="Unsure">Not sure yet</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="budget">Budget (optional)</label>
-                            <input type="text" id="budget" name="budget" placeholder="e.g. $500, open to quote">
+                            <label for="people">How Many People <span style="color:var(--accent-dark)">*</span></label>
+                            <input type="number" id="people" name="people" min="1" required placeholder="e.g. 12">
                         </div>
 
                         <div class="form-group form-group--full">
-                            <label>Additional Items Needed</label>
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" name="extras" value="Table Linen"> Table Linen</label>
-                                <label><input type="checkbox" name="extras" value="China"> China</label>
-                                <label><input type="checkbox" name="extras" value="Servers"> Servers for the meal</label>
-                                <label><input type="checkbox" name="extras" value="Plasticware"> Plasticware</label>
-                                <label><input type="checkbox" name="extras" value="None"> None / Food only</label>
-                            </div>
-                        </div>
-
-                        <div class="form-group form-group--full">
-                            <label for="message">Additional Requests or Requirements</label>
-                            <textarea id="message" name="message" placeholder="Food allergies, dietary restrictions, anything else we should know…"></textarea>
+                            <label for="message">What Are You Looking For?</label>
+                            <textarea id="message" name="message" placeholder="Sandwiches and a couple of salads, items off our menu, or just tell us what you have in mind. Include any allergies or dietary needs."></textarea>
                         </div>
 
                         <div class="form-group form-group--full form-submit">
-                            <button type="submit" class="btn btn-primary">Send Inquiry</button>
+                            <button type="submit" class="btn btn-primary">Send Request</button>
                             <p class="form-privacy" style="margin-top:0.6rem;">
-                                We only use your details to respond to this inquiry.
-                                See our <a href="privacy">privacy policy</a>.
+                                We only use your details to respond to this request.
+                                See our <a href="/privacy">privacy policy</a>.
                             </p>
                         </div>
 

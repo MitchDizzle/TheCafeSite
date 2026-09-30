@@ -15,7 +15,7 @@
 
 {#- Dietary marks. Rendered in the order the codes are declared in
     menu.json's `diets` registry, not the order an item happens to list
-    them, so GF/V/LS always read left to right the same way and the legend
+    them, so GF/V always read left to right the same way and the legend
     matches. `diet` is what the item IS; `dietOnRequest` is what the
     kitchen will make it into if asked, and takes the asterisk. -#}
 {%- macro dietMarks(item) %}
@@ -217,16 +217,17 @@
             Catering here means SELF-SERVE PICKUP (client, 2026-09-29): lunch
             for a group, ordered ahead and collected at the counter. No trays
             list, no buffet / reception / sit-down styles, no guest minimum —
-            those described the old full-service offer and are being taken
-            off /catering too. Do not put them back without the client. -#}
+            those described the old full-service offer and are gone from
+            /catering too. The 12-hour notice matches /catering and /menu. Do not put them back without the client. -#}
         <section class="panel panel-back">
             <div class="panel-note">
                 <p class="p-label panel-note-label ink-accent">Catering</p>
                 <p class="p-display panel-note-head ink-teal">Feeding a crowd?</p>
                 <p class="p-body panel-note-body">Lunch for the office, the crew or the whole family. Give us a heads up and we will have it packed and ready for you to pick up.</p>
+                <p class="p-body panel-note-notice">More than 10 people: at least 12 hours&rsquo; notice, please.</p>
 
                 <p class="p-display panel-note-call ink-teal">Call {{ site.phone }}</p>
-                <p class="p-body panel-note-book">or ask at the counter</p>
+                <p class="p-body panel-note-book">or email {{ site.email }}</p>
             </div>
 
             <div class="panel-spacer"></div>

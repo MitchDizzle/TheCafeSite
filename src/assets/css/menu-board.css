@@ -217,7 +217,7 @@ html {
        left. On this board a wrapped "Pepper / Jack" cost a whole row, and
        column 3 has no row to spare. */
     grid-template-columns: repeat(var(--pick-cols, 2), minmax(max-content, 1fr));
-    gap: 0.6rem;
+    gap: 0.6rem 1.2rem;
 }
 
 .bpick-label {
