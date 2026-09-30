@@ -294,14 +294,17 @@
 .menu-picks {
     display: grid;
     /* One column per pick, set inline from the template: two for the kids
-       meals, four for Build Your Own. minmax(0, …) so a long option wraps
-       inside its column instead of widening it off the panel. */
-    grid-template-columns: repeat(var(--pick-cols, 2), minmax(0, 1fr));
+       meals, three for Build Your Own. Each column is at least as wide as
+       its longest option or label (both nowrap, below) and they share what
+       is left — a wrapped "Meats & / Salads" or "Pepper / Jack" cost a
+       whole line on a panel with none to spare. */
+    grid-template-columns: repeat(var(--pick-cols, 2), minmax(max-content, 1fr));
     gap: 0.14in;
     margin-top: 0.12in;
 }
 
 .menu-pick-label {
+    white-space: nowrap;
     font-size: 0.115in;
 }
 
@@ -311,6 +314,7 @@
 }
 
 .menu-pick-option {
+    white-space: nowrap;
     font-size: 0.15in;
     line-height: 1.5;
 }

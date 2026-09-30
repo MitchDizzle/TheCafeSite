@@ -172,9 +172,9 @@
    or set in type on bare stock.
 
    It also has a second job. Tacked to a board or left on a counter the cover
-   IS the flyer, so it repeats the hours, address, phone and both links that
-   the back panel carries. That duplication is deliberate — nobody unfolds a
-   flyer to find out when it is open. */
+   IS the flyer, so it carries the hours, address, phone and both links —
+   and since 2026-09-29 it is the only panel that does. The back panel used
+   to repeat them; it is the catering pitch now. */
 
 .panel-cover {
     align-items: center;
@@ -293,61 +293,46 @@
 
 /* ── Back panel ───────────────────────────────────────────────
    The face that lies up when the closed piece sits on a table, so it is the
-   one that carries the two QR codes. */
+   one that carries the two QR codes — and, above them, the catering pitch
+   (self-serve pickup; see the note in the template). The hours and address
+   are on the cover only. The catering type is set large on purpose: it is
+   three sentences, and a short pitch in small type just reads as empty. */
 
 .panel-back {
     justify-content: flex-start;
-}
-
-.panel-eyebrow {
-    font-size: 0.13in;
-}
-
-.panel-hours-days {
-    font-size: 0.24in;
-    margin-top: 0.05in;
-}
-
-.panel-hours-time {
-    font-size: 0.2in;
-}
-
-.panel-hours-time .ampm {
-    font-size: 0.6em;
 }
 
 .panel-spacer {
     flex: 1;
 }
 
-.panel-contact {
-    margin-top: 0.22in;
-}
-
-.panel-contact p {
-    font-size: 0.135in;
-    line-height: 1.5;
-}
-
-.panel-phone {
-    font-size: 0.22in;
-    margin-bottom: 0.05in;
-}
-
-.panel-note {
-    margin-top: 0.26in;
-    border-top: 0.015in solid var(--teal);
-    padding-top: 0.16in;
-}
-
 .panel-note-label {
-    font-size: 0.105in;
+    font-size: 0.13in;
+}
+
+/* 0.34in is the most that keeps "Feeding a crowd?" on one line across
+   the panel; 0.4in broke it after "a". */
+.panel-note-head {
+    font-size: 0.34in;
+    line-height: 1.1;
+    margin-top: 0.08in;
 }
 
 .panel-note-body {
-    font-size: 0.115in;
-    line-height: 1.45;
-    margin-top: 0.07in;
+    font-size: 0.17in;
+    line-height: 1.5;
+    margin-top: 0.14in;
+}
+
+.panel-note-call {
+    font-size: 0.26in;
+    margin-top: 0.26in;
+    white-space: nowrap;
+}
+
+.panel-note-book {
+    font-size: 0.15in;
+    margin-top: 0.04in;
 }
 
 /* Two codes across a 3.667in panel with 0.35in padding a side: 2.967in of
@@ -595,14 +580,17 @@
 .menu-picks {
     display: grid;
     /* One column per pick, set inline from the template: two for the kids
-       meals, four for Build Your Own. minmax(0, …) so a long option wraps
-       inside its column instead of widening it off the panel. */
-    grid-template-columns: repeat(var(--pick-cols, 2), minmax(0, 1fr));
-    gap: 0.1in;
+       meals, three for Build Your Own. Each column is at least as wide as
+       its longest option or label (both nowrap, below) and they share what
+       is left — a wrapped "Meats & / Salads" or "Pepper / Jack" cost a
+       whole line on a panel with none to spare. */
+    grid-template-columns: repeat(var(--pick-cols, 2), minmax(max-content, 1fr));
+    gap: 0.1in 0.16in;
     margin-top: 0.1in;
 }
 
 .menu-pick-label {
+    white-space: nowrap;
     font-size: 0.09in;
 }
 
@@ -612,6 +600,7 @@
 }
 
 .menu-pick-option {
+    white-space: nowrap;
     font-size: 0.115in;
     line-height: 1.45;
 }
@@ -700,27 +689,24 @@
     margin-top: 0.08in;
 }
 
-/* The back panel without its "Visit us" block: the catering note becomes
-   the opener, so it loses the rule that separated it from the contact lines
-   above it, and takes the extra room as larger type rather than a gap. */
-.trifold--bw .panel-back .panel-note {
-    margin-top: 0;
-    border-top: none;
-    padding-top: 0;
-}
-
-.trifold--bw .panel-back .panel-note-label {
-    font-size: 0.13in;
-}
-
-.trifold--bw .panel-back .panel-note-body {
-    font-size: 0.14in;
-    line-height: 1.5;
-}
-
 /* A sizing line wraps between pairs ("1 Meat $8.00 · 2 Meats $9.50"),
    never inside one — a price stranded on the next line from its size
    reads as belonging to whatever follows it. */
 .sizing-pair {
     white-space: nowrap;
+}
+
+/* Build Your Own's four price rows, two across: 1 Meat | 2 Meats, then
+   3 Meats | Half Sandwich. Still one leader and one price per row, so they
+   read like every other price on the sheet — but in two rows of height, not
+   four, which is what the middle panel had room for. Tri-fold only; the
+   large print and the board have the height and keep them stacked. */
+.menu-cat--build_sandwich .menu-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.06in 0.22in;
+}
+
+.menu-cat--build_sandwich .menu-item + .menu-item {
+    margin-top: 0;
 }

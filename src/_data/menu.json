@@ -7,7 +7,7 @@
   "_note_flat_price": "A category whose items all cost the same carries ONE `sizing` line (wraps, kids meals) instead of repeating the number on every row — the same mechanism the salads use for Full/Half. Changing that price is then a one-line edit and there is no way for two rows to disagree. An item inside such a category may still carry its own `price`, which wins and prints on its row: that is how the two plates sit under the salads' Full/Half line. Trade-off, accepted: an item with no price of its own emits no schema.org Offer.",
   "_note_picks": "`picks` is a build-your-own category: a list of columns, each with a `label` and its `options`, printed side by side instead of as priced rows. It exists for the kids meals, where three mains x three sides as priced rows would be six rows all saying $6.00. A category with `picks` and no `items` is legal — every template guards the item list — and the JSON-LD flattens the options into MenuItems so the section is never published empty.",
   "_note_hot_cold": "Sandwiches are split into two categories, not one. 'Cold Sandwiches' is the deli case; 'Hot Sandwiches' is everything off the flat-top — the burgers AND the griddle sandwiches, merged into one category on 2026-09-29 at the client's call (they were 'Burgers or Chicken' plus a separate 'Hot Sandwiches'). The Clubhouse moved to the cold side at the same time. Every item names its DEFAULT bread — that default is what goes into Square as the item, and a bread swap is a modifier there — while the category note says the bread is a choice.",
-  "_note_build_sandwich": "'Build Your Own Sandwich' is its own category rather than rows inside Cold Sandwiches: its price line (1 / 2 / 3 meats, half) would otherwise print above the Clubhouse and read as though it priced every sandwich in the case. It uses the same `sizing` + `picks` mechanism as the kids meals. A salad (chicken, tuna, egg) counts as a meat: tuna salad & bacon is the 2-meat price. The category note says so, with that example, because the column layout alone reads as 'meat OR salad'.",
+  "_note_build_sandwich": "'Build Your Own Sandwich' is its own category rather than rows inside Cold Sandwiches, so its prices never read as pricing the Clubhouse. The prices are ordinary priced rows (1 / 2 / 3 meats, half) rather than a `sizing` line: four pairs on one line wrapped mid-list on every layout and were hard to read down. The chicken, tuna and egg salads sit in the SAME column as the meats because they count as one — the layout says it, so no sentence has to. Options are `picks`, like the kids meals.",
   "_note_default_bread": "`defaultBread` is the bread a sandwich comes on when the customer does not ask — the item as it goes into Square, where any other bread is a modifier. It is DATA ONLY and prints nowhere: the menus say 'with choice of bread' instead, and a bread line on every row would overrun the tri-fold. The defaults other than the Clubhouse (white toast, from the client) and the breads already named in descriptions were picked 2026-09-29 as each sandwich's best version and are marked `verify: true` until the kitchen agrees.",
   "_note_diet": "Dietary marks are a data feature, not a nutrition claim. `diet` lists what an item IS as served; `dietOnRequest` lists what the kitchen can make it into if asked (drop the meat, hold the toast) and prints with an asterisk. Codes must exist in the `diets` registry below. The marks drafted here were read off the ingredient lists on this menu and have NOT been confirmed by the kitchen — `dietsConfirmed` is false, which puts a warning on the proof. Two deliberate omissions: drinks carry no marks (marking every bottle of water vegetarian is noise), and cured meats, bagged chips and bottled dressings are left unmarked because gluten and sodium in those come from a supplier label nobody has read yet. No wrap is called gluten free: the spinach wrap used to be named as the gluten free option, and that was withdrawn 2026-09-29 because nobody has confirmed which wrap (if any) actually is. Put it back only from the package label. Add marks only from a label or the kitchen, never from a guess. While `dietsConfirmed` is false the PUBLIC /menu page renders no marks at all — no key, no filter, no data attributes, no suitableForDiet — and says so in plain words instead. The tri-fold still shows them, because that is the proof the client reads in order to confirm them.",
   "dietsConfirmed": false,
@@ -146,16 +146,15 @@
     {
       "id": "build_sandwich",
       "name": "Build Your Own Sandwich",
-      "note": "A salad counts as a meat — tuna salad & bacon is 2 meats. Served with lettuce, tomato, pickle & onion.",
-      "sizing": [
-        { "size": "1 Meat", "price": 8.00 },
-        { "size": "2 Meats", "price": 9.50 },
-        { "size": "3 Meats", "price": 10.00 },
-        { "size": "Half", "price": 4.50 }
+      "note": "Served with lettuce, tomato, pickle & onion.",
+      "items": [
+        { "name": "1 Meat", "price": 8.00 },
+        { "name": "2 Meats", "price": 9.50 },
+        { "name": "3 Meats", "price": 10.00 },
+        { "name": "Half Sandwich", "price": 4.50 }
       ],
       "picks": [
-        { "label": "Meat", "options": ["Turkey", "Ham", "Bacon"] },
-        { "label": "Salad", "options": ["Chicken", "Tuna", "Egg"] },
+        { "label": "Meats & Salads", "options": ["Turkey", "Ham", "Bacon", "Chicken Salad", "Tuna Salad", "Egg Salad"] },
         { "label": "Cheese", "options": ["American", "Pepper Jack", "Colby Jack", "Provolone", "Swiss"] },
         { "label": "Bread", "options": ["Hoagie", "Kaiser", "Croissant", "Wheat", "White", "12 Grain", "Rye"] }
       ]

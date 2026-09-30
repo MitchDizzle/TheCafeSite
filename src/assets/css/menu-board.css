@@ -326,3 +326,24 @@ html {
 .sizing-pair {
     white-space: nowrap;
 }
+
+/* Build Your Own's four price rows, two across, same as the tri-fold:
+   stacked, they cost column 3 the two rows it did not have and pushed the
+   breads through the footer. The option columns get a little air above
+   their labels so the last price row does not read as one of them. */
+.bcat--build_sandwich .bitems {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1.2rem;
+}
+
+.bcat--build_sandwich .bpicks {
+    margin-top: 0.4rem;
+}
+
+/* "Half Sandwich" fits its half of the column with the leader and price,
+   but .bitem-name is allowed to shrink and did — wrapping it cost the row
+   that put "Rye" on the footer rule. */
+.bcat--build_sandwich .bitem-name {
+    white-space: nowrap;
+}

@@ -64,7 +64,7 @@ noSiteJs: true
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
 
 {%- macro category(c) %}
-<section class="bcat">
+<section class="bcat bcat--{{ c.id }}">
     <h2 class="bcat-name">{{ c.name }}</h2>
     {%- if c.serving %}
     <p class="bcat-sizing bcat-serving">{{ c.serving }}</p>
