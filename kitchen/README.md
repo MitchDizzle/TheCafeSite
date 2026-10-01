@@ -9,6 +9,7 @@ Not part of the website. Nothing in this folder is built or uploaded.
 - **Counter orders** rung up on Square POS today. Square marks these finished as soon as they're paid, so they stay on the board until a cook presses **Done**.
 - **Online / pickup orders** due today, starting an hour before pickup time. They leave the board when a cook presses **Done** *or* when the front marks them ready or picked up in Square Order Manager.
 - Items listed in `skipItems` (drinks, chips) are left off. An order made up only of those items doesn't show at all.
+- Amounts typed on the POS keypad show too, under the note typed with them (or "Custom amount"), in case a special or an off-menu plate gets rung up that way.
 
 Header colors:
 
@@ -44,6 +45,13 @@ Header colors:
    - Settings → System → Power: **screen and sleep to Never**.
    - Windows to sign in automatically after a restart (run `netplwiz` and uncheck "Users must enter a user name and password"). Do this only if the kitchen PC is used for nothing else.
    - Windows Update **active hours** to cover service, so the PC doesn't restart mid-lunch.
+
+## When an order doesn't show up
+
+Open **http://localhost:8090/check** in a normal Chrome window. Alt+Tab out of the board, or press Alt+F4 and reopen it with `start-kitchen.bat` afterwards. The page lists every order Square sent on its last check. For each one it says whether it's on the board, and if not, why: cleared with Done, every item on the skip list, pickup still more than an hour away, and so on.
+
+- **If the order is missing from the list entirely**, Square didn't return it. Check the location shown at the top of the page, and check that the token belongs to the cafe's Square account.
+- The minimized **"Kitchen board program"** window logs every new order it sees the same way, along with any errors from Square.
 
 ## Trying it without Square
 

@@ -176,32 +176,42 @@ async function fetchOrders() {
 // ---------------------------------------------------------------- tickets
 
 const DONE_FULFILLMENT = new Set(["PREPARED", "COMPLETED", "CANCELED", "FAILED"]);
-const NOT_FOOD = new Set(["CUSTOM_AMOUNT", "GIFT_CARD"]);
+// Keypad (custom amount) sales DO show: staff may ring a special or an
+// off-menu plate that way, and a missed ticket is worse than an extra one.
+const NOT_FOOD = new Set(["GIFT_CARD"]);
 
+const itemName = (li) => li.name || li.note || "Custom amount";
+
+// Returns { ticket } or { reason } — the reason is what /check shows for an
+// order that came back from Square but isn't on the board.
 function toTicket(order) {
   const f = (order.fulfillments || [])[0];
-  if (f && DONE_FULFILLMENT.has(f.state)) return null; // front already finished it
+  if (f && DONE_FULFILLMENT.has(f.state)) {
+    return { reason: `front already marked it ${f.state.toLowerCase()}` };
+  }
 
-  const items = (order.line_items || [])
+  const lines = order.line_items || [];
+  const items = lines
     .filter((li) => !NOT_FOOD.has(li.item_type))
-    .filter((li) => li.name && !cfg.skip.has(li.name.trim().toLowerCase()))
+    .filter((li) => !cfg.skip.has(itemName(li).trim().toLowerCase()))
     .map((li) => ({
       qty: Number(li.quantity) || 1,
-      name: li.name,
+      name: itemName(li),
       variation:
         li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
       mods: (li.modifiers || []).map((m) =>
         Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name
       ),
-      note: li.note || null,
+      note: li.name && li.note ? li.note : null,
     }));
-  if (!items.length) return null; // drinks-only, gift card, etc.
+  if (!lines.length) return { reason: "no items on the order" };
+  if (!items.length) return { reason: "every item is on the skip list (or a gift card)" };
 
   const details = f && (f.pickup_details || f.delivery_details || f.shipment_details);
   const recipient = details && details.recipient;
   const dueAt = (f && f.pickup_details && f.pickup_details.pickup_at) || null;
 
-  return {
+  return { ticket: {
     id: order.id,
     kind: f ? f.type : "COUNTER", // PICKUP, DELIVERY, SHIPMENT, or COUNTER
     name: (recipient && recipient.display_name) || order.ticket_name || null,
@@ -211,21 +221,25 @@ function toTicket(order) {
     dueAt,
     items,
     note: (details && details.note) || null,
-  };
+  } };
 }
 
-function visible(t, now) {
-  if (bumped[t.id]) return false;
+// null if the ticket belongs on the board, else why not.
+function hiddenReason(t, now) {
+  if (bumped[t.id]) return "cleared with Done";
   const due = Date.parse(t.dueAt || t.createdAt);
   // Today's work only: a stale order from yesterday that nobody closed in
   // Square should not greet the cooks every morning.
-  if (due < startOfToday().getTime()) return false;
-  return due <= now + cfg.showAheadMinutes * 6e4;
+  if (due < startOfToday().getTime()) return "due before today";
+  if (due > now + cfg.showAheadMinutes * 6e4) return "pickup is more than " + cfg.showAheadMinutes + " min away";
+  return null;
 }
 
 // ---------------------------------------------------------------- polling
 
 let all = []; // every ticket from the last good poll, bumped or not
+let rejected = []; // orders Square returned that never became tickets, for /check
+const logged = new Set(); // order ids already announced in the console
 let lastOkAt = null;
 let lastError = null;
 
@@ -234,11 +248,21 @@ async function poll() {
     const orders = MOCK ? mockOrders() : await fetchOrders();
     const seen = new Set();
     all = [];
+    rejected = [];
     for (const o of orders) {
       if (seen.has(o.id)) continue;
       seen.add(o.id);
-      const t = toTicket(o);
-      if (t) all.push(t);
+      const { ticket, reason } = toTicket(o);
+      if (ticket) all.push(ticket);
+      else rejected.push({ order: o, reason });
+      if (!logged.has(o.id)) {
+        logged.add(o.id);
+        const why = ticket ? hiddenReason(ticket, Date.now()) : reason;
+        console.log(
+          `${new Date().toLocaleTimeString()}  order ...${o.id.slice(-4)}: ` +
+            (why ? `not shown (${why})` : "on the board")
+        );
+      }
     }
     lastOkAt = new Date().toISOString();
     if (lastError) console.log("Square connection restored");
@@ -254,7 +278,7 @@ async function poll() {
 function snapshot() {
   const now = Date.now();
   const tickets = all
-    .filter((t) => visible(t, now))
+    .filter((t) => !hiddenReason(t, now))
     .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
   return { tickets, lastOkAt, error: lastError, mock: MOCK };
 }
@@ -342,6 +366,56 @@ function mockOrders() {
   return orders;
 }
 
+// ---------------------------------------------------------------- /check
+
+// A plain troubleshooting page: every order Square returned on the last poll
+// and whether it's on the board, and if not, why. Open
+// http://localhost:8090/check in a normal Chrome window.
+function checkPage() {
+  const esc = (v) =>
+    String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const now = Date.now();
+  const rows = [
+    ...all.map((t) => ({
+      id: t.id,
+      created: t.createdAt,
+      kind: t.kind,
+      items: t.items.map((i) => `${i.qty}× ${i.name}`).join(", "),
+      status: hiddenReason(t, now) || "ON THE BOARD",
+    })),
+    ...rejected.map(({ order: o, reason }) => ({
+      id: o.id,
+      created: o.created_at,
+      kind: ((o.fulfillments || [])[0] || {}).type || "COUNTER",
+      items: (o.line_items || [])
+        .map((li) => `${li.quantity}× ${itemName(li)} [${li.item_type || "ITEM"}]`)
+        .join(", "),
+      status: reason,
+    })),
+  ].sort((a, b) => Date.parse(b.created) - Date.parse(a.created));
+
+  const status = lastError
+    ? `<p style="color:#A02F26"><b>Square error:</b> ${esc(lastError)}</p>`
+    : `<p>Last successful check with Square: ${lastOkAt ? esc(new Date(lastOkAt).toLocaleTimeString()) : "not yet"}</p>`;
+  return `<!DOCTYPE html><meta charset="utf-8"><title>Kitchen board check</title>
+<style>body{font:16px system-ui,sans-serif;margin:24px;color:#22323A}table{border-collapse:collapse;width:100%}
+td,th{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top}th{background:#EEE}</style>
+<h1>Kitchen board check</h1>
+${MOCK ? "<p><b>TEST MODE</b> — fake orders, not Square.</p>" : ""}
+<p>Locations: ${esc(locationIds.join(", ") || "not looked up yet")} · Showing counter sales since
+${esc(startOfToday().toLocaleString())} and pickups due within ${cfg.showAheadMinutes} min.</p>
+${status}
+<p>${rows.length} order(s) came back from Square. Refresh to update.</p>
+<table><tr><th>Created</th><th>Order</th><th>Type</th><th>Items</th><th>Board</th></tr>
+${rows
+  .map(
+    (r) => `<tr><td>${esc(new Date(r.created).toLocaleTimeString())}</td><td>...${esc(r.id.slice(-6))}</td>
+<td>${esc(r.kind)}</td><td>${esc(r.items)}</td><td>${esc(r.status)}</td></tr>`
+  )
+  .join("")}
+</table>`;
+}
+
 // ---------------------------------------------------------------- http
 
 function send(res, status, body, type = "application/json; charset=utf-8") {
@@ -368,6 +442,9 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "GET" && url.pathname === "/") {
     return send(res, 200, fs.readFileSync(BOARD_FILE, "utf8"), "text/html; charset=utf-8");
+  }
+  if (req.method === "GET" && url.pathname === "/check") {
+    return send(res, 200, checkPage(), "text/html; charset=utf-8");
   }
   if (req.method === "GET" && url.pathname === "/api/tickets") {
     return send(res, 200, snapshot());
