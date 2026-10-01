@@ -460,6 +460,18 @@ const server = http.createServer(async (req, res) => {
   send(res, 404, { error: "not found" });
 });
 
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(
+      `Port ${cfg.port} is already in use: another copy of the board program is running.
+` +
+        "Close every \"Kitchen board program\" window (or restart the PC), then run start-kitchen.bat."
+    );
+    process.exit(1);
+  }
+  throw err;
+});
+
 // 127.0.0.1 only: the board is for this PC's own screen, not the network.
 server.listen(cfg.port, "127.0.0.1", () => {
   console.log(`Kitchen board on http://localhost:${cfg.port}${MOCK ? "  (MOCK ORDERS)" : ""}`);

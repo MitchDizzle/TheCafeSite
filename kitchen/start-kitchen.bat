@@ -4,6 +4,9 @@ rem Put a shortcut to this file in shell:startup so it runs at sign-in.
 cd /d "%~dp0"
 if "%~1"=="server" goto server
 
+rem Close a board program that is already running, so a restart (say,
+rem after a git pull) always runs the current code.
+taskkill /FI "WINDOWTITLE eq Kitchen board program*" /T /F >nul 2>&1
 start "Kitchen board program" /min "%~f0" server
 timeout /t 4 /nobreak >nul
 
