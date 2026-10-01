@@ -1,0 +1,53 @@
+/* ============================================================
+   iPad wallpaper — 1366 × 1366 artboard, exported at 2x (2732 px)
+   Piece: src/studio/ipad-wallpaper.njk
+
+   The profile picture's ground and wordmark treatment, so the counter
+   iPad, the Facebook page and the site's first screen read as one brand.
+   No guide ring: that exists only for Facebook's circle crop.
+   ============================================================ */
+
+.ipad {
+    background:
+        /* A soft lift behind the mark so it doesn't float on a flat field;
+           the corners fall away darker, which also keeps home-screen icon
+           labels readable wherever they land. */
+        radial-gradient(circle at 50% 56%, rgba(142, 217, 212, 0.14) 0%, rgba(142, 217, 212, 0) 46%),
+        linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    display: grid;
+    place-items: center;
+}
+
+/* Nudged below centre, clear of the lock-screen clock. 40px of 1366 is
+   small enough that the mark still reads as centred. */
+.ipad-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transform: translateY(40px);
+}
+
+.ipad-wordmark {
+    /* piece.css derives width AND the coral offset from this one value.
+       620px wide stays well inside the 1024px safe square with room for
+       the stroke and shadow. */
+    --mark-w: 620px;
+}
+
+.ipad-filigree {
+    width: 300px;
+    margin-top: 30px;
+    color: var(--mint);
+    opacity: 0.85;
+}
+
+.ipad-eyebrow {
+    font-size: 24px;
+    color: var(--cream);
+    opacity: 0.8;
+    margin-top: 22px;
+    /* .p-eyebrow tracks its letters, including after the last one; a
+       matching indent re-centres the line. */
+    text-indent: 0.3em;
+}

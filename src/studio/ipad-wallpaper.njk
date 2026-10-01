@@ -1,0 +1,39 @@
+---
+layout: layouts/piece.njk
+title: "The Café — iPad Wallpaper (2732 × 2732)"
+canvasW: "1366px"
+canvasH: "1366px"
+pageCss: "/assets/css/ipad-wallpaper.css"
+
+tags: studio
+studioTitle: "iPad wallpaper"
+studioCategory: "Devices"
+studioSize: "2732 × 2732 px · square, fits any iPad in either orientation"
+studioNote: "Save the PNG to the iPad, then Settings → Wallpaper → Add New Wallpaper → Photos. Square on purpose: iPadOS crops the wallpaper to the screen and re-crops when the iPad turns, so one square at the largest iPad resolution (12.9in Pro, 2732 px) covers every model both ways. Turn Perspective Zoom off, or the logo drifts as the iPad tilts. The logo sits inside the middle 1024 px of the artboard — the part that survives both the portrait and the landscape crop."
+studioW: 1366
+studioH: 1366
+studioExportScale: 2
+studioOrder: 10
+---
+{#- Drawn at 1366 px (the 12.9in iPad's long side in points) and exported
+    at 2x, so the PNG is 2732 px — native for the largest iPad, and the
+    wordmark stays vector-sharp because the browser draws it at that size
+    rather than scaling a bitmap.
+
+    Everything sits inside the middle 1024 px square. A 4:3 iPad shows a
+    1024 x 1366 slice of this square in portrait and a 1366 x 1024 slice in
+    landscape, so the centre square is the only part guaranteed to be on
+    screen. The lock-screen clock sits in the top third in both
+    orientations, so the mark sits slightly below centre to stay clear of
+    it. -#}
+<div class="canvas ipad">
+    <div class="ipad-content">
+        <div class="wordmark wordmark--light wordmark--hero ipad-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <div class="ipad-filigree">
+            {% include "partials/filigree.njk" %}
+        </div>
+        <p class="p-eyebrow ipad-eyebrow">Breakfast &amp; Lunch &middot; Leavenworth, Kansas</p>
+    </div>
+</div>

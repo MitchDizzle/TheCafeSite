@@ -42,6 +42,12 @@ pageCss: "/assets/css/menu.css"
             have settled. -#}
         <p class="menu-note">Prices may change closer to our opening on {{ site.opening.monthDay }}.</p>
 
+        {#- Today's special, from src/_data/specials.json. Hidden unless the
+            week lists today or a day still to come — see the partial. Above
+            the list because it is the one thing on this page that changes
+            daily, and a regular checks it first. -#}
+        {% include "partials/specials-today.njk" %}
+
         {%- if site.ordering.url %}
         <p class="menu-order">
             <a href="{{ site.ordering.url }}" class="btn btn-primary">{{ site.ordering.label }} for pickup</a>

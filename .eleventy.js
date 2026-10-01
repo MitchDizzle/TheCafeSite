@@ -51,6 +51,24 @@ module.exports = function (eleventyConfig) {
   // Format a plain number as US currency for menu pricing — 9 -> "$9.00".
   eleventyConfig.addFilter("money", (n) => `$${Number(n).toFixed(2)}`);
 
+  // Words for a YYYY-MM-DD date — "2026-10-05" | dayDate("long") ->
+  // "Monday, October 5". Read as a calendar date in UTC on purpose: parsed in
+  // the build machine's local zone, midnight on the 5th can land on the 4th
+  // and every specials label would be a day early. Formats: "weekday"
+  // (Monday), "short" (Mon), "monthDay" (October 5), "long" (both).
+  const DAY_FORMATS = {
+    weekday: { weekday: "long" },
+    short: { weekday: "short" },
+    monthDay: { month: "long", day: "numeric" },
+    long: { weekday: "long", month: "long", day: "numeric" },
+  };
+  eleventyConfig.addFilter("dayDate", (iso, format = "long") =>
+    new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+      timeZone: "UTC",
+      ...DAY_FORMATS[format],
+    })
+  );
+
   // Narrow a list to the items whose `key` equals `value`.
   //
   // Nunjucks 3.2 ships a selectattr, but it IGNORES its test arguments and

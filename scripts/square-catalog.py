@@ -178,6 +178,13 @@ for i in cats["drinks"]["items"]:
 raw = open(TEMPLATE, encoding="utf-8", newline="").read()
 lines = raw.splitlines(keepends=True)
 header = next(csv.reader([lines[4]]))
+# Square renamed "Skip Detail Screen in POS" to "Auto Add Item to Check"
+# (seen in a library export, 2026-10-01). Same Y/N meaning: ring the item
+# straight onto the ticket without opening its options. Write the value
+# under whichever name this template uses.
+if "Auto Add Item to Check" in header:
+    for r in rows:
+        r["Auto Add Item to Check"] = r.pop("Skip Detail Screen in POS")
 buf = io.StringIO()
 w = csv.DictWriter(buf, fieldnames=header, lineterminator="\n", extrasaction="raise")
 for r in rows:

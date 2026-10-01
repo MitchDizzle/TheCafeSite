@@ -1,0 +1,85 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Weekly Lunch Specials Post (1080 × 1350)"
+canvasW: "1080px"
+canvasH: "1350px"
+pageCss: "/assets/css/fb-weekly-specials.css"
+
+# The caption is generated from src/_data/specials.json in
+# fb-weekly-specials.11tydata.js, so the picture and the words can't
+# disagree. It shows on /studio/downloads/ with a Copy button.
+
+tags: studio
+studioTitle: "Weekly lunch specials — Facebook post"
+studioCategory: "Social"
+studioSize: "1080 × 1350 px · portrait feed post"
+studioNote: "The one Facebook post a week, made a week ahead. Every word on it comes from src/_data/specials.json — edit the week there, run npm run build, and this image and its caption (on /studio/downloads/) both follow. No prices: they are in Square. Portrait 4:5 is the tallest a feed post shows uncropped. Cream body with teal bands, so it sits well beside food photos in a multi-image post."
+studioW: 1080
+studioH: 1350
+studioOrder: 22
+---
+{#- The week's lunch specials and soups, one row per day.
+
+    THE PALETTE. The body is cream, not the teal ground of the other posts,
+    because this one carries the accent red: red on teal is 1.3:1 and the
+    palette forbids it, red on cream is 5.08:1. Teal bands top and bottom
+    keep it recognisably the same account as the profile picture, and a
+    light body sits better beside real food photos when the post carries
+    several images.
+
+    TWO COLUMNS, NOT ONE LINE. The lunch special and the soup are sold
+    separately, so they get separate, labelled columns — a soup set under
+    the plate reads as part of it.
+
+    Every size is set for the ~540px a portrait post shows at on a phone:
+    nothing a customer needs is under 24px. -#}
+{%- set week = specials.week %}
+{%- set first = week[0].date | dayDate("monthDay") %}
+{%- set last = week[week.length - 1].date | dayDate("monthDay") %}
+{#- "October 5 – 9", or "September 28 – October 2" across a month end. -#}
+{%- if first.split(" ")[0] == last.split(" ")[0] %}
+{%- set range = first + " – " + last.split(" ")[1] %}
+{%- else %}
+{%- set range = first + " – " + last %}
+{%- endif %}
+<div class="canvas wk">
+
+    <header class="wk-head">
+        <div class="wordmark wordmark--light wordmark--hero wk-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-display-italic wk-kicker">This Week&rsquo;s Lunch Specials</p>
+        <p class="p-label wk-range">{{ range }}</p>
+    </header>
+
+    <div class="wk-body">
+        <p class="p-label wk-served">Lunch specials &amp; soup served from 11am</p>
+
+        <div class="wk-table">
+            <div class="wk-row wk-row--head">
+                <span></span>
+                <p class="p-label wk-col">Lunch Special</p>
+                <p class="p-label wk-col wk-col--soup">Soup of the Day</p>
+            </div>
+
+            {%- for d in week %}
+            <div class="wk-row">
+                <p class="p-display wk-dayname">{{ d.date | dayDate("short") }}</p>
+                <div class="wk-special-cell">
+                    <p class="p-display wk-special">{{ d.special }}</p>
+                    {%- if d.sides and d.sides.length %}
+                    <p class="p-body wk-sides">with {{ d.sides | join(" and ") }}</p>
+                    {%- endif %}
+                </div>
+                <p class="p-body wk-soup">{{ d.soup }}</p>
+            </div>
+            {%- endfor %}
+        </div>
+    </div>
+
+    <footer class="wk-foot">
+        <p class="p-display wk-foot-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
+        <p class="p-body wk-foot-line">{{ site.opening.hoursDays }}, {{ site.opening.opens.time }}{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}{{ site.opening.closes.meridiem }} &middot; {{ site.address.street }}</p>
+    </footer>
+
+</div>

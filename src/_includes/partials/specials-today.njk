@@ -1,0 +1,132 @@
+{#- Today's lunch special and soup — the box at the top of /menu.
+
+    Built from src/_data/specials.json. EVERY day of the week is in the
+    HTML, all hidden; the script below picks the one for today on Central
+    time (America/Chicago, so a visitor's phone clock or zone can't matter)
+    and un-hides it. That is what lets a static page uploaded once a week
+    show the right special every morning without a rebuild.
+
+    The rule this exists to keep: A STALE SPECIAL IS HIDDEN, NEVER SHOWN.
+    Somebody driving in for yesterday's meatloaf is the worst failure here.
+    So the box ships `hidden` and stays hidden unless the script finds a
+    day that is today or still to come — with JavaScript off, on a weekend
+    after the last listed day, or with an old week left in place, the page
+    simply has no box.
+
+    Three states:
+      today is listed      → today's two cards, then the rest of the week
+      today isn't, but a later day is (the weekend before, or the days
+        before opening) → the week's table only
+      nothing today or later → nothing at all
+
+    THE LUNCH SPECIAL AND THE SOUP ARE SOLD SEPARATELY, so they are two
+    cards side by side and two columns in the table — never one line, which
+    read as the soup coming with the plate. Both are served from 11am.
+
+    Each day's date is printed in words in the HTML itself ("Monday,
+    October 5"), so even a copy cached somewhere can't pass an old special
+    off as today's. -#}
+{%- if specials and specials.week and specials.week.length %}
+{#- Cup / Bowl prices come from the menu's own soup category, so the box
+    can never quote a soup price the menu below it disagrees with. -#}
+{%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
+<section class="today-special" data-specials hidden aria-labelledby="today-special-heading">
+
+    {%- for d in specials.week %}
+    <div class="ts-today" data-special-today="{{ d.date }}" hidden>
+        <h2 class="ts-heading" id="today-special-heading-{{ d.date }}">Today &middot; {{ d.date | dayDate("long") }}</h2>
+        <div class="ts-cards">
+            <div class="ts-card">
+                <p class="ts-label">Lunch special <span class="ts-when">from 11am</span></p>
+                <p class="ts-name">{{ d.special }}</p>
+                {%- if d.sides and d.sides.length %}
+                <p class="ts-detail">with {{ d.sides | join(" and ") }}</p>
+                {%- endif %}
+            </div>
+            {%- if d.soup %}
+            <div class="ts-card">
+                <p class="ts-label">Soup of the day <span class="ts-when">from 11am</span></p>
+                <p class="ts-name">{{ d.soup }}</p>
+                {%- if soupCat and soupCat.items %}
+                <p class="ts-detail">
+                    {%- for s in soupCat.items %}<span class="sizing-pair">{{ s.name }} {{ s.price | money }}</span>{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+                </p>
+                {%- endif %}
+            </div>
+            {%- endif %}
+        </div>
+    </div>
+    {%- endfor %}
+
+    {#- The heading in the "week ahead" state. In the "today" state the
+        visible day's heading labels the box instead (the script points
+        aria-labelledby at whichever one is showing). -#}
+    <div class="ts-ahead" data-specials-ahead hidden>
+        <h2 class="ts-heading" id="today-special-heading">This week&rsquo;s lunch specials</h2>
+        <p class="ts-ahead-note">Lunch specials and soup are served from 11am.</p>
+    </div>
+
+    <div class="ts-week" data-specials-upcoming hidden>
+        <p class="ts-week-label" data-specials-upcoming-label>Later this week</p>
+        <table class="ts-table">
+            <thead>
+                <tr>
+                    <th scope="col">Day</th>
+                    <th scope="col">Lunch special</th>
+                    <th scope="col">Soup of the day</th>
+                </tr>
+            </thead>
+            <tbody>
+                {%- for d in specials.week %}
+                <tr data-special-upcoming="{{ d.date }}" hidden>
+                    <th scope="row">{{ d.date | dayDate("weekday") }}</th>
+                    <td data-label="Lunch special">{{ d.special }}{% if d.sides and d.sides.length %}<span class="ts-table-sides"> with {{ d.sides | join(" and ") }}</span>{% endif %}</td>
+                    <td data-label="Soup">{{ d.soup }}</td>
+                </tr>
+                {%- endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script>
+(function () {
+    var box = document.querySelector('[data-specials]');
+    if (!box) return;
+
+    // Today as YYYY-MM-DD in Central time. en-CA formats dates that way,
+    // which makes it a plain string compare against the data's dates.
+    var today;
+    try {
+        today = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+    } catch (e) {
+        return; // no Intl time zones: leave the box hidden rather than guess
+    }
+
+    var todayEl = box.querySelector('[data-special-today="' + today + '"]');
+    var upcoming = Array.prototype.filter.call(
+        box.querySelectorAll('[data-special-upcoming]'),
+        function (row) { return row.getAttribute('data-special-upcoming') > today; }
+    );
+
+    if (!todayEl && !upcoming.length) return; // stale or empty: show nothing
+
+    if (todayEl) {
+        todayEl.hidden = false;
+        box.setAttribute('aria-labelledby', todayEl.querySelector('.ts-heading').id);
+    } else {
+        box.querySelector('[data-specials-ahead]').hidden = false;
+        box.querySelector('[data-specials-upcoming-label]').hidden = true;
+    }
+
+    if (upcoming.length) {
+        upcoming.forEach(function (row) { row.hidden = false; });
+        box.querySelector('[data-specials-upcoming]').hidden = false;
+    }
+
+    box.hidden = false;
+})();
+</script>
+{%- endif %}

@@ -1,0 +1,163 @@
+/* ============================================================
+   Weekly lunch specials — Facebook post, 1080 × 1350 px (4:5 portrait)
+   Piece: src/studio/fb-weekly-specials.njk  ·  data: src/_data/specials.json
+
+   Shown about 540px wide on a phone, so every size here is roughly twice
+   what it reads as. Nothing a customer needs is set under 24px.
+
+   Palette: teal bands top and bottom (the account's ground, so it reads as
+   the same page as the profile picture), a cream body, and the accent red
+   only where it is read against cream — day names, column labels. Red TEXT
+   never goes on teal (1.3:1); the stripe under the masthead is a plain
+   rule, not text, so it may border it.
+   ============================================================ */
+
+.wk {
+    background: var(--cream);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Masthead band ────────────────────────────────────────── */
+
+.wk-head {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    color: var(--cream);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 44px 60px 34px;
+    border-bottom: 10px solid var(--accent);
+}
+
+.wk-wordmark {
+    --mark-w: 330px;
+}
+
+.wk-kicker {
+    font-size: 50px;
+    margin-top: 14px;
+}
+
+.wk-range {
+    font-size: 26px;
+    color: var(--mint);
+    margin-top: 8px;
+    /* .p-label tracks 0.18em, including after the last letter; half of it
+       back as indent re-centres the line. */
+    text-indent: 0.18em;
+}
+
+/* ── The week ─────────────────────────────────────────────── */
+
+.wk-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 26px 64px 24px;
+}
+
+.wk-served {
+    font-size: 24px;
+    color: var(--accent);
+    text-align: center;
+    text-indent: 0.18em;
+}
+
+/* One full-width row per day, each a three-column grid — day | lunch
+   special | soup — so a row's rule runs edge to edge instead of breaking at
+   every column gap. Rows share the remaining height, so a short week
+   spreads out instead of leaving a hole at the bottom. */
+.wk-table {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    margin-top: 16px;
+}
+
+.wk-row {
+    display: grid;
+    grid-template-columns: 112px 1fr 290px;
+    column-gap: 26px;
+    align-items: start;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.14);
+}
+
+.wk-row:last-child {
+    border-bottom: none;
+}
+
+.wk-row--head {
+    padding: 0 0 10px;
+    border-bottom: 3px solid var(--accent);
+    align-items: end;
+}
+
+.wk-col {
+    font-size: 22px;
+    color: var(--accent);
+}
+
+.wk-col--soup {
+    padding-left: 22px;
+}
+
+.wk-dayname {
+    font-size: 42px;
+    line-height: 1.12;
+    color: var(--accent);
+}
+
+.wk-special-cell {
+    min-width: 0;
+}
+
+.wk-special {
+    font-size: 38px;
+    line-height: 1.12;
+    color: var(--teal-dark);
+}
+
+.wk-sides {
+    font-size: 25px;
+    line-height: 1.3;
+    margin-top: 6px;
+}
+
+/* The soup is its own column with a rule to its left, so it reads as a
+   separate item, not a line under the plate — they are sold separately. */
+.wk-soup {
+    align-self: stretch;
+    font-size: 27px;
+    line-height: 1.25;
+    color: var(--teal-dark);
+    font-weight: 700;
+    padding-left: 22px;
+    border-left: 2px solid rgba(var(--text-dark-rgb), 0.14);
+}
+
+/* ── Footer band ──────────────────────────────────────────── */
+
+.wk-foot {
+    background: var(--teal-dark);
+    color: var(--cream);
+    text-align: center;
+    padding: 22px 40px 26px;
+}
+
+.wk-foot-call {
+    font-size: 40px;
+    white-space: nowrap;
+}
+
+.wk-foot-line {
+    font-size: 24px;
+    margin-top: 6px;
+    opacity: 0.88;
+}
+
+.dot { opacity: 0.55; margin: 0 0.3em; }

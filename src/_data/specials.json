@@ -1,0 +1,37 @@
+{
+  "_note": "The week's daily specials — one entry per day the cafe is open, written a week ahead. This file is the contract: /menu's 'Today's special' box and the weekly Facebook post (src/studio/fb-weekly-specials.njk, with its caption) are all built from it, and the specials web panel planned in CafeWork/DAILY-SPECIALS.md will write this same shape instead of someone editing it by hand. Change the shape and all three change.",
+  "_note_fields": "`date` is YYYY-MM-DD and is the ONLY date — weekday names and 'October 5' are computed from it, so a day can never be labelled wrong. `soup` is the soup of the day (it starts at 11am; prices are Cup/Bowl on the menu). `special` is the plate and `sides` what comes with it. No prices on purpose: they live in Square, and a price here could disagree with the till. `photo` is reserved for later — a path under /assets/ once there are food photos; nothing reads it yet.",
+  "_note_expiry": "Nothing here expires by itself, and nothing has to: /menu picks today's entry in the visitor's browser on Central time and shows nothing at all on a day that is not listed — weekends, and every day after the last one. An old week left in place is therefore hidden, never shown. Replace the whole week each time; do not append.",
+  "week": [
+    {
+      "date": "2026-10-05",
+      "soup": "Chicken Dumpling Soup",
+      "special": "BBQ Ribs",
+      "sides": ["Baked Beans", "Mac & Cheese"]
+    },
+    {
+      "date": "2026-10-06",
+      "soup": "Cauliflower Cheese Soup",
+      "special": "Chicken Enchilada Casserole",
+      "sides": ["Rice & Beans"]
+    },
+    {
+      "date": "2026-10-07",
+      "soup": "Beef Noodle Soup",
+      "special": "Pork Tenderloin on a Bun",
+      "sides": ["Oven Baked Potatoes"]
+    },
+    {
+      "date": "2026-10-08",
+      "soup": "Ham & Beans",
+      "special": "Chicken Parm Sandwich",
+      "sides": ["Cheesy Potatoes"]
+    },
+    {
+      "date": "2026-10-09",
+      "soup": "Baked Potato Soup",
+      "special": "Meatloaf",
+      "sides": ["Mashed Potatoes & Gravy", "Green Beans"]
+    }
+  ]
+}

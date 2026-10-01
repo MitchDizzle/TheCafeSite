@@ -393,3 +393,182 @@
 .sizing-pair {
     white-space: nowrap;
 }
+
+/* ── Today's lunch special & soup ─────────────────────────────
+   The box at the top of the page, from src/_data/specials.json via
+   partials/specials-today.njk.
+
+   A TEAL GROUND so it can't be missed on the cream page — teal is a ground
+   colour here, which is what the palette allows it for. Text on it is
+   cream and mint only: the accent red is 1.3:1 on teal and never goes
+   there. The red lives inside the cream cards, where it reads at 5:1.
+
+   The lunch special and the soup are SOLD SEPARATELY, so they are two
+   cards side by side (stacked on a phone), never one line that reads as
+   the soup coming with the plate. */
+.today-special {
+    margin-top: 1.75rem;
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 100%);
+    color: var(--cream);
+    border-radius: 6px;
+    padding: 1.4rem 1.5rem 1.5rem;
+}
+
+.ts-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    line-height: 1.2;
+    color: var(--cream);
+}
+
+.ts-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.ts-card {
+    background: var(--cream);
+    color: var(--text-dark);
+    border-radius: 4px;
+    border-top: 4px solid var(--accent);
+    padding: 1rem 1.15rem 1.1rem;
+}
+
+.ts-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+}
+
+.ts-when {
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.ts-when::before {
+    content: "·";
+    margin: 0 0.4em;
+}
+
+.ts-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin-top: 0.35rem;
+    color: var(--teal-dark);
+}
+
+.ts-detail {
+    font-size: 1.05rem;
+    margin-top: 0.3rem;
+}
+
+.ts-ahead-note {
+    margin-top: 0.3rem;
+    color: var(--mint);
+    font-weight: 700;
+}
+
+/* ── The rest of the week: a real table, three labelled columns ── */
+
+.ts-week {
+    margin-top: 1.25rem;
+}
+
+.ts-week-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mint);
+    margin-bottom: 0.4rem;
+}
+
+.ts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.ts-table thead th {
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mint);
+    padding: 0 0.75rem 0.4rem 0;
+    border-bottom: 2px solid rgba(250, 247, 242, 0.35);
+}
+
+.ts-table tbody th,
+.ts-table td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.55rem 0.75rem 0.55rem 0;
+    border-bottom: 1px solid rgba(250, 247, 242, 0.18);
+}
+
+.ts-table tbody tr:last-child th,
+.ts-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.ts-table tbody th {
+    font-weight: 700;
+    width: 7.5rem;
+}
+
+/* The soup column gets the same weight as the plate — it is its own item. */
+.ts-table td:last-child {
+    width: 34%;
+    padding-left: 0.75rem;
+    border-left: 1px solid rgba(250, 247, 242, 0.18);
+}
+
+.ts-table-sides {
+    opacity: 0.85;
+}
+
+/* `hidden` rows must stay hidden even where a rule below sets display. */
+.ts-table tr[hidden] {
+    display: none;
+}
+
+/* On a phone the table stacks: one block per day, each cell labelled, so
+   the soup still reads as its own line, not part of the plate. */
+@media (max-width: 560px) {
+    .today-special { padding: 1.1rem 1rem 1.2rem; }
+    .ts-heading { font-size: 1.35rem; }
+
+    .ts-table thead { display: none; }
+    .ts-table tbody tr:not([hidden]) {
+        display: block;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid rgba(250, 247, 242, 0.18);
+    }
+    .ts-table tbody tr:last-child { border-bottom: none; }
+    .ts-table tbody th,
+    .ts-table td {
+        display: block;
+        width: auto;
+        padding: 0.1rem 0;
+        border: none;
+    }
+    .ts-table td:last-child { width: auto; padding-left: 0; border-left: none; }
+    .ts-table td::before {
+        content: attr(data-label) ": ";
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--mint);
+    }
+}
