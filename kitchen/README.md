@@ -30,7 +30,7 @@ Header colors:
 
 ## Setting up the mini PC (one time)
 
-1. **Install Node.js** (the LTS version) from nodejs.org. Use the default options.
+1. **Install Node.js** (the LTS version) from nodejs.org, and **Google Chrome** (Microsoft Edge also works). Use the default options.
 2. **Copy this `kitchen` folder** onto the PC, for example `C:\KitchenBoard`. Nothing else from the repo is needed, and there's nothing to `npm install`.
 3. **Get a Square access token.**
    1. Go to developer.squareup.com and sign in with the cafe's Square account.
