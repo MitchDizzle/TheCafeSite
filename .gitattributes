@@ -13,3 +13,5 @@
 *.woff2 binary
 *.ttf binary
 *.eot binary
+# Batch files need CRLF or cmd mis-parses labels/goto
+*.bat text eol=crlf
