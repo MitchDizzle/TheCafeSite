@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kitchen Orders</title>
+<style>
+  /* System fonts on purpose: the kitchen PC must not depend on Google Fonts
+     loading to be readable. Sizes scale with the screen like /menu-board. */
+  :root {
+    --cream: #FAF7F2;
+    --teal: #2C5E70;
+    --teal-dark: #1F4552;
+    --ground: #15323C;
+    --red: #C0392F;
+    --red-dark: #A02F26;
+    --amber: #E8A33D;
+    --text: #22323A;
+    --muted: #5B6B72;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: clamp(14px, 1.15vw, 26px); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--ground);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  body.idle { cursor: none; }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 0.6rem 1.25rem;
+    background: var(--teal-dark);
+    color: var(--cream);
+  }
+  .bar h1 { margin: 0; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.02em; }
+  .bar .count { font-size: 1.2rem; opacity: 0.9; }
+  .bar .clock { margin-left: auto; font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .undo {
+    font: inherit;
+    font-size: 1rem;
+    padding: 0.45rem 1rem;
+    border: 2px solid var(--cream);
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--cream);
+    cursor: pointer;
+  }
+  .undo[hidden] { display: none; }
+
+  .alert {
+    padding: 0.7rem 1.25rem;
+    background: var(--amber);
+    color: #1A1A1A;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  .alert[hidden] { display: none; }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    gap: 1rem;
+    align-items: start;
+    padding: 1rem 1.25rem 2rem;
+  }
+  .empty {
+    grid-column: 1 / -1;
+    margin-top: 20vh;
+    text-align: center;
+    color: #9FB7BF;
+    font-size: 2rem;
+  }
+
+  .ticket {
+    display: flex;
+    flex-direction: column;
+    background: var(--cream);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0.2rem 0.6rem rgba(0, 0, 0, 0.35);
+  }
+  .ticket.new { animation: arrive 1.2s ease-out 3; }
+  @keyframes arrive { 50% { box-shadow: 0 0 0 0.45rem var(--amber); } }
+  @media (prefers-reduced-motion: reduce) { .ticket.new { animation: none; outline: 0.3rem solid var(--amber); } }
+
+  .ticket header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--teal);
+    color: var(--cream);
+  }
+  .ticket.warn header { background: var(--amber); color: #1A1A1A; }
+  .ticket.late header { background: var(--red); color: #fff; }
+  .ticket.later header { background: #6E8890; }
+
+  .key {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--text);
+    font-weight: 800;
+    font-size: 1.15rem;
+  }
+  .who { min-width: 0; }
+  .who .name { display: block; font-size: 1.25rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who .kind { display: block; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.9; }
+  .timer { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
+  .timer small { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .items { list-style: none; margin: 0; padding: 0.4rem 0.75rem 0.2rem; }
+  .items > li {
+    display: grid;
+    grid-template-columns: 2.4rem 1fr;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid #E3DDD3;
+  }
+  .items > li:last-child { border-bottom: 0; }
+  .qty { font-size: 1.4rem; font-weight: 800; }
+  .qty.many { color: var(--red-dark); }
+  .item { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
+  .variation { font-size: 1.1rem; color: var(--teal-dark); font-weight: 700; }
+  .mods { margin: 0.15rem 0 0; padding: 0; list-style: none; font-size: 1.1rem; }
+  .mods li::before { content: "– "; color: var(--muted); }
+  .mods li.neg { color: var(--red-dark); font-weight: 700; }
+  .note {
+    margin-top: 0.3rem;
+    padding: 0.25rem 0.5rem;
+    background: #FFF0C2;
+    border-left: 0.3rem solid var(--amber);
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+  .ticket > .note { margin: 0.2rem 0.75rem 0.4rem; }
+
+  .done {
+    margin: 0.5rem 0.75rem 0.75rem;
+    padding: 0.8rem;
+    border: 0;
+    border-radius: 0.4rem;
+    background: var(--red);
+    color: #fff;
+    font: inherit;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  .done:active { background: var(--red-dark); }
+  .ticket.later .done { background: #8A9CA2; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <h1>Kitchen Orders</h1>
+    <span class="count" id="count"></span>
+    <button class="undo" id="undo" hidden>↶ Undo</button>
+    <span class="clock" id="clock"></span>
+  </div>
+  <div class="alert" id="alert" hidden></div>
+  <main class="board" id="board"></main>
+
+<script>
+(() => {
+  // How long before a ticket's header turns amber / red, in minutes.
+  // Counter orders age from when they were rung up; pickup orders from when
+  // they're due (amber when due soon, red once past due).
+  const COUNTER_WARN = 8, COUNTER_LATE = 15;
+  const PICKUP_WARN = 10; // minutes before due
+  const POLL_MS = 3000;
+
+  const board = document.getElementById("board");
+  const alertEl = document.getElementById("alert");
+  const undoBtn = document.getElementById("undo");
+
+  let tickets = [];
+  let lastJson = "";
+  let known = null; // ids seen so far; null until the first load
+  const undoStack = []; // [{id, label}]
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmtTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const label = (t) => t.name || `#${t.shortId}`;
+
+  function mmss(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(s / 60);
+    return m >= 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}` : `${m}:${String(s % 60).padStart(2, "0")}`;
+  }
+
+  // ---- timers: recomputed every second without re-rendering the cards
+  function age(t, now) {
+    if (t.dueAt) {
+      const until = Date.parse(t.dueAt) - now;
+      if (until > PICKUP_WARN * 6e4) return { cls: "later", text: fmtTime(t.dueAt), sub: "due" };
+      if (until > 0) return { cls: "warn", text: mmss(until), sub: "due in" };
+      return { cls: "late", text: mmss(-until), sub: "past due" };
+    }
+    const since = now - Date.parse(t.createdAt);
+    const cls = since >= COUNTER_LATE * 6e4 ? "late" : since >= COUNTER_WARN * 6e4 ? "warn" : "";
+    return { cls, text: mmss(since), sub: "waiting" };
+  }
+
+  function tick() {
+    const now = Date.now();
+    document.getElementById("clock").textContent = new Date(now).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    for (const card of board.querySelectorAll(".ticket")) {
+      const t = tickets.find((x) => x.id === card.dataset.id);
+      if (!t) continue;
+      const a = age(t, now);
+      card.classList.remove("warn", "late", "later");
+      if (a.cls) card.classList.add(a.cls);
+      card.querySelector(".timer").innerHTML = `${esc(a.text)}<small>${a.sub}</small>`;
+    }
+  }
+
+  // ---- rendering
+  function kindLabel(t) {
+    if (t.kind === "COUNTER") return "Counter";
+    const k = t.kind === "PICKUP" ? "Pickup" : t.kind.charAt(0) + t.kind.slice(1).toLowerCase();
+    return t.source ? `${k} · ${t.source}` : k;
+  }
+
+  function modClass(m) {
+    return /^(no|without|hold|light|easy)\b/i.test(m) ? ' class="neg"' : "";
+  }
+
+  function render(fresh) {
+    if (!tickets.length) {
+      board.innerHTML = '<p class="empty">No open orders</p>';
+    } else {
+      board.innerHTML = tickets.map((t, i) => `
+        <article class="ticket${fresh.has(t.id) ? " new" : ""}" data-id="${esc(t.id)}">
+          <header>
+            <span class="key">${i < 9 ? i + 1 : ""}</span>
+            <span class="who">
+              <span class="name">${esc(label(t))}</span>
+              <span class="kind">${esc(kindLabel(t))}</span>
+            </span>
+            <span class="timer"></span>
+          </header>
+          <ul class="items">
+            ${t.items.map((it) => `
+              <li>
+                <span class="qty${it.qty > 1 ? " many" : ""}">${it.qty}</span>
+                <div>
+                  <div class="item">${esc(it.name)}</div>
+                  ${it.variation ? `<div class="variation">${esc(it.variation)}</div>` : ""}
+                  ${it.mods.length ? `<ul class="mods">${it.mods.map((m) => `<li${modClass(m)}>${esc(m)}</li>`).join("")}</ul>` : ""}
+                  ${it.note ? `<div class="note">${esc(it.note)}</div>` : ""}
+                </div>
+              </li>`).join("")}
+          </ul>
+          ${t.note ? `<div class="note">${esc(t.note)}</div>` : ""}
+          <button class="done" type="button">Done</button>
+        </article>`).join("");
+    }
+    const n = tickets.length;
+    document.getElementById("count").textContent = n ? `${n} open` : "";
+    tick();
+  }
+
+  function renderUndo() {
+    const last = undoStack[undoStack.length - 1];
+    undoBtn.hidden = !last;
+    if (last) undoBtn.textContent = `↶ Undo ${last.label}`;
+  }
+
+  function apply(data) {
+    // Status banner: Square unreachable, or the last good poll is stale.
+    const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000;
+    if (data.error || stale) {
+      alertEl.hidden = false;
+      alertEl.textContent = data.lastOkAt
+        ? `Can't reach Square — orders shown as of ${fmtTime(data.lastOkAt)}. Check the internet. New orders may be missing.`
+        : `Connecting to Square… ${data.error ? "(" + data.error + ")" : ""}`;
+    } else if (data.mock) {
+      alertEl.hidden = false;
+      alertEl.textContent = "TEST MODE — these are fake orders, not from Square.";
+    } else {
+      alertEl.hidden = true;
+    }
+
+    const json = JSON.stringify(data.tickets);
+    if (json === lastJson) return;
+    lastJson = json;
+    tickets = data.tickets;
+
+    const fresh = new Set();
+    if (known) for (const t of tickets) if (!known.has(t.id)) fresh.add(t.id);
+    known = known || new Set();
+    for (const t of tickets) known.add(t.id);
+    if (fresh.size) chime();
+    render(fresh);
+  }
+
+  async function load() {
+    try {
+      const res = await fetch("/api/tickets", { cache: "no-store" });
+      apply(await res.json());
+    } catch {
+      alertEl.hidden = false;
+      alertEl.textContent = "The board program isn't running. Restart the kitchen PC.";
+    } finally {
+      setTimeout(load, POLL_MS);
+    }
+  }
+
+  async function post(path, id) {
+    const res = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (res.ok) apply(await res.json());
+  }
+
+  function bump(id) {
+    const t = tickets.find((x) => x.id === id);
+    if (!t) return;
+    undoStack.push({ id, label: label(t) });
+    if (undoStack.length > 20) undoStack.shift();
+    renderUndo();
+    // Remove right away so the screen feels instant; the server confirms.
+    tickets = tickets.filter((x) => x.id !== id);
+    lastJson = "";
+    render(new Set());
+    post("/api/bump", id).catch(() => {});
+  }
+
+  function undo() {
+    const last = undoStack.pop();
+    renderUndo();
+    if (last) post("/api/unbump", last.id).catch(() => {});
+  }
+
+  board.addEventListener("click", (e) => {
+    const btn = e.target.closest(".done");
+    if (btn) bump(btn.closest(".ticket").dataset.id);
+  });
+  undoBtn.addEventListener("click", undo);
+
+  // Keyboard / USB number pad: 1–9 finish that ticket, 0 or Backspace undoes.
+  document.addEventListener("keydown", (e) => {
+    if (/^[1-9]$/.test(e.key)) {
+      const t = tickets[Number(e.key) - 1];
+      if (t) bump(t.id);
+    } else if (e.key === "0" || e.key === "Backspace") {
+      e.preventDefault();
+      undo();
+    }
+  });
+
+  // ---- new-order chime (Chrome is launched with autoplay allowed; the
+  // first tap anywhere also unlocks audio, in case it wasn't)
+  let audio;
+  function chime() {
+    try {
+      audio = audio || new AudioContext();
+      if (audio.state === "suspended") audio.resume();
+      [880, 1175].forEach((freq, i) => {
+        const o = audio.createOscillator();
+        const g = audio.createGain();
+        const t0 = audio.currentTime + i * 0.22;
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.4, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.35);
+        o.connect(g).connect(audio.destination);
+        o.start(t0);
+        o.stop(t0 + 0.4);
+      });
+    } catch {}
+  }
+  document.addEventListener("pointerdown", () => {
+    try { audio = audio || new AudioContext(); audio.resume(); } catch {}
+  }, { once: true });
+
+  // ---- kiosk niceties: keep the screen awake, hide an idle mouse pointer
+  async function wake() {
+    try { if ("wakeLock" in navigator) await navigator.wakeLock.request("screen"); } catch {}
+  }
+  wake();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) wake(); });
+
+  let idleTimer;
+  document.addEventListener("pointermove", () => {
+    document.body.classList.remove("idle");
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => document.body.classList.add("idle"), 4000);
+  });
+
+  setInterval(tick, 1000);
+  load();
+})();
+</script>
+</body>
+</html>

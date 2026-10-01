@@ -1,0 +1,390 @@
+#!/usr/bin/env node
+/**
+ * Kitchen order board — runs on the kitchen mini PC, nowhere else.
+ *
+ *   node server.js          → live, reads config.json
+ *   KITCHEN_MOCK=1 node server.js → fake orders, no Square account needed
+ *
+ * Polls Square's Orders API every few seconds and serves a full-screen board
+ * at http://localhost:8090 for Chrome in kiosk mode (start-kitchen.bat).
+ *
+ * Why a local program and not a page on the website: the board needs a Square
+ * access token, and a token can never go in this public repo or on the public
+ * site. Here it lives in config.json on the kitchen PC (gitignored), the server
+ * binds to 127.0.0.1 only, and nothing new is exposed to the internet.
+ *
+ * What shows on the board:
+ *   - Counter (POS) sales from today. Square marks these COMPLETED the moment
+ *     they're paid, so Square never "finishes" them for us — the cooks bump
+ *     them off with Done. Bumps are kept in state.json, local to this PC.
+ *   - Online / pickup orders due today (or within SHOW_AHEAD of now), until a
+ *     cook bumps them OR the front marks them ready/picked up in Square —
+ *     whichever comes first.
+ *
+ * Bumping is LOCAL ONLY. It does not mark the order ready in Square or text the
+ * customer; the front still does that in Order Manager. That keeps one person
+ * in charge of telling customers their food is ready.
+ */
+
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
+
+const DIR = __dirname;
+const CONFIG_FILE = path.join(DIR, "config.json");
+const MOCK = process.env.KITCHEN_MOCK === "1";
+const STATE_FILE = path.join(DIR, MOCK ? "state-mock.json" : "state.json");
+const BOARD_FILE = path.join(DIR, "board.html");
+
+
+const DEFAULTS = {
+  accessToken: "",
+  environment: "production", // or "sandbox"
+  locationIds: [], // empty = every active location on the account
+  port: 8090,
+  pollSeconds: 10,
+  showAheadMinutes: 60, // pickup orders appear this long before they're due
+  openLookbackDays: 14, // how far back to look for pre-ordered pickups
+  skipItems: [], // item names the kitchen never makes, e.g. "Fountain Drink"
+};
+
+function loadConfig() {
+  let file = {};
+  if (fs.existsSync(CONFIG_FILE)) {
+    file = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+  } else if (MOCK) {
+    // Test mode with no config: borrow the example's settings (skip list etc.).
+    file = JSON.parse(fs.readFileSync(path.join(DIR, "config.example.json"), "utf8"));
+  } else {
+    console.error(
+      "No config.json. Copy config.example.json to config.json and add the Square access token.\n" +
+        "To try the board without Square: set KITCHEN_MOCK=1"
+    );
+    process.exit(1);
+  }
+  const cfg = { ...DEFAULTS, ...file };
+  if (!MOCK && !cfg.accessToken) {
+    console.error("config.json has no accessToken.");
+    process.exit(1);
+  }
+  cfg.skip = new Set(cfg.skipItems.map((s) => s.trim().toLowerCase()));
+  return cfg;
+}
+
+const cfg = loadConfig();
+
+// ---------------------------------------------------------------- bump state
+
+let bumped = {}; // orderId -> ISO time bumped
+
+function loadState() {
+  try {
+    bumped = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")).bumped || {};
+  } catch {
+    bumped = {};
+  }
+}
+
+function saveState() {
+  // Three days is plenty; nothing older can reappear on the board anyway.
+  const cutoff = Date.now() - 3 * 864e5;
+  for (const [id, at] of Object.entries(bumped)) {
+    if (Date.parse(at) < cutoff) delete bumped[id];
+  }
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped }, null, 2));
+}
+
+loadState();
+
+// ---------------------------------------------------------------- Square
+
+const API =
+  cfg.environment === "sandbox"
+    ? "https://connect.squareupsandbox.com/v2"
+    : "https://connect.squareup.com/v2";
+const SQUARE_VERSION = "2025-01-23";
+
+async function square(method, endpoint, body) {
+  const res = await fetch(API + endpoint, {
+    method,
+    headers: {
+      Authorization: `Bearer ${cfg.accessToken}`,
+      "Square-Version": SQUARE_VERSION,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(15000),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const detail = (json.errors || []).map((e) => e.detail || e.code).join("; ");
+    throw new Error(`Square ${res.status}: ${detail || res.statusText}`);
+  }
+  return json;
+}
+
+let locationIds = cfg.locationIds;
+
+async function resolveLocations() {
+  if (locationIds.length) return locationIds;
+  const { locations = [] } = await square("GET", "/locations");
+  locationIds = locations.filter((l) => l.status === "ACTIVE").map((l) => l.id);
+  if (!locationIds.length) throw new Error("No active Square locations on this account");
+  console.log(`Watching location(s): ${locationIds.join(", ")}`);
+  return locationIds;
+}
+
+async function searchAll(filter) {
+  const orders = [];
+  let cursor;
+  for (let page = 0; page < 5; page++) {
+    const res = await square("POST", "/orders/search", {
+      location_ids: await resolveLocations(),
+      limit: 100,
+      cursor,
+      query: { filter, sort: { sort_field: "CREATED_AT", sort_order: "ASC" } },
+    });
+    orders.push(...(res.orders || []));
+    cursor = res.cursor;
+    if (!cursor) break;
+  }
+  return orders;
+}
+
+function startOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+async function fetchOrders() {
+  const today = startOfToday().toISOString();
+  const openSince = new Date(Date.now() - cfg.openLookbackDays * 864e5).toISOString();
+  const [open, completed] = await Promise.all([
+    searchAll({
+      state_filter: { states: ["OPEN"] },
+      date_time_filter: { created_at: { start_at: openSince } },
+    }),
+    searchAll({
+      state_filter: { states: ["COMPLETED"] },
+      date_time_filter: { created_at: { start_at: today } },
+    }),
+  ]);
+  return [...open, ...completed];
+}
+
+// ---------------------------------------------------------------- tickets
+
+const DONE_FULFILLMENT = new Set(["PREPARED", "COMPLETED", "CANCELED", "FAILED"]);
+const NOT_FOOD = new Set(["CUSTOM_AMOUNT", "GIFT_CARD"]);
+
+function toTicket(order) {
+  const f = (order.fulfillments || [])[0];
+  if (f && DONE_FULFILLMENT.has(f.state)) return null; // front already finished it
+
+  const items = (order.line_items || [])
+    .filter((li) => !NOT_FOOD.has(li.item_type))
+    .filter((li) => li.name && !cfg.skip.has(li.name.trim().toLowerCase()))
+    .map((li) => ({
+      qty: Number(li.quantity) || 1,
+      name: li.name,
+      variation:
+        li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
+      mods: (li.modifiers || []).map((m) =>
+        Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name
+      ),
+      note: li.note || null,
+    }));
+  if (!items.length) return null; // drinks-only, gift card, etc.
+
+  const details = f && (f.pickup_details || f.delivery_details || f.shipment_details);
+  const recipient = details && details.recipient;
+  const dueAt = (f && f.pickup_details && f.pickup_details.pickup_at) || null;
+
+  return {
+    id: order.id,
+    kind: f ? f.type : "COUNTER", // PICKUP, DELIVERY, SHIPMENT, or COUNTER
+    name: (recipient && recipient.display_name) || order.ticket_name || null,
+    shortId: order.id.slice(-4).toUpperCase(),
+    source: (order.source && order.source.name) || null,
+    createdAt: order.created_at,
+    dueAt,
+    items,
+    note: (details && details.note) || null,
+  };
+}
+
+function visible(t, now) {
+  if (bumped[t.id]) return false;
+  const due = Date.parse(t.dueAt || t.createdAt);
+  // Today's work only: a stale order from yesterday that nobody closed in
+  // Square should not greet the cooks every morning.
+  if (due < startOfToday().getTime()) return false;
+  return due <= now + cfg.showAheadMinutes * 6e4;
+}
+
+// ---------------------------------------------------------------- polling
+
+let all = []; // every ticket from the last good poll, bumped or not
+let lastOkAt = null;
+let lastError = null;
+
+async function poll() {
+  try {
+    const orders = MOCK ? mockOrders() : await fetchOrders();
+    const seen = new Set();
+    all = [];
+    for (const o of orders) {
+      if (seen.has(o.id)) continue;
+      seen.add(o.id);
+      const t = toTicket(o);
+      if (t) all.push(t);
+    }
+    lastOkAt = new Date().toISOString();
+    if (lastError) console.log("Square connection restored");
+    lastError = null;
+  } catch (err) {
+    if (err.message !== lastError) console.error(new Date().toLocaleTimeString(), err.message);
+    lastError = err.message; // keep showing the last good tickets
+  } finally {
+    setTimeout(poll, cfg.pollSeconds * 1000);
+  }
+}
+
+function snapshot() {
+  const now = Date.now();
+  const tickets = all
+    .filter((t) => visible(t, now))
+    .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
+  return { tickets, lastOkAt, error: lastError, mock: MOCK };
+}
+
+// ---------------------------------------------------------------- mock data
+
+const mockStart = Date.now();
+function mockOrders() {
+  const ago = (min) => new Date(Date.now() - min * 6e4).toISOString();
+  const at = (min) => new Date(mockStart + min * 6e4).toISOString();
+  const li = (quantity, name, extra = {}) => ({ quantity: String(quantity), name, ...extra });
+  const orders = [
+    {
+      id: "MOCKCOUNTER0001",
+      state: "COMPLETED",
+      created_at: at(-17),
+      line_items: [
+        li(1, "Turkey Club", { variation_name: "Sourdough", modifiers: [{ name: "No tomato" }] }),
+        li(1, "Soup of the Day", { variation_name: "Bowl" }),
+        li(1, "Iced Tea / Fountain Drink"),
+      ],
+    },
+    {
+      id: "MOCKPICKUP00002",
+      state: "OPEN",
+      created_at: ago(40),
+      fulfillments: [
+        {
+          type: "PICKUP",
+          state: "RESERVED",
+          pickup_details: {
+            pickup_at: at(12),
+            recipient: { display_name: "Linda Parker" },
+            note: "Will call when outside",
+          },
+        },
+      ],
+      line_items: [
+        li(2, "Chicken Salad Croissant"),
+        li(1, "Build Your Own", {
+          variation_name: "Two meats",
+          modifiers: [{ name: "Ham" }, { name: "Roast beef" }, { name: "Swiss" }, { name: "Wheat" }],
+          note: "Mayo on the side",
+        }),
+        li(3, "Chocolate Chip Cookie"),
+      ],
+    },
+    {
+      id: "MOCKCOUNTER0003",
+      state: "COMPLETED",
+      created_at: at(-9),
+      ticket_name: "Bob",
+      line_items: [li(1, "Cheeseburger", { modifiers: [{ name: "Add bacon" }, { name: "No onion" }] })],
+    },
+    {
+      id: "MOCKCOUNTER0004",
+      state: "COMPLETED",
+      created_at: at(-2),
+      line_items: [li(2, "Grilled Cheese"), li(2, "Kids Side", { variation_name: "Applesauce" })],
+    },
+    {
+      id: "MOCKPICKUP00005",
+      state: "OPEN",
+      created_at: ago(300),
+      fulfillments: [
+        {
+          type: "PICKUP",
+          state: "RESERVED",
+          pickup_details: { pickup_at: at(180), recipient: { display_name: "Catering — Hale" } },
+        },
+      ],
+      line_items: [li(1, "Sandwich Tray", { variation_name: "Large" })],
+    },
+  ];
+  // A new counter order every 45 seconds, so the chime can be heard.
+  const extra = Math.floor((Date.now() - mockStart) / 45000);
+  for (let i = 0; i < Math.min(extra, 6); i++) {
+    orders.push({
+      id: `MOCKNEW${String(i).padStart(8, "0")}`,
+      state: "COMPLETED",
+      created_at: new Date(mockStart + (i + 1) * 45000).toISOString(),
+      line_items: [li(1, ["Reuben", "BLT", "Patty Melt"][i % 3], { variation_name: "Rye" })],
+    });
+  }
+  return orders;
+}
+
+// ---------------------------------------------------------------- http
+
+function send(res, status, body, type = "application/json; charset=utf-8") {
+  res.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
+  res.end(typeof body === "string" ? body : JSON.stringify(body));
+}
+
+function readBody(req) {
+  return new Promise((resolve) => {
+    let data = "";
+    req.on("data", (c) => (data += c));
+    req.on("end", () => {
+      try {
+        resolve(JSON.parse(data || "{}"));
+      } catch {
+        resolve({});
+      }
+    });
+  });
+}
+
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url, "http://localhost");
+
+  if (req.method === "GET" && url.pathname === "/") {
+    return send(res, 200, fs.readFileSync(BOARD_FILE, "utf8"), "text/html; charset=utf-8");
+  }
+  if (req.method === "GET" && url.pathname === "/api/tickets") {
+    return send(res, 200, snapshot());
+  }
+  if (req.method === "POST" && (url.pathname === "/api/bump" || url.pathname === "/api/unbump")) {
+    const { id } = await readBody(req);
+    if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
+    if (url.pathname === "/api/bump") bumped[id] = new Date().toISOString();
+    else delete bumped[id];
+    saveState();
+    return send(res, 200, snapshot());
+  }
+  send(res, 404, { error: "not found" });
+});
+
+// 127.0.0.1 only: the board is for this PC's own screen, not the network.
+server.listen(cfg.port, "127.0.0.1", () => {
+  console.log(`Kitchen board on http://localhost:${cfg.port}${MOCK ? "  (MOCK ORDERS)" : ""}`);
+  poll();
+});

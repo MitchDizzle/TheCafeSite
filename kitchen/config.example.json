@@ -1,0 +1,10 @@
+{
+  "accessToken": "PASTE-SQUARE-PRODUCTION-ACCESS-TOKEN-HERE",
+  "environment": "production",
+  "locationIds": [],
+  "port": 8090,
+  "pollSeconds": 10,
+  "showAheadMinutes": 60,
+  "openLookbackDays": 14,
+  "skipItems": ["Iced Tea / Fountain Drink", "Bottle Water", "Chips"]
+}
