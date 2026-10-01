@@ -6,7 +6,7 @@ Not part of the website. Nothing in this folder is built or uploaded.
 
 ## What shows up
 
-- **Counter orders** rung up on Square POS today. Square marks these finished as soon as they're paid, so they stay on the board until a cook presses **Done**.
+- **Counter orders** rung up on Square POS today. Square marks these finished as soon as they're paid; the Restaurants app also marks their pickup step complete. Because of that, the board ignores Square's "completed" on counter orders, and they stay up until a cook presses **Done**. They appear once paid: a check that was sent but not charged yet can't be seen by the board, only by the kitchen printer.
 - **Online / pickup orders** due today, starting an hour before pickup time. They leave the board when a cook presses **Done** *or* when the front marks them ready or picked up in Square Order Manager.
 - Items listed in `skipItems` (drinks, chips) are left off. An order made up only of those items doesn't show at all.
 - Amounts typed on the POS keypad show too, under the note typed with them (or "Custom amount"), in case a special or an off-menu plate gets rung up that way.

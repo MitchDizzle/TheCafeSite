@@ -182,11 +182,24 @@ const NOT_FOOD = new Set(["GIFT_CARD"]);
 
 const itemName = (li) => li.name || li.note || "Custom amount";
 
+// Online vs. front counter. The Restaurants POS attaches a fulfillment to a
+// counter sale and marks it COMPLETED the instant it's paid, so a completed
+// fulfillment only means "the front finished it" on an online order. An
+// order is online if Square names it so or it carries a scheduled pickup
+// time; anything else is treated as a counter sale and waits for Done. When
+// in doubt it stays on the board — an extra ticket beats a missed one.
+function isOnline(order, f) {
+  const source = (order.source && order.source.name) || "";
+  return /online/i.test(source) || !!(f && f.pickup_details && f.pickup_details.pickup_at);
+}
+
 // Returns { ticket } or { reason } — the reason is what /check shows for an
 // order that came back from Square but isn't on the board.
 function toTicket(order) {
   const f = (order.fulfillments || [])[0];
-  if (f && DONE_FULFILLMENT.has(f.state)) {
+  const online = isOnline(order, f);
+  if (f && f.state === "CANCELED") return { reason: "canceled" };
+  if (online && DONE_FULFILLMENT.has(f.state)) {
     return { reason: `front already marked it ${f.state.toLowerCase()}` };
   }
 
@@ -213,7 +226,7 @@ function toTicket(order) {
 
   return { ticket: {
     id: order.id,
-    kind: f ? f.type : "COUNTER", // PICKUP, DELIVERY, SHIPMENT, or COUNTER
+    kind: online ? f.type : "COUNTER", // PICKUP, DELIVERY, SHIPMENT, or COUNTER
     name: (recipient && recipient.display_name) || order.ticket_name || null,
     shortId: order.id.slice(-4).toUpperCase(),
     source: (order.source && order.source.name) || null,
@@ -221,6 +234,7 @@ function toTicket(order) {
     dueAt,
     items,
     note: (details && details.note) || null,
+    detail: orderDetail(order),
   } };
 }
 
@@ -353,6 +367,25 @@ function mockOrders() {
       line_items: [li(1, "Sandwich Tray", { variation_name: "Large" })],
     },
   ];
+  // The Restaurants POS: a paid counter sale arrives with its fulfillment
+  // already COMPLETED. It must stay on the board until Done.
+  orders.push({
+    id: "MOCKRESTPOS0006",
+    state: "COMPLETED",
+    created_at: at(-5),
+    source: { name: "Square for Restaurants" },
+    fulfillments: [{ type: "PICKUP", state: "COMPLETED", pickup_details: {} }],
+    line_items: [li(1, "Philly Steak Sandwich")],
+  });
+  // An online order the front already handed over: must NOT show.
+  orders.push({
+    id: "MOCKONLINEDONE7",
+    state: "COMPLETED",
+    created_at: at(-30),
+    source: { name: "Square Online" },
+    fulfillments: [{ type: "PICKUP", state: "COMPLETED", pickup_details: { pickup_at: at(-10) } }],
+    line_items: [li(1, "Chef Salad")],
+  });
   // A new counter order every 45 seconds, so the chime can be heard.
   const extra = Math.floor((Date.now() - mockStart) / 45000);
   for (let i = 0; i < Math.min(extra, 6); i++) {
@@ -368,6 +401,21 @@ function mockOrders() {
 
 // ---------------------------------------------------------------- /check
 
+// What Square said about an order, in one line, for /check.
+function orderDetail(o) {
+  const f = (o.fulfillments || [])[0];
+  const parts = [`source: ${(o.source && o.source.name) || "none"}`, `order ${o.state}`];
+  if (f) {
+    parts.push(`fulfillment ${f.type} ${f.state}`);
+    const p = f.pickup_details || {};
+    if (p.schedule_type) parts.push(`schedule ${p.schedule_type}`);
+    if (p.pickup_at) parts.push(`pickup_at ${p.pickup_at}`);
+  } else {
+    parts.push("no fulfillment");
+  }
+  return parts.join(" · ");
+}
+
 // A plain troubleshooting page: every order Square returned on the last poll
 // and whether it's on the board, and if not, why. Open
 // http://localhost:8090/check in a normal Chrome window.
@@ -380,13 +428,15 @@ function checkPage() {
       id: t.id,
       created: t.createdAt,
       kind: t.kind,
+      detail: t.detail,
       items: t.items.map((i) => `${i.qty}× ${i.name}`).join(", "),
       status: hiddenReason(t, now) || "ON THE BOARD",
     })),
     ...rejected.map(({ order: o, reason }) => ({
       id: o.id,
       created: o.created_at,
-      kind: ((o.fulfillments || [])[0] || {}).type || "COUNTER",
+      kind: "—",
+      detail: orderDetail(o),
       items: (o.line_items || [])
         .map((li) => `${li.quantity}× ${itemName(li)} [${li.item_type || "ITEM"}]`)
         .join(", "),
@@ -406,11 +456,11 @@ ${MOCK ? "<p><b>TEST MODE</b> — fake orders, not Square.</p>" : ""}
 ${esc(startOfToday().toLocaleString())} and pickups due within ${cfg.showAheadMinutes} min.</p>
 ${status}
 <p>${rows.length} order(s) came back from Square. Refresh to update.</p>
-<table><tr><th>Created</th><th>Order</th><th>Type</th><th>Items</th><th>Board</th></tr>
+<table><tr><th>Created</th><th>Order</th><th>Board type</th><th>From Square</th><th>Items</th><th>Board</th></tr>
 ${rows
   .map(
     (r) => `<tr><td>${esc(new Date(r.created).toLocaleTimeString())}</td><td>...${esc(r.id.slice(-6))}</td>
-<td>${esc(r.kind)}</td><td>${esc(r.items)}</td><td>${esc(r.status)}</td></tr>`
+<td>${esc(r.kind)}</td><td>${esc(r.detail)}</td><td>${esc(r.items)}</td><td>${esc(r.status)}</td></tr>`
   )
   .join("")}
 </table>`;
