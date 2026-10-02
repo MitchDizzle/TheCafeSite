@@ -24,10 +24,20 @@ Header colors:
 
 ## Using it
 
-- **Tap Done** on a ticket (touchscreen or mouse), or press its **number key 1–9** (a cheap USB number pad works well as a bump bar).
-- **Undo** (top bar), **0**, or **Backspace** brings back the last ticket you cleared.
-- A two-tone chime plays when a new order arrives.
-- An amber banner across the top means Square can't be reached; the tickets shown might be out of date. Check the internet connection.
+Everything works from a number pad, with Num Lock on or off. The mouse is there for precision.
+
+| Key | Does |
+|---|---|
+| **1–9** | Done on that ticket (the number in its corner) |
+| **Backspace** or **0** | Undo: brings back the last ticket cleared. Press again to go further back. Still works after a restart. |
+| **+** / **−** | Scroll down / up |
+| **Enter** | Check Square right now instead of waiting for the next check |
+
+- Tickets 10 and up have no number key. Clear the first nine, or use the mouse.
+- **The board checks Square every 5 seconds** (`pollSeconds` in `config.json`). The top bar shows how long ago the last check was.
+- **A two-tone chime** means a new order. **A low falling tone** plus an amber banner means the board lost Square or its own program. Tickets shown at that point might be out of date, and new ones might be missing, so go by the printer until it clears.
+- **An amber "continues below" pointer** appears when a ticket runs off the bottom of the screen. Press **+** to see it.
+- **Sound needs speakers.** Make sure they're plugged in, set as the default output in Windows, and not muted.
 
 ## Setting up the mini PC (one time)
 
