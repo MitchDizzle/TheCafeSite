@@ -3,7 +3,7 @@
   "environment": "production",
   "locationIds": [],
   "port": 8090,
-  "pollSeconds": 10,
+  "pollSeconds": 5,
   "showAheadMinutes": 60,
   "openLookbackDays": 14,
   "skipItems": ["Iced Tea / Fountain Drink", "Bottle Water", "Chips"]

@@ -42,7 +42,7 @@ const DEFAULTS = {
   environment: "production", // or "sandbox"
   locationIds: [], // empty = every active location on the account
   port: 8090,
-  pollSeconds: 10,
+  pollSeconds: 5,
   showAheadMinutes: 60, // pickup orders appear this long before they're due
   openLookbackDays: 14, // how far back to look for pre-ordered pickups
   skipItems: [], // item names the kitchen never makes, e.g. "Fountain Drink"
@@ -249,15 +249,39 @@ function hiddenReason(t, now) {
   return null;
 }
 
+// The most recently bumped ticket that could come back: what Undo restores.
+// Kept on the server, so Undo still works after the page or PC restarts.
+function lastCleared() {
+  const byId = new Map(all.map((t) => [t.id, t]));
+  const ids = Object.keys(bumped)
+    .filter((id) => byId.has(id))
+    .sort((a, b) => Date.parse(bumped[b]) - Date.parse(bumped[a]));
+  if (!ids.length) return null;
+  const t = byId.get(ids[0]);
+  return { id: t.id, label: t.name || `#${t.shortId}` };
+}
+
 // ---------------------------------------------------------------- polling
 
+let pollTimer = null;
+let polling = null; // the in-flight poll, so "check now" never runs two at once
 let all = []; // every ticket from the last good poll, bumped or not
 let rejected = []; // orders Square returned that never became tickets, for /check
 const logged = new Set(); // order ids already announced in the console
 let lastOkAt = null;
 let lastError = null;
 
-async function poll() {
+function poll() {
+  if (polling) return polling;
+  clearTimeout(pollTimer);
+  polling = pollOnce().finally(() => {
+    polling = null;
+    pollTimer = setTimeout(poll, cfg.pollSeconds * 1000);
+  });
+  return polling;
+}
+
+async function pollOnce() {
   try {
     const orders = MOCK ? mockOrders() : await fetchOrders();
     const seen = new Set();
@@ -284,8 +308,6 @@ async function poll() {
   } catch (err) {
     if (err.message !== lastError) console.error(new Date().toLocaleTimeString(), err.message);
     lastError = err.message; // keep showing the last good tickets
-  } finally {
-    setTimeout(poll, cfg.pollSeconds * 1000);
   }
 }
 
@@ -294,7 +316,7 @@ function snapshot() {
   const tickets = all
     .filter((t) => !hiddenReason(t, now))
     .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
-  return { tickets, lastOkAt, error: lastError, mock: MOCK };
+  return { tickets, lastOkAt, error: lastError, mock: MOCK, lastCleared: lastCleared() };
 }
 
 // ---------------------------------------------------------------- mock data
@@ -497,6 +519,18 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, checkPage(), "text/html; charset=utf-8");
   }
   if (req.method === "GET" && url.pathname === "/api/tickets") {
+    return send(res, 200, snapshot());
+  }
+  if (req.method === "POST" && url.pathname === "/api/refresh") {
+    await poll();
+    return send(res, 200, snapshot());
+  }
+  if (req.method === "POST" && url.pathname === "/api/undo") {
+    const last = lastCleared();
+    if (last) {
+      delete bumped[last.id];
+      saveState();
+    }
     return send(res, 200, snapshot());
   }
   if (req.method === "POST" && (url.pathname === "/api/bump" || url.pathname === "/api/unbump")) {
