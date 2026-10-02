@@ -1,0 +1,62 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Dish Post (1080 × 1350)"
+canvasW: "1080px"
+canvasH: "1350px"
+pageCss: "/assets/css/fb-dish.css"
+
+# One post per food photo in src/_data/photos.json. Add a photo there and a
+# new post appears on the board and in /studio/downloads/ on the next build.
+# Name, description and price come from menu.json through the photo's
+# `item`, so a menu change reaches the posts without touching them.
+pagination:
+  data: photos.photos
+  size: 1
+  alias: photo
+  addAllPagesToCollections: true
+permalink: "/studio/fb-dish-{{ photo.file | replace('/assets/photos/', '') | replace('.jpg', '') }}.html"
+
+tags: studio
+studioCategory: "Social"
+studioSize: "1080 × 1350 px · portrait feed post"
+studioNote: "Built from one photo in src/_data/photos.json. The dish name sits in the kitchen background above the food and everything else goes in the band under the photo, so no text crosses the plate. The menu supplies the description and price."
+studioW: 1080
+studioH: 1350
+studioOrder: 30
+---
+{#- THE PHOTO IS THE POST. It gets the whole 1080 × 1080 square; the
+    photos were shot with room above the plate for exactly this header, and
+    the band below holds what would otherwise sit on the food.
+
+    The name is set in the wordmark's treatment (cream letterform, teal
+    outline, coral offset). The wordmark itself is hand-drawn SVG; Playfair
+    Display Black Italic is the nearest font, close enough to read as one
+    brand. Red text stays on cream (the price plaque): red on teal is 1.3:1. -#}
+<div class="canvas dish">
+
+    <img class="dish-photo" src="{{ photo.file }}" alt="{{ photo.alt }}">
+
+    <header class="dish-head">
+        <p class="p-label dish-kicker">{{ dish.kicker }}</p>
+        <h1 class="dish-title" style="font-size: {{ dish.titleSize }}px">{{ photo.title }}</h1>
+    </header>
+
+    <footer class="dish-band">
+        <div class="dish-info">
+            <p class="p-body dish-desc">{{ dish.description }}</p>
+            {%- if dish.variantNote %}
+            <p class="p-display-italic dish-variant">{{ dish.variantNote }}</p>
+            {%- endif %}
+        </div>
+        <div class="dish-plaque">
+            <p class="p-display dish-price">{{ dish.price }}</p>
+        </div>
+        <div class="dish-sign">
+            <div class="wordmark wordmark--light wordmark--hero dish-wordmark">
+                {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+            </div>
+            <p class="p-body dish-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
+        </div>
+    </footer>
+
+</div>

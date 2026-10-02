@@ -1,0 +1,144 @@
+/* ============================================================
+   We Open Monday — Facebook post, 1080 × 1350 px (4:5 portrait)
+   Piece: src/studio/fb-open-monday.njk
+
+   Shown about 540px wide on a phone, so every size is roughly twice what it
+   reads as; nothing a customer needs is under 24px.
+
+   The profile picture's teal ground, like the opening-day square, so it
+   reads as the same account; it pairs with the cream-bodied weekly specials
+   post in one multi-image post. Red text only on the cream plaque (red on
+   teal is 1.3:1).
+   ============================================================ */
+
+.om {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    color: var(--cream);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    padding: 64px 60px 56px;
+}
+
+.dot { opacity: 0.55; margin: 0 0.3em; }
+
+/* ── Masthead ─────────────────────────────────────────────── */
+
+.om-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.om-wordmark {
+    --mark-w: 520px;
+}
+
+.om-filigree {
+    width: 280px;
+    margin-top: 20px;
+    color: var(--mint);
+    opacity: 0.7;
+}
+
+/* ── The announcement ─────────────────────────────────────── */
+
+.om-announce {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.om-kicker {
+    font-size: 50px;
+    color: var(--mint);
+}
+
+.om-when {
+    font-size: 150px;
+    line-height: 1;
+    margin-top: 10px;
+    white-space: nowrap;
+}
+
+.om-plaque {
+    margin-top: 30px;
+    background: var(--cream);
+    border-radius: 8px;
+    padding: 10px 48px 14px;
+    box-shadow: 0 12px 30px rgba(10, 22, 28, 0.26);
+}
+
+.om-date {
+    font-size: 72px;
+    line-height: 1.1;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+/* Playfair's default superscript sits too high and too large beside a big
+   numeral — same correction as the opening-day square. */
+.om-date sup {
+    font-size: 0.36em;
+    vertical-align: baseline;
+    position: relative;
+    top: -0.72em;
+    margin-left: 0.04em;
+}
+
+.om-service {
+    font-size: 25px;
+    color: var(--mint);
+    margin-top: 32px;
+    /* .p-label tracks 0.18em after the last letter too; half back as indent
+       re-centres the line. */
+    text-indent: 0.18em;
+}
+
+/* ── Hours ────────────────────────────────────────────────── */
+
+.om-facts {
+    width: 100%;
+    padding: 26px 0 24px;
+    border-top: 2px solid rgba(250, 247, 242, 0.28);
+    border-bottom: 2px solid rgba(250, 247, 242, 0.28);
+}
+
+.om-days {
+    font-size: 44px;
+    color: var(--mint);
+}
+
+.om-hours {
+    font-size: 64px;
+    margin-top: 6px;
+    white-space: nowrap;
+}
+
+.om-hours .ampm {
+    font-size: 0.5em;
+    margin-left: 0.06em;
+    letter-spacing: 0.03em;
+}
+
+.om-lunch {
+    font-size: 28px;
+    margin-top: 12px;
+    opacity: 0.9;
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+
+.om-call {
+    font-size: 42px;
+    white-space: nowrap;
+}
+
+.om-addr {
+    font-size: 26px;
+    margin-top: 10px;
+    letter-spacing: 0.04em;
+    opacity: 0.75;
+}

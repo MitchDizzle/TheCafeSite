@@ -1,0 +1,129 @@
+/* ============================================================
+   Dish post — Facebook, 1080 × 1350 px (4:5 portrait)
+   Piece: src/studio/fb-dish.njk  ·  data: src/_data/photos.json + menu.json
+
+   The photo fills the top 1080 × 1080. The name sits in the kitchen
+   background above the plate, on a fade that darkens only that strip, and
+   everything else lives in the band below the photo, so no text crosses the
+   food. Shown about 540px wide on a phone: nothing needed is under 24px.
+   ============================================================ */
+
+.dish {
+    background: var(--teal-dark);
+    color: var(--cream);
+    position: relative;
+    overflow: hidden;
+}
+
+.dish-photo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1080px;
+    height: 1080px;
+    object-fit: cover;
+    display: block;
+}
+
+/* ── The name, over the kitchen background ────────────────── */
+
+.dish-head {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 34px 60px 70px;
+    text-align: center;
+    /* Darkens the strip of steel and wall behind the name and stops well
+       above the food. */
+    background: linear-gradient(180deg,
+        rgba(18, 40, 48, 0.88) 0%,
+        rgba(18, 40, 48, 0.62) 58%,
+        rgba(18, 40, 48, 0) 100%);
+}
+
+.dish-kicker {
+    font-size: 24px;
+    color: var(--mint);
+    text-indent: 0.18em; /* re-centre the trailing letter-spacing */
+}
+
+/* The wordmark's treatment on live type: cream fill, teal-dark outline
+   painted under the fill, coral offset. Same proportions as
+   .wordmark--hero in piece.css. */
+.dish-title {
+    margin: 6px 0 0;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 900;
+    line-height: 1.08;
+    white-space: nowrap;
+    color: var(--cream);
+    -webkit-text-stroke: 0.07em var(--teal-dark);
+    paint-order: stroke fill;
+    filter: drop-shadow(0.03em 0.045em 0 var(--coral));
+}
+
+/* ── The band ─────────────────────────────────────────────── */
+
+.dish-band {
+    position: absolute;
+    top: 1080px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 30px 60px 26px;
+    border-top: 8px solid var(--accent);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: 1fr auto;
+    column-gap: 36px;
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 100%);
+}
+
+.dish-info { align-self: center; min-width: 0; }
+
+.dish-desc {
+    font-size: 30px;
+    line-height: 1.3;
+}
+
+.dish-variant {
+    font-size: 28px;
+    color: var(--mint);
+    margin-top: 6px;
+}
+
+/* Red price on a cream plaque: red text never sits on teal. */
+.dish-plaque {
+    align-self: center;
+    background: var(--cream);
+    border-radius: 8px;
+    padding: 8px 26px 12px;
+    box-shadow: 0 10px 24px rgba(10, 22, 28, 0.3);
+}
+
+.dish-price {
+    font-size: 54px;
+    line-height: 1.1;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+.dish-sign {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+}
+
+.dish-wordmark { --mark-w: 190px; }
+
+.dish-call {
+    font-size: 26px;
+    letter-spacing: 0.02em;
+    opacity: 0.9;
+}
+
+.dot { opacity: 0.55; margin: 0 0.3em; }

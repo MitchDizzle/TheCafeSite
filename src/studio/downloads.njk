@@ -25,6 +25,7 @@ permalink: "/studio/downloads/index.html"
     build if a piece will not render — a link here must never dangle. -#}
 {%- set groups = [] %}
 {%- for piece in collections.studio %}
+                {%- set pslug = piece.data.studioSlug or piece.fileSlug %}
   {%- if piece.data.studioCategory not in groups %}
     {%- set _ = groups.push(piece.data.studioCategory or "Pages") %}
   {%- endif %}
@@ -52,6 +53,7 @@ permalink: "/studio/downloads/index.html"
 
         <ul class="dl-list">
             {%- for piece in collections.studio %}
+                {%- set pslug = piece.data.studioSlug or piece.fileSlug %}
             {%- if (piece.data.studioCategory or "Pages") == name %}
             {%- set fmt = piece.data.studioFormat or "png" %}
             <li class="dl-item">
@@ -60,8 +62,8 @@ permalink: "/studio/downloads/index.html"
                     wifi: seven artboards in seven iframes is seven full page
                     loads with webfonts, and lazy-loaded images are a fraction
                     of that. -#}
-                <a class="dl-thumb" href="/studio/downloads/{{ piece.fileSlug }}.{{ fmt }}" target="_blank" rel="noopener">
-                    <img src="/studio/downloads/{{ piece.fileSlug }}.{{ fmt }}"
+                <a class="dl-thumb" href="/studio/downloads/{{ pslug }}.{{ fmt }}" target="_blank" rel="noopener">
+                    <img src="/studio/downloads/{{ pslug }}.{{ fmt }}"
                          alt="{{ piece.data.studioTitle or piece.data.title }}"
                          loading="lazy">
                 </a>
@@ -77,9 +79,9 @@ permalink: "/studio/downloads/index.html"
                         to be long-pressed out of it. With the attribute it
                         goes straight to the downloads folder. -#}
                     <div class="dl-actions">
-                        <a class="dl-btn" href="/studio/downloads/{{ piece.fileSlug }}.{{ fmt }}" download>{{ fmt | upper }}</a>
+                        <a class="dl-btn" href="/studio/downloads/{{ pslug }}.{{ fmt }}" download>{{ fmt | upper }}</a>
                         {%- if piece.data.pageSize %}
-                        <a class="dl-btn dl-btn--ghost" href="/studio/downloads/{{ piece.fileSlug }}.pdf" download>PDF</a>
+                        <a class="dl-btn dl-btn--ghost" href="/studio/downloads/{{ pslug }}.pdf" download>PDF</a>
                         {%- endif %}
                         <a class="dl-btn dl-btn--quiet" href="{{ piece.url }}">Open</a>
                     </div>
@@ -113,12 +115,12 @@ permalink: "/studio/downloads/index.html"
                         scannable. -#}
                     <details class="dl-caption">
                         <summary>Draft caption</summary>
-                        <div class="dl-caption-body" id="cap-{{ piece.fileSlug }}">
+                        <div class="dl-caption-body" id="cap-{{ pslug }}">
                             {%- for para in piece.data.caption %}
                             <p>{{ para }}</p>
                             {%- endfor %}
                         </div>
-                        <button class="dl-btn dl-btn--ghost dl-copy" type="button" data-copy="cap-{{ piece.fileSlug }}">Copy caption</button>
+                        <button class="dl-btn dl-btn--ghost dl-copy" type="button" data-copy="cap-{{ pslug }}">Copy caption</button>
                     </details>
                     {%- endif %}
                 </div>

@@ -19,8 +19,8 @@ pageCss: "/assets/css/contact.css"
                 <!-- ── Contact Info ─────────────────────────── -->
                 <div class="contact-info">
                     <h2>Get in Touch</h2>
-                    <!-- TODO: replace with real contact info from client -->
                     <ul class="contact-info__list">
+                        <li>Hours: {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}</li>
                         <li>Phone: <a href="tel:+19135479994">(913) 547-9994</a></li>
                         <li>Email: <a href="mailto:theabcafe@gmail.com">theabcafe@gmail.com</a></li>
                         <li>Location: <a href="https://maps.google.com/?q=417+S+6th+St,+Leavenworth,+KS+66048">417 S 6th St, Leavenworth, KS 66048</a></li>
@@ -76,27 +76,26 @@ pageCss: "/assets/css/contact.css"
                 <!-- ── FAQ ─────────────────────────────────── -->
                 <div class="faq">
                     <h2>Frequently Asked Questions</h2>
-                    <!-- TODO: fill in answers from client interview -->
+                    {#- Answers are the client's own (CafeWork DECISIONS.md §8,
+                        2026-09-30). Two old questions came out rather than get
+                        invented answers: cancellation policy (not decided) and
+                        serving staff (the full-service offer is gone). -#}
                     <ul class="faq__list">
                         <li>
-                            <p class="faq__q">How far in advance should I book?</p>
-                            <p class="faq__a">TODO.</p>
+                            <p class="faq__q">How far ahead should I order for a group?</p>
+                            <p class="faq__a">For more than 10 people, please give us at least 12 hours&rsquo; notice. Larger custom catering takes a few weeks to plan, so reach out as early as you can.</p>
+                        </li>
+                        <li>
+                            <p class="faq__q">Can I order ahead?</p>
+                            <p class="faq__a">Yes. Call <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a> and we&rsquo;ll have it ready for pickup.{% if not site.ordering.url %} Online ordering is coming soon.{% endif %}</p>
+                        </li>
+                        <li>
+                            <p class="faq__q">How can I pay?</p>
+                            <p class="faq__a">Cash, check, or card.</p>
                         </li>
                         <li>
                             <p class="faq__q">Do you accommodate dietary restrictions?</p>
-                            <p class="faq__a">TODO.</p>
-                        </li>
-                        <li>
-                            <p class="faq__q">What is your cancellation policy?</p>
-                            <p class="faq__a">TODO.</p>
-                        </li>
-                        <li>
-                            <p class="faq__q">Do you provide serving staff?</p>
-                            <p class="faq__a">TODO.</p>
-                        </li>
-                        <li>
-                            <p class="faq__q">What areas do you serve?</p>
-                            <p class="faq__a">TODO.</p>
+                            <p class="faq__a">Tell us about any allergies or dietary needs when you order and we&rsquo;ll let you know what we can do.</p>
                         </li>
                     </ul>
                 </div>

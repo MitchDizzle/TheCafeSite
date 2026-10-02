@@ -8,9 +8,10 @@ pageCss: "/assets/css/home.css"
 # Gateway page: no nav, no footer, so the shared nav/footer JS has nothing to do.
 noSiteJs: true
 headExtra: |
-  <!-- Local-search structured data. Only facts already published on this site —
-           no hours, prices, or geo coordinates until the client confirms them
-           (adding unverified ones here would contradict Google Business Profile). -->
+  <!-- Local-search structured data. Only facts already published on this site.
+           Hours confirmed for opening 2026-10-05 (Mon–Fri 6am–2pm, site.json);
+           keep them in step with Google Business Profile. No prices or geo
+           coordinates. -->
       <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -30,13 +31,21 @@ headExtra: |
           "postalCode": "66048",
           "addressCountry": "US"
         },
-        "areaServed": "Leavenworth, Kansas and the surrounding area"
+        "areaServed": "Leavenworth, Kansas and the surrounding area",
+        "openingHoursSpecification": [{
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          "opens": "06:00",
+          "closes": "14:00"
+        }]
       }
       </script>
 ---
+{%- if site.underConstruction %}
 <div class="construction-banner" role="note">
-    Pardon our crumbs. This site is still under construction, so some details may change.
+    {{ site.constructionNotice }}
 </div>
+{%- endif %}
 
 <main class="hero" role="main">
 
@@ -157,6 +166,9 @@ headExtra: |
         </nav>
         <div class="hero-subspace">
             <p class="hero-subtitle">
+                {#- Hours lead: this page has no footer, so it is the only
+                    place the gateway says when we are open. -#}
+                {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}<br/>
                 <a href="tel:+19135479994">(913) 547-9994</a><br/>
                 <a href="mailto:theabcafe@gmail.com">theabcafe@gmail.com</a><br/>
                 <a href="https://maps.google.com/?q=417+S+6th+St,+Leavenworth,+KS+66048">417 S 6th St, Leavenworth, KS 66048</a>

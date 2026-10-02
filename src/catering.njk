@@ -1,16 +1,17 @@
 ---
 layout: layouts/page.njk
 title: "Catering | The Café"
-description: "Catering from The Café in Leavenworth, KS: lunch for the office, the crew or the family, packed and ready for pickup. Call, email or send a request online."
-ogDescription: "Group lunches packed and ready for pickup in Leavenworth, KS. Call, email or send a request online."
+description: "Catering from The Café in Leavenworth, KS: lunch for the office, the crew or the family, ready for pickup or dropped off. Call, email or send a request online."
+ogDescription: "Group lunches ready for pickup or dropped off in Leavenworth, KS. Call, email or send a request online."
 pageCss: "/assets/css/catering.css"
 ---
 <!-- The menu now has its own page at /menu, built from src/_data/menu.json
              and linked from the nav — the old packages/bundle markup that used to
              sit here is in git history. -->
 
-<!-- Catering is SELF-SERVE PICKUP (client, 2026-09-29): a group lunch ordered
-     ahead and collected at the counter. This form only collects enough to call
+<!-- Catering is PICKUP OR DROP-OFF (client, 2026-09-29; drop-off added
+     2026-10-02): a group lunch ordered ahead, collected at the counter or
+     brought to the customer. Anything bigger is worked out in person. This form only collects enough to call
      or email the customer back — the details are settled in that conversation,
      not here. The old full-service fields (event location, service style,
      budget, linen / china / servers checkboxes, a 15-guest minimum) were
@@ -21,7 +22,7 @@ pageCss: "/assets/css/catering.css"
             <div class="container">
                 <h1 id="inquiry-heading">Feeding a crowd?</h1>
                 <p style="margin-top: 0.75rem; max-width: 55ch;">
-                    Lunch for the office, the crew or the whole family, packed and ready for you to pick up.
+                    Lunch for the office, the crew or the whole family, packed and ready for you to pick up, or dropped off.
                     Send us the basics below and we&rsquo;ll reach out to go over the details.
                 </p>
 
@@ -64,13 +65,21 @@ pageCss: "/assets/css/catering.css"
                         </div>
 
                         <div class="form-group">
-                            <label for="date">Pickup Date <span style="color:var(--accent-dark)">*</span></label>
-                            <input type="date" id="date" name="pickup_date" required>
+                            <label for="date">Date Needed <span style="color:var(--accent-dark)">*</span></label>
+                            <input type="date" id="date" name="date_needed" required>
                         </div>
 
                         <div class="form-group">
-                            <label for="time">Pickup Time</label>
-                            <input type="time" id="time" name="pickup_time">
+                            <label for="time">Time Needed</label>
+                            <input type="time" id="time" name="time_needed">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="handoff">Pickup or Drop-off</label>
+                            <select id="handoff" name="pickup_or_dropoff">
+                                <option value="Pickup">Pickup at the cafe</option>
+                                <option value="Drop-off">Drop-off (we&rsquo;ll confirm the address)</option>
+                            </select>
                         </div>
 
                         <div class="form-group">

@@ -21,7 +21,7 @@
     "website": "lvcafetogo.com"
   },
 
-  "_comment_owners": "The two names on the door. On the opening post because a small-town reopening is shared for the people, not the premises — friends and family scrolling past recognise a name long before they read an address. Bios and photos are still outstanding: src/team.njk is a placeholder.",
+  "_comment_owners": "The two names on the door. On the opening post because a small-town reopening is shared for the people, not the premises — friends and family scrolling past recognise a name long before they read an address. There is no team page: the staff do not want photos online, so src/team.njk is not published.",
   "owners": [
     { "name": "Terry Booker" },
     { "name": "Dalton Watkins" }
@@ -47,6 +47,6 @@
   },
 
   "_comment_construction": "Set to false to remove the under-construction banner from every page at once.",
-  "underConstruction": true,
+  "underConstruction": false,
   "constructionNotice": "Pardon our crumbs. This site is still under construction, so some details may change."
 }

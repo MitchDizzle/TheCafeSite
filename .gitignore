@@ -11,3 +11,6 @@ _site/
 
 # Rendered studio PNGs — regenerate with `npm run export`
 exports/
+
+# Full-size photo originals (camera files, may carry GPS) — web copies live in src/assets/photos/
+photos-originals/

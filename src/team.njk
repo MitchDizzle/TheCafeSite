@@ -3,6 +3,12 @@ layout: layouts/page.njk
 title: "Our Team | The Café"
 description: "Meet the team behind The Café. The people who make every event and meal special."
 pageCss: "/assets/css/team.css"
+# NOT PUBLISHED (2026-10-02). The staff don't want their photos online, so
+# this page is not built at all and nothing links to it. The template stays
+# as a starting point if that ever changes. permalink: false means Eleventy
+# writes no file, so no team.html can ship by accident.
+permalink: false
+eleventyExcludeFromCollections: true
 ---
 <section class="section" aria-labelledby="team-heading">
             <div class="container">

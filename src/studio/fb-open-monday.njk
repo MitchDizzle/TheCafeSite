@@ -1,0 +1,66 @@
+---
+layout: layouts/piece.njk
+title: "The Café — We Open Monday Post (1080 × 1350)"
+canvasW: "1080px"
+canvasH: "1350px"
+pageCss: "/assets/css/fb-open-monday.css"
+
+# The last post before the doors open, made because the opening-day square
+# had already gone out once and a repeat image reads as a repeat post.
+# Same 4:5 portrait as fb-weekly-specials so the two sit side by side in one
+# multi-image post without Facebook cropping either.
+#
+# The caption is built in fb-open-monday.11tydata.js, so the specials in it
+# come from src/_data/specials.json like the specials image does.
+
+tags: studio
+studioTitle: "We open Monday — Facebook post"
+studioCategory: "Social"
+studioSize: "1080 × 1350 px · portrait feed post"
+studioNote: "The countdown post for opening week, pairing with the weekly specials post (same 4:5 size) in one multi-image post. Teal ground to contrast the specials post's cream body. The date and hours come from site.json. Once the doors are open this piece is spent: don't repost it after October 5th."
+studioW: 1080
+studioH: 1350
+studioOrder: 23
+---
+{#- Loudness order: THIS MONDAY, then the date, then the hours. "This Monday"
+    leads rather than the date because the post goes out in the final days
+    before opening, and a weekday is read faster than a date. The date is
+    still there, on a cream plaque, for anyone who sees this late.
+
+    Red only on the cream plaque: red on the teal ground is 1.3:1. -#}
+<div class="canvas om">
+
+    <header class="om-head">
+        <div class="wordmark wordmark--light wordmark--hero om-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <div class="om-filigree">
+            {% include "partials/filigree.njk" %}
+        </div>
+    </header>
+
+    <section class="om-announce">
+        <p class="p-display-italic om-kicker">We open our doors</p>
+        <p class="p-display om-when">This {{ site.opening.dayName }}</p>
+        <div class="om-plaque">
+            <p class="p-display om-date">{{ site.opening.monthDay }}<sup>{{ site.opening.ordinal }}</sup></p>
+        </div>
+        <p class="p-label om-service">Breakfast &amp; Lunch <span class="dot">&middot;</span> Order &amp; Go <span class="dot">&middot;</span> Seating Available</p>
+    </section>
+
+    <section class="om-facts">
+        <p class="p-display om-days">{{ site.opening.hoursDays }}</p>
+        <p class="p-display om-hours">
+            {{ site.opening.opens.time }}<span class="ampm">{{ site.opening.opens.meridiem }}</span>
+            &ndash;
+            {{ site.opening.closes.time }}<span class="ampm">{{ site.opening.closes.meridiem }}</span>
+        </p>
+        <p class="p-body om-lunch">Lunch specials &amp; soup starting at 11am</p>
+    </section>
+
+    <footer class="om-foot">
+        <p class="p-display om-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
+        <p class="p-body om-addr">{{ site.address.street }} <span class="dot">&middot;</span> {{ site.address.locality }}, {{ site.address.region }}</p>
+    </footer>
+
+</div>

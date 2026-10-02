@@ -9,9 +9,9 @@ eleventyExcludeFromCollections: true
 {%- set pieces = [] %}
 {%- for piece in collections.studio %}
   {%- set _ = pieces.push({
-        slug:  piece.fileSlug,
+        slug:  (piece.data.studioSlug or piece.fileSlug),
         title: piece.data.studioTitle or piece.data.title,
-        url:   piece.filePathStem,
+        url:   piece.url | replace(".html", ""),
         w:     piece.data.studioW,
         h:     piece.data.studioH,
         scale: piece.data.studioExportScale or 1,
