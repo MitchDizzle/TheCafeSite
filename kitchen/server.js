@@ -48,10 +48,45 @@ const DEFAULTS = {
   skipItems: [], // item names the kitchen never makes, e.g. "Fountain Drink"
 };
 
+// Settings that are the cafe's own and have no meaningful default: never
+// flagged as "differs from the default".
+const OWN = new Set(["accessToken", "locationIds", "skipItems"]);
+
+// What's worth knowing about config.json, in plain words. Written to the
+// program window at startup and shown on /check.
+//
+// The point: a line in config.json pins that setting forever, so when a
+// default improves in an update (pollSeconds went 10 -> 5), a PC whose config
+// still says 10 never gets it. Saying so is how an update reaches it.
+function reviewConfig(file) {
+  const notes = [];
+  for (const [key, value] of Object.entries(file)) {
+    if (key.startsWith("_")) continue; // notes, not settings
+    if (!(key in DEFAULTS)) {
+      notes.push(`"${key}" is not a setting the board knows; check the spelling. It is being ignored.`);
+    } else if (!OWN.has(key) && JSON.stringify(value) !== JSON.stringify(DEFAULTS[key])) {
+      notes.push(
+        `"${key}" is set to ${JSON.stringify(value)} in config.json; the current default is ` +
+          `${JSON.stringify(DEFAULTS[key])}. Delete that line to use the default, or keep it if it's on purpose.`
+      );
+    }
+  }
+  return notes;
+}
+
 function loadConfig() {
   let file = {};
   if (fs.existsSync(CONFIG_FILE)) {
-    file = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+    try {
+      file = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+    } catch (err) {
+      console.error(
+        `config.json has a typo and can't be read (${err.message}).
+` +
+          "Usual causes: a missing comma between lines, a comma after the last line, or a missing quote."
+      );
+      process.exit(1);
+    }
   } else if (MOCK) {
     // Test mode with no config: borrow the example's settings (skip list etc.).
     file = JSON.parse(fs.readFileSync(path.join(DIR, "config.example.json"), "utf8"));
@@ -62,7 +97,9 @@ function loadConfig() {
     );
     process.exit(1);
   }
-  const cfg = { ...DEFAULTS, ...file };
+  const known = Object.fromEntries(Object.entries(file).filter(([k]) => k in DEFAULTS));
+  const cfg = { ...DEFAULTS, ...known };
+  cfg.notes = fs.existsSync(CONFIG_FILE) ? reviewConfig(file) : [];
   if (!MOCK && !cfg.accessToken) {
     console.error("config.json has no accessToken.");
     process.exit(1);
@@ -477,6 +514,7 @@ ${MOCK ? "<p><b>TEST MODE</b> — fake orders, not Square.</p>" : ""}
 <p>Locations: ${esc(locationIds.join(", ") || "not looked up yet")} · Showing counter sales since
 ${esc(startOfToday().toLocaleString())} and pickups due within ${cfg.showAheadMinutes} min.</p>
 ${status}
+${cfg.notes.length ? `<h2>config.json</h2><ul>${cfg.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : "<p>config.json: no problems found.</p>"}
 <p>${rows.length} order(s) came back from Square. Refresh to update.</p>
 <table><tr><th>Created</th><th>Order</th><th>Board type</th><th>From Square</th><th>Items</th><th>Board</th></tr>
 ${rows
@@ -559,5 +597,7 @@ server.on("error", (err) => {
 // 127.0.0.1 only: the board is for this PC's own screen, not the network.
 server.listen(cfg.port, "127.0.0.1", () => {
   console.log(`Kitchen board on http://localhost:${cfg.port}${MOCK ? "  (MOCK ORDERS)" : ""}`);
+  console.log(`Checking Square every ${cfg.pollSeconds} s.`);
+  for (const note of cfg.notes) console.log(`config.json: ${note}`);
   poll();
 });

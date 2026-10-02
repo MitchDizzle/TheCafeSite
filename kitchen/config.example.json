@@ -1,10 +1,5 @@
 {
+  "_note": "Copy this file to config.json and paste in the token. Only the cafe's own settings belong here. Everything else has a built-in default (see DEFAULTS in server.js), and leaving it out means an update can improve it. Add a line only to change a default on purpose; the board says so at startup and on /check.",
   "accessToken": "PASTE-SQUARE-PRODUCTION-ACCESS-TOKEN-HERE",
-  "environment": "production",
-  "locationIds": [],
-  "port": 8090,
-  "pollSeconds": 5,
-  "showAheadMinutes": 60,
-  "openLookbackDays": 14,
   "skipItems": ["Iced Tea / Fountain Drink", "Bottle Water", "Chips"]
 }

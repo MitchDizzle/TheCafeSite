@@ -49,12 +49,16 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
    3. Switch to **Production**, open **Credentials**, and copy the **Production Access token**.
 
    Treat the token like a password. It never goes in git, an email, or a text message.
-4. **Copy `config.example.json` to `config.json`** and paste in the token. `config.json` is gitignored. Adjust `skipItems` to match item names exactly as they appear in Square.
-5. **Double-click `start-kitchen.bat`.** A minimized window runs the board program, and Chrome opens full-screen on the board. Press **Alt+F4** to leave full-screen.
+4. **Copy `config.example.json` to `config.json`** and paste in the token. `config.json` is gitignored, so updates never touch it. Adjust `skipItems` to match item names exactly as they appear in Square. Keep only those two settings: every other setting has a built-in default, and a line in `config.json` pins that setting so updates can't improve it. The board lists any such line when it starts and on `/check`.
+5. **Double-click `start-kitchen.bat`.** It first pulls the latest board code with git (if the internet is down, it starts the version already on the PC). Then a minimized window runs the board program, and Chrome opens full-screen on the board. Press **Alt+F4** to leave full-screen. A desktop shortcut to it is fine. Running it again replaces the board program and the board window, never stacks a second one, and leaves everything else on the PC alone.
 6. **Start it automatically.** Press Win+R and type `shell:startup`, then put a shortcut to `start-kitchen.bat` in that folder. Also set:
    - Settings → System → Power: **screen and sleep to Never**.
    - Windows to sign in automatically after a restart (run `netplwiz` and uncheck "Users must enter a user name and password"). Do this only if the kitchen PC is used for nothing else.
    - Windows Update **active hours** to cover service, so the PC doesn't restart mid-lunch.
+
+## Updating the board
+
+Push the change to the `kitchen-board` branch from any computer, then restart the board on the kitchen PC: run `start-kitchen.bat` or restart the PC. It runs `git pull` itself before starting. `config.json` and `state.json` (cleared tickets) are never changed by an update.
 
 ## When an order doesn't show up
 
@@ -82,4 +86,4 @@ This shows fake orders and adds a new one every 45 seconds, so you can hear the 
 | `board.html` | The screen. |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `state.json` | Which orders have been cleared. Created automatically; gitignored. |
-| `start-kitchen.bat` | Starts the program (restarting it if it ever stops) and opens Chrome in kiosk mode. |
+| `start-kitchen.bat` | Pulls updates, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. |
