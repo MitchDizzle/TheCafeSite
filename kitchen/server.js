@@ -33,6 +33,9 @@ const path = require("path");
 const DIR = __dirname;
 const CONFIG_FILE = path.join(DIR, "config.json");
 const MOCK = process.env.KITCHEN_MOCK === "1";
+// KITCHEN_MUTE=1 silences the board for testing on another computer. On the
+// kitchen PC, leave sound on: the chime is how a new order gets noticed.
+const MUTE = process.env.KITCHEN_MUTE === "1";
 const STATE_FILE = path.join(DIR, MOCK ? "state-mock.json" : "state.json");
 const BOARD_FILE = path.join(DIR, "board.html");
 
@@ -43,6 +46,7 @@ const DEFAULTS = {
   locationIds: [], // empty = every active location on the account
   port: 8090,
   pollSeconds: 5,
+  sound: true, // new-order chime and lost-connection alarm
   showAheadMinutes: 60, // pickup orders appear this long before they're due
   openLookbackDays: 14, // how far back to look for pre-ordered pickups
   skipItems: [], // item names the kitchen never makes, e.g. "Fountain Drink"
@@ -353,7 +357,7 @@ function snapshot() {
   const tickets = all
     .filter((t) => !hiddenReason(t, now))
     .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
-  return { tickets, lastOkAt, error: lastError, mock: MOCK, lastCleared: lastCleared() };
+  return { tickets, lastOkAt, error: lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared() };
 }
 
 // ---------------------------------------------------------------- mock data
@@ -598,6 +602,7 @@ server.on("error", (err) => {
 server.listen(cfg.port, "127.0.0.1", () => {
   console.log(`Kitchen board on http://localhost:${cfg.port}${MOCK ? "  (MOCK ORDERS)" : ""}`);
   console.log(`Checking Square every ${cfg.pollSeconds} s.`);
+  if (!cfg.sound || MUTE) console.log("Sound is OFF.");
   for (const note of cfg.notes) console.log(`config.json: ${note}`);
   poll();
 });

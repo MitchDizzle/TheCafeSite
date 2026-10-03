@@ -78,6 +78,8 @@ start-kitchen.bat
 
 This shows fake orders and adds a new one every 45 seconds, so you can hear the chime. Bumps in test mode go to `state-mock.json` and never mix with real ones.
 
+To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` before `start-kitchen.bat`. The top bar then shows an amber **Sound off** tag so a muted board can't go unnoticed. To silence the kitchen PC for good, add `"sound": false` to `config.json`, but the chime is how a new order gets noticed, so leave it on there.
+
 ## Files
 
 | File | What it is |

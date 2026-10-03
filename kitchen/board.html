@@ -57,6 +57,10 @@
   .live { font-size: 0.95rem; opacity: 0.85; font-variant-numeric: tabular-nums; }
   .keys { font-size: 0.9rem; opacity: 0.8; white-space: nowrap; }
   .keys b { display: inline-block; min-width: 1.4em; padding: 0 0.3em; margin: 0 0.15em; border: 1px solid currentColor; border-radius: 0.25rem; text-align: center; }
+  /* Hard to miss on purpose: a muted board on the kitchen PC means orders
+     arrive silently. */
+  .muted { padding: 0.15rem 0.6rem; border-radius: 0.3rem; background: var(--amber); color: #1A1A1A; font-weight: 800; font-size: 0.95rem; }
+  .muted[hidden] { display: none; }
   .more {
     position: fixed;
     left: 50%;
@@ -187,6 +191,7 @@
     <button class="undo" id="undo" type="button" hidden>↶ Undo</button>
     <button class="undo" id="refresh" type="button">Check now</button>
     <span class="live" id="live"></span>
+    <span class="muted" id="muted" hidden>Sound off</span>
     <span class="clock" id="clock"></span>
     <span class="keys"><b>1</b>–<b>9</b> done <b>⌫</b> undo <b>−</b><b>+</b> scroll <b>⏎</b> check now</span>
   </div>
@@ -209,6 +214,8 @@
   const refreshBtn = document.getElementById("refresh");
   const liveEl = document.getElementById("live");
   const moreEl = document.getElementById("more");
+  const soundEl = document.getElementById("muted");
+  let soundOn = true;
 
   let tickets = [];
   let lastJson = "";
@@ -324,14 +331,27 @@
 
   // Show or clear the connection banner. Going from fine to broken sounds
   // the alarm once, so a dead board mid-service doesn't go unnoticed.
+  // Alarms only on LOSING a connection that was working: "Connecting…" at
+  // startup is not an outage and must not beep every time the PC boots.
+  let wasOk = false;
   function problem(text) {
-    if (text && !down) alarm();
+    if (text && !down && wasOk) alarm();
+    if (!text) wasOk = true;
     down = !!text;
     alertEl.hidden = !text;
     if (text) alertEl.textContent = text;
   }
 
+  // A banner that is information, not an outage (test mode): never sounds.
+  function notice(text) {
+    down = false;
+    alertEl.hidden = false;
+    alertEl.textContent = text;
+  }
+
   function apply(data) {
+    soundOn = data.sound !== false;
+    soundEl.hidden = soundOn;
     lastOkAt = data.lastOkAt;
     lastCleared = data.lastCleared;
     renderUndo();
@@ -343,8 +363,10 @@
         ? `Can't reach Square — orders shown as of ${fmtTime(data.lastOkAt)}. Check the internet. New orders may be missing.`
         : `Connecting to Square… ${data.error ? "(" + data.error + ")" : ""}`);
     } else {
-      problem(data.mock ? "TEST MODE — these are fake orders, not from Square." : null);
-      if (data.mock) down = false; // test mode is a notice, not an outage
+      // Test mode used to go through problem(), which sounded the alarm and
+      // then reset itself, so it went off on every poll.
+      if (data.mock) { wasOk = true; notice("TEST MODE — these are fake orders, not from Square."); }
+      else problem(null);
     }
 
     const json = JSON.stringify(data.tickets);
@@ -448,6 +470,7 @@
   // first tap anywhere also unlocks audio, in case it wasn't)
   let audio;
   function chime() {
+    if (!soundOn) return;
     try {
       audio = audio || new AudioContext();
       if (audio.state === "suspended") audio.resume();
@@ -468,6 +491,7 @@
   // A low falling tone when the board loses Square or its own program,
   // distinct from the new-order chime so nobody mistakes it for an order.
   function alarm() {
+    if (!soundOn) return;
     try {
       audio = audio || new AudioContext();
       if (audio.state === "suspended") audio.resume();
