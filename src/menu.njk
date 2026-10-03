@@ -2,7 +2,7 @@
 layout: layouts/page.njk
 title: "Menu | The Café"
 description: "Breakfast and lunch at The Café in Leavenworth, KS. Biscuits and gravy, omelets, wraps, sandwiches, burgers, salads and daily soup."
-ogDescription: "Breakfast and lunch in Leavenworth, KS. Call ahead and we will have it waiting."
+ogDescription: "Breakfast and lunch in Leavenworth, KS, made to order."
 pageCss: "/assets/css/menu.css"
 ---
 {#- ===========================================================
@@ -32,15 +32,17 @@ pageCss: "/assets/css/menu.css"
 <section class="section menu-body" aria-labelledby="menu-heading">
     <div class="container">
         <h1 id="menu-heading">Menu</h1>
-        <p class="menu-lede">Breakfast and lunch, made to order. Everything is available to go. Call ahead and we&rsquo;ll have it waiting.</p>
+        <p class="menu-lede">Breakfast and lunch, made to order. Everything is available to go.{% if site.phoneOrders %} Call ahead and we&rsquo;ll have it waiting.{% endif %}</p>
 
-        {#- Prices on this page are the old menu's, and some of them are still
-            being re-costed (see menu.json's priceReview flag). Saying so up
-            here rather than in small print at the foot: somebody who drives
-            over expecting $8.00 and pays $9.00 remembers that, and the note
-            costs one line. Delete it once the cafe is open and the prices
-            have settled. -#}
-        <p class="menu-note">Prices may change closer to our opening on {{ site.opening.monthDay }}.</p>
+        {#- Until the Square Online site exists, say how to order ahead —
+            people arrive here from a Facebook post asking exactly that. The
+            line goes away by itself once site.ordering.url is filled in and
+            the Order Online button below takes over. (This slot used to say
+            prices might change before opening; they were settled when the
+            Square catalog was built from menu.json.) -#}
+        {%- if not site.ordering.url %}
+        <p class="menu-note">Online ordering is coming soon.{% if site.phoneOrders %} Until then, call <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a> to order ahead.{% else %} Until then, please order at the counter.{% endif %}</p>
+        {%- endif %}
 
         {#- Today's special, from src/_data/specials.json. Hidden unless the
             week lists today or a day still to come — see the partial. Above
@@ -240,7 +242,7 @@ pageCss: "/assets/css/menu.css"
 <section class="section menu-cta" aria-labelledby="menu-cta-heading">
     <div class="container">
         <h2 id="menu-cta-heading">Feeding a crowd?</h2>
-        <p class="menu-cta-copy">Lunch for the office, the crew or the whole family, packed and ready for pickup. For more than 10 people, give us at least 12 hours&rsquo; notice.</p>
+        <p class="menu-cta-copy">Lunch for the office, the crew or the whole family, ready for pickup or dropped off. For more than 10 people, give us at least 12 hours&rsquo; notice.</p>
         <p class="menu-cta-actions">
             <a href="/catering" class="btn btn-primary">Request catering</a>
             <a href="tel:{{ site.phoneHref }}" class="btn btn-outline">Call {{ site.phone }}</a>

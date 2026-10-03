@@ -5,19 +5,19 @@
   "week": [
     {
       "date": "2026-10-05",
-      "soup": "Chicken Dumpling Soup",
+      "soup": "Chicken Dumpling",
       "special": "BBQ Ribs",
       "sides": ["Baked Beans", "Mac & Cheese"]
     },
     {
       "date": "2026-10-06",
-      "soup": "Cauliflower Cheese Soup",
+      "soup": "Cauliflower Cheese",
       "special": "Chicken Enchilada Casserole",
       "sides": ["Rice & Beans"]
     },
     {
       "date": "2026-10-07",
-      "soup": "Beef Noodle Soup",
+      "soup": "Beef Noodle",
       "special": "Pork Tenderloin on a Bun",
       "sides": ["Oven Baked Potatoes"]
     },

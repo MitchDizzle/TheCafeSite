@@ -1,7 +1,7 @@
 {
   "name": "The Café",
   "url": "https://lvcafetogo.com",
-  "description": "Professional catering and meal prep services in Leavenworth, Kansas. Crafted with care for every occasion.",
+  "description": "Breakfast and lunch made to order, plus pickup and drop-off catering, in Leavenworth, Kansas.",
   "phone": "(913) 547-9994",
   "phoneHref": "+1-913-547-9994",
   "email": "theabcafe@gmail.com",
@@ -21,15 +21,15 @@
     "website": "lvcafetogo.com"
   },
 
-  "_comment_owners": "The two names on the door. On the opening post because a small-town reopening is shared for the people, not the premises — friends and family scrolling past recognise a name long before they read an address. Bios and photos are still outstanding: src/team.njk is a placeholder.",
+  "_comment_owners": "The two names on the door. On the opening post because a small-town reopening is shared for the people, not the premises — friends and family scrolling past recognise a name long before they read an address. There is no team page: the staff do not want photos online, so src/team.njk is not published.",
   "owners": [
     { "name": "Terry Booker" },
     { "name": "Dalton Watkins" }
   ],
 
-  "_comment_ordering": "Square Online, the hosted pickup-ordering site. `url` is the squaresite.com address from square-setup.md §7 in the CafeWork repo, and it is EMPTY UNTIL THAT SITE EXISTS — every Order Online button on this site is conditional on it, so an empty string means no button rather than a button that 404s. A custom domain needs a paid Square plan we deliberately skip, so this will stay an off-domain link; that is a known tradeoff, not an oversight.",
+  "_comment_ordering": "The online ordering page (Square, reached through Cash App: cash.app/$lvcafetogo, set 2026-10-02). Every Order Online button and every 'online ordering is coming soon' line on the site and in the post captions keys off `url`: empty means no button and a coming-soon note, filled means the button. It is an off-site link by design (a custom domain needs a paid Square plan).",
   "ordering": {
-    "url": "",
+    "url": "https://cash.app/$lvcafetogo",
     "label": "Order Online"
   },
 
@@ -47,6 +47,9 @@
   },
 
   "_comment_construction": "Set to false to remove the under-construction banner from every page at once.",
-  "underConstruction": true,
+  "underConstruction": false,
+
+  "_comment_phoneOrders": "false while the kitchen can't take food orders by phone (client, 2026-10-02: not for the first few weeks after opening, for capacity). Every 'call ahead' line on the site and in the generated post captions is conditional on this, so flipping it to true turns them all back on. Catering inquiries by phone are separate and always shown.",
+  "phoneOrders": false,
   "constructionNotice": "Pardon our crumbs. This site is still under construction, so some details may change."
 }

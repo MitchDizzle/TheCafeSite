@@ -12,6 +12,10 @@ _site/
 # Rendered studio PNGs — regenerate with `npm run export`
 exports/
 
+
 # Kitchen board — the Square token and bump state live only on the kitchen PC
 kitchen/config.json
 kitchen/state*.json
+
+# Full-size photo originals (camera files, may carry GPS) — web copies live in src/assets/photos/
+photos-originals/

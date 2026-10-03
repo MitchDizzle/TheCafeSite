@@ -27,13 +27,13 @@ eleventyExcludeFromCollections: true
         category:  piece.data.studioCategory or "Pages",
         note:      piece.data.studioNote,
         meta:      piece.data.studioSize,
-        url:       piece.filePathStem,
+        url:       piece.url | replace(".html", ""),
         kind:      "embed",
         w:         piece.data.studioW or 1056,
         h:         piece.data.studioH or 1632,
         printable: piece.data.pageSize,
         source:    piece.inputPath,
-        slug:      piece.fileSlug,
+        slug:      (piece.data.studioSlug or piece.fileSlug),
         order:     piece.data.studioOrder or 500
      }) %}
 {%- endfor %}

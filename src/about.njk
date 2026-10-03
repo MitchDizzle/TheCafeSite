@@ -1,8 +1,8 @@
 ---
 layout: layouts/page.njk
 title: "About | The Café"
-description: "Learn about The Café. Our story, what we offer, and what to expect from our catering and meal prep services."
-ogDescription: "Our story, what we offer, and what to expect. Catering and meal prep from a Leavenworth, KS kitchen since 2005."
+description: "Learn about The Café. Our story, what we offer, and how our pickup and drop-off catering works."
+ogDescription: "Breakfast, lunch and catering from a Leavenworth, KS kitchen since 2005."
 ---
 <!-- ── Section 1: Our Story ─────────────────────────── -->
         <section class="section" id="our-story" aria-labelledby="story-heading">
@@ -25,7 +25,8 @@ ogDescription: "Our story, what we offer, and what to expect. Catering and meal 
             <div class="container">
                 <h2 id="history-heading">Our History</h2>
                 <p>Over more than two decades, The Café has grown and evolved alongside the Leavenworth community. Since opening in 2005, the business has moved locations several times across the city, each move bringing The Café closer to where it needed to be. Through those changes, the team's dedication to quality and community never wavered.</p>
-                <p style="margin-top: 1rem;">In time, The Café transitioned from a sit-down restaurant to a full-service catering and meal prep operation, so the team could concentrate on what they do best. Today, The Café is proud to serve both private events and the community through the <strong>Meals on Wheels</strong> program, delivering nutritious, home-prepared meals to seniors and neighbors in need throughout the Leavenworth area.</p>
+                <p style="margin-top: 1rem;">In 2015, The Café stepped back from serving the public to focus on catering and to cook for the <strong>Meals on Wheels</strong> program alongside the Council on Aging, bringing home-prepared meals to seniors and neighbors throughout the Leavenworth area.</p>
+                <p style="margin-top: 1rem;">Starting {{ site.opening.dayName }}, {{ site.opening.monthDay }}, 2026, The Café is open to the public again as an order-and-go deli at {{ site.address.street }}: breakfast and lunch, {{ site.opening.hoursDays }}.</p>
             </div>
 
             <div class="chevron-down" aria-hidden="true">
@@ -40,15 +41,18 @@ ogDescription: "Our story, what we offer, and what to expect. Catering and meal 
         <section class="section" id="what-we-offer" aria-labelledby="offer-heading">
             <div class="container">
                 <h2 id="offer-heading">What We Offer</h2>
-                <p>The Café is a catering-only operation serving Leavenworth and the surrounding area. We can provide as much or as little support as your event requires, and we'll work with your budget.</p>
+                {#- Catering as the client describes it (2026-10-02): pickup and
+                    drop-off. Anything beyond that is worked out with them in
+                    person, so it is offered as a conversation, not a list of
+                    services. Hours, notice and payment come from site.json and
+                    CafeWork DECISIONS.md §8. -#}
+                <p><strong>Breakfast and lunch</strong>, {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}. {% if site.ordering.url %}<a href="{{ site.ordering.url }}">Order online</a> for pickup, or order at the counter.{% elif site.phoneOrders %}Order at the counter or call ahead and we&rsquo;ll have it ready.{% else %}Order at the counter; online ordering is coming soon.{% endif %} Seating is available; there&rsquo;s no table service.</p>
                 <ul style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; padding-left: 1.25rem;">
-                    <li><strong>Full sit-down dinners:</strong> china, silverware, glassware, and linen included</li>
-                    <li><strong>Buffets:</strong> setup and service for groups of any size</li>
-                    <li><strong>Drop-off catering:</strong> food delivered, you handle the rest</li>
-                    <li><strong>Appetizer &amp; station service:</strong> cocktail hours, receptions, and more</li>
-                    <li><strong>Meals on Wheels:</strong> prepared meals for seniors and community members in the Leavenworth area</li>
+                    <li><strong>Pickup catering:</strong> lunch for the office, the crew or the whole family, packed and ready at the counter</li>
+                    <li><strong>Drop-off catering:</strong> we bring the food to you</li>
+                    <li><strong>Something special?</strong> Larger or custom catering is something we work out with you personally. Give us a call and give us a few weeks for bigger events.</li>
                 </ul>
-                <p style="margin-top: 1.25rem;">We can also provide plasticware, serving staff, and table linen as needed. Minimum guest count for catering events is 15. Dietary accommodations available. Just let us know.</p>
+                <p style="margin-top: 1.25rem;">For more than 10 people, please give us at least 12 hours&rsquo; notice. Let us know about any allergies or dietary needs when you order. We take cash, check or card.</p>
             </div>
 
             <div class="chevron-down" aria-hidden="true">
@@ -63,8 +67,8 @@ ogDescription: "Our story, what we offer, and what to expect. Catering and meal 
         <section class="section section--alt" id="what-to-expect" aria-labelledby="expect-heading">
             <div class="container">
                 <h2 id="expect-heading">What to Expect</h2>
-                <p>Getting started is straightforward. Fill out our catering request form with your event details: date, guest count, style of service, and any special requirements. We'll review your submission and follow up with availability and a custom quote.</p>
-                <p style="margin-top: 1rem;">We're happy to accommodate, whether you need a full-service dinner or just the food dropped off. The more detail you provide upfront, the faster we can put together the right plan for your event.</p>
+                <p>Getting started is easy. Send us the basics on our catering request form: when you need it, how many people, pickup or drop-off, and what you have in mind. We&rsquo;ll call or email to go over the details.</p>
+                <p style="margin-top: 1rem;">Rather talk it through? Call <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a> or email <a href="mailto:{{ site.email }}">{{ site.email }}</a>.</p>
 
                 <a href="catering#inquiry" class="btn btn-primary" style="margin-top: 2rem;">Book a Catering</a>
             </div>

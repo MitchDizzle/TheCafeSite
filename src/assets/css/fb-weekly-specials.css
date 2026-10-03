@@ -59,9 +59,10 @@
     padding: 26px 64px 24px;
 }
 
+/* Teal, not red: red here sat right on top of the red column labels. */
 .wk-served {
     font-size: 24px;
-    color: var(--accent);
+    color: var(--teal);
     text-align: center;
     text-indent: 0.18em;
 }
@@ -104,6 +105,7 @@
 
 .wk-col--soup {
     padding-left: 22px;
+    text-align: center;
 }
 
 .wk-dayname {
@@ -132,6 +134,12 @@
    separate item, not a line under the plate — they are sold separately. */
 .wk-soup {
     align-self: stretch;
+    /* Centred in its cell both ways, so a one-line soup beside a two-line
+       plate doesn't hang at the top of the row. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     font-size: 27px;
     line-height: 1.25;
     color: var(--teal-dark);
