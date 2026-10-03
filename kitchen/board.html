@@ -76,9 +76,9 @@
   .refresh .track { stroke: rgba(250, 247, 242, 0.22); }
   .refresh .ring { stroke: var(--mint); transform: rotate(-90deg); transform-origin: 22px 22px; }
   .refresh.is-down .ring { stroke: var(--amber); }
-  .refresh.is-checking .glyph { animation: spin 0.8s linear infinite; transform-origin: 22px 23px; }
+  .refresh.is-checking svg .glyph-spin { animation: spin 0.8s linear infinite; transform-origin: 22px 22px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) { .refresh.is-checking .glyph { animation: none; opacity: 0.6; } }
+  @media (prefers-reduced-motion: reduce) { .refresh.is-checking svg .glyph-spin { animation: none; opacity: 0.6; } }
   .undo {
     font: inherit;
     font-size: 1rem;
@@ -233,10 +233,10 @@
       <svg viewBox="0 0 44 44" fill="none" stroke-linecap="round" aria-hidden="true">
         <circle class="track" cx="22" cy="22" r="20" stroke-width="3"/>
         <circle class="ring" id="ring" cx="22" cy="22" r="20" stroke-width="3" stroke-dasharray="125.66" stroke-dashoffset="0"/>
-        <g class="glyph" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">
-          <circle cx="22" cy="23.5" r="8.5"/>
-          <path d="M22 23.5v-4.5M19.5 12h5M22 12v3M29.2 16.3l1.6-1.6"/>
-        </g>
+        <g class="glyph-spin"><g class="glyph" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" transform="translate(9.4 9.4) scale(1.05)">
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+        </g></g>
       </svg>
     </button>
     <span class="clock" id="clock"></span>

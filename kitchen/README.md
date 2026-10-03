@@ -34,7 +34,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 | **Enter** | Check Square right now instead of waiting for the next check |
 
 - Tickets 10 and up have no number key. Clear the first nine, or use the mouse.
-- **The board checks Square every 5 seconds.** The timer icon in the top right has a ring that empties as the next check approaches and refills when it runs. Tap it (or press **Enter**) to check right now. The ring turns amber when Square can't be reached.
+- **The board checks Square every 5 seconds.** The refresh icon in the top right has a ring that empties as the next check approaches and refills when it runs. Tap it (or press **Enter**) to check right now. The ring turns amber when Square can't be reached.
 - **The speaker icon** mutes and unmutes the chime and the alarm. Muted shows amber with a cross, and that screen remembers the setting until someone taps it again.
 - **A two-tone chime** means a new order. **A low falling tone** plus an amber banner means the board lost Square or its own program. Tickets shown at that point might be out of date, and new ones might be missing, so go by the printer until it clears.
 - **An amber "continues below" pointer** appears when a ticket runs off the bottom of the screen. Press **+** to see it.
@@ -59,7 +59,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 
 ## Updating the board
 
-Push the change to the `kitchen-board` branch from any computer, then restart the board on the kitchen PC: run `start-kitchen.bat` or restart the PC. It runs `git pull` itself before starting. `config.json` and `state.json` (cleared tickets) are never changed by an update.
+Push the change to the `kitchen-board` branch from any computer, then restart the board on the kitchen PC: run `start-kitchen.bat` or restart the PC. Before starting, it fetches that branch, switches to it (so a copy cloned on `main` still ends up on the board's code), and fast-forwards. The branch is set at the top of `start-kitchen.bat` (`BOARD_BRANCH`); change it to `main` once the board is merged. If git isn't installed or the update fails, it says so on screen and starts the version already there. `config.json` and `state.json` (cleared tickets) are never changed by an update.
 
 ## When an order doesn't show up
 

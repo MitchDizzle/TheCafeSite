@@ -8,20 +8,36 @@ cd /d "%~dp0"
 if "%~1"=="server" goto server
 if "%~1"=="launch" goto launch
 
-rem Step 1: get the latest board code. config.json is never changed by this,
-rem because git ignores it.
+rem The branch the kitchen PC runs. Change to main once kitchen-board is
+rem merged (TASKS KB-7).
+set BOARD_BRANCH=kitchen-board
+
+rem Step 1: get the latest board code. Fetches the branch, switches to it
+rem (so a copy cloned on main, or left on another branch, still ends up on
+rem the board's code), then fast-forwards. config.json and state.json are
+rem never changed by this, because git ignores them.
 rem
-rem This is one parenthesised block ON PURPOSE. git pull can rewrite this very
-rem file, and cmd reads a batch file line by line while it runs, so anything
-rem after the pull would be read from the new file at the old position. cmd
-rem parses a whole block before running it, so the block is safe, and it ends
-rem by starting the (possibly new) file afresh.
+rem This is one parenthesised block ON PURPOSE. The update can rewrite this
+rem very file, and cmd reads a batch file line by line while it runs, so
+rem anything after it would be read from the new file at the old position.
+rem cmd parses a whole block before running it, so the block is safe, and it
+rem ends by starting the (possibly new) file afresh.
 (
   where git >nul 2>&1
-  if not errorlevel 1 if exist "..\.git" (
-    echo Checking for board updates...
-    git -C .. pull --ff-only
-    if errorlevel 1 echo Could not update. Starting the version already on this PC.
+  if errorlevel 1 (
+    echo git was not found on this PC, so the board cannot update itself.
+    echo Install Git for Windows, or check it is on the PATH. Starting the version already here.
+  ) else if not exist "..\.git" (
+    echo This folder is not a git checkout, so the board cannot update itself.
+  ) else (
+    echo Updating the board from %BOARD_BRANCH%...
+    git -C .. fetch origin %BOARD_BRANCH%
+    git -C .. checkout %BOARD_BRANCH%
+    git -C .. merge --ff-only origin/%BOARD_BRANCH%
+    if errorlevel 1 (
+      echo Could not update. Starting the version already on this PC.
+      timeout /t 5 >nul
+    )
   )
   "%~f0" launch
 )
