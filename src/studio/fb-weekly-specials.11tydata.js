@@ -20,7 +20,8 @@ module.exports = {
       return [
         `This week's lunch specials at The Café, ${weekRange(week)}:`,
         ...dayLines(week),
-        `Lunch specials and soup are served from 11am. We're open ${site.opening.hoursDays}, ${hours}. Call ${site.phone} and we'll have yours ready.`,
+        `Lunch specials and soup are served from 11am. We're open ${site.opening.hoursDays}, ${hours}.${site.phoneOrders ? ` Call ${site.phone} and we'll have yours ready.` : ""}`,
+        ...(site.ordering.url ? [`Order online for pickup: ${site.ordering.url.replace(/^https?:\/\//, "")}`] : []),
         `Full menu: ${site.social.website}/menu`,
       ];
     },

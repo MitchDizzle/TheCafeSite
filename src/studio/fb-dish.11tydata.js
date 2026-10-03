@@ -36,12 +36,13 @@ module.exports = {
       const found = lookup(photo.item);
       if (!found) throw new Error(`photos.json: "${photo.item}" is not an item in menu.json`);
       const { category, item } = found;
-      const price = item.price ?? (category.sizing && category.sizing[0] && category.sizing[0].price);
 
       // The hot sandwiches come both ways; say so on the other one's photo.
+      // "Available as…", not "Also made with chicken", which read as if
+      // the burger already had chicken in it.
       const variantNote =
-        photo.variant === "Chicken" ? "Also made as a burger" :
-        photo.variant === "Burger" ? "Also made with chicken" : null;
+        photo.variant === "Chicken" ? "Available as a burger" :
+        photo.variant === "Burger" ? "Available as a chicken sandwich" : null;
 
       // Fit the name on one line across the 960px measure. Playfair Black
       // Italic runs about 0.56em a character.
@@ -50,7 +51,6 @@ module.exports = {
       return {
         kicker: category.name,
         description: withBread(item),
-        price: price != null ? money(price) : "",
         variantNote,
         titleSize,
       };
@@ -64,10 +64,14 @@ module.exports = {
       const price = item.price ?? (category.sizing && category.sizing[0] && category.sizing[0].price);
       const o = site.opening;
       const lines = [`${photo.title}: ${withBread(item)}. ${money(price)}.`];
-      if (photo.variant === "Chicken") lines.push("Rather have a burger? We make it that way too.");
-      if (photo.variant === "Burger") lines.push("Rather have chicken? We make it that way too.");
+      if (photo.variant === "Chicken") lines.push("Rather have a burger? It's available that way too.");
+      if (photo.variant === "Burger") lines.push("Rather have chicken? It's available as a chicken sandwich too.");
+      // The photos were taken while the menu was still being finalized.
       lines.push(
-        `Order at the counter or call ${site.phone} and we'll have it ready. Open ${o.hoursDays}, ${o.opens.time.replace(":00", "")}${o.opens.meridiem} – ${o.closes.time.replace(":00", "")}${o.closes.meridiem}, ${site.address.street}.`,
+        "A first look from our kitchen: these photos were taken while we were still finalizing the menu, so your plate may look a little different."
+      );
+      lines.push(
+        `${site.ordering.url ? `Order online for pickup at ${site.ordering.url.replace(/^https?:\/\//, "")}, or at the counter.` : site.phoneOrders ? `Order at the counter or call ${site.phone} and we'll have it ready.` : "Order at the counter."} Open ${o.hoursDays}, ${o.opens.time.replace(":00", "")}${o.opens.meridiem} – ${o.closes.time.replace(":00", "")}${o.closes.meridiem}, ${site.address.street}.`,
         `Full menu: ${site.url}/menu`
       );
       return lines;

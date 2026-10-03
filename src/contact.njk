@@ -87,7 +87,13 @@ pageCss: "/assets/css/contact.css"
                         </li>
                         <li>
                             <p class="faq__q">Can I order ahead?</p>
+                            {%- if site.phoneOrders %}
                             <p class="faq__a">Yes. Call <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a> and we&rsquo;ll have it ready for pickup.{% if not site.ordering.url %} Online ordering is coming soon.{% endif %}</p>
+                            {%- elif site.ordering.url %}
+                            <p class="faq__a">Yes. <a href="{{ site.ordering.url }}">Order online</a> and pick it up at the counter.</p>
+                            {%- else %}
+                            <p class="faq__a">Not yet. For our first few weeks, please order at the counter. Online ordering is coming soon. Group orders for catering can still be arranged ahead; see <a href="/catering">Catering</a>.</p>
+                            {%- endif %}
                         </li>
                         <li>
                             <p class="faq__q">How can I pay?</p>

@@ -2,7 +2,7 @@
 layout: layouts/page.njk
 title: "Menu | The Café"
 description: "Breakfast and lunch at The Café in Leavenworth, KS. Biscuits and gravy, omelets, wraps, sandwiches, burgers, salads and daily soup."
-ogDescription: "Breakfast and lunch in Leavenworth, KS. Call ahead and we will have it waiting."
+ogDescription: "Breakfast and lunch in Leavenworth, KS, made to order."
 pageCss: "/assets/css/menu.css"
 ---
 {#- ===========================================================
@@ -32,7 +32,7 @@ pageCss: "/assets/css/menu.css"
 <section class="section menu-body" aria-labelledby="menu-heading">
     <div class="container">
         <h1 id="menu-heading">Menu</h1>
-        <p class="menu-lede">Breakfast and lunch, made to order. Everything is available to go. Call ahead and we&rsquo;ll have it waiting.</p>
+        <p class="menu-lede">Breakfast and lunch, made to order. Everything is available to go.{% if site.phoneOrders %} Call ahead and we&rsquo;ll have it waiting.{% endif %}</p>
 
         {#- Until the Square Online site exists, say how to order ahead —
             people arrive here from a Facebook post asking exactly that. The
@@ -41,7 +41,7 @@ pageCss: "/assets/css/menu.css"
             prices might change before opening; they were settled when the
             Square catalog was built from menu.json.) -#}
         {%- if not site.ordering.url %}
-        <p class="menu-note">Online ordering is coming soon. Until then, call <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a> to order ahead.</p>
+        <p class="menu-note">Online ordering is coming soon.{% if site.phoneOrders %} Until then, call <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a> to order ahead.{% else %} Until then, please order at the counter.{% endif %}</p>
         {%- endif %}
 
         {#- Today's special, from src/_data/specials.json. Hidden unless the

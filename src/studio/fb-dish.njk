@@ -1,8 +1,8 @@
 ---
 layout: layouts/piece.njk
-title: "The Café — Dish Post (1080 × 1350)"
+title: "The Café — Dish Post (1080 × 1250)"
 canvasW: "1080px"
-canvasH: "1350px"
+canvasH: "1250px"
 pageCss: "/assets/css/fb-dish.css"
 
 # One post per food photo in src/_data/photos.json. Add a photo there and a
@@ -18,10 +18,10 @@ permalink: "/studio/fb-dish-{{ photo.file | replace('/assets/photos/', '') | rep
 
 tags: studio
 studioCategory: "Social"
-studioSize: "1080 × 1350 px · portrait feed post"
-studioNote: "Built from one photo in src/_data/photos.json. The dish name sits in the kitchen background above the food and everything else goes in the band under the photo, so no text crosses the plate. The menu supplies the description and price."
+studioSize: "1080 × 1250 px · portrait feed post"
+studioNote: "Built from one photo in src/_data/photos.json. The dish name sits in the kitchen background above the food and everything else goes in the band under the photo, so no text crosses the plate. A showcase, not a price list: no price on the image (the caption carries it). The menu supplies the description."
 studioW: 1080
-studioH: 1350
+studioH: 1250
 studioOrder: 30
 ---
 {#- THE PHOTO IS THE POST. It gets the whole 1080 × 1080 square; the
@@ -31,7 +31,12 @@ studioOrder: 30
     The name is set in the wordmark's treatment (cream letterform, teal
     outline, coral offset). The wordmark itself is hand-drawn SVG; Playfair
     Display Black Italic is the nearest font, close enough to read as one
-    brand. Red text stays on cream (the price plaque): red on teal is 1.3:1. -#}
+    brand.
+
+    No price on the picture (client, 2026-10-02): these are a showcase of
+    the food, and a price baked into a PNG goes stale with the menu. The
+    caption carries it. The band is only as tall as its text, so the canvas
+    is 1080 × 1250 rather than the full 4:5; the photo stays a square. -#}
 <div class="canvas dish">
 
     <img class="dish-photo" src="{{ photo.file }}" alt="{{ photo.alt }}">
@@ -48,14 +53,11 @@ studioOrder: 30
             <p class="p-display-italic dish-variant">{{ dish.variantNote }}</p>
             {%- endif %}
         </div>
-        <div class="dish-plaque">
-            <p class="p-display dish-price">{{ dish.price }}</p>
-        </div>
         <div class="dish-sign">
             <div class="wordmark wordmark--light wordmark--hero dish-wordmark">
                 {% inlineSvg "/assets/thecafe.svg", "", site.name %}
             </div>
-            <p class="p-body dish-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
+            <p class="p-body dish-call">{{ site.phone }}<br>{{ site.social.website }}</p>
         </div>
     </footer>
 

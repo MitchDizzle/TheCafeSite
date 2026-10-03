@@ -46,7 +46,7 @@ ogDescription: "Breakfast, lunch and catering from a Leavenworth, KS kitchen sin
                     person, so it is offered as a conversation, not a list of
                     services. Hours, notice and payment come from site.json and
                     CafeWork DECISIONS.md §8. -#}
-                <p><strong>Breakfast and lunch</strong>, {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}. Order at the counter or call ahead and we&rsquo;ll have it ready. Seating is available; there&rsquo;s no table service.</p>
+                <p><strong>Breakfast and lunch</strong>, {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}. {% if site.ordering.url %}<a href="{{ site.ordering.url }}">Order online</a> for pickup, or order at the counter.{% elif site.phoneOrders %}Order at the counter or call ahead and we&rsquo;ll have it ready.{% else %}Order at the counter; online ordering is coming soon.{% endif %} Seating is available; there&rsquo;s no table service.</p>
                 <ul style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; padding-left: 1.25rem;">
                     <li><strong>Pickup catering:</strong> lunch for the office, the crew or the whole family, packed and ready at the counter</li>
                     <li><strong>Drop-off catering:</strong> we bring the food to you</li>

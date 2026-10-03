@@ -26,7 +26,11 @@ module.exports = {
         );
       }
       lines.push(
-        `We're working on online ordering for the website. Until then, see the full menu at ${site.url}/menu and call ${site.phone} to order ahead.`,
+        site.ordering.url
+          ? `Order online for pickup at ${site.ordering.url.replace(/^https?:\/\//, "")}, or order at the counter. Full menu: ${site.url}/menu`
+          : site.phoneOrders
+          ? `We're working on online ordering for the website. Until then, see the full menu at ${site.url}/menu and call ${site.phone} to order ahead.`
+          : `Online ordering is on its way. Until then, order at the counter, and see the full menu at ${site.url}/menu.`,
         "See you Monday!"
       );
       return lines;
