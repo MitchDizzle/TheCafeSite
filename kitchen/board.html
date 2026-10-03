@@ -15,6 +15,7 @@
     --red: #C0392F;
     --red-dark: #A02F26;
     --amber: #E8A33D;
+    --mint: #8ED9D4;
     --text: #22323A;
     --muted: #5B6B72;
   }
@@ -41,7 +42,43 @@
   }
   .bar h1 { margin: 0; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.02em; }
   .bar .count { font-size: 1.2rem; opacity: 0.9; }
-  .bar .clock { margin-left: auto; font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  /* Right-hand group: key guide, then sound and refresh, then the clock
+     pinned to the far right. */
+  .bar .keys { margin-left: auto; }
+  .bar .clock { min-width: 5.2em; text-align: right; font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .icon-btn {
+    display: grid;
+    place-items: center;
+    width: 2.8rem;
+    height: 2.8rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--cream);
+    cursor: pointer;
+  }
+  .icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
+  .icon-btn:focus-visible { outline: 3px solid var(--mint); outline-offset: 2px; }
+  .icon-btn svg { width: 100%; height: 100%; overflow: visible; }
+
+  /* Muted is amber, not just a different icon: a silent board in a loud
+     kitchen should be noticeable from across the room. */
+  .sound .waves { display: inline; }
+  .sound .cross { display: none; }
+  .sound.is-muted { color: var(--amber); }
+  .sound.is-muted .waves { display: none; }
+  .sound.is-muted .cross { display: inline; }
+
+  /* The refresh button's ring empties as the next Square check approaches,
+     then refills when it runs. Amber when Square can't be reached. */
+  .refresh .track { stroke: rgba(250, 247, 242, 0.22); }
+  .refresh .ring { stroke: var(--mint); transform: rotate(-90deg); transform-origin: 22px 22px; }
+  .refresh.is-down .ring { stroke: var(--amber); }
+  .refresh.is-checking .glyph { animation: spin 0.8s linear infinite; transform-origin: 22px 23px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .refresh.is-checking .glyph { animation: none; opacity: 0.6; } }
   .undo {
     font: inherit;
     font-size: 1rem;
@@ -54,13 +91,8 @@
   }
   .undo[hidden] { display: none; }
 
-  .live { font-size: 0.95rem; opacity: 0.85; font-variant-numeric: tabular-nums; }
   .keys { font-size: 0.9rem; opacity: 0.8; white-space: nowrap; }
   .keys b { display: inline-block; min-width: 1.4em; padding: 0 0.3em; margin: 0 0.15em; border: 1px solid currentColor; border-radius: 0.25rem; text-align: center; }
-  /* Hard to miss on purpose: a muted board on the kitchen PC means orders
-     arrive silently. */
-  .muted { padding: 0.15rem 0.6rem; border-radius: 0.3rem; background: var(--amber); color: #1A1A1A; font-weight: 800; font-size: 0.95rem; }
-  .muted[hidden] { display: none; }
   .more {
     position: fixed;
     left: 50%;
@@ -189,11 +221,25 @@
     <h1>Kitchen Orders</h1>
     <span class="count" id="count"></span>
     <button class="undo" id="undo" type="button" hidden>↶ Undo</button>
-    <button class="undo" id="refresh" type="button">Check now</button>
-    <span class="live" id="live"></span>
-    <span class="muted" id="muted" hidden>Sound off</span>
-    <span class="clock" id="clock"></span>
     <span class="keys"><b>1</b>–<b>9</b> done <b>⌫</b> undo <b>−</b><b>+</b> scroll <b>⏎</b> check now</span>
+    <button class="icon-btn sound" id="sound" type="button" aria-pressed="false" aria-label="Mute sound" title="Mute sound">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/>
+        <g class="waves"><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9.5 9.5 0 0 1 0 13"/></g>
+        <g class="cross"><path d="m16 9 6 6"/><path d="m22 9-6 6"/></g>
+      </svg>
+    </button>
+    <button class="icon-btn refresh" id="refresh" type="button" aria-label="Check Square now" title="Check Square now">
+      <svg viewBox="0 0 44 44" fill="none" stroke-linecap="round" aria-hidden="true">
+        <circle class="track" cx="22" cy="22" r="20" stroke-width="3"/>
+        <circle class="ring" id="ring" cx="22" cy="22" r="20" stroke-width="3" stroke-dasharray="125.66" stroke-dashoffset="0"/>
+        <g class="glyph" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">
+          <circle cx="22" cy="23.5" r="8.5"/>
+          <path d="M22 23.5v-4.5M19.5 12h5M22 12v3M29.2 16.3l1.6-1.6"/>
+        </g>
+      </svg>
+    </button>
+    <span class="clock" id="clock"></span>
   </div>
   <div class="alert" id="alert" hidden></div>
   <main class="board" id="board"></main>
@@ -206,16 +252,37 @@
   // they're due (amber when due soon, red once past due).
   const COUNTER_WARN = 8, COUNTER_LATE = 15;
   const PICKUP_WARN = 10; // minutes before due
-  const POLL_MS = 3000;
+  const POLL_MS = 1000; // this PC's own board program, not Square: cheap
 
   const board = document.getElementById("board");
   const alertEl = document.getElementById("alert");
   const undoBtn = document.getElementById("undo");
   const refreshBtn = document.getElementById("refresh");
-  const liveEl = document.getElementById("live");
+  const ringEl = document.getElementById("ring");
+  const RING = 125.66; // circumference of the r=20 ring
+  let pollSeconds = 5;
+  let nextPollAt = null;
+  let checking = false;
   const moreEl = document.getElementById("more");
-  const soundEl = document.getElementById("muted");
+  const soundBtn = document.getElementById("sound");
   let soundOn = true;
+  let serverSound = true; // false when started with KITCHEN_MUTE or "sound": false
+  // A tap on the speaker overrides the default and is remembered on this
+  // screen; null means "no tap yet, follow the server".
+  let localMute = null;
+  try {
+    const v = localStorage.getItem("kb-muted");
+    if (v === "1" || v === "0") localMute = v === "1";
+  } catch {}
+
+  function renderSound() {
+    soundOn = localMute === null ? serverSound : !localMute;
+    soundBtn.classList.toggle("is-muted", !soundOn);
+    soundBtn.setAttribute("aria-pressed", String(!soundOn));
+    const label = soundOn ? "Mute sound" : "Unmute sound";
+    soundBtn.setAttribute("aria-label", label);
+    soundBtn.title = label;
+  }
 
   let tickets = [];
   let lastJson = "";
@@ -251,7 +318,7 @@
     const now = Date.now();
     if (lastOkAt) {
       const s = Math.round((now - Date.parse(lastOkAt)) / 1000);
-      liveEl.textContent = s < 3 ? "Square: just checked" : `Square: checked ${s}s ago`;
+      refreshBtn.title = `Check Square now (last checked ${s < 2 ? "just now" : s + "s ago"})`;
     }
     document.getElementById("clock").textContent = new Date(now).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     for (const card of board.querySelectorAll(".ticket")) {
@@ -350,8 +417,11 @@
   }
 
   function apply(data) {
-    soundOn = data.sound !== false;
-    soundEl.hidden = soundOn;
+    serverSound = data.sound !== false;
+    renderSound();
+    pollSeconds = data.pollSeconds || pollSeconds;
+    nextPollAt = data.nextPollAt;
+    checking = !!data.checking;
     lastOkAt = data.lastOkAt;
     lastCleared = data.lastCleared;
     renderUndo();
@@ -421,10 +491,25 @@
   }
 
   async function checkNow() {
-    refreshBtn.textContent = "Checking…";
+    checking = true;
     try { await post("/api/refresh"); } catch {}
-    refreshBtn.textContent = "Check now";
+    checking = false;
   }
+
+  // The countdown ring: full right after a check, empty when the next one
+  // is due. Drawn every frame so it moves smoothly rather than in steps.
+  function drawRing() {
+    let frac = 1;
+    if (nextPollAt && !checking) {
+      frac = (Date.parse(nextPollAt) - Date.now()) / (pollSeconds * 1000);
+      frac = Math.max(0, Math.min(1, frac));
+    }
+    ringEl.style.strokeDashoffset = String(RING * (1 - frac));
+    refreshBtn.classList.toggle("is-checking", checking);
+    refreshBtn.classList.toggle("is-down", down);
+    requestAnimationFrame(drawRing);
+  }
+  requestAnimationFrame(drawRing);
 
   function scrollPage(dir) {
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -437,6 +522,12 @@
   });
   undoBtn.addEventListener("click", undo);
   refreshBtn.addEventListener("click", checkNow);
+  soundBtn.addEventListener("click", () => {
+    localMute = soundOn; // muting if it was on, unmuting if it was off
+    try { localStorage.setItem("kb-muted", localMute ? "1" : "0"); } catch {}
+    renderSound();
+    if (soundOn) chime(); // so you hear it's back on
+  });
 
   // Built to run from a number pad alone (spill-resistant; the mouse is for
   // precision). Matched on e.code as well as e.key so the keys work with Num

@@ -34,7 +34,8 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 | **Enter** | Check Square right now instead of waiting for the next check |
 
 - Tickets 10 and up have no number key. Clear the first nine, or use the mouse.
-- **The board checks Square every 5 seconds** (`pollSeconds` in `config.json`). The top bar shows how long ago the last check was.
+- **The board checks Square every 5 seconds.** The timer icon in the top right has a ring that empties as the next check approaches and refills when it runs. Tap it (or press **Enter**) to check right now. The ring turns amber when Square can't be reached.
+- **The speaker icon** mutes and unmutes the chime and the alarm. Muted shows amber with a cross, and that screen remembers the setting until someone taps it again.
 - **A two-tone chime** means a new order. **A low falling tone** plus an amber banner means the board lost Square or its own program. Tickets shown at that point might be out of date, and new ones might be missing, so go by the printer until it clears.
 - **An amber "continues below" pointer** appears when a ticket runs off the bottom of the screen. Press **+** to see it.
 - **Sound needs speakers.** Make sure they're plugged in, set as the default output in Windows, and not muted.
@@ -78,7 +79,7 @@ start-kitchen.bat
 
 This shows fake orders and adds a new one every 45 seconds, so you can hear the chime. Bumps in test mode go to `state-mock.json` and never mix with real ones.
 
-To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` before `start-kitchen.bat`. The top bar then shows an amber **Sound off** tag so a muted board can't go unnoticed. To silence the kitchen PC for good, add `"sound": false` to `config.json`, but the chime is how a new order gets noticed, so leave it on there.
+To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` before `start-kitchen.bat`, or just tap the speaker icon. A muted speaker shows amber, so a silent board can't go unnoticed. To silence the kitchen PC for good, add `"sound": false` to `config.json`, but the chime is how a new order gets noticed, so leave it on there.
 
 ## Files
 

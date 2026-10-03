@@ -305,6 +305,7 @@ function lastCleared() {
 // ---------------------------------------------------------------- polling
 
 let pollTimer = null;
+let nextPollAt = null; // when the next scheduled Square check runs, for the board's countdown ring
 let polling = null; // the in-flight poll, so "check now" never runs two at once
 let all = []; // every ticket from the last good poll, bumped or not
 let rejected = []; // orders Square returned that never became tickets, for /check
@@ -318,6 +319,7 @@ function poll() {
   polling = pollOnce().finally(() => {
     polling = null;
     pollTimer = setTimeout(poll, cfg.pollSeconds * 1000);
+    nextPollAt = new Date(Date.now() + cfg.pollSeconds * 1000).toISOString();
   });
   return polling;
 }
@@ -357,7 +359,8 @@ function snapshot() {
   const tickets = all
     .filter((t) => !hiddenReason(t, now))
     .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
-  return { tickets, lastOkAt, error: lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared() };
+  return { tickets, lastOkAt, error: lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
+    pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
 }
 
 // ---------------------------------------------------------------- mock data
