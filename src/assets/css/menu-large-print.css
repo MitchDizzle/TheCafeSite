@@ -587,3 +587,62 @@
     font-size: 0.42in;
     line-height: 1;
 }
+
+/* ── Counter copy: the band across the foot of the front ──────
+   Three cells under the columns: order-ahead QR, daily specials, Facebook.
+   .lp-cols is flex: 1, so the band sits on the bottom margin however long
+   the columns run. The QR's padding is its quiet zone, as on the door
+   sign (front-door-banner.css): content-box so the width is the CODE. */
+.lp-band {
+    display: grid;
+    grid-template-columns: 1.45fr 1fr 1fr;
+    gap: 0.35in;
+    border-top: 2px solid var(--teal);
+    padding-top: 0.28in;
+    margin-top: 0.3in;
+}
+
+.lp-band-cell + .lp-band-cell {
+    border-left: 1px solid #ccc;
+    padding-left: 0.35in;
+}
+
+.lp-band-order {
+    display: flex;
+    gap: 0.2in;
+    align-items: center;
+}
+
+.lp-band-qr {
+    box-sizing: content-box;
+    flex: none;
+    /* 33 modules across 1.15in: 4 modules of quiet zone is ~0.14in. */
+    width: 1.15in;
+    padding: 0.15in;
+    border: 0.02in solid var(--teal);
+    border-radius: 0.05in;
+    color: #000;
+}
+
+.lp-band-qr svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.lp-band-label {
+    font-size: 0.15in;
+}
+
+.lp-band-big {
+    font-size: 0.24in;
+    line-height: 1.2;
+    margin-top: 0.06in;
+}
+
+.lp-band-text {
+    font-size: 0.17in;
+    line-height: 1.4;
+    margin-top: 0.06in;
+    color: var(--text-dark);
+}

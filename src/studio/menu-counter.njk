@@ -84,6 +84,35 @@ studioOrder: 22
                 {{ category(drinks, menu) }}
             </div>
         </div>
+
+        {#- The foot of the front. The three columns end well short of 17in
+            and the back is full, so the room goes to things this sheet
+            doesn't otherwise say, rather than to bigger type that would
+            overflow the back. The QR is the door sign's: it encodes
+            lvcafetogo.com/order (src/order.njk), which forwards to the
+            ordering page in site.json, so a change there never strands a
+            printed menu. -#}
+        <footer class="lp-band">
+            <div class="lp-band-cell lp-band-order">
+                <div class="lp-band-qr">
+                    {% inlineSvg "/assets/qr-order.svg" %}
+                </div>
+                <div>
+                    <p class="p-label lp-band-label ink-accent">Order ahead</p>
+                    <p class="p-body lp-band-text">Scan to order online and pick it up at the counter.</p>
+                </div>
+            </div>
+            <div class="lp-band-cell">
+                <p class="p-label lp-band-label ink-accent">Daily specials</p>
+                <p class="p-display lp-band-big ink-teal">A lunch special &amp; a soup every weekday</p>
+                <p class="p-body lp-band-text">From 11am. Ask at the counter, or see this week&rsquo;s on the specials sign.</p>
+            </div>
+            <div class="lp-band-cell">
+                <p class="p-label lp-band-label ink-accent">Follow us</p>
+                <p class="p-display lp-band-big ink-teal">{{ site.social.facebookHandle }}</p>
+                <p class="p-body lp-band-text">The week&rsquo;s specials go up every weekend.</p>
+            </div>
+        </footer>
     </div>
 
     <p class="fold-legend">Back &mdash; the griddle, salads, kids, sides &amp; where to find us</p>
