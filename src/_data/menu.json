@@ -215,6 +215,7 @@
     {
       "id": "salads",
       "name": "Salads",
+      "note": "Dressings: Ranch, Italian, Caesar or Honey Dijon",
       "sizing": [
         { "size": "Full", "price": 12.00 },
         { "size": "Half", "price": 7.00 }
@@ -297,7 +298,7 @@
         { "name": "Iced Tea / Fountain Drink", "price": 2.00 },
         { "name": "Coffee", "price": 1.00 },
         { "name": "Bottle Water", "price": 1.50 },
-        { "name": "Bottle Juice", "price": 3.00 }
+        { "name": "Bottle Juice", "description": "Orange, Apple, Cranberry", "_note_flavours": "The flavours are left over from the old contract and change as they run out: edit this list (it is also Square's variations, via npm run square) rather than adding rows.", "price": 3.00 }
       ]
     }
   ]

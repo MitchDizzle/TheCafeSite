@@ -76,4 +76,6 @@ Token,Item Name,Customer-facing Name,Variation Name,SKU,Description,Categories,R
 ,Iced Tea / Fountain Drink,Iced Tea / Fountain Drink,Fountain Drink,,Fountain drinks are self-serve Pepsi products.,Drinks,Drinks,,Prepared food and beverage,,,,2.00,,N,Y,N,N,N,,,,,,
 ,Coffee,Coffee,Regular,,,Drinks,Drinks,,Prepared food and beverage,,,,1.00,,N,Y,N,N,Y,,,,,,
 ,Bottle Water,Bottle Water,Regular,,,Drinks,Drinks,,Prepared food and beverage,,,,1.50,,N,Y,N,N,Y,,,,,,
-,Bottle Juice,Bottle Juice,Regular,,,Drinks,Drinks,,Prepared food and beverage,,,,3.00,,N,Y,N,N,Y,,,,,,
+,Bottle Juice,Bottle Juice,Orange,,,Drinks,Drinks,,Prepared food and beverage,,,,3.00,,N,Y,N,N,N,,,,,,
+,Bottle Juice,Bottle Juice,Apple,,,Drinks,Drinks,,Prepared food and beverage,,,,3.00,,N,Y,N,N,N,,,,,,
+,Bottle Juice,Bottle Juice,Cranberry,,,Drinks,Drinks,,Prepared food and beverage,,,,3.00,,N,Y,N,N,N,,,,,,

@@ -171,6 +171,10 @@ for i in cats["drinks"]["items"]:
         # variation only says which cup was sold.
         add("Iced Tea / Fountain Drink", D, [("Iced Tea", i["price"]), ("Fountain Drink", i["price"])],
             "Fountain drinks are self-serve Pepsi products.")
+    elif i["name"] == "Bottle Juice" and i.get("description"):
+        # One tile, a variation per flavour, like the chips: the flavours
+        # come and go, and the variation counts which one sold.
+        add("Bottle Juice", D, [(v.strip(), i["price"]) for v in i["description"].split(",")])
     else:
         one(i["name"], D, i["price"])
 
