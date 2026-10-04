@@ -568,6 +568,12 @@ function orderDetail(o) {
   } else {
     parts.push("no fulfillment");
   }
+  // Paid or not: a counter sale whose payment was canceled on the terminal
+  // can come back as an OPEN order with nothing paid on it.
+  const tenders = o.tenders || [];
+  const due = o.net_amount_due_money && o.net_amount_due_money.amount;
+  parts.push(tenders.length ? `paid (${tenders.map((t) => t.type).join(", ")})` : "no payment");
+  if (due) parts.push(`still due ${(due / 100).toFixed(2)}`);
   return parts.join(" · ");
 }
 
