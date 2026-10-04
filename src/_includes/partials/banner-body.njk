@@ -32,45 +32,47 @@
         </div>
     </header>
 
-    {# Two lines, not one. "Monday, October 5th" set large enough to read from
-       the sidewalk does not fit across an 11in sheet, and shrinking it to fit
-       would make the date no bigger than the hours below it. Splitting lets
-       the date itself stay the largest thing on the banner. #}
+    {#- The door sign now that we're open (2026-10-03; the opening-day
+        version is in git history). Biggest thing on the sheet is NOW OPEN,
+        in red on white: it's what a passer-by needs, and "Breakfast & Lunch"
+        above it says what kind of open. Swap the headline for something
+        evergreen ("Welcome") once being newly open stops being news. -#}
     <section class="banner-announce">
-        <p class="p-display-italic announce-kicker ink-teal">Restaurant opening</p>
-        <p class="p-display announce-day ink-teal">{{ site.opening.dayName }}</p>
-        <p class="p-display announce-date ink-accent">{{ site.opening.monthDay }}<sup>{{ site.opening.ordinal }}</sup></p>
+        <p class="p-display-italic announce-kicker ink-teal">Breakfast &amp; Lunch</p>
+        <p class="p-display announce-date ink-accent">Now Open</p>
+        <p class="p-label announce-service ink-teal">Order &amp; Go <span class="dot">&middot;</span> Seating Available</p>
     </section>
 
     <section class="banner-hours">
         <p class="p-label hours-label ink-accent">{{ site.opening.hoursLabel }}</p>
         <p class="p-display hours-days ink-teal">{{ site.opening.hoursDays }}</p>
         <p class="p-display hours-time ink-teal">{{ site.opening.opens.time }} <span class="ampm">{{ site.opening.opens.meridiem }}</span> &ndash; {{ site.opening.closes.time }} <span class="ampm">{{ site.opening.closes.meridiem }}</span></p>
+        <p class="p-body hours-note">Lunch specials &amp; soup from 11am</p>
+        <p class="p-body hours-note hours-closed">Closed Saturday &amp; Sunday</p>
     </section>
 
+    {#- Left: order ahead. The QR encodes lvcafetogo.com/order (src/order.njk),
+        which forwards to site.ordering.url, so a change of ordering page
+        never strands a printed code. Right: where to find the menu and us.
+        The phone is labelled for catering: food orders aren't taken by phone
+        for now (site.phoneOrders). No street address: whoever reads the door
+        is standing at it. -#}
     <footer class="banner-footer">
         <div class="follow">
-            {# Encodes https://www.facebook.com/LVCafeToGo at error-correction
-               level H, so the code still scans with a corner scuffed or a
-               thumbtack through it. Regenerate per studio/README.md. #}
             <div class="qr follow-qr">
-                {% inlineSvg "/assets/qr-facebook.svg" %}
+                {% inlineSvg "/assets/qr-order.svg" %}
             </div>
-            {# The handle breaks after the slash rather than running on one
-               line. The banner faces out through the door glass, so the code
-               is sized for a phone that has to focus through a reflective
-               pane; a narrower caption is what buys that width back. #}
             <div class="follow-text">
-                <p class="p-label follow-label ink-accent">Follow us</p>
-                <p class="p-body follow-handle ink-teal">facebook.com/<br><strong>LVCafeToGo</strong></p>
+                <p class="p-label follow-label ink-accent">Order ahead</p>
+                <p class="p-body follow-handle ink-teal">Scan to<br><strong>order online</strong></p>
             </div>
         </div>
 
         <div class="contact">
-            <p class="p-display contact-phone ink-teal">{{ site.phone }}</p>
-            <p class="p-body contact-line">{{ site.email }}</p>
-            <p class="p-body contact-line">{{ site.address.street }}</p>
-            <p class="p-body contact-line">{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
+            <p class="p-label contact-label ink-accent">Menu</p>
+            <p class="p-display contact-web ink-teal">{{ site.social.website }}</p>
+            <p class="p-body contact-line">facebook.com/<strong>LVCafeToGo</strong></p>
+            <p class="p-body contact-line">{% if site.phoneOrders %}Call {% else %}Catering {% endif %}{{ site.phone }}</p>
         </div>
     </footer>
 

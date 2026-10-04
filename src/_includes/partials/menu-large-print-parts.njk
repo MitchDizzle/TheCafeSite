@@ -1,0 +1,121 @@
+{#- ===========================================================
+    Large-print menu parts: the dietary marks, the dietary key and the
+    category renderer, shared by the two large-print pieces:
+
+        menu-large-print.njk  8.5 x 11, three sheets
+        menu-counter.njk      11 x 17, one sheet printed both sides
+
+        {% from "partials/menu-large-print-parts.njk" import category, dietLegend %}
+        {{ category(breakfast, menu) }}
+
+    The pieces differ in page geometry only; the markup is one copy so the
+    two cannot drift. `menu` is passed in because an imported template does
+    not see the page's data. Styles: assets/css/menu-large-print.css.
+    =========================================================== -#}
+
+{#- The marks, the key and the category renderer are the tri-fold's, class
+    for class, on purpose: the stylesheet is what differs between the two
+    pieces, not the markup. Copying the markup means copying the decisions
+    about mark order and about `diet` versus `dietOnRequest`, and two copies
+    of a decision is one copy too many. -#}
+{%- macro dietMarks(item, menu) %}
+{%- set served = item.diet or [] %}
+{%- set onRequest = item.dietOnRequest or [] %}
+{%- if served.length or onRequest.length -%}
+<span class="menu-item-diet">
+    {%- for d in menu.diets -%}
+        {%- if d.code in served %}<abbr class="diet-mark" title="{{ d.name }}">{{ d.code }}</abbr>
+        {%- elif d.code in onRequest %}<abbr class="diet-mark diet-mark--request" title="{{ d.name }} on request">{{ d.code }}*</abbr>
+        {%- endif -%}
+    {%- endfor -%}
+</span>
+{%- endif %}
+{%- endmacro %}
+
+{%- macro dietLegend(menu) %}
+<div class="diet-legend">
+    <p class="p-label diet-legend-title ink-accent">Dietary key</p>
+    <p class="p-body diet-legend-keys">
+        {%- for d in menu.diets %}<span class="diet-mark">{{ d.code }}</span>&nbsp;{{ d.name }}{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+    </p>
+    <p class="p-body diet-legend-note"><span class="diet-mark">*</span> we can make it that way. Just ask.</p>
+    <p class="p-body diet-legend-caveat">{{ menu.dietNote }}</p>
+    {#- The consumer advisory. Its own paragraph, and the LAST one, because it
+        is the only line in this block that is not about us — the rest explain
+        our marks and our kitchen, this one is a warning. It prints on every
+        sheet and is never gated behind dietsConfirmed: see _note_health. -#}
+    <p class="p-body diet-legend-advisory">{{ menu.healthNote }}</p>
+</div>
+{%- endmacro %}
+
+{%- macro category(c, menu) %}
+<div class="menu-cat">
+    <h3 class="menu-cat-name p-display ink-teal">{{ c.name }}</h3>
+    {%- if c.serving %}
+    <p class="menu-cat-sizing menu-cat-serving p-label ink-accent">{{ c.serving }}</p>
+    {%- endif %}
+    {%- if c.note %}
+    <p class="menu-cat-note p-body">{{ c.note }}</p>
+    {%- endif %}
+    {%- if c.sizing %}
+    <p class="menu-cat-sizing p-label ink-accent">
+        {%- for s in c.sizing %}<span class="sizing-pair">{{ s.size }} {{ s.price | money }}</span>{% if not loop.last %} &middot; {% endif %}{% endfor -%}
+    </p>
+    {%- endif %}
+    {%- if c.items %}
+    <ul class="menu-items">
+        {%- for item in c.items %}
+        <li class="menu-item">
+            <div class="menu-item-head">
+                <span class="menu-item-name p-body">{{ item.name }}
+                    {{- dietMarks(item, menu) }}
+                    {%- if item.priceReview %}<span class="price-review" title="Price not re-costed yet">&bull;</span>{% endif -%}
+                </span>
+                {%- if not item.variants %}
+                <span class="menu-item-fill" aria-hidden="true"></span>
+                {%- endif %}
+                {%- if item.price %}
+                <span class="menu-item-price p-body">{{ item.price | money }}</span>
+                {%- elif item.prices %}
+                <span class="menu-item-price p-body">
+                    {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
+                </span>
+                {%- endif %}
+            </div>
+            {%- if item.description %}
+            <p class="menu-item-desc p-body">{{ item.description }}</p>
+            {%- endif %}
+            {#- One indented priced row per variant — see the note in
+                menu-trifold.njk for why this is not a string in the price
+                column. -#}
+            {%- if item.variants %}
+            <ul class="menu-variants">
+                {%- for v in item.variants %}
+                <li class="menu-variant">
+                    <span class="menu-variant-name p-body">{{ v.size }}</span>
+                    <span class="menu-item-fill" aria-hidden="true"></span>
+                    <span class="menu-item-price p-body">{{ v.price | money }}</span>
+                </li>
+                {%- endfor %}
+            </ul>
+            {%- endif %}
+        </li>
+        {%- endfor %}
+    </ul>
+    {%- endif %}
+    {%- if c.picks %}
+    <div class="menu-picks" style="--pick-cols: {{ c.picks.length }}">
+        {%- for p in c.picks %}
+        <div class="menu-pick">
+            <p class="menu-pick-label p-label ink-accent">{{ p.label }}</p>
+            <ul class="menu-pick-list">
+                {%- for o in p.options %}
+                <li class="menu-pick-option p-body">{{ o }}</li>
+                {%- endfor %}
+            </ul>
+        </div>
+        {%- endfor %}
+    </div>
+    {%- endif %}
+</div>
+{%- endmacro %}
