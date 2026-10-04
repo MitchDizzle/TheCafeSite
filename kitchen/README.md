@@ -34,10 +34,18 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 | **Enter** | Check Square right now instead of waiting for the next check |
 
 - Tickets 10 and up have no number key. Clear the first nine, or use the mouse.
+- **A new order** flashes amber around the edge of the whole screen, and the ticket keeps an amber outline and a **NEW** tag for a minute. Without speakers, that's the only alert, so it lasts long enough to be noticed from the grill.
+- **Allergy notes** (peanut, gluten, dairy and the like) show in red with a ⚠ sign, on the ticket or on the item.
 - **The board checks Square every 5 seconds.** The refresh icon in the top right has a ring that empties as the next check approaches and refills when it runs. Tap it (or press **Enter**) to check right now. The ring turns amber when Square can't be reached.
 - **The speaker icon** mutes and unmutes the chime and the alarm. Muted shows amber with a cross, and that screen remembers the setting until someone taps it again.
 - **A two-tone chime** means a new order. **A low falling tone** plus an amber banner means the board lost Square or its own program. Tickets shown at that point might be out of date, and new ones might be missing, so go by the printer until it clears.
 - **An amber "continues below" pointer** appears when a ticket runs off the bottom of the screen. Press **+** to see it.
+- **The power button** in the top right opens the board menu. It works with the mouse only, so nothing on the number pad can open it or confirm anything in it.
+  - **Settings & help:** the key guide, whether sound is on, and a link to the order check page. The key guide also shows on the board when there are no orders.
+  - **Check for updates:** looks for new board code. If there is any, it runs `start-kitchen.bat`, which installs it and restarts the board in about 10 seconds. If not, it says the board is up to date.
+  - **Close the board:** back to Windows. Run `start-kitchen.bat` to bring it back.
+  - **Restart the PC** and **Shut down the PC:** each asks first, then counts down from 10 with a big Cancel. Prefer Restart when working remotely: once the PC is off, someone has to press its power button.
+  - In test mode (`KITCHEN_MOCK=1`) the power items only say what they would have done, so a laptop running the test board can't be shut down from it.
 - **Sound needs speakers.** Make sure they're plugged in, set as the default output in Windows, and not muted.
 
 ## Setting up the mini PC (one time)
@@ -85,7 +93,7 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 
 | File | What it is |
 |---|---|
-| `server.js` | Polls Square every 10 s and serves the board on `http://localhost:8090`. It only listens on the PC itself, not the network. |
+| `server.js` | Polls Square every 5 s and serves the board on `http://localhost:8090`. It only listens on the PC itself, not the network, and the power menu and update check only answer the board page itself. |
 | `board.html` | The screen. |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `state.json` | Which orders have been cleared. Created automatically; gitignored. |

@@ -29,6 +29,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const { execFile, spawn } = require("child_process");
 
 const DIR = __dirname;
 const CONFIG_FILE = path.join(DIR, "config.json");
@@ -516,6 +517,7 @@ function checkPage() {
   return `<!DOCTYPE html><meta charset="utf-8"><title>Kitchen board check</title>
 <style>body{font:16px system-ui,sans-serif;margin:24px;color:#22323A}table{border-collapse:collapse;width:100%}
 td,th{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top}th{background:#EEE}</style>
+<p><a href="/" style="font-size:20px">&larr; Back to the board</a></p>
 <h1>Kitchen board check</h1>
 ${MOCK ? "<p><b>TEST MODE</b> — fake orders, not Square.</p>" : ""}
 <p>Locations: ${esc(locationIds.join(", ") || "not looked up yet")} · Showing counter sales since
@@ -554,8 +556,99 @@ function readBody(req) {
   });
 }
 
+// Power menu: close the board window, restart or shut down this PC.
+//
+// Only the board page itself may ask. The server listens on 127.0.0.1, but
+// any web page open in any browser on this PC could still send a request to
+// localhost, so the request must carry the X-Kitchen-Board header (a page
+// from another site can't add a custom header without a preflight, which
+// this server never answers) and, if the browser sent an Origin, it must be
+// this board's own.
+function fromBoard(req) {
+  if (req.headers["x-kitchen-board"] !== "1") return false;
+  const origin = req.headers.origin;
+  return !origin || origin === `http://localhost:${cfg.port}` || origin === `http://127.0.0.1:${cfg.port}`;
+}
+
+// The same match start-kitchen.bat uses: the board's own Chrome profile, so
+// no other Chrome window on the PC is touched.
+const CLOSE_BOARD =
+  "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*--user-data-dir=*KitchenBoard*' } | " +
+  "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }";
+
+function power(action) {
+  const what = { close: "closed the board", restart: "restarted the PC", shutdown: "shut down the PC" }[action];
+  if (!what) return { ok: false, message: "Unknown action." };
+  // Test mode is how the board gets tried on other computers. Shutting one
+  // of those down from a test board would be a nasty surprise.
+  if (MOCK) return { ok: false, message: `Test mode: this would have ${what}.` };
+  if (process.platform !== "win32") return { ok: false, message: "The power menu only works on the Windows kitchen PC." };
+  console.log(`Power menu: ${what} (${new Date().toLocaleTimeString()}).`);
+  // Run after the reply has gone out, so the board hears back first.
+  setTimeout(() => {
+    const run = (cmd, args) => execFile(cmd, args, { windowsHide: true }, (err) => err && console.error(`Power menu: ${err.message}`));
+    if (action === "close") run("powershell", ["-NoProfile", "-Command", CLOSE_BOARD]);
+    if (action === "restart") run("shutdown", ["/r", "/t", "0"]);
+    if (action === "shutdown") run("shutdown", ["/s", "/t", "0"]);
+  }, 300);
+  return { ok: true };
+}
+
+// "Check for updates": fetch the branch this copy is on and compare. If
+// anything is new, re-run start-kitchen.bat, which pulls it and restarts the
+// program and the board window — the same as double-clicking it, so there
+// is one update path, not two. That run replaces this process.
+function git(args) {
+  return new Promise((resolve, reject) =>
+    execFile("git", ["-C", path.join(DIR, ".."), ...args], { windowsHide: true, timeout: 30000 }, (err, out) =>
+      err ? reject(err) : resolve(String(out).trim())
+    )
+  );
+}
+
+async function checkUpdates() {
+  let branch, behind;
+  try {
+    branch = await git(["rev-parse", "--abbrev-ref", "HEAD"]);
+    await git(["fetch", "origin", branch]);
+    behind = Number(await git(["rev-list", "--count", `HEAD..origin/${branch}`]));
+  } catch (err) {
+    console.error(`Update check: ${err.message}`);
+    return { ok: false, message: "Couldn't check for updates. Is the internet up, and is git installed?" };
+  }
+  if (!behind) return { ok: true, message: "The board is up to date." };
+  const n = `${behind} update${behind === 1 ? "" : "s"}`;
+  if (MOCK) return { ok: true, message: `Test mode: ${n} found. Run start-kitchen.bat to install them.` };
+  if (process.platform !== "win32") return { ok: true, message: `${n} found. Run start-kitchen.bat to install them.` };
+  console.log(`Update check: ${n} on ${branch}. Restarting through start-kitchen.bat.`);
+  setTimeout(() => {
+    // Verbatim, because start's empty "" window title must reach cmd as-is;
+    // Node's own quoting would turn it into \"\". Started through `start`
+    // so the batch file is not a child of this process: its first act is
+    // to close this program's window, and taskkill /T would take it too.
+    spawn("cmd.exe", ["/c", `start "" "${path.join(DIR, "start-kitchen.bat")}"`], {
+      cwd: DIR,
+      detached: true,
+      stdio: "ignore",
+      windowsHide: true,
+      windowsVerbatimArguments: true,
+    }).unref();
+  }, 300);
+  return { ok: true, restarting: true, message: `Installing ${n}. The board will be back in about 10 seconds.` };
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
+
+  if (req.method === "POST" && url.pathname === "/api/update") {
+    if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
+    return send(res, 200, await checkUpdates());
+  }
+  if (req.method === "POST" && url.pathname === "/api/power") {
+    if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
+    const { action } = await readBody(req);
+    return send(res, 200, power(action));
+  }
 
   if (req.method === "GET" && url.pathname === "/") {
     return send(res, 200, fs.readFileSync(BOARD_FILE, "utf8"), "text/html; charset=utf-8");
