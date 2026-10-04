@@ -44,7 +44,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
   - **Settings & help:** the key guide, whether sound is on, and a link to the order check page. The key guide also shows on the board when there are no orders.
   - **Check for updates:** looks for new board code. If there is any, it runs `start-kitchen.bat`, which installs it and restarts the board in about 10 seconds. If not, it says the board is up to date.
   - **Close the board:** back to Windows. Run `start-kitchen.bat` to bring it back.
-  - **Restart the PC** and **Shut down the PC:** each asks first, then counts down from 10 with a big Cancel. Prefer Restart when working remotely: once the PC is off, someone has to press its power button.
+  - **Restart the PC** and **Shut down the PC:** each asks first, then counts down from 5 with a big Cancel. Prefer Restart when working remotely: once the PC is off, someone has to press its power button.
   - In test mode (`KITCHEN_MOCK=1`) the power items only say what they would have done, so a laptop running the test board can't be shut down from it.
 - **Sound needs speakers.** Make sure they're plugged in, set as the default output in Windows, and not muted.
 

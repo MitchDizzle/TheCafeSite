@@ -725,6 +725,7 @@
   const menuEl = document.getElementById("menu");
   const scrim = document.getElementById("scrim");
   const dialog = document.getElementById("dialog");
+  const POWER_COUNTDOWN = 5; // seconds before a restart or shut down goes ahead
   let countdown = null;
 
   function openMenu(open) {
@@ -800,7 +801,7 @@
       </div>`);
     dialog.querySelector("[data-go]").addEventListener("click", () => {
       if (!p.count) { closeAll(); runPower(action); return; }
-      let left = 10;
+      let left = POWER_COUNTDOWN;
       showDialog(`<h2 id="dialog-title">${p.count}</h2>
         <p class="count-down" id="count-left">${left}</p>
         <div class="actions"><button type="button" class="primary" data-close data-focus>Cancel</button></div>`);
