@@ -98,3 +98,4 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `state.json` | Which orders have been cleared. Created automatically; gitignored. |
 | `start-kitchen.bat` | Pulls updates, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. |
+| `focus-board.ps1` | Run by `start-kitchen.bat` after Chrome opens: brings the board window to the front so the number pad types into it, not into a console window. Tries for 20 seconds; if it can't, click the board once. |
