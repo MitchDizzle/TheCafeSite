@@ -65,7 +65,8 @@ if not defined BROWSER (
 )
 
 rem A separate profile so kiosk mode applies even if Chrome is already open.
-start "" %BROWSER% --kiosk --autoplay-policy=no-user-gesture-required --noerrdialogs --disable-session-crashed-bubble --disable-features=Translate --user-data-dir="%LOCALAPPDATA%\KitchenBoard" http://localhost:8090
+rem No first-run screens on it: no "make Chrome the default", no sign-in.
+start "" %BROWSER% --kiosk --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --noerrdialogs --disable-session-crashed-bubble --disable-features=Translate --user-data-dir="%LOCALAPPDATA%\KitchenBoard" http://localhost:8090
 
 rem Bring the board to the front once Chrome has opened it, so the number
 rem pad types into the board and not into this window. Waits up to 20 s.
