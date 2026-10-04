@@ -93,6 +93,22 @@
     cursor: pointer;
   }
   .undo[hidden] { display: none; }
+  .undo-wrap { position: relative; }
+  .undo-wrap[hidden] { display: none; }
+  /* The Undo list: every ticket cleared today, newest first, so the mouse
+     can bring back the one it wants instead of stepping back one at a time.
+     Backspace / 0 on the number pad still steps back one at a time. */
+  .undo-menu { left: 0; right: auto; min-width: 34rem; max-height: 70vh; overflow-y: auto; }
+  .undo-menu button > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .undo-menu .when { margin-left: auto; font-weight: 600; color: var(--muted); font-size: 1rem; white-space: nowrap; }
+  .undo-menu .main { font-weight: 600; color: var(--muted); }
+  .undo-menu .empty-note { padding: 0.75rem 0.9rem; color: var(--muted); }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin: 0 0 1rem; }
+  .stat { background: #EFE9DE; border-radius: 0.4rem; padding: 0.5rem 0.7rem; }
+  .stat b { display: block; font-size: 1.8rem; line-height: 1.1; }
+  .stat span { font-size: 0.95rem; color: var(--muted); }
+  .dialog .top-items { font-size: 1.05rem; margin: -0.4rem 0 1rem; color: var(--muted); }
 
   .keys b { display: inline-block; min-width: 1.6em; padding: 0 0.3em; border: 2px solid currentColor; border-radius: 0.3rem; text-align: center; font-weight: 800; }
 
@@ -341,7 +357,10 @@
   <div class="bar">
     <div class="bar-left">
       <span class="count" id="count"></span>
-      <button class="undo" id="undo" type="button" hidden>↶ Undo</button>
+      <div class="undo-wrap" id="undo-wrap" hidden>
+        <button class="undo" id="undo" type="button" aria-haspopup="menu" aria-expanded="false">↶ Undo</button>
+        <div class="menu undo-menu" id="undo-menu" role="menu" hidden></div>
+      </div>
     </div>
     <span class="clock" id="clock"></span>
     <div class="bar-right">
@@ -446,6 +465,31 @@
   let lastJson = "";
   let known = null; // ids seen so far; null until the first load
   let lastCleared = null; // {id, label} from the server: what Undo brings back
+  let clearedList = []; // everything Undo can bring back, newest first
+  let stats = null; // the day so far, from the server
+
+  // STABLE NUMBERS. A ticket keeps its number key from the moment it
+  // arrives until it's done: when 1 is cleared, 2 stays 2 and slides over.
+  // A cook working on 2 who looks back must still see 2 on it, and pressing
+  // 2 must still clear it. A new order takes the lowest free number, so
+  // numbers can be out of order on screen, but never change under anyone.
+  // Remembered on this screen, so a reload keeps them.
+  let slots = {};
+  try { slots = JSON.parse(localStorage.getItem("kb-slots") || "{}"); } catch {}
+  function assignSlots() {
+    const ids = new Set(tickets.map((t) => t.id));
+    for (const id of Object.keys(slots)) if (!ids.has(id)) delete slots[id];
+    const used = new Set(Object.values(slots));
+    for (const t of tickets) {
+      if (slots[t.id]) continue;
+      let n = 1;
+      while (used.has(n) && n <= 9) n++;
+      if (n > 9) continue; // no free key: it gets one when one frees up
+      slots[t.id] = n;
+      used.add(n);
+    }
+    try { localStorage.setItem("kb-slots", JSON.stringify(slots)); } catch {}
+  }
   let lastOkAt = null;
   let down = false; // currently showing a connection problem
 
@@ -522,10 +566,11 @@
       board.innerHTML = `<div class="empty"><p>No open orders</p>
         <p class="empty-keys keys"><b>1</b>–<b>9</b> done &nbsp; <b>⌫</b> or <b>0</b> undo &nbsp; <b>+</b> <b>−</b> scroll &nbsp; <b>⏎</b> check Square now</p></div>`;
     } else {
-      board.innerHTML = tickets.map((t, i) => `
+      assignSlots();
+      board.innerHTML = tickets.map((t) => `
         <article class="ticket${fresh.has(t.id) ? " new" : ""}" data-id="${esc(t.id)}">
           <header>
-            <span class="key">${i < 9 ? i + 1 : ""}</span>
+            <span class="key">${slots[t.id] || ""}</span>
             <span class="who">
               <span class="name">${esc(label(t))}</span>
               <span class="kind"><span class="fresh-tag">NEW</span>${esc(kindLabel(t))}</span>
@@ -561,9 +606,28 @@
     edgeEl.classList.add("go");
   }
 
+  const undoWrap = document.getElementById("undo-wrap");
+  const undoMenu = document.getElementById("undo-menu");
+  const ago = (iso) => {
+    const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 6e4));
+    return m ? `${m} min ago` : "just now";
+  };
   function renderUndo() {
-    undoBtn.hidden = !lastCleared;
+    undoWrap.hidden = !lastCleared;
     if (lastCleared) undoBtn.textContent = `↶ Undo ${lastCleared.label}`;
+    if (!undoMenu.hidden) renderUndoMenu();
+  }
+  function renderUndoMenu() {
+    undoMenu.innerHTML = clearedList.length
+      ? clearedList.map((c) => `<button type="button" role="menuitem" data-unbump="${esc(c.id)}">
+          <span>${esc(c.label)}${c.main ? ` <span class="main">· ${esc(c.main)}</span>` : ""}</span>
+          <span class="when">${ago(c.at)}</span></button>`).join("")
+      : `<div class="empty-note">Nothing to bring back.</div>`;
+  }
+  function openUndoMenu(open) {
+    if (open) renderUndoMenu();
+    undoMenu.hidden = !open;
+    undoBtn.setAttribute("aria-expanded", String(open));
   }
 
   // "2 more orders below": a ticket must never sit unseen off the bottom.
@@ -607,6 +671,8 @@
     checking = !!data.checking;
     lastOkAt = data.lastOkAt;
     lastCleared = data.lastCleared;
+    clearedList = data.clearedList || [];
+    stats = data.stats || null;
     renderUndo();
 
     // Status banner: Square unreachable, or the last good poll is stale.
@@ -664,6 +730,7 @@
     const t = tickets.find((x) => x.id === id);
     if (!t) return;
     lastCleared = { id, label: label(t) };
+    clearedList = [{ id, label: label(t), main: t.items[0] ? t.items[0].name : "", at: new Date().toISOString() }, ...clearedList];
     renderUndo();
     // Remove right away so the screen feels instant; the server confirms.
     tickets = tickets.filter((x) => x.id !== id);
@@ -708,7 +775,19 @@
     const btn = e.target.closest(".done");
     if (btn) bump(btn.closest(".ticket").dataset.id);
   });
-  undoBtn.addEventListener("click", undo);
+  undoBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openUndoMenu(undoMenu.hidden);
+  });
+  undoMenu.addEventListener("click", (e) => {
+    const id = e.target.closest("[data-unbump]")?.dataset.unbump;
+    if (!id) return;
+    openUndoMenu(false);
+    post("/api/unbump", id).catch(() => {});
+  });
+  document.addEventListener("click", (e) => {
+    if (!undoMenu.hidden && !e.target.closest(".undo-wrap")) openUndoMenu(false);
+  });
   refreshBtn.addEventListener("click", checkNow);
   soundBtn.addEventListener("click", () => {
     localMute = soundOn; // muting if it was on, unmuting if it was off
@@ -833,13 +912,40 @@
         <span><b>+</b> <b>−</b></span><span>Scroll down / up</span>
         <span><b>⏎</b></span><span>Check Square now</span>
       </div>
+      ${stats ? `<div class="stats">
+        <div class="stat"><b>${stats.orders}</b><span>orders today</span></div>
+        <div class="stat"><b>${stats.breakfast} / ${stats.lunch}</b><span>breakfast / lunch</span></div>
+        <div class="stat"><b>${stats.avgMinutes ?? "–"}${stats.avgMinutes != null ? " min" : ""}</b><span>avg in the kitchen</span></div>
+      </div>
+      ${stats.topItems.length ? `<p class="top-items">Most ordered: ${stats.topItems.map((i) => `${esc(i.name)} ×${i.qty}`).join(", ")}</p>` : ""}` : ""}
       <p>Sound is <b>${soundOn ? "on" : "off"}</b>. Tap the speaker in the top bar to change it.</p>
       <p class="meta">Checks Square every ${pollSeconds} s · last good check ${esc(last)}</p>
       <div class="actions">
+        <button type="button" data-reset>Reset for the day</button>
         <a class="link-btn" href="/check">Order check page</a>
         <button type="button" class="primary" data-close data-focus>Close</button>
       </div>`);
   }
+
+  // Reset for the day: clears the Undo history on both screens, so last
+  // night's tickets can't be brought back by a stray Backspace. Tickets on
+  // the board and the day's stats are untouched.
+  function confirmReset() {
+    showDialog(`<h2 id="dialog-title">Reset for the day?</h2>
+      <p>Clears the Undo list here and on the front page. Orders on the board stay where they are, and today's stats aren't affected.</p>
+      <div class="actions">
+        <button type="button" data-close data-focus>Cancel</button>
+        <button type="button" class="primary" data-go>Reset</button>
+      </div>`);
+    dialog.querySelector("[data-go]").addEventListener("click", async () => {
+      const r = await ask("/api/reset-day");
+      if (r && r.tickets) { lastJson = ""; apply(r); }
+      message("Reset", "The Undo list is cleared.");
+    });
+  }
+  dialog.addEventListener("click", (e) => {
+    if (e.target.closest("[data-reset]")) confirmReset();
+  });
 
   powerBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -866,6 +972,7 @@
   //   − / +             scroll up / down
   //   Enter             check Square now
   document.addEventListener("keydown", (e) => {
+    if (!undoMenu.hidden && e.key === "Escape") { openUndoMenu(false); return; }
     // With the menu or a dialog open, the number pad does nothing but
     // Escape closes it. No key can confirm a shutdown: Enter is swallowed
     // here before it reaches a focused button.
@@ -878,7 +985,7 @@
     const m = /^(?:Numpad|Digit)([0-9])$/.exec(e.code) || /^([0-9])$/.exec(e.key);
     const digit = m ? Number(m[1]) : null;
     if (digit !== null && digit >= 1) {
-      const t = tickets[digit - 1];
+      const t = tickets.find((x) => slots[x.id] === digit);
       if (t) bump(t.id);
     } else if (digit === 0 || e.key === "Backspace") {
       undo();

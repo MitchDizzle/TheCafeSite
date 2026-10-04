@@ -28,12 +28,13 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 
 | Key | Does |
 |---|---|
-| **1–9** | Done on that ticket (the number in its corner) |
+| **1–9** | Done on that ticket (the number in its corner). **A ticket keeps its number until it's done:** when 1 is cleared, 2 stays 2. A new order takes the lowest free number, so the numbers on screen aren't always in order, but they never change under a cook. |
 | **Backspace** or **0** | Undo: brings back the last ticket cleared. Press again to go further back. Still works after a restart. |
 | **+** / **−** | Scroll down / up |
 | **Enter** | Check Square right now instead of waiting for the next check |
 
-- Tickets 10 and up have no number key. Clear the first nine, or use the mouse.
+- With more than nine tickets up, the extras have no number until one frees up. Use the mouse for those, or clear some first.
+- **Undo with the mouse:** click Undo for a list of everything cleared today (name, first item, how long ago) and click the one to bring back. Backspace / 0 still steps back one at a time.
 - **A new order** flashes amber around the edge of the whole screen, and the ticket keeps an amber outline and a **NEW** tag for a minute. Without speakers, that's the only alert, so it lasts long enough to be noticed from the grill.
 - **Allergy notes** (peanut, gluten, dairy and the like) show in red with a ⚠ sign, on the ticket or on the item.
 - **The board checks Square every 5 seconds.** The refresh icon in the top right has a ring that empties as the next check approaches and refills when it runs. Tap it (or press **Enter**) to check right now. The ring turns amber when Square can't be reached.
@@ -41,7 +42,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 - **A two-tone chime** means a new order. **A low falling tone** plus an amber banner means the board lost Square or its own program. Tickets shown at that point might be out of date, and new ones might be missing, so go by the printer until it clears.
 - **An amber "continues below" pointer** appears when a ticket runs off the bottom of the screen. Press **+** to see it.
 - **The power button** in the top right opens the board menu. It works with the mouse only, so nothing on the number pad can open it or confirm anything in it.
-  - **Settings & help:** the key guide, whether sound is on, and a link to the order check page. The key guide also shows on the board when there are no orders.
+  - **Settings & help:** the key guide, today's numbers (orders, breakfast / lunch, average time in the kitchen, most ordered), whether sound is on, and a link to the order check page. **Reset for the day** clears the Undo list on both screens so yesterday's tickets can't be brought back by a stray Backspace. The tickets on the board and the stats stay as they are. The key guide also shows on the board when there are no orders.
   - **Check for updates:** looks for new board code. If there is any, it runs `start-kitchen.bat`, which installs it and restarts the board in about 10 seconds. If not, it says the board is up to date.
   - **Close the board:** back to Windows. Run `start-kitchen.bat` to bring it back.
   - **Restart the PC** and **Shut down the PC:** each asks first, then counts down from 5 with a big Cancel. Prefer Restart when working remotely: once the PC is off, someone has to press its power button.
@@ -75,10 +76,11 @@ The same orders for the counter, on any laptop, tablet or phone on the cafe wifi
 
 - **Ready** (green, on top): the kitchen pressed Done, so the food is coming out. It chimes once the laptop's **Sound** button is on.
 - **Cooking:** still on the kitchen board. A pickup counts down to its pickup time; a counter order counts up from when it was rung.
-- **Add from the front:** the order's skip-list items (drinks, chips): what the counter puts in the bag. Tap a line to tick it off while bagging. Ticks are kept on that device only.
+- **Add from the front:** the order's skip-list items (drinks, chips) and any condiment packets: what the counter puts in the bag. A Square modifier with **"packet"** in its name ("Ketchup packet") is moved off the kitchen ticket and onto this list, totalled across the order. Tap a line to tick it off while bagging. Ticks are kept on that device only.
 - **Online orders** say whether they've been marked ready in Square Order Manager. That step is still what texts the customer, and an order marked ready there stays on the front page until it's handed off.
 - **An online order of only drinks or chips** shows on the front page only, as Ready: there's nothing for the kitchen to make. A counter sale of only those doesn't show anywhere, because it's handed over as it's rung up.
-- **Handed off** clears an order from the front page only; it never touches the kitchen board. **Undo** in the top bar brings it back.
+- **Handed off** clears an order from the front page only; it never touches the kitchen board. **Undo** in the top bar lists today's hand-offs; click one to bring it back.
+- **Today**, under the orders: how many orders so far, breakfast vs lunch (before or after 11am, by when it was rung up or due), counter vs online, average and longest time in the kitchen (counter orders, rung up to Done), and the most ordered items. Canceled orders and unpaid open checks aren't counted.
 
 Only the front page and its own Handed off and Undo answer other devices. The kitchen board, `/check`, Done, the power menu and updates answer the kitchen PC alone.
 

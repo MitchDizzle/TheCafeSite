@@ -130,15 +130,20 @@ const cfg = loadConfig();
 
 let bumped = {}; // orderId -> ISO time a cook pressed Done (kitchen board)
 let handedOff = {}; // orderId -> ISO time the front pressed Handed off (/front)
+// "Reset for the day" (board Settings): nothing cleared before this time
+// can be brought back with Undo, on either screen. Stats are not affected.
+let undoFloor = null;
 
 function loadState() {
   try {
     const state = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
     bumped = state.bumped || {};
     handedOff = state.handedOff || {};
+    undoFloor = state.undoFloor || null;
   } catch {
     bumped = {};
     handedOff = {};
+    undoFloor = null;
   }
 }
 
@@ -150,7 +155,7 @@ function saveState() {
       if (Date.parse(at) < cutoff) delete map[id];
     }
   }
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped, handedOff }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped, handedOff, undoFloor }, null, 2));
 }
 
 loadState();
@@ -267,12 +272,16 @@ function toTicket(order) {
   }
 
   const lines = order.line_items || [];
+  // Condiment packets ("Ketchup packet") are chosen as modifiers in Square
+  // but go in the bag, not on the food: they come off the kitchen ticket
+  // and onto the front's list. See the Packets list in square/README.md.
+  const isPacket = (m) => /\bpackets?\b/i.test(m.name || "");
   const toItem = (li) => ({
     qty: Number(li.quantity) || 1,
     name: itemName(li),
     variation:
       li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
-    mods: (li.modifiers || []).map((m) =>
+    mods: (li.modifiers || []).filter((m) => !isPacket(m)).map((m) =>
       Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name
     ),
     note: li.name && li.note ? li.note : null,
@@ -282,6 +291,17 @@ function toTicket(order) {
   // items: what the kitchen makes. front: what the counter adds to the bag.
   const items = food.filter((li) => !isSkip(li)).map(toItem);
   const front = food.filter(isSkip).map(toItem);
+  // Packets, totalled across the order: 2 burgers each wanting ketchup is
+  // "2 Ketchup packet", one line.
+  const packets = new Map();
+  for (const li of food) {
+    for (const m of li.modifiers || []) {
+      if (!isPacket(m)) continue;
+      const n = (Number(li.quantity) || 1) * (Number(m.quantity) || 1);
+      packets.set(m.name, (packets.get(m.name) || 0) + n);
+    }
+  }
+  for (const [name, qty] of packets) front.push({ qty, name, variation: null, mods: [], note: null });
   if (!lines.length) return { reason: "no items on the order" };
   // A counter sale of only drinks or chips is handed over as it's rung up;
   // it belongs on neither screen. An online one still needs bagging, so it
@@ -342,27 +362,32 @@ function readyAt(t) {
   return null;
 }
 
-// The most recently bumped ticket that could come back: what Undo restores.
+// Everything cleared that could come back, newest first: what Undo offers.
 // Kept on the server, so Undo still works after the page or PC restarts.
-function lastCleared() {
+// `main` is the first thing on the order, so a list of them can be told
+// apart ("#4F2A · Cheeseburger"). Nothing from before a Reset for the day.
+function undoList(map) {
   const byId = new Map(all.map((t) => [t.id, t]));
-  const ids = Object.keys(bumped)
-    .filter((id) => byId.has(id))
-    .sort((a, b) => Date.parse(bumped[b]) - Date.parse(bumped[a]));
-  if (!ids.length) return null;
-  const t = byId.get(ids[0]);
-  return { id: t.id, label: t.name || `#${t.shortId}` };
+  const floor = undoFloor ? Date.parse(undoFloor) : 0;
+  return Object.keys(map)
+    .filter((id) => byId.has(id) && Date.parse(map[id]) > floor)
+    .sort((a, b) => Date.parse(map[b]) - Date.parse(map[a]))
+    .slice(0, 12)
+    .map((id) => {
+      const t = byId.get(id);
+      const first = t.items[0] || t.front[0];
+      return { id, label: t.name || `#${t.shortId}`, main: first ? first.name : "", at: map[id] };
+    });
+}
+
+// The most recently bumped ticket that could come back: what Undo restores.
+function lastCleared() {
+  return undoList(bumped)[0] || null;
 }
 
 // The most recent hand-off that could come back: what Undo on /front restores.
 function lastHandedOff() {
-  const byId = new Map(all.map((t) => [t.id, t]));
-  const ids = Object.keys(handedOff)
-    .filter((id) => byId.has(id))
-    .sort((a, b) => Date.parse(handedOff[b]) - Date.parse(handedOff[a]));
-  if (!ids.length) return null;
-  const t = byId.get(ids[0]);
-  return { id: t.id, label: t.name || `#${t.shortId}` };
+  return undoList(handedOff)[0] || null;
 }
 
 // ---------------------------------------------------------------- polling
@@ -371,6 +396,7 @@ let pollTimer = null;
 let nextPollAt = null; // when the next scheduled Square check runs, for the board's countdown ring
 let polling = null; // the in-flight poll, so "check now" never runs two at once
 let all = []; // every ticket from the last good poll, bumped or not
+let todaysOrders = []; // every order from the last good poll, for the day's stats
 let rejected = []; // orders Square returned that never became tickets, for /check
 const logged = new Set(); // order ids already announced in the console
 let lastOkAt = null;
@@ -390,6 +416,7 @@ function poll() {
 async function pollOnce() {
   try {
     const orders = MOCK ? mockOrders() : await fetchOrders();
+    todaysOrders = orders;
     const seen = new Set();
     all = [];
     rejected = [];
@@ -423,7 +450,55 @@ function snapshot() {
     .filter((t) => !hiddenReason(t, now))
     .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
   return { tickets, lastOkAt, error: lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
-    pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
+    clearedList: undoList(bumped), stats: statsToday(), pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
+}
+
+// ---------------------------------------------------------------- stats
+
+// The day so far, for /front and the board's Settings. Breakfast or lunch is
+// by the clock, as the menu draws it: rung up (or due, for a pickup) before
+// BREAKFAST_ENDS is breakfast. Counted from Square's orders, so an online
+// order the front has already handed over still counts. Canceled orders and
+// unpaid open checks don't.
+const BREAKFAST_ENDS = 11; // hour, local time
+
+function statsToday() {
+  const today = startOfToday().getTime();
+  const tomorrow = today + 864e5;
+  const seen = new Set();
+  const out = { orders: 0, breakfast: 0, lunch: 0, counter: 0, online: 0, kitchenDone: 0,
+    avgMinutes: null, longestMinutes: null, topItems: [] };
+  const qty = new Map();
+  for (const o of todaysOrders) {
+    if (seen.has(o.id)) continue;
+    seen.add(o.id);
+    const f = (o.fulfillments || [])[0];
+    if (o.state === "CANCELED" || (f && (f.state === "CANCELED" || f.state === "FAILED"))) continue;
+    if (o.state === "OPEN" && !(o.tenders || []).length && !(f && f.pickup_details && f.pickup_details.pickup_at)) continue;
+    const when = Date.parse((f && f.pickup_details && f.pickup_details.pickup_at) || o.created_at);
+    if (when < today || when >= tomorrow) continue;
+    const food = (o.line_items || []).filter((li) => !NOT_FOOD.has(li.item_type));
+    if (!food.length) continue;
+    out.orders++;
+    if (new Date(when).getHours() < BREAKFAST_ENDS) out.breakfast++;
+    else out.lunch++;
+    if (isOnline(o, f)) out.online++;
+    else out.counter++;
+    for (const li of food) qty.set(itemName(li), (qty.get(itemName(li)) || 0) + (Number(li.quantity) || 1));
+  }
+  // Time in the kitchen: rung up to Done, counter orders only. A pickup's
+  // order time can be hours before it's started, so it would skew this.
+  const times = all
+    .filter((t) => t.kind === "COUNTER" && bumped[t.id] && Date.parse(t.createdAt) >= today)
+    .map((t) => (Date.parse(bumped[t.id]) - Date.parse(t.createdAt)) / 6e4)
+    .filter((m) => m >= 0 && m < 240);
+  out.kitchenDone = all.filter((t) => bumped[t.id] && Date.parse(t.dueAt || t.createdAt) >= today).length;
+  if (times.length) {
+    out.avgMinutes = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+    out.longestMinutes = Math.round(Math.max(...times));
+  }
+  out.topItems = [...qty].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, n]) => ({ name, qty: n }));
+  return out;
 }
 
 // /front: ready orders first, oldest-ready at the top (the one waiting
@@ -439,7 +514,7 @@ function frontSnapshot() {
       return Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt);
     });
   return { orders, lastOkAt, error: lastError, mock: MOCK, lastHandedOff: lastHandedOff(),
-    pollSeconds: cfg.pollSeconds };
+    handedOffList: undoList(handedOff), stats: statsToday(), pollSeconds: cfg.pollSeconds };
 }
 
 // ---------------------------------------------------------------- mock data
@@ -490,7 +565,7 @@ function mockOrders() {
       state: "COMPLETED",
       created_at: at(-9),
       ticket_name: "Bob",
-      line_items: [li(1, "Cheeseburger", { modifiers: [{ name: "Add bacon" }, { name: "No onion" }] })],
+      line_items: [li(1, "Cheeseburger", { modifiers: [{ name: "Add bacon" }, { name: "No onion" }, { name: "Ketchup packet", quantity: "2" }] })],
     },
     {
       id: "MOCKCOUNTER0004",
@@ -742,7 +817,7 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/handoff-undo"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/handoff-undo", "/api/unhandoff"]);
 function networkAllowed(req, url) {
   if (!NETWORK_PATHS.has(url.pathname)) return false;
   return !cfg.frontKey || url.searchParams.get("key") === cfg.frontKey;
@@ -773,6 +848,20 @@ const server = http.createServer(async (req, res) => {
     handedOff[id] = new Date().toISOString();
     saveState();
     return send(res, 200, frontSnapshot());
+  }
+  if (req.method === "POST" && url.pathname === "/api/unhandoff") {
+    const { id } = await readBody(req);
+    if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
+    delete handedOff[id];
+    saveState();
+    return send(res, 200, frontSnapshot());
+  }
+  if (req.method === "POST" && url.pathname === "/api/reset-day") {
+    if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
+    undoFloor = new Date().toISOString();
+    saveState();
+    console.log(`Reset for the day (${new Date().toLocaleTimeString()}): Undo history cleared.`);
+    return send(res, 200, snapshot());
   }
   if (req.method === "POST" && url.pathname === "/api/handoff-undo") {
     const last = lastHandedOff();
