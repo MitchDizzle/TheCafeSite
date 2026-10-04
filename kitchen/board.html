@@ -186,6 +186,8 @@
   .dialog .actions .danger { background: var(--red); border-color: var(--red); color: #fff; }
   .dialog .keys-table { display: grid; grid-template-columns: auto 1fr; gap: 0.55rem 1rem; align-items: center; margin: 0 0 1.2rem; font-size: 1.25rem; }
   .dialog .meta { font-size: 1.05rem; color: var(--muted); }
+  .dialog .check { display: flex; gap: 0.7rem; align-items: flex-start; font-size: 1.2rem; margin: 0 0 0.6rem; cursor: pointer; }
+  .dialog .check input { width: 1.4rem; height: 1.4rem; margin-top: 0.15rem; flex: none; }
   .more {
     position: fixed;
     left: 50%;
@@ -947,20 +949,23 @@
       </div>`);
   }
 
-  // Reset for the day: clears the Undo history on both screens, so last
-  // night's tickets can't be brought back by a stray Backspace. Tickets on
-  // the board and the day's stats are untouched.
+  // Reset for the day: the Undo lists on both screens empty, so test or
+  // last-night tickets can't come back with a stray Backspace, and today's
+  // stats start counting from now. Optionally every order on the board is
+  // cleared too: the morning after testing, before the doors open.
   function confirmReset() {
     showDialog(`<h2 id="dialog-title">Reset for the day?</h2>
-      <p>Clears the Undo list here and on the front page. Orders on the board stay where they are, and today's stats aren't affected.</p>
+      <p>Clears the Undo list here and on the front page, and today's stats start again from now.</p>
+      <label class="check"><input type="checkbox" id="clear-board"> Also clear every order on the board now (after testing, before opening)</label>
       <div class="actions">
         <button type="button" data-close data-focus>Cancel</button>
         <button type="button" class="primary" data-go>Reset</button>
       </div>`);
     dialog.querySelector("[data-go]").addEventListener("click", async () => {
-      const r = await ask("/api/reset-day");
+      const clearBoard = document.getElementById("clear-board").checked;
+      const r = await ask("/api/reset-day", { clearBoard });
       if (r && r.tickets) { lastJson = ""; apply(r); }
-      message("Reset", "The Undo list is cleared.");
+      message("Reset", clearBoard ? "Undo list and stats cleared, and the board is empty." : "Undo list and stats cleared.");
     });
   }
   // Demo: practice orders for showing the staff how the board works. They

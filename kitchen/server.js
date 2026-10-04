@@ -143,6 +143,9 @@ let handedOff = {}; // orderId -> ISO time the front pressed Handed off (/front)
 // "Reset for the day" (board Settings): nothing cleared before this time
 // can be brought back with Undo, on either screen. Stats are not affected.
 let undoFloor = null;
+// Today's stats count from here (also set by Reset for the day), so test
+// orders rung up before opening don't count.
+let statsFloor = null;
 
 function loadState() {
   try {
@@ -150,10 +153,12 @@ function loadState() {
     bumped = state.bumped || {};
     handedOff = state.handedOff || {};
     undoFloor = state.undoFloor || null;
+    statsFloor = state.statsFloor || null;
   } catch {
     bumped = {};
     handedOff = {};
     undoFloor = null;
+    statsFloor = null;
   }
 }
 
@@ -167,7 +172,7 @@ function saveState() {
   }
   // Demo tickets are practice: never written down, gone when the demo ends.
   const real = (map) => Object.fromEntries(Object.entries(map).filter(([id]) => !isDemo(id)));
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), handedOff: real(handedOff), undoFloor }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), handedOff: real(handedOff), undoFloor, statsFloor }, null, 2));
 }
 
 loadState();
@@ -479,8 +484,9 @@ function snapshot() {
 const BREAKFAST_ENDS = 11; // hour, local time
 
 function statsToday() {
-  const today = startOfToday().getTime();
-  const tomorrow = today + 864e5;
+  // From midnight, or from the last Reset for the day if that was today.
+  const today = Math.max(startOfToday().getTime(), statsFloor ? Date.parse(statsFloor) : 0);
+  const tomorrow = startOfToday().getTime() + 864e5;
   const seen = new Set();
   const out = { orders: 0, breakfast: 0, lunch: 0, counter: 0, online: 0, kitchenDone: 0,
     avgMinutes: null, longestMinutes: null, topItems: [] };
@@ -882,11 +888,44 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/handoff-undo", "/api/unhandoff", "/api/front-update"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset"]);
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
 let pinFails = [];
 let pinLockedUntil = 0;
+
+// null if the PIN is right, else what to tell the person.
+function pinRefusal(pin) {
+  const now = Date.now();
+  if (!cfg.updatePin) return "Not set up: add \"updatePin\" to config.json on the kitchen PC.";
+  if (now < pinLockedUntil) return "Too many wrong PINs. Try again in 10 minutes.";
+  if (String(pin || "") !== String(cfg.updatePin)) {
+    pinFails = pinFails.filter((t) => now - t < 10 * 6e4).concat(now);
+    if (pinFails.length >= 5) { pinLockedUntil = now + 10 * 6e4; pinFails = []; }
+    console.log(`Front page: wrong PIN (${new Date().toLocaleTimeString()}).`);
+    return "Wrong PIN.";
+  }
+  pinFails = [];
+  return null;
+}
+
+// Reset for the day: the Undo lists empty and today's stats start from
+// now. With clearBoard, every order on the board and the front page is
+// cleared too, for the morning after testing. Cleared at the same instant
+// as the floor, so none of them can be brought back with Undo either.
+function resetDay(clearBoard, from) {
+  const now = new Date().toISOString();
+  undoFloor = now;
+  statsFloor = now;
+  if (clearBoard) {
+    for (const t of all) {
+      if (!bumped[t.id]) bumped[t.id] = now;
+      if (!handedOff[t.id]) handedOff[t.id] = now;
+    }
+  }
+  saveState();
+  console.log(`Reset for the day from ${from} (${new Date().toLocaleTimeString()})${clearBoard ? ", board cleared" : ""}.`);
+}
 function networkAllowed(req, url) {
   if (!NETWORK_PATHS.has(url.pathname)) return false;
   return !cfg.frontKey || url.searchParams.get("key") === cfg.frontKey;
@@ -927,9 +966,8 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === "POST" && url.pathname === "/api/reset-day") {
     if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
-    undoFloor = new Date().toISOString();
-    saveState();
-    console.log(`Reset for the day (${new Date().toLocaleTimeString()}): Undo history cleared.`);
+    const { clearBoard } = await readBody(req);
+    resetDay(!!clearBoard, "the board");
     return send(res, 200, snapshot());
   }
   if (req.method === "POST" && url.pathname === "/api/handoff-undo") {
@@ -941,22 +979,20 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, frontSnapshot());
   }
 
-  // Check for updates from the front page, with the PIN from config.json.
-  // Same update path as the board's own menu item.
-  if (req.method === "POST" && url.pathname === "/api/front-update") {
-    const now = Date.now();
-    if (!cfg.updatePin) return send(res, 200, { ok: false, message: "Not set up: add \"updatePin\" to config.json on the kitchen PC." });
-    if (now < pinLockedUntil) return send(res, 200, { ok: false, message: "Too many wrong PINs. Try again in 10 minutes." });
-    const { pin } = await readBody(req);
-    if (String(pin || "") !== String(cfg.updatePin)) {
-      pinFails = pinFails.filter((t) => now - t < 10 * 6e4).concat(now);
-      if (pinFails.length >= 5) { pinLockedUntil = now + 10 * 6e4; pinFails = []; }
-      console.log(`Update from the front page: wrong PIN (${new Date().toLocaleTimeString()}).`);
-      return send(res, 200, { ok: false, message: "Wrong PIN." });
+  // Check for updates and Reset for the day from the front page, both
+  // behind the PIN in config.json. Same actions as the board's own.
+  if (req.method === "POST" && (url.pathname === "/api/front-update" || url.pathname === "/api/front-reset")) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    if (url.pathname === "/api/front-update") {
+      console.log(`Update from the front page (${new Date().toLocaleTimeString()}).`);
+      return send(res, 200, await checkUpdates());
     }
-    pinFails = [];
-    console.log(`Update from the front page (${new Date().toLocaleTimeString()}).`);
-    return send(res, 200, await checkUpdates());
+    resetDay(!!body.clearBoard, "the front page");
+    return send(res, 200, { ok: true, message: body.clearBoard
+      ? "Reset: the Undo lists and today's stats start fresh, and every order on the board was cleared."
+      : "Reset: the Undo lists and today's stats start fresh." });
   }
   if (req.method === "POST" && url.pathname === "/api/demo") {
     if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });

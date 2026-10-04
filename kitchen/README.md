@@ -42,7 +42,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 - **A two-tone chime** means a new order. **A low falling tone** plus an amber banner means the board lost Square or its own program. Tickets shown at that point might be out of date, and new ones might be missing, so go by the printer until it clears.
 - **An amber "continues below" pointer** appears when a ticket runs off the bottom of the screen. Press **+** to see it.
 - **The power button** in the top right opens the board menu. It works with the mouse only, so nothing on the number pad can open it or confirm anything in it.
-  - **Settings & help:** the key guide, today's numbers (orders, breakfast / lunch, average time in the kitchen, most ordered), whether sound is on, and a link to the order check page. **Demo orders** adds practice tickets for training the staff (see below). **Reset for the day** clears the Undo list on both screens so yesterday's tickets can't be brought back by a stray Backspace. The tickets on the board and the stats stay as they are. The key guide also shows on the board when there are no orders.
+  - **Settings & help:** the key guide, today's numbers (orders, breakfast / lunch, average time in the kitchen, most ordered), whether sound is on, and a link to the order check page. **Demo orders** adds practice tickets for training the staff (see below). **Reset for the day** clears the Undo list on both screens (so test or yesterday's tickets can't come back with a stray Backspace) and restarts today's stats from that moment. Tick **Also clear every order on the board** to empty both screens too: the morning after testing, before the doors open. The key guide also shows on the board when there are no orders.
   - **Check for updates:** looks for new board code. If there is any, it runs `start-kitchen.bat`, which installs it and restarts the board in about 10 seconds. If not, it says the board is up to date.
   - **Close the board:** back to Windows. Run `start-kitchen.bat` to bring it back.
   - **Restart the PC** and **Shut down the PC:** each asks first, then counts down from 5 with a big Cancel. Prefer Restart when working remotely: once the PC is off, someone has to press its power button.
@@ -91,7 +91,7 @@ The same orders for the counter, on any laptop, tablet or phone on the cafe wifi
 - **Handed off** clears an order from the front page only; it never touches the kitchen board. **Undo** in the top bar lists today's hand-offs; click one to bring it back.
 - **Today**, under the orders: how many orders so far, breakfast vs lunch (before or after 11am, by when it was rung up or due), counter vs online, average and longest time in the kitchen (counter orders, rung up to Done), and the most ordered items. Canceled orders and unpaid open checks aren't counted.
 
-Only the front page and its own Handed off and Undo answer other devices. The kitchen board, `/check`, Done, the power menu and updates answer the kitchen PC alone.
+Only the front page, its Handed off and Undo, and the PIN-protected Manage actions answer other devices. The kitchen board, `/check`, Done, the power menu and updates answer the kitchen PC alone.
 
 ### Setting it up (one time, on the kitchen PC)
 
@@ -109,7 +109,7 @@ Settings in `config.json`, both optional:
 |---|---|---|
 | `frontOnNetwork` | `true` | `false` keeps everything on the kitchen PC; `/front` then works only there. |
 | `frontKey` | none | If set, other devices must open `/front?key=<the key>`. Bookmark the full address. Worth setting if customers ever share the staff wifi. |
-| `updatePin` | none | Turns on **Updates** on the front page: it asks for this PIN, then runs the same update as the board's Check for updates (the board restarts in about 10 seconds if there's anything new). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, the button says it isn't set up. Example: `"updatePin": "2468"`. |
+| `updatePin` | none | Turns on **Manage** on the front page. With this PIN it can **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
 
 ## When an order doesn't show up
 

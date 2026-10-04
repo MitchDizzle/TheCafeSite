@@ -116,6 +116,9 @@
   .dialog .actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1rem; }
   .dialog .actions button { font: inherit; font-weight: 800; padding: 0.55rem 1.1rem; border-radius: 0.4rem; border: 2px solid var(--teal); background: transparent; color: var(--teal-dark); cursor: pointer; }
   .dialog .actions .primary { background: var(--teal); color: var(--cream); }
+  .dialog .actions { flex-wrap: wrap; }
+  .dialog .check { display: flex; gap: 0.5rem; align-items: flex-start; margin: 0.8rem 0 0; font-size: 0.95rem; cursor: pointer; }
+  .dialog .check input { width: auto; font-size: 1rem; padding: 0; margin-top: 0.2rem; letter-spacing: 0; }
 
   main { padding: 1rem 1.2rem 3rem; max-width: 90rem; margin: 0 auto; }
   h2 {
@@ -224,7 +227,7 @@
       <button type="button" id="undo" aria-haspopup="menu" aria-expanded="false">↶ Undo</button>
       <div class="undo-menu" id="undo-menu" role="menu" hidden></div>
     </div>
-    <button type="button" id="updates" title="Check the kitchen board for updates">Updates</button>
+    <button type="button" id="manage" title="Check for updates or reset for the day (needs the PIN)">Manage</button>
     <button type="button" id="sound">Sound on</button>
     <span class="clock" id="clock"></span>
   </div>
@@ -539,35 +542,47 @@
   scrim.addEventListener("click", (e) => {
     if (e.target === scrim || e.target.closest("[data-close]")) closeDialog();
   });
-  document.getElementById("updates").addEventListener("click", () => {
-    showDialog(`<h2>Check for updates</h2>
-      <p>Updates the kitchen board and this page. If there's an update, the board restarts and is back in about 10 seconds.</p>
+  // Manage: the two things the front can do to the whole board, both
+  // behind the PIN (updatePin in the kitchen PC's config.json).
+  //   Check for updates: the board's own update; it restarts if there's one.
+  //   Reset for the day: empties the Undo lists, restarts today's stats from
+  //     now, and optionally clears every order on the board.
+  document.getElementById("manage").addEventListener("click", () => {
+    showDialog(`<h2>Manage the kitchen board</h2>
+      <p>Needs the PIN.</p>
       <form id="pin-form">
-        <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" aria-label="Update PIN">
+        <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" aria-label="PIN">
+        <label class="check"><input type="checkbox" id="clear-board"> When resetting, also clear every order on the board (after testing, before opening)</label>
         <div class="actions">
           <button type="button" data-close>Cancel</button>
-          <button type="submit" class="primary">Check</button>
+          <button type="button" data-act="reset">Reset for the day</button>
+          <button type="submit" class="primary" data-act="update">Check for updates</button>
         </div>
       </form>`);
     const pin = document.getElementById("pin");
     pin.focus();
-    document.getElementById("pin-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      showDialog(`<h2>Checking…</h2><p>One moment.</p>`);
+    const form = document.getElementById("pin-form");
+    async function run(act) {
+      const clearBoard = document.getElementById("clear-board").checked;
+      const path = act === "reset" ? "/api/front-reset" : "/api/front-update";
+      showDialog(`<h2>${act === "reset" ? "Resetting…" : "Checking…"}</h2><p>One moment.</p>`);
       let r;
       try {
-        const res = await fetch(api("/api/front-update"), {
+        const res = await fetch(api(path), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pin: pin.value }),
+          body: JSON.stringify({ pin: pin.value, clearBoard }),
         });
         r = await res.json();
       } catch {
         r = { ok: false, message: "The kitchen PC didn't answer." };
       }
-      showDialog(`<h2>${r.restarting ? "Updating" : r.ok ? "Updates" : "Didn't work"}</h2><p>${esc(r.message || "")}</p>
+      if (r.ok && act === "reset") lastJson = "";
+      showDialog(`<h2>${r.restarting ? "Updating" : r.ok ? "Done" : "Didn't work"}</h2><p>${esc(r.message || "")}</p>
         <div class="actions"><button type="button" class="primary" data-close>OK</button></div>`);
-    });
+    }
+    form.addEventListener("submit", (e) => { e.preventDefault(); run("update"); });
+    form.querySelector('[data-act="reset"]').addEventListener("click", () => run("reset"));
   });
 
   setInterval(tick, 15000);
