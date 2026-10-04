@@ -1,0 +1,25 @@
+---
+# /order — a short address we own that forwards to the online ordering
+# page in site.json. Printed QR codes (the door sign) point HERE rather than
+# at Square/Cash App directly, so if the ordering page ever changes, one edit
+# to site.json keeps every printed code working. Unlisted: noindex, off the
+# nav and the sitemap. With no ordering URL it falls back to the menu.
+permalink: /order.html
+eleventyExcludeFromCollections: true
+---
+{%- set target = site.ordering.url or "/menu" -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <meta http-equiv="refresh" content="0; url={{ target }}">
+    <title>Order online | {{ site.name }}</title>
+    <script>location.replace({{ target | dump | safe }});</script>
+</head>
+<body style="font-family: sans-serif; padding: 2rem;">
+    <p>Taking you to our online ordering&hellip;</p>
+    <p><a href="{{ target }}">Continue to order online</a></p>
+</body>
+</html>

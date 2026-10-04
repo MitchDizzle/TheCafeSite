@@ -241,3 +241,10 @@ npx qrcode -o src/assets/qr-facebook.svg -t svg -e H -w 0 "https://www.facebook.
 ```
 
 Then strip the background `<rect>` and swap `#000000` for `currentColor`.
+
+`qr-order.svg` (the door sign) encodes `https://lvcafetogo.com/order`, which is
+`src/order.njk`: a redirect to `site.ordering.url`. Printed codes point at our
+own address so that changing the ordering page never strands a sign on the
+door. Note the generator ignores `-w 0` as a margin setting and adds a 4-module
+border; crop it with the viewBox (`viewBox="4 4 33 33"`) rather than editing
+the paths. Check a new code with a phone before printing.
