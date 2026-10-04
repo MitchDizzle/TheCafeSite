@@ -440,3 +440,79 @@
 .sizing-pair {
     white-space: nowrap;
 }
+
+/* ── Counter copy: 11 × 17, three columns ─────────────────────
+   menu-counter.njk. Same markup, a tabloid sheet each side. Two tabloid
+   pages are a third more paper than the three letter pages above, and the
+   extra goes on type: every size is about 1.4x the letter piece's, so
+   descriptions run ~14pt and item names ~16.5pt. Three columns at ~3.1in
+   keep a short measure; two columns on an 11in sheet would run
+   descriptions too long to track back to the next line. */
+
+.lp-stack--counter .lp-canvas {
+    padding: 0.55in 0.6in;
+}
+
+.lp-stack--counter .lp-cols {
+    /* minmax(0, 1fr): a bare 1fr has a min-content floor, so one wide line
+       would steal width from the other two columns. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.4in;
+}
+
+.lp-stack--counter .lp-head {
+    padding-bottom: 0.16in;
+    margin-bottom: 0.3in;
+}
+
+.lp-stack--counter .lp-wordmark  { width: 4in; }
+.lp-stack--counter .lp-tagline   { font-size: 0.3in; }
+.lp-stack--counter .lp-head-line { font-size: 0.19in; }
+.lp-stack--counter .lp-runhead   { font-size: 0.26in; }
+
+.lp-stack--counter .menu-cat + .menu-cat { margin-top: 0.36in; }
+.lp-stack--counter .menu-cat-name   { font-size: 0.36in; }
+.lp-stack--counter .menu-cat-note   { font-size: 0.18in; }
+.lp-stack--counter .menu-cat-sizing { font-size: 0.2in; }
+.lp-stack--counter .menu-items      { margin-top: 0.15in; }
+.lp-stack--counter .menu-item + .menu-item { margin-top: 0.15in; }
+.lp-stack--counter .menu-item-name,
+.lp-stack--counter .menu-item-price { font-size: 0.23in; }
+.lp-stack--counter .menu-item-desc  { font-size: 0.195in; line-height: 1.35; max-width: none; }
+.lp-stack--counter .menu-variant-name { font-size: 0.195in; }
+.lp-stack--counter .menu-variant .menu-item-price { font-size: 0.2in; }
+
+/* Pick lists run as labelled lines here, not side-by-side lists: three
+   lists at this size ("Curry Chicken Salad" beside "Pepper Jack" beside
+   "Croissant") are wider than a column, and wrapping them inside their
+   lists splits "Pepper / Jack". A line per list reads as a sentence and
+   wraps cleanly between options. */
+.lp-stack--counter .menu-picks {
+    grid-template-columns: 1fr;
+    gap: 0.12in;
+}
+.lp-stack--counter .menu-pick-label  { font-size: 0.155in; }
+.lp-stack--counter .menu-pick-list   { margin-top: 0.03in; }
+.lp-stack--counter .menu-pick-option {
+    display: inline;
+    font-size: 0.2in;
+    line-height: 1.4;
+}
+.lp-stack--counter .menu-pick-option:not(:last-child)::after {
+    content: " \00b7  ";
+    color: #8a979e;
+}
+
+.lp-stack--counter .diet-mark { font-size: 0.14in; }
+.lp-stack--counter .diet-legend-title { font-size: 0.155in; }
+.lp-stack--counter .diet-legend-keys  { font-size: 0.175in; }
+.lp-stack--counter .diet-legend .diet-mark { font-size: 0.18in; }
+.lp-stack--counter .diet-legend-note,
+.lp-stack--counter .diet-legend-caveat,
+.lp-stack--counter .diet-legend-advisory { font-size: 0.16in; }
+
+.lp-stack--counter .lp-foot-label { font-size: 0.155in; }
+.lp-stack--counter .lp-visit-hours { font-size: 0.26in; }
+.lp-stack--counter .lp-visit-phone { font-size: 0.32in; }
+.lp-stack--counter .lp-visit-line,
+.lp-stack--counter .lp-foot-body  { font-size: 0.185in; }

@@ -1,0 +1,131 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Menu, counter copy (11 × 17)"
+canvasW: "11in"
+canvasH: "17in"
+pageSize: "11in 17in"
+pageCss: "/assets/css/menu-large-print.css"
+
+tags: studio
+studioTitle: "Menu — large print, counter copy"
+studioCategory: "Menus"
+studioSize: "11 × 17 in portrait · one sheet, both sides · no fold"
+studioNote: "The large-print menu on the door sign's 11 × 17 sheet, for copies left on the counter. Front: breakfast, wraps, cold and build-your-own sandwiches, soup and drinks. Back: the griddle, salads, kids meals, sides and where to find us. Type is a fifth bigger again than the letter-size large print (descriptions about 12pt). Print duplex, flip on either edge, at 100% — never 'fit to page'. Same data as every other menu, and the same dietary-marks caution: the GF/V marks stay off the paper until `dietsConfirmed` is set. The letter-size large print stays for anyone who wants one to hold."
+studioW: 1056
+studioH: 3520
+studioOrder: 22
+---
+
+{#- ===========================================================
+    Menu — counter copy, 11 × 17, one sheet both sides
+
+    The large-print menu (menu-large-print.njk) on the door sign's tabloid
+    sheet. Same markup (partials/menu-large-print-parts.njk) and the same
+    stylesheet; `.lp-stack--counter` in menu-large-print.css is the only
+    difference: three columns instead of two, and every size scaled up.
+
+    Two tabloid pages are a third more paper than three letter pages, so
+    this one spends the extra room on bigger type rather than on fewer
+    sheets alone.
+
+    COLUMN ASSIGNMENT is by hand, as on the letter piece. The sheet does
+    not scroll: a column that overruns is clipped, not continued. If you
+    add items, move a whole category and re-proof the PNG.
+    =========================================================== #}
+
+{%- set breakfast = (menu.categories | where("id", "breakfast"))[0] %}
+{%- set breakfastSides = (menu.categories | where("id", "breakfast_sides"))[0] %}
+{%- set wraps = (menu.categories | where("id", "wraps"))[0] %}
+{%- set sandwiches = (menu.categories | where("id", "sandwiches"))[0] %}
+{%- set hotSandwiches = (menu.categories | where("id", "hot_sandwiches"))[0] %}
+{%- set buildSandwich = (menu.categories | where("id", "build_sandwich"))[0] %}
+{%- set salads = (menu.categories | where("id", "salads"))[0] %}
+{%- set soup = (menu.categories | where("id", "soup"))[0] %}
+{%- set kids = (menu.categories | where("id", "kids"))[0] %}
+{%- set sides = (menu.categories | where("id", "sides"))[0] %}
+{%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
+
+{%- from "partials/menu-large-print-parts.njk" import category, dietLegend %}
+
+<div class="lp-stack lp-stack--counter{% if not menu.dietsConfirmed %} diets-unconfirmed{% endif %}">
+
+    {%- if not menu.dietsConfirmed %}
+    <p class="fold-legend fold-legend--review fold-legend--warn">Dietary marks are drafted from the ingredient lists and are <strong>not kitchen-confirmed</strong> &mdash; they are left off the printed PDF until they are. Set <code>dietsConfirmed</code> in menu.json to clear this. Screen and PNG proof only.</p>
+    {%- endif %}
+
+    <p class="fold-legend fold-legend--review">A red <span class="price-review">&bull;</span> marks a price still to be re-costed. Screen and PNG proof only &mdash; it never prints.</p>
+
+    <p class="fold-legend">Front &mdash; masthead, breakfast, wraps, sandwiches, soup &amp; drinks</p>
+
+    <div class="canvas lp-canvas">
+        <header class="lp-head">
+            <div class="wordmark wordmark--ink lp-wordmark">
+                {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+            </div>
+            <div class="lp-head-meta">
+                <p class="p-display-italic lp-tagline ink-teal">Breakfast &amp; Lunch</p>
+                <p class="p-body lp-head-line">{{ site.opening.hoursDays }} &middot; {{ site.opening.opens.time }} {{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }} {{ site.opening.closes.meridiem }}</p>
+                <p class="p-body lp-head-line lp-head-phone ink-teal">{{ site.phone }} &middot; {{ site.address.street }}</p>
+            </div>
+        </header>
+
+        <div class="lp-cols">
+            <div class="lp-col">
+                {{ category(breakfast, menu) }}
+                {{ category(breakfastSides, menu) }}
+            </div>
+            <div class="lp-col">
+                {{ category(wraps, menu) }}
+                {{ category(sandwiches, menu) }}
+            </div>
+            <div class="lp-col">
+                {{ category(buildSandwich, menu) }}
+                {{ category(soup, menu) }}
+                {{ category(drinks, menu) }}
+            </div>
+        </div>
+    </div>
+
+    <p class="fold-legend">Back &mdash; the griddle, salads, kids, sides &amp; where to find us</p>
+
+    <div class="canvas lp-canvas">
+        <header class="lp-head lp-head--run">
+            <p class="p-display lp-runhead ink-teal">{{ site.name }} &middot; Menu</p>
+            <p class="p-body lp-head-line lp-head-phone ink-teal">{{ site.phone }} &middot; {{ site.social.website }}</p>
+        </header>
+
+        <div class="lp-cols">
+            <div class="lp-col">
+                {{ category(hotSandwiches, menu) }}
+            </div>
+            <div class="lp-col">
+                {{ category(salads, menu) }}
+
+                <div class="panel-spacer"></div>
+                {{ dietLegend(menu) }}
+            </div>
+            <div class="lp-col">
+                {{ category(kids, menu) }}
+                {{ category(sides, menu) }}
+
+                <div class="panel-spacer"></div>
+
+                <div class="lp-visit">
+                    <p class="p-label lp-foot-label ink-accent">Visit us</p>
+                    <p class="p-display lp-visit-hours ink-teal">{{ site.opening.hoursDays }}</p>
+                    <p class="p-display lp-visit-hours ink-teal">{{ site.opening.opens.time }} <span class="ampm">{{ site.opening.opens.meridiem }}</span> &ndash; {{ site.opening.closes.time }} <span class="ampm">{{ site.opening.closes.meridiem }}</span></p>
+                    <p class="p-display lp-visit-phone ink-teal">{{ site.phone }}</p>
+                    <p class="p-body lp-visit-line">{{ site.address.street }}</p>
+                    <p class="p-body lp-visit-line">{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
+                    <p class="p-body lp-visit-line">{{ site.social.website }}</p>
+                </div>
+
+                <div class="lp-foot">
+                    <p class="p-label lp-foot-label ink-accent">Catering &amp; meal prep</p>
+                    <p class="p-body lp-foot-body">Group lunches for offices, churches, funerals and family gatherings, ready for pickup or dropped off. Ask at the counter or call about catering.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
