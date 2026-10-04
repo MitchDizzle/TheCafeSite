@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Front · Orders</title>
+<style>
+  /* The counter's view of the kitchen board, for a laptop or tablet on the
+     cafe wifi. Read at arm's length, not across a kitchen, so sizes are
+     ordinary page sizes, not the board's. System fonts for the same reason
+     as the board: nothing to load from the internet. */
+  :root {
+    --cream: #FAF7F2;
+    --paper: #FFFFFF;
+    --teal: #2C5E70;
+    --teal-dark: #1F4552;
+    --red: #C0392F;
+    --red-dark: #A02F26;
+    --amber: #E8A33D;
+    --green: #2E7D4F;
+    --green-soft: #E3F2E8;
+    --text: #22323A;
+    --muted: #5B6B72;
+    --line: #E3DDD3;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 17px; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--cream);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  }
+
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.7rem 1.2rem;
+    background: var(--teal-dark);
+    color: var(--cream);
+  }
+  .bar h1 { margin: 0; font-size: 1.25rem; }
+  .bar .counts { font-size: 1rem; opacity: 0.9; }
+  .bar .spacer { flex: 1; }
+  .bar .clock { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .bar button {
+    font: inherit;
+    font-weight: 700;
+    padding: 0.4rem 0.9rem;
+    border: 2px solid var(--cream);
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--cream);
+    cursor: pointer;
+  }
+  .bar button[hidden] { display: none; }
+  .bar button.sound-off { border-color: var(--amber); color: var(--amber); }
+
+  .alert { padding: 0.6rem 1.2rem; background: var(--amber); color: #1A1A1A; font-weight: 700; }
+  .alert[hidden] { display: none; }
+
+  main { padding: 1rem 1.2rem 3rem; max-width: 90rem; margin: 0 auto; }
+  h2 {
+    margin: 1.2rem 0 0.6rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    gap: 0.9rem;
+    align-items: start;
+  }
+  .empty { color: var(--muted); font-size: 1.1rem; margin: 0.4rem 0 0; }
+
+  .order {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+  /* Name over order type on the left, status on the right: the name is what
+     the front calls out, so it never gets cut short for the type line. */
+  .order header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .order .name { display: block; font-size: 1.2rem; font-weight: 800; overflow-wrap: anywhere; }
+  .order .kind { display: block; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .order .status { font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; text-align: right; }
+  .order .status.late { color: var(--red-dark); }
+
+  .order.ready { border: 2px solid var(--green); }
+  .order.ready header { background: var(--green-soft); }
+  .order.ready .status { color: var(--green); }
+  .order.cooking .status { color: var(--teal); }
+  .order.just-ready { animation: pop 1s ease-out 3; }
+  @keyframes pop { 50% { box-shadow: 0 0 0 0.35rem rgba(46, 125, 79, 0.45); } }
+  @media (prefers-reduced-motion: reduce) { .order.just-ready { animation: none; } }
+
+  .section { padding: 0.5rem 0.8rem; }
+  .section + .section { border-top: 1px dashed var(--line); }
+  .label { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.25rem; }
+  .items { list-style: none; margin: 0; padding: 0; }
+  .items li { display: grid; grid-template-columns: 1.8rem 1fr; padding: 0.15rem 0; }
+  .qty { font-weight: 800; }
+  .qty.many { color: var(--red-dark); }
+  .item-name { font-weight: 700; }
+  .sub { color: var(--muted); font-size: 0.92rem; }
+  .sub.allergy { color: var(--red-dark); font-weight: 800; }
+
+  /* What the counter adds. Tap to tick it off while bagging; the ticks are
+     kept on this device only and vanish with the order. */
+  .front-items { background: #FFF7E6; }
+  .front-items .label { color: #8A5A0B; }
+  .front-items li { cursor: pointer; border-radius: 0.3rem; user-select: none; }
+  .front-items li:hover { background: #FCEBC8; }
+  .front-items li { grid-template-columns: 1.6rem 1.8rem 1fr; }
+  .box { font-size: 1.15rem; line-height: 1.2; }
+  .box::before { content: "\2610"; }
+  .front-items li.got { color: var(--muted); }
+  .front-items li.got .item-name { text-decoration: line-through; }
+  .front-items li.got .box::before { content: "\2611"; color: var(--green); }
+  .nothing { color: var(--muted); font-style: italic; }
+
+  .note { margin: 0.2rem 0; padding: 0.3rem 0.5rem; background: #FFF0C2; border-left: 0.25rem solid var(--amber); font-weight: 700; }
+  .note.allergy { background: #FBE3E1; border-left-color: var(--red); color: #7A1F18; }
+  .note.allergy::before { content: "\26A0  "; }
+
+  .square { font-size: 0.92rem; font-weight: 700; }
+  .square.todo { color: var(--red-dark); }
+  .square.done { color: var(--green); }
+
+  .actions { padding: 0.6rem 0.8rem 0.8rem; }
+  .handoff {
+    width: 100%;
+    padding: 0.65rem;
+    border: 0;
+    border-radius: 0.4rem;
+    background: var(--green);
+    color: #fff;
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .handoff:hover { filter: brightness(1.08); }
+  /* Still cooking: the button is there (the customer may take part of it
+     early, or the kitchen forgot Done) but it doesn't invite a tap. */
+  .order.cooking .handoff { background: transparent; color: var(--muted); border: 2px solid var(--line); }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <h1>Front · Orders</h1>
+    <span class="counts" id="counts"></span>
+    <span class="spacer"></span>
+    <button type="button" id="undo" hidden>↶ Undo</button>
+    <button type="button" id="sound">Sound on</button>
+    <span class="clock" id="clock"></span>
+  </div>
+  <div class="alert" id="alert" hidden></div>
+  <main>
+    <h2>Ready</h2>
+    <div class="list" id="ready"></div>
+    <h2>Cooking</h2>
+    <div class="list" id="cooking"></div>
+  </main>
+
+<script>
+(() => {
+  const POLL_MS = 2000;
+  // The key from this page's own address, passed on to every request, so a
+  // bookmarked /front?key=... keeps working (see frontKey in server.js).
+  const key = new URLSearchParams(location.search).get("key");
+  const api = (p) => (key ? `${p}?key=${encodeURIComponent(key)}` : p);
+
+  const readyEl = document.getElementById("ready");
+  const cookingEl = document.getElementById("cooking");
+  const alertEl = document.getElementById("alert");
+  const undoBtn = document.getElementById("undo");
+  const soundBtn = document.getElementById("sound");
+
+  let orders = [];
+  let lastJson = "";
+  let readyKnown = null; // ids already seen as ready; null until the first load
+  const justReady = new Set();
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmtTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const label = (o) => o.name || `#${o.shortId}`;
+  const mins = (ms) => Math.max(0, Math.floor(ms / 6e4));
+  const ALLERGY = /allerg|anaphyla|epi-?pen|gluten|celiac|coeliac|peanut|tree ?nut|\bnuts?\b|shellfish|dairy|lactose|\begg[- ]free|\bsoy\b|sesame/i;
+
+  // ---- ticks on the "add from the front" lines, per device
+  function loadTicks() {
+    try { return JSON.parse(localStorage.getItem("front-ticks") || "{}"); } catch { return {}; }
+  }
+  function saveTicks(t) {
+    try { localStorage.setItem("front-ticks", JSON.stringify(t)); } catch {}
+  }
+  let ticks = loadTicks();
+
+  // ---- sound: a chime when an order turns ready. Off until a click turns
+  // it on, because browsers block sound on a page nobody has touched.
+  let soundOn = false;
+  try { soundOn = localStorage.getItem("front-sound") === "1"; } catch {}
+  let audio;
+  function renderSound() {
+    soundBtn.textContent = soundOn ? "Sound on" : "Sound off";
+    soundBtn.classList.toggle("sound-off", !soundOn);
+  }
+  function chime() {
+    if (!soundOn) return;
+    try {
+      audio = audio || new AudioContext();
+      if (audio.state === "suspended") audio.resume();
+      [660, 990].forEach((freq, i) => {
+        const o = audio.createOscillator();
+        const g = audio.createGain();
+        const t0 = audio.currentTime + i * 0.18;
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(0.3, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3);
+        o.connect(g).connect(audio.destination);
+        o.start(t0);
+        o.stop(t0 + 0.35);
+      });
+    } catch {}
+  }
+  soundBtn.addEventListener("click", () => {
+    soundOn = !soundOn;
+    try { localStorage.setItem("front-sound", soundOn ? "1" : "0"); } catch {}
+    renderSound();
+    chime();
+  });
+  document.addEventListener("pointerdown", () => {
+    try { audio = audio || new AudioContext(); audio.resume(); } catch {}
+  }, { once: true });
+  renderSound();
+
+  // ---- rendering
+  function kindLabel(o) {
+    if (o.kind === "COUNTER") return "Counter";
+    const k = o.kind === "PICKUP" && (!o.source || /square online/i.test(o.source)) ? "Online" : (o.source || o.kind);
+    return o.dueAt ? `${k} · due ${fmtTime(o.dueAt)}` : k;
+  }
+
+  function itemsHtml(list, isFront, orderId) {
+    return `<ul class="items">${list.map((it, i) => {
+      const subs = [it.variation, ...it.mods].filter(Boolean)
+        .map((m) => `<div class="sub${ALLERGY.test(m) ? " allergy" : ""}">${esc(m)}</div>`).join("");
+      const note = it.note ? `<div class="note${ALLERGY.test(it.note) ? " allergy" : ""}">${esc(it.note)}</div>` : "";
+      const got = isFront && ticks[orderId] && ticks[orderId][i];
+      return `<li${isFront ? ` data-tick="${i}"${got ? ' class="got"' : ""}` : ""}>
+        ${isFront ? '<span class="box" aria-hidden="true"></span>' : ""}<span class="qty${it.qty > 1 ? " many" : ""}">${it.qty}</span>
+        <div><div class="item-name">${esc(it.name)}</div>${subs}${note}</div>
+      </li>`;
+    }).join("")}</ul>`;
+  }
+
+  function orderHtml(o) {
+    const ready = !!o.readyAt;
+    const online = o.kind !== "COUNTER";
+    const square = !online ? "" : o.squareReady
+      ? `<div class="square done">✓ Marked ready in Square. Customer texted.</div>`
+      : ready ? `<div class="square todo">Mark it ready in Square Order Manager to text the customer.</div>` : "";
+    return `
+      <article class="order ${ready ? "ready" : "cooking"}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
+        <header>
+          <span><span class="name">${esc(label(o))}</span><span class="kind">${esc(kindLabel(o))}</span></span>
+          <span class="status" data-status></span>
+        </header>
+        <div class="section">
+          <div class="label">From the kitchen</div>
+          ${o.items.length ? itemsHtml(o.items, false, o.id) : `<div class="nothing">Nothing from the kitchen</div>`}
+          ${o.note ? `<div class="note${ALLERGY.test(o.note) ? " allergy" : ""}">${esc(o.note)}</div>` : ""}
+        </div>
+        ${o.front.length ? `<div class="section front-items">
+          <div class="label">Add from the front</div>
+          ${itemsHtml(o.front, true, o.id)}
+        </div>` : ""}
+        ${square ? `<div class="section">${square}</div>` : ""}
+        <div class="actions"><button class="handoff" type="button">Handed off</button></div>
+      </article>`;
+  }
+
+  function render() {
+    const ready = orders.filter((o) => o.readyAt);
+    const cooking = orders.filter((o) => !o.readyAt);
+    readyEl.innerHTML = ready.length ? ready.map(orderHtml).join("") : `<p class="empty">Nothing ready yet.</p>`;
+    cookingEl.innerHTML = cooking.length ? cooking.map(orderHtml).join("") : `<p class="empty">Nothing cooking.</p>`;
+    document.getElementById("counts").textContent = orders.length
+      ? `${ready.length} ready · ${cooking.length} cooking` : "";
+    tick();
+  }
+
+  function tick() {
+    const now = Date.now();
+    document.getElementById("clock").textContent = new Date(now).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    for (const card of document.querySelectorAll(".order")) {
+      const o = orders.find((x) => x.id === card.dataset.id);
+      if (!o) continue;
+      const el = card.querySelector("[data-status]");
+      // Ready: how long it has sat on the counter. A pickup still cooking:
+      // time to its pickup (it may have been placed hours ago). A counter
+      // order still cooking: how long since it was rung up.
+      let text, late = false;
+      if (o.readyAt) {
+        const m = mins(now - Date.parse(o.readyAt));
+        text = m ? `Ready ${m} min` : "Ready now";
+      } else if (o.dueAt) {
+        const until = Date.parse(o.dueAt) - now;
+        late = until < 0;
+        text = late ? `${mins(-until)} min late` : `Due in ${mins(until)} min`;
+      } else {
+        text = `Cooking ${mins(now - Date.parse(o.createdAt))} min`;
+      }
+      el.textContent = text;
+      el.classList.toggle("late", late);
+    }
+  }
+
+  function apply(data) {
+    const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000;
+    alertEl.hidden = !(data.error || stale || data.mock);
+    alertEl.textContent = data.mock ? "TEST MODE: these are fake orders, not from Square."
+      : data.lastOkAt ? `The kitchen PC can't reach Square. Orders as of ${fmtTime(data.lastOkAt)}; new ones may be missing.`
+      : "Connecting to Square…";
+
+    undoBtn.hidden = !data.lastHandedOff;
+    if (data.lastHandedOff) undoBtn.textContent = `↶ Undo ${data.lastHandedOff.label}`;
+
+    const json = JSON.stringify(data.orders);
+    if (json === lastJson) return;
+    lastJson = json;
+    orders = data.orders;
+
+    // Chime and pulse for orders that just turned ready, not ones that were
+    // already ready when the page opened.
+    justReady.clear();
+    const nowReady = orders.filter((o) => o.readyAt).map((o) => o.id);
+    if (readyKnown) for (const id of nowReady) if (!readyKnown.has(id)) justReady.add(id);
+    readyKnown = new Set(nowReady);
+    if (justReady.size) chime();
+
+    // Forget ticks for orders no longer listed.
+    const ids = new Set(orders.map((o) => o.id));
+    for (const id of Object.keys(ticks)) if (!ids.has(id)) delete ticks[id];
+    saveTicks(ticks);
+
+    render();
+  }
+
+  async function load() {
+    try {
+      const res = await fetch(api("/api/front"), { cache: "no-store" });
+      if (!res.ok) throw new Error(String(res.status));
+      apply(await res.json());
+    } catch {
+      alertEl.hidden = false;
+      alertEl.textContent = "Can't reach the kitchen PC. Is it on, and is this device on the cafe wifi?";
+    } finally {
+      setTimeout(load, POLL_MS);
+    }
+  }
+
+  async function post(path, body) {
+    const res = await fetch(api(path), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {}),
+    });
+    if (res.ok) { lastJson = ""; apply(await res.json()); }
+  }
+
+  document.querySelector("main").addEventListener("click", (e) => {
+    const card = e.target.closest(".order");
+    if (!card) return;
+    const id = card.dataset.id;
+    if (e.target.closest(".handoff")) {
+      // Gone from this screen at once; the server confirms.
+      orders = orders.filter((o) => o.id !== id);
+      render();
+      post("/api/handoff", { id }).catch(() => {});
+      return;
+    }
+    const li = e.target.closest("[data-tick]");
+    if (li) {
+      const i = li.dataset.tick;
+      ticks[id] = ticks[id] || {};
+      ticks[id][i] = !ticks[id][i];
+      saveTicks(ticks);
+      li.classList.toggle("got", ticks[id][i]);
+    }
+  });
+  undoBtn.addEventListener("click", () => post("/api/handoff-undo").catch(() => {}));
+
+  setInterval(tick, 15000);
+  load();
+})();
+</script>
+</body>
+</html>

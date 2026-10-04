@@ -69,6 +69,36 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 
 Push the change to the `kitchen-board` branch from any computer, then restart the board on the kitchen PC: run `start-kitchen.bat` or restart the PC. Before starting, it fetches that branch, switches to it (so a copy cloned on `main` still ends up on the board's code), and fast-forwards. The branch is set at the top of `start-kitchen.bat` (`BOARD_BRANCH`); change it to `main` once the board is merged. If git isn't installed or the update fails, it says so on screen and starts the version already there. `config.json` and `state.json` (cleared tickets) are never changed by an update.
 
+## The front page (counter laptop or tablet)
+
+The same orders for the counter, on any laptop, tablet or phone on the cafe wifi: `http://<kitchen PC name>:8090/front`. The board program prints the exact address when it starts, and `/check` shows it too. Bookmark it by the PC's name, not its IP address, because the router can change the address.
+
+- **Ready** (green, on top): the kitchen pressed Done, so the food is coming out. It chimes once the laptop's **Sound** button is on.
+- **Cooking:** still on the kitchen board. A pickup counts down to its pickup time; a counter order counts up from when it was rung.
+- **Add from the front:** the order's skip-list items (drinks, chips): what the counter puts in the bag. Tap a line to tick it off while bagging. Ticks are kept on that device only.
+- **Online orders** say whether they've been marked ready in Square Order Manager. That step is still what texts the customer, and an order marked ready there stays on the front page until it's handed off.
+- **An online order of only drinks or chips** shows on the front page only, as Ready: there's nothing for the kitchen to make. A counter sale of only those doesn't show anywhere, because it's handed over as it's rung up.
+- **Handed off** clears an order from the front page only; it never touches the kitchen board. **Undo** in the top bar brings it back.
+
+Only the front page and its own Handed off and Undo answer other devices. The kitchen board, `/check`, Done, the power menu and updates answer the kitchen PC alone.
+
+### Setting it up (one time, on the kitchen PC)
+
+1. **Allow it through Windows Firewall.** In PowerShell **as administrator**:
+   ```powershell
+   New-NetFirewallRule -DisplayName "Kitchen board front page" -Direction Inbound -Program (Get-Command node).Source -Protocol TCP -LocalPort 8090 -Action Allow -Profile Private
+   ```
+   Do this before the board next starts. Otherwise Windows pops up its own firewall question over the full-screen board.
+2. **Set the cafe wifi to Private** on the kitchen PC: Settings → Network & Internet → the wifi or Ethernet connection → Network profile: **Private**. On a Public network the rule above doesn't apply, and the front page won't load from other devices.
+3. **Restart the board** (Check for updates, or restart the PC). The program window then says `Front page for the counter: http://…/front`. Open that address on the laptop.
+
+Settings in `config.json`, both optional:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `frontOnNetwork` | `true` | `false` keeps everything on the kitchen PC; `/front` then works only there. |
+| `frontKey` | none | If set, other devices must open `/front?key=<the key>`. Bookmark the full address. Worth setting if customers ever share the staff wifi. |
+
 ## When an order doesn't show up
 
 Open **http://localhost:8090/check** in a normal Chrome window. Alt+Tab out of the board, or press Alt+F4 and reopen it with `start-kitchen.bat` afterwards. The page lists every order Square sent on its last check. For each one it says whether it's on the board, and if not, why: cleared with Done, every item on the skip list, pickup still more than an hour away, and so on.
@@ -94,7 +124,8 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | File | What it is |
 |---|---|
 | `server.js` | Polls Square every 5 s and serves the board on `http://localhost:8090`. It only listens on the PC itself, not the network, and the power menu and update check only answer the board page itself. |
-| `board.html` | The screen. |
+| `board.html` | The kitchen screen. |
+| `front.html` | The front page for the counter (`/front`). |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `state.json` | Which orders have been cleared. Created automatically; gitignored. |
 | `start-kitchen.bat` | Pulls updates, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. |

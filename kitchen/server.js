@@ -24,11 +24,19 @@
  * Bumping is LOCAL ONLY. It does not mark the order ready in Square or text the
  * customer; the front still does that in Order Manager. That keeps one person
  * in charge of telling customers their food is ready.
+ *
+ * The front page (/front) is the same orders for the counter, on a laptop or
+ * tablet over the cafe wifi: what's cooking, what's ready (the kitchen pressed
+ * Done), and what the front adds to the bag (the skip-list items: drinks,
+ * chips). The front clears its own list with "Handed off"; that never touches
+ * the kitchen board. Only /front and its own two actions answer the network;
+ * the kitchen board, the power menu and updates answer this PC alone.
  */
 
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 const { execFile, spawn } = require("child_process");
 
 const DIR = __dirname;
@@ -39,6 +47,7 @@ const MOCK = process.env.KITCHEN_MOCK === "1";
 const MUTE = process.env.KITCHEN_MUTE === "1";
 const STATE_FILE = path.join(DIR, MOCK ? "state-mock.json" : "state.json");
 const BOARD_FILE = path.join(DIR, "board.html");
+const FRONT_FILE = path.join(DIR, "front.html");
 
 
 const DEFAULTS = {
@@ -51,11 +60,13 @@ const DEFAULTS = {
   showAheadMinutes: 60, // pickup orders appear this long before they're due
   openLookbackDays: 14, // how far back to look for pre-ordered pickups
   skipItems: [], // item names the kitchen never makes, e.g. "Fountain Drink"
+  frontOnNetwork: true, // serve /front to other devices on the wifi; false = this PC only
+  frontKey: "", // if set, other devices must open /front?key=<this>
 };
 
 // Settings that are the cafe's own and have no meaningful default: never
 // flagged as "differs from the default".
-const OWN = new Set(["accessToken", "locationIds", "skipItems"]);
+const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey"]);
 
 // What's worth knowing about config.json, in plain words. Written to the
 // program window at startup and shown on /check.
@@ -117,23 +128,29 @@ const cfg = loadConfig();
 
 // ---------------------------------------------------------------- bump state
 
-let bumped = {}; // orderId -> ISO time bumped
+let bumped = {}; // orderId -> ISO time a cook pressed Done (kitchen board)
+let handedOff = {}; // orderId -> ISO time the front pressed Handed off (/front)
 
 function loadState() {
   try {
-    bumped = JSON.parse(fs.readFileSync(STATE_FILE, "utf8")).bumped || {};
+    const state = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
+    bumped = state.bumped || {};
+    handedOff = state.handedOff || {};
   } catch {
     bumped = {};
+    handedOff = {};
   }
 }
 
 function saveState() {
-  // Three days is plenty; nothing older can reappear on the board anyway.
+  // Three days is plenty; nothing older can reappear on either screen anyway.
   const cutoff = Date.now() - 3 * 864e5;
-  for (const [id, at] of Object.entries(bumped)) {
-    if (Date.parse(at) < cutoff) delete bumped[id];
+  for (const map of [bumped, handedOff]) {
+    for (const [id, at] of Object.entries(map)) {
+      if (Date.parse(at) < cutoff) delete map[id];
+    }
   }
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped, handedOff }, null, 2));
 }
 
 loadState();
@@ -217,7 +234,11 @@ async function fetchOrders() {
 
 // ---------------------------------------------------------------- tickets
 
-const DONE_FULFILLMENT = new Set(["PREPARED", "COMPLETED", "CANCELED", "FAILED"]);
+// An online order the front has picked up, canceled or failed is finished
+// everywhere. PREPARED (marked ready in Order Manager, which texts the
+// customer) is finished for the kitchen but not for the front: the bag is
+// still on the counter waiting for the customer.
+const GONE_FULFILLMENT = new Set(["COMPLETED", "CANCELED", "FAILED"]);
 // Keypad (custom amount) sales DO show: staff may ring a special or an
 // off-menu plate that way, and a missed ticket is worse than an extra one.
 const NOT_FOOD = new Set(["GIFT_CARD"]);
@@ -241,26 +262,33 @@ function toTicket(order) {
   const f = (order.fulfillments || [])[0];
   const online = isOnline(order, f);
   if (f && f.state === "CANCELED") return { reason: "canceled" };
-  if (online && DONE_FULFILLMENT.has(f.state)) {
+  if (online && GONE_FULFILLMENT.has(f.state)) {
     return { reason: `front already marked it ${f.state.toLowerCase()}` };
   }
 
   const lines = order.line_items || [];
-  const items = lines
-    .filter((li) => !NOT_FOOD.has(li.item_type))
-    .filter((li) => !cfg.skip.has(itemName(li).trim().toLowerCase()))
-    .map((li) => ({
-      qty: Number(li.quantity) || 1,
-      name: itemName(li),
-      variation:
-        li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
-      mods: (li.modifiers || []).map((m) =>
-        Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name
-      ),
-      note: li.name && li.note ? li.note : null,
-    }));
+  const toItem = (li) => ({
+    qty: Number(li.quantity) || 1,
+    name: itemName(li),
+    variation:
+      li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
+    mods: (li.modifiers || []).map((m) =>
+      Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name
+    ),
+    note: li.name && li.note ? li.note : null,
+  });
+  const food = lines.filter((li) => !NOT_FOOD.has(li.item_type));
+  const isSkip = (li) => cfg.skip.has(itemName(li).trim().toLowerCase());
+  // items: what the kitchen makes. front: what the counter adds to the bag.
+  const items = food.filter((li) => !isSkip(li)).map(toItem);
+  const front = food.filter(isSkip).map(toItem);
   if (!lines.length) return { reason: "no items on the order" };
-  if (!items.length) return { reason: "every item is on the skip list (or a gift card)" };
+  // A counter sale of only drinks or chips is handed over as it's rung up;
+  // it belongs on neither screen. An online one still needs bagging, so it
+  // stays a ticket and shows on /front only (see hiddenReason).
+  if (!items.length && (!online || !front.length)) {
+    return { reason: "every item is on the skip list (or a gift card)" };
+  }
 
   const details = f && (f.pickup_details || f.delivery_details || f.shipment_details);
   const recipient = details && details.recipient;
@@ -275,19 +303,42 @@ function toTicket(order) {
     createdAt: order.created_at,
     dueAt,
     items,
+    front,
+    // Marked ready in Order Manager: the customer has been texted.
+    squareReady: !!(online && f.state === "PREPARED"),
     note: (details && details.note) || null,
     detail: orderDetail(order),
   } };
 }
 
-// null if the ticket belongs on the board, else why not.
-function hiddenReason(t, now) {
-  if (bumped[t.id]) return "cleared with Done";
+// Today's work only, on both screens: a stale order from yesterday that
+// nobody closed in Square should not greet anyone every morning.
+function outOfWindow(t, now) {
   const due = Date.parse(t.dueAt || t.createdAt);
-  // Today's work only: a stale order from yesterday that nobody closed in
-  // Square should not greet the cooks every morning.
   if (due < startOfToday().getTime()) return "due before today";
   if (due > now + cfg.showAheadMinutes * 6e4) return "pickup is more than " + cfg.showAheadMinutes + " min away";
+  return null;
+}
+
+// null if the ticket belongs on the kitchen board, else why not.
+function hiddenReason(t, now) {
+  if (bumped[t.id]) return "cleared with Done";
+  if (t.squareReady) return "front already marked it prepared";
+  if (!t.items.length) return "every item is on the skip list (front only)";
+  return outOfWindow(t, now);
+}
+
+// null if the ticket belongs on /front, else why not.
+function frontHiddenReason(t, now) {
+  if (handedOff[t.id]) return "handed off at the front";
+  return outOfWindow(t, now);
+}
+
+// Ready for the front: the kitchen pressed Done, the front already marked it
+// ready in Square, or there was nothing for the kitchen to make.
+function readyAt(t) {
+  if (bumped[t.id]) return bumped[t.id];
+  if (t.squareReady || !t.items.length) return t.createdAt;
   return null;
 }
 
@@ -298,6 +349,17 @@ function lastCleared() {
   const ids = Object.keys(bumped)
     .filter((id) => byId.has(id))
     .sort((a, b) => Date.parse(bumped[b]) - Date.parse(bumped[a]));
+  if (!ids.length) return null;
+  const t = byId.get(ids[0]);
+  return { id: t.id, label: t.name || `#${t.shortId}` };
+}
+
+// The most recent hand-off that could come back: what Undo on /front restores.
+function lastHandedOff() {
+  const byId = new Map(all.map((t) => [t.id, t]));
+  const ids = Object.keys(handedOff)
+    .filter((id) => byId.has(id))
+    .sort((a, b) => Date.parse(handedOff[b]) - Date.parse(handedOff[a]));
   if (!ids.length) return null;
   const t = byId.get(ids[0]);
   return { id: t.id, label: t.name || `#${t.shortId}` };
@@ -362,6 +424,22 @@ function snapshot() {
     .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
   return { tickets, lastOkAt, error: lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
     pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
+}
+
+// /front: ready orders first, oldest-ready at the top (the one waiting
+// longest on the counter), then what's still cooking in board order.
+function frontSnapshot() {
+  const now = Date.now();
+  const orders = all
+    .filter((t) => !frontHiddenReason(t, now))
+    .map((t) => ({ ...t, readyAt: readyAt(t) }))
+    .sort((a, b) => {
+      if (!!a.readyAt !== !!b.readyAt) return a.readyAt ? -1 : 1;
+      if (a.readyAt) return Date.parse(a.readyAt) - Date.parse(b.readyAt);
+      return Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt);
+    });
+  return { orders, lastOkAt, error: lastError, mock: MOCK, lastHandedOff: lastHandedOff(),
+    pollSeconds: cfg.pollSeconds };
 }
 
 // ---------------------------------------------------------------- mock data
@@ -444,6 +522,16 @@ function mockOrders() {
     fulfillments: [{ type: "PICKUP", state: "COMPLETED", pickup_details: {} }],
     line_items: [li(1, "Philly Steak Sandwich")],
   });
+  // Online, drinks and chips only: nothing for the kitchen, but the front
+  // still bags it. Shows on /front only.
+  orders.push({
+    id: "MOCKONLINEDRNK8",
+    state: "OPEN",
+    created_at: at(-3),
+    source: { name: "Square Online" },
+    fulfillments: [{ type: "PICKUP", state: "PROPOSED", pickup_details: { pickup_at: at(15), recipient: { display_name: "Dee" } } }],
+    line_items: [li(2, "Iced Tea / Fountain Drink"), li(1, "Chips", { variation_name: "BBQ" })],
+  });
   // An online order the front already handed over: must NOT show.
   orders.push({
     id: "MOCKONLINEDONE7",
@@ -520,6 +608,7 @@ td,th{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top}t
 <p><a href="/" style="font-size:20px">&larr; Back to the board</a></p>
 <h1>Kitchen board check</h1>
 ${MOCK ? "<p><b>TEST MODE</b> — fake orders, not Square.</p>" : ""}
+<p>Front page for the counter: ${cfg.frontOnNetwork ? `<b>${esc(FRONT_URL)}</b>` : "this PC only (frontOnNetwork is false)"}</p>
 <p>Locations: ${esc(locationIds.join(", ") || "not looked up yet")} · Showing counter sales since
 ${esc(startOfToday().toLocaleString())} and pickups due within ${cfg.showAheadMinutes} min.</p>
 ${status}
@@ -565,6 +654,7 @@ function readBody(req) {
 // this server never answers) and, if the browser sent an Origin, it must be
 // this board's own.
 function fromBoard(req) {
+  if (!isLocal(req)) return false;
   if (req.headers["x-kitchen-board"] !== "1") return false;
   const origin = req.headers.origin;
   return !origin || origin === `http://localhost:${cfg.port}` || origin === `http://127.0.0.1:${cfg.port}`;
@@ -637,8 +727,55 @@ async function checkUpdates() {
   return { ok: true, restarting: true, message: `Installing ${n}. The board will be back in about 10 seconds.` };
 }
 
+// A request from this PC itself (the kitchen board), as opposed to another
+// device on the wifi (the front page).
+function isLocal(req) {
+  const a = req.socket.remoteAddress || "";
+  return a === "127.0.0.1" || a === "::1" || a === "::ffff:127.0.0.1";
+}
+
+// What another device on the wifi may reach: the front page and its own
+// actions. With frontKey set, it must also carry ?key=<frontKey>.
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/handoff-undo"]);
+function networkAllowed(req, url) {
+  if (!NETWORK_PATHS.has(url.pathname)) return false;
+  return !cfg.frontKey || url.searchParams.get("key") === cfg.frontKey;
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
+
+  if (!isLocal(req) && !networkAllowed(req, url)) {
+    // The kitchen board's address opened from a laptop: send it to the
+    // front page rather than a bare refusal.
+    if (req.method === "GET" && url.pathname === "/" && !cfg.frontKey) {
+      res.writeHead(302, { Location: "/front" });
+      return res.end();
+    }
+    return send(res, 403, "This page only opens on the kitchen PC. The front page is /front.", "text/plain; charset=utf-8");
+  }
+
+  if (req.method === "GET" && url.pathname === "/front") {
+    return send(res, 200, fs.readFileSync(FRONT_FILE, "utf8"), "text/html; charset=utf-8");
+  }
+  if (req.method === "GET" && url.pathname === "/api/front") {
+    return send(res, 200, frontSnapshot());
+  }
+  if (req.method === "POST" && url.pathname === "/api/handoff") {
+    const { id } = await readBody(req);
+    if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
+    handedOff[id] = new Date().toISOString();
+    saveState();
+    return send(res, 200, frontSnapshot());
+  }
+  if (req.method === "POST" && url.pathname === "/api/handoff-undo") {
+    const last = lastHandedOff();
+    if (last) {
+      delete handedOff[last.id];
+      saveState();
+    }
+    return send(res, 200, frontSnapshot());
+  }
 
   if (req.method === "POST" && url.pathname === "/api/update") {
     if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
@@ -694,9 +831,14 @@ server.on("error", (err) => {
   throw err;
 });
 
-// 127.0.0.1 only: the board is for this PC's own screen, not the network.
-server.listen(cfg.port, "127.0.0.1", () => {
+// The kitchen board is for this PC's own screen. With frontOnNetwork the
+// program also listens on the wifi, for /front; isLocal() and
+// networkAllowed() above keep everything else to this PC.
+const HOST = cfg.frontOnNetwork ? "0.0.0.0" : "127.0.0.1";
+const FRONT_URL = `http://${os.hostname().toLowerCase()}:${cfg.port}/front${cfg.frontKey ? "?key=" + encodeURIComponent(cfg.frontKey) : ""}`;
+server.listen(cfg.port, HOST, () => {
   console.log(`Kitchen board on http://localhost:${cfg.port}${MOCK ? "  (MOCK ORDERS)" : ""}`);
+  console.log(cfg.frontOnNetwork ? `Front page for the counter: ${FRONT_URL}` : "Front page: this PC only (frontOnNetwork is false).");
   console.log(`Checking Square every ${cfg.pollSeconds} s.`);
   if (!cfg.sound || MUTE) console.log("Sound is OFF.");
   for (const note of cfg.notes) console.log(`config.json: ${note}`);
