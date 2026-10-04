@@ -1,0 +1,32 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Kitchen PC desktop (1920 × 1080)"
+canvasW: "1920px"
+canvasH: "1080px"
+pageCss: "/assets/css/device-wallpaper.css"
+
+tags: studio
+studioTitle: "Kitchen PC desktop"
+studioCategory: "Devices"
+studioSize: "1920 × 1080 px · the kitchen screen's own resolution"
+studioNote: "The Windows desktop on the kitchen mini PC, signed in as Kitchen. Save the PNG to the PC, right-click it → Set as desktop background (or Settings → Personalization → Background → Browse; Choose a fit: Fill). It only shows while the PC starts up or when the board is closed, so it says what to do then: restart the PC. Sized to the screen, not square — a square picture gets cropped or stretched on a widescreen TV."
+studioW: 1920
+studioH: 1080
+studioOrder: 11
+---
+{#- The board covers this almost all day. The one time anyone reads it is
+    when the board ISN'T up, so the help line is the point of the piece,
+    not decoration: a cook who sees the desktop mid-shift needs to know
+    the fix is a restart, not a phone call. -#}
+<div class="canvas wallpaper wallpaper--desktop">
+    <div class="wallpaper-content">
+        <div class="wordmark wordmark--light wordmark--hero">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <div class="wallpaper-filigree">
+            {% include "partials/filigree.njk" %}
+        </div>
+        <p class="p-eyebrow wallpaper-eyebrow">Kitchen Orders</p>
+        <p class="wallpaper-help">Order board not showing? <strong>Restart this PC</strong> and it comes back by itself.</p>
+    </div>
+</div>

@@ -1,0 +1,31 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Phone wallpaper (1080 × 2340)"
+canvasW: "540px"
+canvasH: "1170px"
+pageCss: "/assets/css/device-wallpaper.css"
+
+tags: studio
+studioTitle: "Phone wallpaper"
+studioCategory: "Devices"
+studioSize: "1080 × 2340 px · Galaxy A17 5G (SM-A176U)"
+studioNote: "The cafe phone's lock and home screen. Save the PNG to the phone from /studio/downloads/, then long-press the home screen → Wallpaper and style → Change wallpapers → Gallery, and set it for the lock screen and home screen. Exactly the A17's screen size, so nothing gets cropped; the mark sits a little below centre to clear the lock-screen clock."
+studioW: 540
+studioH: 1170
+studioExportScale: 2
+studioOrder: 12
+---
+{#- Drawn at half size and exported at 2x so the wordmark is drawn at full
+    resolution rather than scaled up. See device-wallpaper.css for where
+    the clock and icons land. -#}
+<div class="canvas wallpaper wallpaper--phone">
+    <div class="wallpaper-content">
+        <div class="wordmark wordmark--light wordmark--hero">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <div class="wallpaper-filigree">
+            {% include "partials/filigree.njk" %}
+        </div>
+        <p class="p-eyebrow wallpaper-eyebrow">Breakfast &amp; Lunch &middot; Leavenworth, Kansas</p>
+    </div>
+</div>
