@@ -294,6 +294,7 @@
       "id": "drinks",
       "name": "Drinks",
       "items": [
+        { "name": "Coffee", "price": 1.00 },
         { "name": "Iced Tea / Fountain Drink", "price": 2.00 },
         { "name": "Bottle Water", "price": 1.50 },
         { "name": "Bottle Juice", "price": 3.00 }
