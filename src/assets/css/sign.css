@@ -216,3 +216,42 @@
     text-transform: uppercase;
     font-size: 0.15in;
 }
+
+/* ── "How did we do?" survey sign ──────────────────────────
+   The QR is the point of the sheet. 3.4in of code is 33 modules at about
+   0.1in each, which a phone reads from three or four feet: across the
+   counter, without picking the sign up. The padding is the quiet zone
+   (four modules is ~0.42in); content-box so `width` is the code itself. */
+
+.sign-survey-sub {
+    font-size: 0.26in;
+    margin-top: 0.12in;
+}
+
+.sign-survey-qr {
+    box-sizing: content-box;
+    width: 3.4in;
+    padding: 0.42in;
+    margin: 0.34in auto 0;
+    border: 0.03in solid var(--teal);
+    border-radius: 0.1in;
+    color: #000;
+}
+
+.sign-survey-qr svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.sign-survey-step {
+    margin-top: 0.22in;
+    text-align: center;
+    font-size: 0.24in;
+}
+
+.sign-survey-url {
+    margin-top: 0.06in;
+    text-align: center;
+    font-size: 0.34in;
+}

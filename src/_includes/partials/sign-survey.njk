@@ -1,0 +1,22 @@
+{#- "How did we do?" counter sign, shared by sign-survey.njk (colour) and
+    sign-survey-bw.njk (`bw: true`). The QR encodes
+    https://lvcafetogo.com/survey (src/survey.njk); the paper version is
+    studio/survey-card. -#}
+<div class="canvas sign{% if bw %} sign--bw{% endif %}">
+    {% include "partials/sign-mast.njk" %}
+
+    <div class="sign-heading">
+        <h2 class="p-display sign-heading-title ink-teal">How did we do?</h2>
+        <p class="p-body sign-survey-sub">Two minutes, on your phone. We read every one.</p>
+    </div>
+
+    <div class="sign-survey-qr">
+        {% inlineSvg "/assets/qr-survey.svg" %}
+    </div>
+
+    <p class="p-body sign-survey-step">Point your phone&rsquo;s camera here and tap the link</p>
+    <p class="p-display sign-survey-url ink-teal">{{ site.social.website }}/survey</p>
+
+    <div class="sign-spacer"></div>
+    <p class="p-body sign-foot">Rather use paper? Ask for a survey card at the counter.</p>
+</div>

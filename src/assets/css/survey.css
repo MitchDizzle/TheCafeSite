@@ -1,0 +1,144 @@
+/* Page styles for survey.njk: the customer survey.
+
+   Built for a phone held at the counter by someone who may not be in a
+   hurry to squint: every answer is a big pill (48px tall, the WCAG target
+   size with room to spare), the question text is body size, not the small
+   uppercase labels of the catering form, and a chosen answer fills with the
+   red accent so it's obvious which one is picked. The radio itself is
+   visually hidden but stays in the tab order, so the keyboard and screen
+   readers get a real radio group. */
+
+.survey { max-width: 44rem; }
+
+.survey-intro {
+    margin-top: 0.6rem;
+    font-size: 1.05rem;
+}
+
+.form-grid {
+    display: grid;
+    gap: 1.6rem;
+    margin-top: 1.8rem;
+}
+
+fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+legend,
+.form-group label {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 0.6rem;
+    padding: 0;
+}
+
+.form-group { display: flex; flex-direction: column; }
+
+.optional {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: rgba(var(--text-dark-rgb), 0.7);
+}
+
+.pills {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.pills--wrap {
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+}
+
+.pill { position: relative; }
+
+.pill input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.pill span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid rgba(var(--text-dark-rgb), 0.3);
+    border-radius: 999px;
+    background: #fff;
+    font-size: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.pill span:hover { border-color: var(--accent); }
+
+.pill input:focus-visible + span {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.pill input:checked + span {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 700;
+}
+
+input[type="text"],
+textarea {
+    font-family: 'Lato', sans-serif;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    border: 2px solid rgba(var(--text-dark-rgb), 0.3);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text-dark);
+    width: 100%;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+textarea { resize: vertical; min-height: 5.5rem; }
+
+.reply-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.reply-fields .form-group label {
+    font-family: 'Lato', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    margin-bottom: 0.35rem;
+}
+
+.form-privacy {
+    margin-top: 0.7rem;
+    font-size: 0.9rem;
+    color: rgba(var(--text-dark-rgb), 0.7);
+}
+
+@media (max-width: 520px) {
+    .pills { grid-template-columns: 1fr 1fr; }
+    .reply-fields { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pill span { transition: none; }
+}

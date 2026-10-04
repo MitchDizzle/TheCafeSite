@@ -1,0 +1,135 @@
+/* ============================================================
+   Survey card: two 5.5 × 8.5 in cards on an 11 × 8.5 sheet.
+   Piece: src/studio/survey-card.njk. Questions: src/_data/survey.json.
+
+   One ink, for the cafe's black-only printer, and made to be filled in
+   with a pen: open circles to mark, ruled lines to write on. 0.4in of
+   margin inside each card, so a desktop printer's unprintable edge and
+   a slightly crooked cut both stay clear of the type.
+
+   Every length is in inches. This is a fixed artboard.
+   ============================================================ */
+
+.survey-sheet {
+    background: #fff;
+    color: #000;
+    display: grid;
+    grid-template-columns: 1fr 0 1fr;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    padding: 0.4in 0.42in 0.36in;
+    font-family: 'Lato', sans-serif;
+}
+
+/* The cut line, down the middle of the sheet. */
+.cut {
+    border-left: 0.012in dashed #777;
+    margin: 0.15in 0;
+}
+
+.card-head {
+    text-align: center;
+    border-bottom: 0.02in solid #000;
+    padding-bottom: 0.08in;
+}
+
+.card-name {
+    font-size: 0.34in;
+    line-height: 1;
+}
+
+.card-title {
+    font-size: 0.22in;
+    margin-top: 0.03in;
+}
+
+.card-intro {
+    font-size: 0.13in;
+    margin-top: 0.04in;
+}
+
+/* ── The rating grid ─────────────────────────────────────── */
+
+.card-rates {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.14in;
+    font-size: 0.14in;
+}
+
+.card-rates thead th {
+    font-size: 0.11in;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: center;
+    padding-bottom: 0.04in;
+}
+
+.card-rates tbody th {
+    text-align: left;
+    font-weight: 700;
+    padding: 0.075in 0;
+}
+
+.card-rates tbody tr + tr th,
+.card-rates tbody tr + tr td {
+    border-top: 0.008in solid #bbb;
+}
+
+.card-rates td {
+    text-align: center;
+    width: 0.62in;
+}
+
+.o {
+    display: inline-block;
+    width: 0.17in;
+    height: 0.17in;
+    border: 0.014in solid #000;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+/* ── Pick-one and write-in questions ─────────────────────── */
+
+.card-q {
+    margin-top: 0.15in;
+}
+
+.card-label {
+    font-size: 0.14in;
+    font-weight: 700;
+}
+
+.card-opts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.04in 0.16in;
+    margin-top: 0.06in;
+    font-size: 0.13in;
+}
+
+.opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.05in;
+    white-space: nowrap;
+}
+
+.card-lines span {
+    display: block;
+    height: 0.34in;
+    border-bottom: 0.01in solid #000;
+}
+
+.card-foot {
+    margin-top: auto;
+    padding-top: 0.1in;
+    text-align: center;
+    font-size: 0.13in;
+    font-style: italic;
+}
