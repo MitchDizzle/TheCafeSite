@@ -102,6 +102,20 @@
 
   .alert { padding: 0.6rem 1.2rem; background: var(--amber); color: #1A1A1A; font-weight: 700; }
   .alert[hidden] { display: none; }
+  .alert.demo-banner { background: #E7D9F3; color: #3D1A5C; }
+  .demo-tag { display: inline-block; padding: 0 0.4rem; margin-right: 0.4rem; border-radius: 0.25rem; background: #E7D9F3; color: #5B2A86; font-weight: 900; }
+  .order.demo { border-style: dashed; }
+
+  /* Check for updates, with the PIN from the kitchen PC's config.json. */
+  .scrim { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(10, 25, 30, 0.6); }
+  .scrim[hidden] { display: none; }
+  .dialog { width: min(26rem, 92vw); padding: 1.3rem 1.4rem; background: var(--paper); border-radius: 0.6rem; box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.4); }
+  .dialog h2 { margin: 0 0 0.6rem; font-size: 1.3rem; color: var(--text); text-transform: none; letter-spacing: 0; }
+  .dialog p { margin: 0 0 0.8rem; }
+  .dialog input { width: 100%; font: inherit; font-size: 1.4rem; padding: 0.5rem 0.7rem; border: 2px solid var(--line); border-radius: 0.4rem; letter-spacing: 0.3em; }
+  .dialog .actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1rem; }
+  .dialog .actions button { font: inherit; font-weight: 800; padding: 0.55rem 1.1rem; border-radius: 0.4rem; border: 2px solid var(--teal); background: transparent; color: var(--teal-dark); cursor: pointer; }
+  .dialog .actions .primary { background: var(--teal); color: var(--cream); }
 
   main { padding: 1rem 1.2rem 3rem; max-width: 90rem; margin: 0 auto; }
   h2 {
@@ -210,6 +224,7 @@
       <button type="button" id="undo" aria-haspopup="menu" aria-expanded="false">↶ Undo</button>
       <div class="undo-menu" id="undo-menu" role="menu" hidden></div>
     </div>
+    <button type="button" id="updates" title="Check the kitchen board for updates">Updates</button>
     <button type="button" id="sound">Sound on</button>
     <span class="clock" id="clock"></span>
   </div>
@@ -225,6 +240,7 @@
       <p class="top" id="top"></p>
     </section>
   </main>
+  <div class="scrim" id="scrim" hidden><div class="dialog" id="dialog" role="dialog" aria-modal="true"></div></div>
 
 <script>
 (() => {
@@ -329,9 +345,9 @@
       ? `<div class="square done">✓ Marked ready in Square. Customer texted.</div>`
       : ready ? `<div class="square todo">Mark it ready in Square Order Manager to text the customer.</div>` : "";
     return `
-      <article class="order ${ready ? "ready" : "cooking"}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
+      <article class="order ${ready ? "ready" : "cooking"}${o.demo ? " demo" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
         <header>
-          <span><span class="name">${esc(label(o))}</span><span class="kind">${esc(kindLabel(o))}</span></span>
+          <span><span class="name">${esc(label(o))}</span><span class="kind">${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${esc(kindLabel(o))}</span></span>
           <span class="status" data-status></span>
         </header>
         <div class="section">
@@ -387,7 +403,10 @@
   function apply(data) {
     const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000;
     alertEl.hidden = !(data.error || stale || data.mock);
+    alertEl.hidden = alertEl.hidden && !data.demo;
+    alertEl.classList.toggle("demo-banner", !!data.demo && !data.mock && !data.error && !stale);
     alertEl.textContent = data.mock ? "TEST MODE: these are fake orders, not from Square."
+      : data.demo && !data.error && !stale ? `DEMO: practice orders (dashed, marked DEMO) until ${fmtTime(data.demo.until)}. Real orders still show.`
       : data.lastOkAt ? `The kitchen PC can't reach Square. Orders as of ${fmtTime(data.lastOkAt)}; new ones may be missing.`
       : "Connecting to Square…";
 
@@ -511,6 +530,45 @@
     document.getElementById("top").textContent = st.topItems.length
       ? "Most ordered: " + st.topItems.map((i) => `${i.name} ×${i.qty}`).join(", ") : "";
   }
+
+  // ---- Check for updates (the kitchen board's own update path, from here)
+  const scrim = document.getElementById("scrim");
+  const dialog = document.getElementById("dialog");
+  function showDialog(html) { dialog.innerHTML = html; scrim.hidden = false; }
+  function closeDialog() { scrim.hidden = true; dialog.innerHTML = ""; }
+  scrim.addEventListener("click", (e) => {
+    if (e.target === scrim || e.target.closest("[data-close]")) closeDialog();
+  });
+  document.getElementById("updates").addEventListener("click", () => {
+    showDialog(`<h2>Check for updates</h2>
+      <p>Updates the kitchen board and this page. If there's an update, the board restarts and is back in about 10 seconds.</p>
+      <form id="pin-form">
+        <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" aria-label="Update PIN">
+        <div class="actions">
+          <button type="button" data-close>Cancel</button>
+          <button type="submit" class="primary">Check</button>
+        </div>
+      </form>`);
+    const pin = document.getElementById("pin");
+    pin.focus();
+    document.getElementById("pin-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      showDialog(`<h2>Checking…</h2><p>One moment.</p>`);
+      let r;
+      try {
+        const res = await fetch(api("/api/front-update"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pin: pin.value }),
+        });
+        r = await res.json();
+      } catch {
+        r = { ok: false, message: "The kitchen PC didn't answer." };
+      }
+      showDialog(`<h2>${r.restarting ? "Updating" : r.ok ? "Updates" : "Didn't work"}</h2><p>${esc(r.message || "")}</p>
+        <div class="actions"><button type="button" class="primary" data-close>OK</button></div>`);
+    });
+  });
 
   setInterval(tick, 15000);
   load();

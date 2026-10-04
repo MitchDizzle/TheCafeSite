@@ -62,11 +62,12 @@ const DEFAULTS = {
   skipItems: [], // item names the kitchen never makes, e.g. "Fountain Drink"
   frontOnNetwork: true, // serve /front to other devices on the wifi; false = this PC only
   frontKey: "", // if set, other devices must open /front?key=<this>
+  updatePin: "", // if set, /front can run Check for updates with this PIN
 };
 
 // Settings that are the cafe's own and have no meaningful default: never
 // flagged as "differs from the default".
-const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey"]);
+const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin"]);
 
 // What's worth knowing about config.json, in plain words. Written to the
 // program window at startup and shown on /check.
@@ -129,6 +130,15 @@ const cfg = loadConfig();
 // ---------------------------------------------------------------- bump state
 
 let bumped = {}; // orderId -> ISO time a cook pressed Done (kitchen board)
+
+// Demo mode (board Settings): practice orders for training, mixed in with
+// the real ones, which keep showing. Practice tickets carry DEMO- ids, are
+// marked DEMO on both screens, are never saved and never counted in the
+// stats, and the demo turns itself off after DEMO_MINUTES.
+const DEMO_PREFIX = "DEMO-";
+const DEMO_MINUTES = 30;
+let demo = null; // { startedAt, until } while running
+const isDemo = (id) => String(id).startsWith(DEMO_PREFIX);
 let handedOff = {}; // orderId -> ISO time the front pressed Handed off (/front)
 // "Reset for the day" (board Settings): nothing cleared before this time
 // can be brought back with Undo, on either screen. Stats are not affected.
@@ -155,7 +165,9 @@ function saveState() {
       if (Date.parse(at) < cutoff) delete map[id];
     }
   }
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped, handedOff, undoFloor }, null, 2));
+  // Demo tickets are practice: never written down, gone when the demo ends.
+  const real = (map) => Object.fromEntries(Object.entries(map).filter(([id]) => !isDemo(id)));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), handedOff: real(handedOff), undoFloor }, null, 2));
 }
 
 loadState();
@@ -415,8 +427,10 @@ function poll() {
 
 async function pollOnce() {
   try {
-    const orders = MOCK ? mockOrders() : await fetchOrders();
-    todaysOrders = orders;
+    const real = MOCK ? mockOrders() : await fetchOrders();
+    todaysOrders = real; // the stats never see demo orders
+    if (demo && Date.now() > Date.parse(demo.until)) endDemo();
+    const orders = demo ? [...real, ...demoOrders(Date.parse(demo.startedAt))] : real;
     const seen = new Set();
     all = [];
     rejected = [];
@@ -424,9 +438,11 @@ async function pollOnce() {
       if (seen.has(o.id)) continue;
       seen.add(o.id);
       const { ticket, reason } = toTicket(o);
-      if (ticket) all.push(ticket);
-      else rejected.push({ order: o, reason });
-      if (!logged.has(o.id)) {
+      if (ticket) {
+        if (isDemo(o.id)) ticket.demo = true;
+        all.push(ticket);
+      } else rejected.push({ order: o, reason });
+      if (!logged.has(o.id) && !isDemo(o.id)) {
         logged.add(o.id);
         const why = ticket ? hiddenReason(ticket, Date.now()) : reason;
         console.log(
@@ -450,7 +466,7 @@ function snapshot() {
     .filter((t) => !hiddenReason(t, now))
     .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
   return { tickets, lastOkAt, error: lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
-    clearedList: undoList(bumped), stats: statsToday(), pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
+    clearedList: undoList(bumped), stats: statsToday(), demo, pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
 }
 
 // ---------------------------------------------------------------- stats
@@ -489,10 +505,10 @@ function statsToday() {
   // Time in the kitchen: rung up to Done, counter orders only. A pickup's
   // order time can be hours before it's started, so it would skew this.
   const times = all
-    .filter((t) => t.kind === "COUNTER" && bumped[t.id] && Date.parse(t.createdAt) >= today)
+    .filter((t) => !t.demo && t.kind === "COUNTER" && bumped[t.id] && Date.parse(t.createdAt) >= today)
     .map((t) => (Date.parse(bumped[t.id]) - Date.parse(t.createdAt)) / 6e4)
     .filter((m) => m >= 0 && m < 240);
-  out.kitchenDone = all.filter((t) => bumped[t.id] && Date.parse(t.dueAt || t.createdAt) >= today).length;
+  out.kitchenDone = all.filter((t) => !t.demo && bumped[t.id] && Date.parse(t.dueAt || t.createdAt) >= today).length;
   if (times.length) {
     out.avgMinutes = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
     out.longestMinutes = Math.round(Math.max(...times));
@@ -514,7 +530,7 @@ function frontSnapshot() {
       return Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt);
     });
   return { orders, lastOkAt, error: lastError, mock: MOCK, lastHandedOff: lastHandedOff(),
-    handedOffList: undoList(handedOff), stats: statsToday(), pollSeconds: cfg.pollSeconds };
+    handedOffList: undoList(handedOff), stats: statsToday(), demo, updatePin: !!cfg.updatePin, pollSeconds: cfg.pollSeconds };
 }
 
 // ---------------------------------------------------------------- mock data
@@ -626,6 +642,55 @@ function mockOrders() {
       line_items: [li(1, ["Reuben", "BLT", "Patty Melt"][i % 3], { variation_name: "Rye" })],
     });
   }
+  return orders;
+}
+
+// ---------------------------------------------------------------- demo
+
+function startDemo() {
+  const now = Date.now();
+  demo = { startedAt: new Date(now).toISOString(), until: new Date(now + DEMO_MINUTES * 6e4).toISOString() };
+  console.log(`Demo started (${new Date().toLocaleTimeString()}): practice orders for ${DEMO_MINUTES} min.`);
+}
+
+function endDemo() {
+  demo = null;
+  for (const map of [bumped, handedOff]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
+  console.log(`Demo ended (${new Date().toLocaleTimeString()}).`);
+}
+
+// A lunch rush in miniature, from the real menu: counter tickets of
+// different ages (so the colours show), online pickups, an allergy note,
+// condiment packets and a drink for the front, then a new order every
+// minute so the NEW tag, the edge flash and the chime can be shown.
+function demoOrders(start) {
+  const at = (min) => new Date(start + min * 6e4).toISOString();
+  const li = (quantity, name, extra = {}) => ({ quantity: String(quantity), name, ...extra });
+  const counter = (n, mins, name, items) => ({
+    id: `${DEMO_PREFIX}COUNTER${n}`, state: "COMPLETED", created_at: at(mins), ticket_name: name, line_items: items,
+  });
+  const online = (n, mins, dueIn, name, items, note) => ({
+    id: `${DEMO_PREFIX}ONLINE${n}`, state: "OPEN", created_at: at(mins), source: { name: "Square Online" },
+    fulfillments: [{ type: "PICKUP", state: "RESERVED", pickup_details: { pickup_at: at(dueIn), recipient: { display_name: name }, note } }],
+    line_items: items,
+  });
+  const orders = [
+    counter(1, -16, "Linda", [li(1, "Big Breakfast", { modifiers: [{ name: "Scrambled" }, { name: "Bacon" }] }), li(1, "Coffee")]),
+    counter(2, -9, "Ray", [li(1, "Clubhouse Wrap", { modifiers: [{ name: "No tomato" }] }), li(1, "Chips", { variation_name: "BBQ" })]),
+    counter(3, -3, "Bob", [li(2, "Cheeseburger", { modifiers: [{ name: "No onion" }, { name: "Ketchup packet" }] })]),
+    online(4, -25, 6, "Marge", [li(1, "Reuben Sandwich"), li(1, "Soup of the Day", { variation_name: "Cup" })], "Peanut allergy"),
+    online(5, -5, 40, "Dee", [li(1, "Chef Salad", { variation_name: "Full", modifiers: [{ name: "Ranch" }] }), li(1, "Bottle Juice", { variation_name: "Apple" })]),
+  ];
+  const later = [
+    ["Sue", [li(1, "Philly Steak Sandwich")]],
+    ["Hank", [li(1, "Kids Meal", { modifiers: [{ name: "Chicken Strips" }, { name: "Mac & Cheese" }] }), li(1, "Grilled Cheese")]],
+    ["Jo", [li(1, "BLT Sandwich", { modifiers: [{ name: "Mayo packet" }] }), li(1, "Iced Tea / Fountain Drink", { variation_name: "Iced Tea" })]],
+    ["Al", [li(1, "Breakfast Sandwich", { modifiers: [{ name: "Sausage" }, { name: "Biscuit" }] })]],
+    ["Pat", [li(1, "Cordon Bleu Burger", { variation_name: "Chicken", modifiers: [{ name: "Gluten-free bun" }] })]],
+    ["Vic", [li(2, "Soup of the Day", { variation_name: "Bowl" })]],
+  ];
+  const arrived = Math.min(later.length, Math.floor((Date.now() - start) / 60000));
+  for (let i = 0; i < arrived; i++) orders.push(counter(10 + i, i + 1, later[i][0], later[i][1]));
   return orders;
 }
 
@@ -817,7 +882,11 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/handoff-undo", "/api/unhandoff"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/handoff-undo", "/api/unhandoff", "/api/front-update"]);
+
+// Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
+let pinFails = [];
+let pinLockedUntil = 0;
 function networkAllowed(req, url) {
   if (!NETWORK_PATHS.has(url.pathname)) return false;
   return !cfg.frontKey || url.searchParams.get("key") === cfg.frontKey;
@@ -872,6 +941,31 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, frontSnapshot());
   }
 
+  // Check for updates from the front page, with the PIN from config.json.
+  // Same update path as the board's own menu item.
+  if (req.method === "POST" && url.pathname === "/api/front-update") {
+    const now = Date.now();
+    if (!cfg.updatePin) return send(res, 200, { ok: false, message: "Not set up: add \"updatePin\" to config.json on the kitchen PC." });
+    if (now < pinLockedUntil) return send(res, 200, { ok: false, message: "Too many wrong PINs. Try again in 10 minutes." });
+    const { pin } = await readBody(req);
+    if (String(pin || "") !== String(cfg.updatePin)) {
+      pinFails = pinFails.filter((t) => now - t < 10 * 6e4).concat(now);
+      if (pinFails.length >= 5) { pinLockedUntil = now + 10 * 6e4; pinFails = []; }
+      console.log(`Update from the front page: wrong PIN (${new Date().toLocaleTimeString()}).`);
+      return send(res, 200, { ok: false, message: "Wrong PIN." });
+    }
+    pinFails = [];
+    console.log(`Update from the front page (${new Date().toLocaleTimeString()}).`);
+    return send(res, 200, await checkUpdates());
+  }
+  if (req.method === "POST" && url.pathname === "/api/demo") {
+    if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
+    const { on } = await readBody(req);
+    if (on) startDemo();
+    else if (demo) endDemo();
+    await poll();
+    return send(res, 200, snapshot());
+  }
   if (req.method === "POST" && url.pathname === "/api/update") {
     if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
     return send(res, 200, await checkUpdates());

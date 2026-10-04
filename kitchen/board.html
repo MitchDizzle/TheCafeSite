@@ -253,6 +253,19 @@
     font-weight: 900;
   }
   .ticket.is-fresh .fresh-tag { display: inline-block; }
+  /* Practice tickets from Settings → Demo. Dashed and tagged, so a real
+     order arriving mid-training is never mistaken for one. */
+  .demo-tag {
+    display: inline-block;
+    padding: 0 0.45rem;
+    margin-right: 0.45rem;
+    border-radius: 0.3rem;
+    background: #fff;
+    color: #5B2A86;
+    font-weight: 900;
+  }
+  .ticket.demo { outline: 0.25rem dashed #B48BD6; outline-offset: 0.1rem; }
+  .alert.demo-banner { background: #E7D9F3; color: #3D1A5C; }
   .ticket.warn .fresh-tag, .ticket.late .fresh-tag { background: #1A1A1A; color: var(--amber); }
 
   /* A flash around the edge of the whole screen when an order arrives, for
@@ -467,6 +480,7 @@
   let lastCleared = null; // {id, label} from the server: what Undo brings back
   let clearedList = []; // everything Undo can bring back, newest first
   let stats = null; // the day so far, from the server
+  let demo = null; // { startedAt, until } while practice orders are showing
 
   // STABLE NUMBERS. A ticket keeps its number key from the moment it
   // arrives until it's done: when 1 is cleared, 2 stays 2 and slides over.
@@ -568,12 +582,12 @@
     } else {
       assignSlots();
       board.innerHTML = tickets.map((t) => `
-        <article class="ticket${fresh.has(t.id) ? " new" : ""}" data-id="${esc(t.id)}">
+        <article class="ticket${fresh.has(t.id) ? " new" : ""}${t.demo ? " demo" : ""}" data-id="${esc(t.id)}">
           <header>
             <span class="key">${slots[t.id] || ""}</span>
             <span class="who">
               <span class="name">${esc(label(t))}</span>
-              <span class="kind"><span class="fresh-tag">NEW</span>${esc(kindLabel(t))}</span>
+              <span class="kind">${t.demo ? '<span class="demo-tag">DEMO</span>' : ""}<span class="fresh-tag">NEW</span>${esc(kindLabel(t))}</span>
             </span>
             <span class="timer"></span>
           </header>
@@ -673,6 +687,7 @@
     lastCleared = data.lastCleared;
     clearedList = data.clearedList || [];
     stats = data.stats || null;
+    demo = data.demo || null;
     renderUndo();
 
     // Status banner: Square unreachable, or the last good poll is stale.
@@ -685,7 +700,11 @@
       // Test mode used to go through problem(), which sounded the alarm and
       // then reset itself, so it went off on every poll.
       if (data.mock) { wasOk = true; notice("TEST MODE — these are fake orders, not from Square."); }
-      else problem(null);
+      else if (demo) {
+        wasOk = true;
+        notice(`DEMO — practice orders (dashed, marked DEMO) until ${fmtTime(demo.until)}. Real orders still show. End it in Settings.`);
+      } else problem(null);
+      alertEl.classList.toggle("demo-banner", !!demo && !data.mock && !(data.error || stale));
     }
 
     const json = JSON.stringify(data.tickets);
@@ -921,6 +940,7 @@
       <p>Sound is <b>${soundOn ? "on" : "off"}</b>. Tap the speaker in the top bar to change it.</p>
       <p class="meta">Checks Square every ${pollSeconds} s · last good check ${esc(last)}</p>
       <div class="actions">
+        <button type="button" data-demo>${demo ? "End demo" : "Demo orders"}</button>
         <button type="button" data-reset>Reset for the day</button>
         <a class="link-btn" href="/check">Order check page</a>
         <button type="button" class="primary" data-close data-focus>Close</button>
@@ -943,8 +963,17 @@
       message("Reset", "The Undo list is cleared.");
     });
   }
+  // Demo: practice orders for showing the staff how the board works. They
+  // mix in with real ones (which keep showing), are marked DEMO, never
+  // count in the stats, and stop by themselves after 30 minutes.
+  async function toggleDemo() {
+    const r = await ask("/api/demo", { on: !demo });
+    if (r && r.tickets) { lastJson = ""; apply(r); }
+    closeAll();
+  }
   dialog.addEventListener("click", (e) => {
     if (e.target.closest("[data-reset]")) confirmReset();
+    if (e.target.closest("[data-demo]")) toggleDemo();
   });
 
   powerBtn.addEventListener("click", (e) => {
