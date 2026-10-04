@@ -1,0 +1,51 @@
+{#- Drinks & chips counter sign, shared by sign-drinks.njk (colour) and
+    sign-drinks-bw.njk (`bw: true`). Every name and price is read from
+    src/_data/menu.json, so a price change there reaches this sign on the
+    next build. If you find yourself typing a price here, stop. -#}
+{%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
+{%- set sides = (menu.categories | where("id", "sides"))[0] %}
+{%- set chips = (sides.items | where("name", "Chips"))[0] %}
+<div class="canvas sign{% if bw %} sign--bw{% endif %}">
+    {% include "partials/sign-mast.njk" %}
+
+    <div class="sign-heading">
+        <h2 class="p-display sign-heading-title ink-teal">Drinks &amp; Chips</h2>
+    </div>
+
+    <section class="sign-group">
+        <p class="p-label sign-group-label ink-accent">Drinks</p>
+        <ul class="sign-rows">
+            {%- for i in drinks.items %}
+            <li class="sign-row">
+                <div class="sign-row-head">
+                    <span class="sign-row-name">{{ i.name }}</span>
+                    <span class="sign-row-fill" aria-hidden="true"></span>
+                    <span class="sign-row-price">{{ i.price | money }}</span>
+                </div>
+                {%- if i.description %}
+                <p class="sign-row-sub">{{ i.description }}</p>
+                {%- endif %}
+            </li>
+            {%- endfor %}
+        </ul>
+    </section>
+
+    {%- if chips %}
+    <section class="sign-group">
+        <p class="p-label sign-group-label ink-accent">Chips</p>
+        <ul class="sign-rows">
+            <li class="sign-row">
+                <div class="sign-row-head">
+                    <span class="sign-row-name">Chips</span>
+                    <span class="sign-row-fill" aria-hidden="true"></span>
+                    <span class="sign-row-price">{{ chips.price | money }}</span>
+                </div>
+                <p class="sign-row-sub">{{ chips.description }}</p>
+            </li>
+        </ul>
+    </section>
+    {%- endif %}
+
+    <div class="sign-spacer"></div>
+    <p class="p-body sign-foot">Fountain drinks are self-serve. Ask at the counter for anything else.</p>
+</div>

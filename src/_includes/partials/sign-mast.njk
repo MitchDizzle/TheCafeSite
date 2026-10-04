@@ -1,0 +1,14 @@
+{#- The counter signs' masthead. Colour: the wordmark in a contained teal
+    box. Black & white (`bw`): the name in type over a rule, because the
+    wordmark is drawn to sit on teal and loses its outline in one ink. -#}
+{%- if bw %}
+<header class="sign-title-type">
+    <h1 class="p-display sign-name">{{ site.name }}</h1>
+</header>
+{%- else %}
+<header class="sign-mast">
+    <div class="wordmark wordmark--light">
+        {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+    </div>
+</header>
+{%- endif %}

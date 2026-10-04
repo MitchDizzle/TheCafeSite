@@ -516,3 +516,74 @@
 .lp-stack--counter .lp-visit-phone { font-size: 0.32in; }
 .lp-stack--counter .lp-visit-line,
 .lp-stack--counter .lp-foot-body  { font-size: 0.185in; }
+
+/* ── Handout: letter, one sheet both sides, two columns ──────
+   menu-handout.njk. The whole menu on two pages instead of three, so
+   every size steps down from the letter large print: descriptions ~9pt
+   (0.125in), names ~10.5pt. Still a point and a half above the tri-fold. */
+
+.lp-stack--handout .lp-canvas { padding: 0.42in 0.48in; }
+.lp-stack--handout .lp-cols { column-gap: 0.36in; }
+.lp-stack--handout .lp-head { margin-bottom: 0.16in; padding-bottom: 0.1in; }
+.lp-stack--handout .lp-wordmark { width: 2.2in; }
+.lp-stack--handout .lp-tagline { font-size: 0.17in; }
+.lp-stack--handout .lp-head-line { font-size: 0.115in; }
+.lp-stack--handout .lp-runhead { font-size: 0.15in; }
+
+.lp-stack--handout .menu-cat + .menu-cat { margin-top: 0.17in; }
+.lp-stack--handout .menu-cat-name { font-size: 0.215in; }
+.lp-stack--handout .menu-cat-note { font-size: 0.115in; margin-top: 0.03in; }
+.lp-stack--handout .menu-cat-sizing { font-size: 0.125in; margin-top: 0.03in; }
+.lp-stack--handout .menu-items { margin-top: 0.08in; }
+.lp-stack--handout .menu-item + .menu-item { margin-top: 0.07in; }
+.lp-stack--handout .menu-item-name,
+.lp-stack--handout .menu-item-price { font-size: 0.145in; }
+.lp-stack--handout .menu-item-desc { font-size: 0.123in; line-height: 1.35; margin-top: 0.02in; }
+.lp-stack--handout .menu-variant-name { font-size: 0.123in; }
+.lp-stack--handout .menu-variant .menu-item-price { font-size: 0.128in; }
+
+.lp-stack--handout .menu-picks { gap: 0.08in 0.18in; margin-top: 0.08in; }
+.lp-stack--handout .menu-pick-label { font-size: 0.1in; }
+.lp-stack--handout .menu-pick-option { font-size: 0.128in; line-height: 1.4; }
+
+.lp-stack--handout .diet-legend { padding-top: 0.08in; }
+.lp-stack--handout .diet-legend-title { font-size: 0.1in; }
+.lp-stack--handout .diet-legend-keys { font-size: 0.11in; }
+.lp-stack--handout .diet-legend-note,
+.lp-stack--handout .diet-legend-caveat,
+.lp-stack--handout .diet-legend-advisory { font-size: 0.1in; }
+
+/* ── Black & white (any large-print piece with `bw`) ──────────
+   For the cafe's black-only printer: every colour token becomes ink, the
+   lighter description grey goes to full black (a copier turns grey into
+   speckle), and the masthead is the name in type. Same approach as
+   .trifold--bw in menu-trifold.css. */
+.lp-stack--bw {
+    --teal:         #000;
+    --teal-dark:    #000;
+    --accent:       #000;
+    --accent-dark:  #000;
+    --accent-rgb:   0, 0, 0;
+    --text-dark:    #000;
+    color: #000;
+}
+.lp-stack--bw .fold-legend--warn,
+.lp-stack--bw .price-review {
+    --accent:       #C0392F;
+    --accent-dark:  #A02F26;
+    --accent-rgb:   192, 57, 47;
+}
+.lp-stack--bw .menu-item-desc,
+.lp-stack--bw .menu-variant-name,
+.lp-stack--bw .diet-legend-note,
+.lp-stack--bw .diet-legend-caveat,
+.lp-stack--bw .lp-foot-body { color: #000; opacity: 1; }
+.lp-stack--bw .menu-cat-note { opacity: 1; }
+.lp-stack--bw .menu-item-fill { border-bottom-color: #666; }
+.lp-stack--bw .diet-legend { border-top-color: #666; }
+.lp-stack--bw .diet-mark--request { opacity: 1; }
+
+.lp-type-title {
+    font-size: 0.42in;
+    line-height: 1;
+}
