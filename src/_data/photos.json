@@ -1,5 +1,5 @@
 {
-  "_note": "Food photos, one entry per picture, for Facebook posts and later the site. Images live in src/assets/photos/ as web copies: about 2000px, upright, camera and GPS data stripped. Full-size originals go in photos-originals/ at the repo root, which git ignores; never commit a camera original, because phone photos carry the GPS location. `file` is the path under /assets/. `item` is the dish EXACTLY as named in menu.json, so a post can pull the price and description from the menu instead of retyping them. `variant` is set when the photo shows one version of a two-way item. The hot sandwiches are listed as 'X Burger or Chicken', so a chicken photo has variant 'Chicken' and a beef one 'Burger'; otherwise null. `title` is what the post calls the dish. `alt` describes the picture for screen readers. `date` is when it was taken (YYYY-MM-DD). Use only photos the cafe took or has permission to use.",
+  "_note": "Food photos, one entry per picture, for Facebook posts and later the site. Images live in src/assets/photos/ as web copies: about 2000px, upright, camera and GPS data stripped. Full-size originals go in photos-originals/ at the repo root, which git ignores; never commit a camera original, because phone photos carry the GPS location. `file` is the path under /assets/. `item` is the dish EXACTLY as named in menu.json, so a post can pull the price and description from the menu instead of retyping them. `variant` is set when the photo shows one version of a two-way item. The hot sandwiches are listed as 'X Burger or Chicken', so a chicken photo has variant 'Chicken' and a beef one 'Burger'; otherwise null. `title` is what the post calls the dish. `alt` describes the picture for screen readers. `description` is used only when the menu item has none of its own (the burrito, whose options are a note on its category); keep it in step with that note. `date` is when it was taken (YYYY-MM-DD). Use only photos the cafe took or has permission to use.",
   "photos": [
     {
       "file": "/assets/photos/bacon-cheeseburger.jpg",
@@ -64,6 +64,15 @@
       "title": "Cordon Bleu Wrap",
       "alt": "Cordon bleu wrap in a tomato-basil tortilla, cut in half to show ham, chicken, cheese, lettuce and tomato, with a pickle spear.",
       "date": "2026-09-22"
+    },
+    {
+      "file": "/assets/photos/breakfast-burrito.jpg",
+      "item": "Burrito",
+      "variant": null,
+      "title": "Breakfast Burrito",
+      "description": "Build your own from bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom & olives, served with sour cream or salsa",
+      "alt": "Breakfast burrito in a toasted flour tortilla, cut in half to show scrambled egg, sausage, melted cheddar, potato and mushroom, with cups of salsa and sour cream.",
+      "date": "2026-10-05"
     }
   ]
 }

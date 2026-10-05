@@ -14,9 +14,11 @@ function lookup(name) {
 const money = (n) => `$${Number(n).toFixed(2)}`;
 
 // "on a Kaiser bun", unless the description already names the bread
-// ("…on white toast").
-function withBread(item) {
-  const d = item.description || "";
+// ("…on white toast"). An item the menu gives no description (the burrito
+// is build-your-own; its options are a note on the category) takes the
+// photo's own `description` instead.
+function withBread(item, photo) {
+  const d = item.description || photo.description || "";
   if (!item.defaultBread || / on /i.test(d)) return d;
   const bread = item.defaultBread === "Kaiser" ? "a Kaiser bun" : item.defaultBread.toLowerCase();
   return `${d} on ${bread}`;
@@ -50,7 +52,7 @@ module.exports = {
 
       return {
         kicker: category.name,
-        description: withBread(item),
+        description: withBread(item, photo),
         variantNote,
         titleSize,
       };
@@ -63,11 +65,12 @@ module.exports = {
       const { category, item } = found;
       const price = item.price ?? (category.sizing && category.sizing[0] && category.sizing[0].price);
       const o = site.opening;
-      const lines = [`${photo.title}: ${withBread(item)}. ${money(price)}.`];
+      const lines = [`${photo.title}: ${withBread(item, photo)}. ${money(price)}.`];
       if (photo.variant === "Chicken") lines.push("Rather have a burger? It's available that way too.");
       if (photo.variant === "Burger") lines.push("Rather have chicken? It's available as a chicken sandwich too.");
-      // The photos were taken while the menu was still being finalized.
-      lines.push(
+      // The first photos were taken while the menu was still being
+      // finalized; anything shot from opening day on is the real plate.
+      if (photo.date < site.opening.date) lines.push(
         "A first look from our kitchen: these photos were taken while we were still finalizing the menu, so your plate may look a little different."
       );
       lines.push(
