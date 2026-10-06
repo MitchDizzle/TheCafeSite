@@ -24,6 +24,10 @@ function withBread(item, photo) {
   return `${d} on ${bread}`;
 }
 
+// Fit the name on one line across the 960px measure. Playfair Black Italic
+// runs about 0.56em a character.
+const titleSizeFor = (title) => Math.min(104, Math.floor(960 / (title.length * 0.56)));
+
 const slug = (photo) => photo.file.replace("/assets/photos/", "").replace(/\.jpg$/, "");
 
 module.exports = {
@@ -35,6 +39,12 @@ module.exports = {
 
     dish: (data) => {
       const { photo } = data;
+      // A daily special isn't on the menu: the photo carries its own words,
+      // and the post says it's a special rather than naming a category.
+      if (photo.special) {
+        if (!photo.description) throw new Error(`photos.json: special "${photo.title}" needs a description`);
+        return { kicker: "Daily Special", description: photo.description, variantNote: null, titleSize: titleSizeFor(photo.title) };
+      }
       const found = lookup(photo.item);
       if (!found) throw new Error(`photos.json: "${photo.item}" is not an item in menu.json`);
       const { category, item } = found;
@@ -46,26 +56,29 @@ module.exports = {
         photo.variant === "Chicken" ? "Available as a burger" :
         photo.variant === "Burger" ? "Available as a chicken sandwich" : null;
 
-      // Fit the name on one line across the 960px measure. Playfair Black
-      // Italic runs about 0.56em a character.
-      const titleSize = Math.min(104, Math.floor(960 / (photo.title.length * 0.56)));
-
       return {
         kicker: category.name,
         description: withBread(item, photo),
         variantNote,
-        titleSize,
+        titleSize: titleSizeFor(photo.title),
       };
     },
 
     caption: (data) => {
       const { photo, site } = data;
-      const found = lookup(photo.item);
-      if (!found) return [];
-      const { category, item } = found;
-      const price = item.price ?? (category.sizing && category.sizing[0] && category.sizing[0].price);
       const o = site.opening;
-      const lines = [`${photo.title}: ${withBread(item, photo)}. ${money(price)}.`];
+      const lines = [];
+      if (photo.special) {
+        // No price: a special's price lives in Square and changes with the
+        // dish. Written for posting on the day it's served.
+        lines.push(`Today's special: ${photo.title}, ${photo.description.charAt(0).toLowerCase()}${photo.description.slice(1)}. While it lasts!`);
+      } else {
+        const found = lookup(photo.item);
+        if (!found) return [];
+        const { category, item } = found;
+        const price = item.price ?? (category.sizing && category.sizing[0] && category.sizing[0].price);
+        lines.push(`${photo.title}: ${withBread(item, photo)}. ${money(price)}.`);
+      }
       if (photo.variant === "Chicken") lines.push("Rather have a burger? It's available that way too.");
       if (photo.variant === "Burger") lines.push("Rather have chicken? It's available as a chicken sandwich too.");
       // The first photos were taken while the menu was still being
@@ -75,7 +88,7 @@ module.exports = {
       );
       lines.push(
         `${site.ordering.url ? `Order online for pickup at ${site.ordering.url.replace(/^https?:\/\//, "")}, or at the counter.` : site.phoneOrders ? `Order at the counter or call ${site.phone} and we'll have it ready.` : "Order at the counter."} Open ${o.hoursDays}, ${o.opens.time.replace(":00", "")}${o.opens.meridiem} – ${o.closes.time.replace(":00", "")}${o.closes.meridiem}, ${site.address.street}.`,
-        `Full menu: ${site.url}/menu`
+        photo.special ? `Today's special and the full menu: ${site.url}/menu` : `Full menu: ${site.url}/menu`
       );
       return lines;
     },

@@ -1,9 +1,13 @@
-{#- The counter signs' masthead. Colour: the wordmark in a contained teal
-    box. Black & white (`bw`): the name in type over a rule, because the
-    wordmark is drawn to sit on teal and loses its outline in one ink. -#}
+{#- The counter signs' masthead: the logo on every sign, so they read as one
+    set. Colour: the wordmark in a contained teal box. Black & white (`bw`):
+    the same wordmark in solid black on the bare sheet (.wordmark--ink), over
+    a rule. The outlined version is drawn to sit on teal and loses its
+    outline in one ink; the solid one is the mark's own one-colour form. -#}
 {%- if bw %}
-<header class="sign-title-type">
-    <h1 class="p-display sign-name">{{ site.name }}</h1>
+<header class="sign-title-ink">
+    <div class="wordmark wordmark--ink">
+        {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+    </div>
 </header>
 {%- else %}
 <header class="sign-mast">

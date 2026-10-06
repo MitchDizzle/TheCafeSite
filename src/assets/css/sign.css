@@ -10,8 +10,8 @@
    panel cockles the paper and eats toner).
 
    .sign--bw is the black-only printer's version: every colour token
-   becomes ink, and the masthead is set in type instead of the teal box,
-   because the wordmark is drawn to sit on teal.
+   becomes ink, and the masthead is the wordmark in solid black instead of
+   the teal box (see partials/sign-mast.njk).
 
    Every length is in inches. This is a fixed artboard.
    ============================================================ */
@@ -47,17 +47,6 @@
 .sign-mast .wordmark {
     --mark-w: 3.4in;
     margin: 0 auto;
-}
-
-.sign-title-type {
-    text-align: center;
-    border-bottom: 0.03in solid #000;
-    padding-bottom: 0.12in;
-}
-
-.sign-title-type .sign-name {
-    font-size: 0.62in;
-    line-height: 1;
 }
 
 .sign-heading {
@@ -254,4 +243,80 @@
     margin-top: 0.06in;
     text-align: center;
     font-size: 0.34in;
+}
+
+/* ── Black & white masthead: the logo in solid ink ─────────
+   Every bw sign carries the same wordmark as the colour ones, so the set
+   reads as one. No offset shadow: in one ink it only thickens the letters. */
+
+.sign-title-ink {
+    border-bottom: 0.03in solid #000;
+    padding-bottom: 0.16in;
+}
+
+.sign-title-ink .wordmark {
+    --mark-w: 3.4in;
+    --mark-shadow-color: transparent;
+    margin: 0 auto;
+}
+
+/* ── Order Here: one line, as big as the sheet allows ──────
+   Landscape, read from the door. Set as large as the 9.6in measure takes
+   on one line; type this size is legible past 40 feet. */
+
+.sign--wide {
+    padding: 0.55in 0.7in;
+}
+
+.sign--wide .sign-title-ink .wordmark {
+    --mark-w: 4.2in;
+}
+
+.sign-big {
+    font-size: 1.6in;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.sign-big-sub {
+    font-size: 0.42in;
+    text-align: center;
+    margin-top: 0.3in;
+}
+
+/* ── Tip jar label: two per sheet, cut on the dashes ─────── */
+
+.tipjar-sheet {
+    padding: 0.4in 0.5in;
+    justify-content: space-around;
+}
+
+.tipjar {
+    width: 10in;
+    height: 3.6in;
+    margin: 0 auto;
+    border: 0.02in dashed #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.tipjar-mark {
+    --mark-w: 2.6in;
+    --mark-shadow-color: transparent;
+}
+
+.tipjar-word {
+    font-size: 1.3in;
+    line-height: 1;
+    margin-top: 0.04in;
+}
+
+.tipjar-thanks {
+    font-size: 0.4in;
+    line-height: 1.1;
+    margin-top: 0.22in;
 }
