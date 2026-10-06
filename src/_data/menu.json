@@ -39,6 +39,8 @@
           "name": "Big Breakfast",
           "description": "2 eggs, potatoes, meat & toast",
           "dietOnRequest": ["GF"],
+          "_note_price": "The menus advertise the price WITH meat, $10. In Square (client 2026-10-06) the item is `squareBase` and the Meat list adds $2 for bacon, sausage or ham, nothing for No Meat, so a meatless one rings up $2 less. Online ordering therefore shows $8 plus the meat choice. Change both together.",
+          "squareBase": 8.00,
           "price": 10.00
         },
         {

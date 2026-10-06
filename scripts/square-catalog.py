@@ -65,7 +65,10 @@ i = item("breakfast", "Big Breakfast")
 # are cooked any style but poached (the Eggs modifier, client 2026-09-30), the
 # meat is the Breakfast Meat modifier and the toast defaults to white. Square
 # only — the printed menus keep "2 eggs, potatoes, meat & toast".
-one("Big Breakfast", B, i["price"],
+# The meat is priced as an add-on in Square (client 2026-10-06): the item is
+# `squareBase` ($8), the Meat list adds $2 for bacon, sausage or ham and
+# nothing for No Meat. The menus still say $10, the price with meat.
+one("Big Breakfast", B, i.get("squareBase", i["price"]),
     "2 eggs your way, potatoes, choice of bacon, sausage or ham, and white toast. Served until 11am.",
     skip_detail=False)
 one("Burrito", B, item("breakfast", "Burrito")["price"],

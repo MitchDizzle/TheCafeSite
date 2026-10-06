@@ -23,7 +23,16 @@ noSiteJs: true
     out for someone reading it from across a room rather than from a phone
     at arm's length.
 
-    HOW IT SCALES. There is no fixed 1920px canvas and no JavaScript. The
+    BREAKFAST, THEN LUNCH (2026-10-06). The board shows one meal at a time:
+    the breakfast board before 11:00 Central, the lunch board from 11:00, the
+    same switch the POS menus make. A small script at the bottom picks one and
+    looks again every 30 seconds; nothing else on the page is scripted. Each
+    board sets its own type size (html.meal-* in menu-board.css), so
+    breakfast, with a quarter of the items, is set much larger. Drinks and
+    desserts are on both. Proof either one with ?meal=breakfast or
+    ?meal=lunch. Without the script the lunch board shows, at the base size.
+
+    HOW IT SCALES. There is no fixed 1920px canvas. The
     root font-size is tied to the viewport (see menu-board.css) and every
     length on the page is in rem, so the layout is proportionally identical
     at 1080p, at 4K, and in a small window while you are checking it on a
@@ -62,6 +71,7 @@ noSiteJs: true
 {%- set kids = (menu.categories | where("id", "kids"))[0] %}
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
+{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
 
 {%- macro category(c) %}
 <section class="bcat bcat--{{ c.id }}">
@@ -134,35 +144,48 @@ noSiteJs: true
         <div class="board-mark">
             {% inlineSvg "/assets/thecafe.svg", "board-wordmark", site.name %}
         </div>
-        <p class="board-tagline">Breakfast &amp; Lunch &middot; Catering &amp; Meal Prep</p>
+        <p class="board-tagline">Breakfast &amp; Lunch<span class="board-tagline-more"> &middot; Catering &amp; Meal Prep</span></p>
         <p class="board-hours">{{ site.opening.hoursDays }} &nbsp;&middot;&nbsp; {{ site.opening.opens.time }} {{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }} {{ site.opening.closes.meridiem }}</p>
     </header>
 
-    <div class="board-grid">
+    {#- Breakfast: three columns at the large size. Drinks and desserts share
+        the last one; both are sold all day. -#}
+    <div class="board-grid board-grid--breakfast" data-meal="breakfast" hidden>
         <div class="board-col">
             {{ category(breakfast) }}
-            {{ category(breakfastSides) }}
-            {{ category(drinks) }}
         </div>
+        <div class="board-col">
+            {{ category(breakfastSides) }}
+        </div>
+        <div class="board-col">
+            {{ category(drinks) }}
+            {{ category(desserts) }}
+        </div>
+    </div>
+
+    {#- Lunch: four columns. The griddle gets the widest column so the long
+        burger names stay on one line; Build Your Own's three pick lists need
+        the next widest. Soup and desserts sit under the griddle, drinks under
+        Build Your Own, for fit. -#}
+    <div class="board-grid board-grid--lunch" data-meal="lunch">
         <div class="board-col">
             {{ category(wraps) }}
             {{ category(sandwiches) }}
             {{ category(kids) }}
         </div>
-        {#- Everything off the griddle, then Build Your Own. Build Your Own
-            belongs with the cold sandwiches, but at seven breads tall it does
-            not fit under them and the wraps; this is the only column with
-            room for it. See _note_hot_cold in menu.json. -#}
         <div class="board-col">
             {{ category(hotSandwiches) }}
+            {{ category(soup) }}
+            {{ category(desserts) }}
+        </div>
+        <div class="board-col">
             {{ category(buildSandwich) }}
+            {{ category(drinks) }}
         </div>
         <div class="board-col">
             {{ category(salads) }}
             {{ category(sides) }}
-            {{ category(soup) }}
         </div>
-    </div>
     </div>
 
     {#- Two rows, not one. The advisory is a full-width line of its own above
@@ -189,3 +212,26 @@ noSiteJs: true
     </footer>
 
 </main>
+
+{#- Which meal: Central time, whatever the PC's clock zone. ?meal= forces one,
+    for proofing. Sets html.meal-* (the type size) and shows that grid. -#}
+<script>
+(function () {
+    var forced = new URLSearchParams(location.search).get("meal");
+    var fmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "numeric", hourCycle: "h23" });
+    function pick() {
+        var meal = forced;
+        if (meal !== "breakfast" && meal !== "lunch") {
+            var parts = fmt.formatToParts(new Date());
+            var h = +parts.find(function (p) { return p.type === "hour"; }).value;
+            var m = +parts.find(function (p) { return p.type === "minute"; }).value;
+            meal = h * 60 + m < 11 * 60 ? "breakfast" : "lunch";
+        }
+        document.documentElement.classList.toggle("meal-breakfast", meal === "breakfast");
+        document.documentElement.classList.toggle("meal-lunch", meal === "lunch");
+        document.querySelectorAll("[data-meal]").forEach(function (g) { g.hidden = g.dataset.meal !== meal; });
+    }
+    pick();
+    setInterval(pick, 30000);
+})();
+</script>
