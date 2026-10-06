@@ -83,6 +83,16 @@
       "description": "Served with baked beans, mac & cheese and cornbread",
       "alt": "BBQ ribs glazed in sauce in a to-go box, with a square of cornbread, mac and cheese, and baked beans.",
       "date": "2026-10-05"
+    },
+    {
+      "file": "/assets/photos/chicken-enchilada-casserole.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Chicken Enchilada Casserole",
+      "description": "Served with rice & beans",
+      "alt": "Chicken enchilada casserole topped with melted cheese, with Spanish rice, pinto beans and cups of salsa and sour cream on a white plate.",
+      "date": "2026-10-06"
     }
   ]
 }
