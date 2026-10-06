@@ -106,22 +106,92 @@
   .demo-tag { display: inline-block; padding: 0 0.4rem; margin-right: 0.4rem; border-radius: 0.25rem; background: #E7D9F3; color: #5B2A86; font-weight: 900; }
   .order.demo { border-style: dashed; }
 
-  /* Check for updates, with the PIN from the kitchen PC's config.json. */
-  .scrim { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(10, 25, 30, 0.6); }
+  /* Manage: one panel, one screen at a time. A fixed header (Back, title,
+     close) and footer (the screen's one or two buttons) with the body
+     scrolling between them, so Save is always in reach on a long list. */
+  .scrim { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 1rem; background: rgba(10, 25, 30, 0.6); }
   .scrim[hidden] { display: none; }
-  .dialog { width: min(26rem, 92vw); padding: 1.3rem 1.4rem; background: var(--paper); border-radius: 0.6rem; box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.4); }
-  .dialog h2 { margin: 0 0 0.6rem; font-size: 1.3rem; color: var(--text); text-transform: none; letter-spacing: 0; }
-  .dialog p { margin: 0 0 0.8rem; }
-  .dialog input { width: 100%; font: inherit; font-size: 1.4rem; padding: 0.5rem 0.7rem; border: 2px solid var(--line); border-radius: 0.4rem; letter-spacing: 0.3em; }
-  .dialog .actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1rem; }
-  .dialog .actions button { font: inherit; font-weight: 800; padding: 0.55rem 1.1rem; border-radius: 0.4rem; border: 2px solid var(--teal); background: transparent; color: var(--teal-dark); cursor: pointer; }
-  .dialog .actions .primary { background: var(--teal); color: var(--cream); }
-  .dialog .actions { flex-wrap: wrap; }
-  .dialog .check { display: flex; gap: 0.5rem; align-items: flex-start; margin: 0.8rem 0 0; font-size: 0.95rem; cursor: pointer; }
-  .dialog .check input { width: auto; font-size: 1rem; padding: 0; margin-top: 0.2rem; letter-spacing: 0; }
+  .dialog {
+    width: min(38rem, 100%);
+    max-height: min(46rem, 92vh);
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
+    border-radius: 0.7rem;
+    box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+  }
+  .m-head {
+    display: grid;
+    grid-template-columns: 6rem 1fr 6rem;
+    align-items: center;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .m-head h2 { margin: 0; text-align: center; font-size: 1.25rem; color: var(--text); text-transform: none; letter-spacing: 0; }
+  .m-back, .m-x { font: inherit; font-weight: 800; border: 0; background: transparent; color: var(--teal-dark); cursor: pointer; padding: 0.4rem 0.5rem; border-radius: 0.4rem; }
+  .m-back { justify-self: start; }
+  .m-x { justify-self: end; font-size: 1.2rem; color: var(--muted); }
+  .m-back:hover, .m-x:hover { background: #F1ECE3; }
+  .m-body { padding: 1rem 1.2rem; overflow-y: auto; flex: 1; }
+  .m-body p { margin: 0 0 0.8rem; }
+  .m-foot { display: flex; gap: 0.6rem; justify-content: flex-end; padding: 0.8rem 1.2rem; border-top: 1px solid var(--line); background: #FBFAF7; }
+  .m-btn { font: inherit; font-weight: 800; font-size: 1.05rem; padding: 0.65rem 1.3rem; border-radius: 0.45rem; border: 2px solid var(--teal); background: transparent; color: var(--teal-dark); cursor: pointer; }
+  .m-btn.primary { background: var(--teal); color: var(--cream); }
+  .m-btn.danger { background: var(--red); border-color: var(--red); color: #fff; }
+  .m-btn:hover { filter: brightness(1.08); }
+  .m-note { color: var(--muted); font-size: 0.95rem; }
+  .m-error { color: var(--red-dark); font-weight: 700; }
+  .m-error[hidden] { display: none; }
+  .m-busy { color: var(--muted); font-size: 1.1rem; padding: 1.5rem 0; text-align: center; }
+  .m-result { font-size: 1.1rem; font-weight: 700; padding: 0.6rem 0; }
+  .m-result.good { color: var(--green); }
+  .m-result.bad { color: var(--red-dark); }
+
+  /* The PIN */
+  .m-lock { display: grid; gap: 0.5rem; justify-items: center; padding: 0.5rem 0 0.2rem; }
+  .m-lock label { font-weight: 800; font-size: 1.1rem; }
+  .m-lock input { width: 12rem; font: inherit; font-size: 1.8rem; text-align: center; letter-spacing: 0.4em; padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.45rem; }
+  .m-lock input:focus { outline: none; border-color: var(--teal); }
+
+  /* The menu: four big rows, each saying what it does. */
+  .m-menu { display: grid; gap: 0.6rem; }
+  .m-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 0.55rem;
+    background: var(--paper);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .m-row:hover { border-color: var(--teal); background: #F6FAFA; }
+  .m-row b { display: block; font-size: 1.12rem; }
+  .m-row small { display: block; color: var(--muted); font-size: 0.92rem; margin-top: 0.1rem; }
+  .m-row.warn b { color: var(--red-dark); }
+  .m-chev { margin-left: auto; font-size: 1.6rem; color: var(--muted); }
+
+  /* Today's specials: one card per item. */
+  .m-card { border: 1px solid var(--line); border-radius: 0.55rem; padding: 0.8rem 1rem; margin: 0 0 0.7rem; }
+  .m-card h3 { margin: 0 0 0.6rem; font-size: 1.12rem; }
+  .m-field { display: grid; gap: 0.25rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); }
+  .m-field input { font: inherit; font-size: 1.15rem; color: var(--text); padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
+  .m-prices { display: flex; flex-wrap: wrap; gap: 0.8rem 1.4rem; margin-top: 0.7rem; }
+  .m-price { display: grid; gap: 0.25rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); }
+  .m-money { display: flex; align-items: center; gap: 0.3rem; font-size: 1.15rem; color: var(--text); }
+  .m-money input { width: 7rem; font: inherit; padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
+  .m-field input:focus, .m-money input:focus { outline: none; border-color: var(--teal); }
+
+  .dialog .check { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.98rem; cursor: pointer; }
+  .dialog .check input { margin-top: 0.25rem; }
+  .m-check { padding: 0.8rem 1rem; border: 1px solid var(--line); border-radius: 0.55rem; }
 
   /* What the kitchen skips: Square's categories, each with its items. */
-  .dialog.wide { width: min(42rem, 94vw); max-height: 88vh; overflow-y: auto; }
   .skip-cat { border: 1px solid var(--line); border-radius: 0.45rem; margin: 0 0 0.5rem; }
   .skip-cat > summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; cursor: pointer; font-weight: 800; }
   .skip-cat > summary .count { margin-left: auto; font-weight: 400; color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
@@ -129,15 +199,6 @@
   .skip-cat .skip-items { padding: 0.2rem 0.7rem 0.6rem 2.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.1rem 0.8rem; }
   .dialog .skip-cat .check { margin: 0.15rem 0; }
   .dialog .skip-cat input:disabled + span { color: var(--muted); }
-  .dialog .skip-note { color: var(--muted); font-size: 0.92rem; }
-  .dialog .skip-error { color: var(--red-dark); font-weight: 700; }
-  .daily-item { border: 1px solid var(--line); border-radius: 0.45rem; padding: 0.6rem 0.8rem; margin: 0 0 0.6rem; }
-  .daily-item h3 { margin: 0 0 0.4rem; font-size: 1.1rem; }
-  .daily-row { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; align-items: center; padding: 0.2rem 0; }
-  .daily-row label { display: flex; gap: 0.5rem; align-items: center; font-weight: 700; }
-  .dialog .daily-row input { width: auto; font-size: 1.15rem; padding: 0.35rem 0.5rem; letter-spacing: 0; }
-  .dialog .daily-row input[data-field="name"] { width: 14rem; }
-  .daily-size { min-width: 4rem; font-weight: 800; }
   .dining { display: inline-block; padding: 0 0.35rem; border-radius: 0.25rem; background: var(--teal-dark); color: var(--cream); }
   .dining.here { background: transparent; color: var(--teal-dark); border: 1.5px solid var(--teal-dark); }
 
@@ -587,107 +648,14 @@
       ? "Most ordered: " + st.topItems.map((i) => `${i.name} ×${i.qty}`).join(", ") : "";
   }
 
-  // ---- Check for updates (the kitchen board's own update path, from here)
+  // ---- Manage: the jobs the front can do to the whole board, behind the PIN
+  // (updatePin in the kitchen PC's config.json). One panel, one screen at a
+  // time: the PIN, then a short menu, then the job, with Back to the menu.
+  // The PIN is kept only while the panel is open.
   const scrim = document.getElementById("scrim");
   const dialog = document.getElementById("dialog");
-  function showDialog(html) { dialog.innerHTML = html; scrim.hidden = false; }
-  function closeDialog() { scrim.hidden = true; dialog.innerHTML = ""; dialog.classList.remove("wide"); }
-  scrim.addEventListener("click", (e) => {
-    if (e.target === scrim || e.target.closest("[data-close]")) closeDialog();
-  });
-  // Manage: the things the front can do to the whole board, all behind the
-  // PIN (updatePin in the kitchen PC's config.json).
-  //   What the kitchen skips: items and whole Square categories that go on
-  //     the front's "Add from the front" list instead of the kitchen board.
-  //   Check for updates: the board's own update; it restarts if there's one.
-  //   Reset for the day: empties the Undo lists, restarts today's stats from
-  //     now, and optionally clears every order on the board.
-  document.getElementById("manage").addEventListener("click", () => {
-    showDialog(`<h2>Manage the kitchen board</h2>
-      <p>Needs the PIN.</p>
-      <form id="pin-form">
-        <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" aria-label="PIN">
-        <label class="check"><input type="checkbox" id="clear-board"> When resetting, also clear every order on the board (after testing, before opening)</label>
-        <div class="actions">
-          <button type="button" data-close>Cancel</button>
-          <button type="button" data-act="daily">Today's specials</button>
-          <button type="button" data-act="skip">What the kitchen skips</button>
-          <button type="button" data-act="reset">Reset for the day</button>
-          <button type="submit" class="primary" data-act="update">Check for updates</button>
-        </div>
-      </form>`);
-    const pin = document.getElementById("pin");
-    pin.focus();
-    const form = document.getElementById("pin-form");
-    async function run(act) {
-      const clearBoard = document.getElementById("clear-board").checked;
-      const path = act === "reset" ? "/api/front-reset" : "/api/front-update";
-      showDialog(`<h2>${act === "reset" ? "Resetting…" : "Checking…"}</h2><p>One moment.</p>`);
-      let r;
-      try {
-        const res = await fetch(api(path), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pin: pin.value, clearBoard }),
-        });
-        r = await res.json();
-      } catch {
-        r = { ok: false, message: "The kitchen PC didn't answer." };
-      }
-      if (r.ok && act === "reset") lastJson = "";
-      showDialog(`<h2>${r.restarting ? "Updating" : r.ok ? "Done" : "Didn't work"}</h2><p>${esc(r.message || "")}</p>
-        <div class="actions"><button type="button" class="primary" data-close>OK</button></div>`);
-    }
-    form.addEventListener("submit", (e) => { e.preventDefault(); run("update"); });
-    form.querySelector('[data-act="reset"]').addEventListener("click", () => run("reset"));
-    form.querySelector('[data-act="skip"]').addEventListener("click", () => openSkip(pin.value));
-    form.querySelector('[data-act="daily"]').addEventListener("click", () => openDaily(pin.value));
-  });
+  let pinValue = "";
 
-  // ---- Today's specials: the morning's prices, saved straight into Square.
-  // Only the items listed in the kitchen PC's config (dailyItems). A blank
-  // price means the till asks for one, as Lunch Special did on opening day.
-  async function openDaily(pinValue) {
-    showDialog(`<h2>Reading from Square…</h2><p>One moment.</p>`);
-    const r = await postJson("/api/front-daily", { pin: pinValue });
-    if (!r.ok) return showResult(r);
-    const itemHtml = (it) => it.missing
-      ? `<div class="daily-item"><h3>${esc(it.name)}</h3><p class="skip-error">Not found in Square under this name.</p></div>`
-      : `<div class="daily-item" data-id="${esc(it.id)}">
-        <h3>${esc(it.name)}</h3>
-        ${it.variations.map((v) => `<div class="daily-row" data-var="${esc(v.id)}">
-          ${it.oneSize ? `<label>What it is today <input type="text" data-field="name" value="${esc(v.name === "Regular" ? "" : v.name)}" placeholder="e.g. BBQ Ribs" maxlength="60"></label>`
-            : `<span class="daily-size">${esc(v.name)}</span>`}
-          <label>Price $ <input type="text" inputmode="decimal" data-field="price" value="${esc(v.price)}" placeholder="at the till" size="7"></label>
-        </div>`).join("")}
-      </div>`;
-    dialog.classList.add("wide");
-    showDialog(`<h2>Today's specials</h2>
-      <p class="skip-note">Saved straight into Square: the POS and online ordering use the new price within a minute or so.
-        Leave a price blank to have the till ask for it. "What it is today" prints on the kitchen ticket after the item name.</p>
-      <form id="daily-form">
-        ${r.items.map(itemHtml).join("")}
-        <div class="actions">
-          <button type="button" data-close>Cancel</button>
-          <button type="submit" class="primary">Save to Square</button>
-        </div>
-      </form>`);
-    const form = document.getElementById("daily-form");
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const items = [...form.querySelectorAll(".daily-item[data-id]")].map((el) => ({
-        id: el.dataset.id,
-        variations: [...el.querySelectorAll("[data-var]")].map((row) => {
-          const name = row.querySelector('[data-field="name"]');
-          return { id: row.dataset.var, price: row.querySelector('[data-field="price"]').value, ...(name ? { name: name.value } : {}) };
-        }),
-      }));
-      showDialog(`<h2>Saving to Square…</h2><p>One moment.</p>`);
-      showResult(await postJson("/api/front-daily-save", { pin: pinValue, items }));
-    });
-  }
-
-  // ---- What the kitchen skips
   async function postJson(path, body) {
     try {
       const res = await fetch(api(path), {
@@ -701,16 +669,121 @@
     }
   }
 
-  function showResult(r) {
-    dialog.classList.remove("wide");
-    showDialog(`<h2>${r.ok ? "Done" : "Didn't work"}</h2><p>${esc(r.message || "")}</p>
-      <div class="actions"><button type="button" class="primary" data-close>OK</button></div>`);
+  // One screen: a header (Back, title, close), a body, and a footer whose
+  // buttons are given as [{ label, act, kind }]. kind: "primary" | "danger".
+  function screen({ title, back, body, buttons = [] }) {
+    dialog.innerHTML = `
+      <header class="m-head">
+        ${back ? `<button type="button" class="m-back" data-go="menu">‹ Back</button>` : `<span></span>`}
+        <h2>${esc(title)}</h2>
+        <button type="button" class="m-x" data-close aria-label="Close">✕</button>
+      </header>
+      <div class="m-body">${body}</div>
+      ${buttons.length ? `<footer class="m-foot">${buttons.map((b) =>
+        `<button type="${b.submit ? "submit" : "button"}" class="m-btn${b.kind ? ` ${b.kind}` : ""}" ${b.submit ? `form="${b.submit}"` : `data-act="${b.act}"`}>${esc(b.label)}</button>`).join("")}</footer>` : ""}`;
+    scrim.hidden = false;
+  }
+  const busy = (title, what) => screen({ title, back: false, body: `<p class="m-busy">${esc(what)}</p>` });
+  function closeManage() { scrim.hidden = true; dialog.innerHTML = ""; pinValue = ""; }
+
+  // The outcome of a job, with a way back to the menu.
+  function result(title, r) {
+    screen({ title, back: true,
+      body: `<p class="m-result ${r.ok ? "good" : "bad"}">${r.ok ? "✓ " : ""}${esc(r.message || (r.ok ? "Done." : "Didn't work."))}</p>`,
+      buttons: [{ label: "Back to Manage", act: "menu" }, { label: "Done", act: "close", kind: "primary" }] });
   }
 
-  async function openSkip(pinValue) {
-    showDialog(`<h2>Reading Square's items…</h2><p>One moment.</p>`);
+  scrim.addEventListener("click", (e) => {
+    if (e.target === scrim || e.target.closest("[data-close]")) return closeManage();
+    const act = e.target.closest("[data-go], [data-act]");
+    if (!act) return;
+    const to = act.dataset.go || act.dataset.act;
+    if (to === "close") closeManage();
+    else if (to === "menu") showMenu();
+    else if (to === "daily") openDaily();
+    else if (to === "skip") openSkip();
+    else if (to === "reset") openReset();
+    else if (to === "update") runUpdate();
+    else if (to === "do-reset") runReset();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !scrim.hidden) closeManage();
+  });
+
+  // ---- 1. The PIN
+  function showLock(message) {
+    screen({ title: "Manage", back: false,
+      body: `<form id="m-lock" class="m-lock">
+        <label for="pin">Enter the PIN</label>
+        <input id="pin" type="password" inputmode="numeric" autocomplete="off" aria-describedby="pin-msg">
+        <p id="pin-msg" class="m-error" ${message ? "" : "hidden"}>${esc(message || "")}</p>
+      </form>`,
+      buttons: [{ label: "Unlock", submit: "m-lock", kind: "primary" }] });
+    const pin = document.getElementById("pin");
+    pin.focus();
+    document.getElementById("m-lock").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const r = await postJson("/api/front-unlock", { pin: pin.value });
+      if (!r.ok) return showLock(r.message);
+      pinValue = pin.value;
+      showMenu();
+    });
+  }
+  document.getElementById("manage").addEventListener("click", () => (pinValue ? showMenu() : showLock()));
+
+  // ---- 2. The menu
+  function showMenu() {
+    const row = (act, title, sub, warn) => `<button type="button" class="m-row${warn ? " warn" : ""}" data-act="${act}">
+      <span><b>${title}</b><small>${sub}</small></span><span class="m-chev" aria-hidden="true">›</span></button>`;
+    screen({ title: "Manage", back: false,
+      body: `<div class="m-menu">
+        ${row("daily", "Today's specials", "Today's special and soup, and their prices. Saved to Square.")}
+        ${row("skip", "What the kitchen skips", "Items and categories that go on the front's list instead.")}
+        ${row("reset", "Reset for the day", "Start today's numbers and the Undo lists fresh.", true)}
+        ${row("update", "Check for updates", "Install a new version of the board, if there is one.")}
+      </div>`,
+      buttons: [{ label: "Lock", act: "close" }] });
+  }
+
+  // ---- Today's specials: saved straight into Square. Only the items in the
+  // kitchen PC's config (dailyItems). Blank price: the till asks for one.
+  async function openDaily() {
+    busy("Today's specials", "Reading from Square…");
+    const r = await postJson("/api/front-daily", { pin: pinValue });
+    if (!r.ok) return result("Today's specials", r);
+    const itemHtml = (it) => it.missing
+      ? `<section class="m-card"><h3>${esc(it.name)}</h3><p class="m-error">Not found in Square under this name.</p></section>`
+      : `<section class="m-card" data-id="${esc(it.id)}">
+        <h3>${esc(it.name)}</h3>
+        <label class="m-field">What it is today
+          <input type="text" data-field="today" value="${esc(it.today)}" placeholder="${/soup/i.test(it.name) ? "e.g. Chicken Dumpling" : "e.g. BBQ Ribs"}" maxlength="60"></label>
+        <div class="m-prices">${it.variations.map((v) => `<label class="m-price" data-var="${esc(v.id)}">
+          <span>${esc(v.size || "Price")}</span>
+          <span class="m-money">$<input type="text" inputmode="decimal" data-field="price" value="${esc(v.price)}" placeholder="at the till"></span>
+        </label>`).join("")}</div>
+      </section>`;
+    screen({ title: "Today's specials", back: true,
+      body: `<p class="m-note">"What it is today" prints on the kitchen ticket and the receipt. Leave a price blank and the till asks for it.
+        The POS and online ordering pick up a change within a minute or so.</p>
+        <form id="m-daily">${r.items.map(itemHtml).join("")}</form>`,
+      buttons: [{ label: "Save to Square", submit: "m-daily", kind: "primary" }] });
+    document.getElementById("m-daily").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const items = [...e.target.querySelectorAll(".m-card[data-id]")].map((el) => ({
+        id: el.dataset.id,
+        today: el.querySelector('[data-field="today"]').value,
+        variations: [...el.querySelectorAll("[data-var]")].map((row) => ({ id: row.dataset.var, price: row.querySelector('[data-field="price"]').value })),
+      }));
+      busy("Today's specials", "Saving to Square…");
+      result("Today's specials", await postJson("/api/front-daily-save", { pin: pinValue, items }));
+    });
+  }
+
+  // ---- What the kitchen skips
+  async function openSkip() {
+    busy("What the kitchen skips", "Reading Square's items…");
     const r = await postJson("/api/front-skip", { pin: pinValue });
-    if (!r.ok) return showResult(r);
+    if (!r.ok) return result("What the kitchen skips", r);
     const lc = (x) => x.trim().toLowerCase();
     const cats = new Set(r.skip.categories.map(lc));
     const items = new Set(r.skip.items.map(lc));
@@ -724,26 +797,22 @@
       const whole = cats.has(lc(c.name)) && c.name !== "(No category)";
       const picked = c.items.filter((n) => items.has(lc(n))).length;
       return `<details class="skip-cat" data-whole="${whole ? 1 : 0}"${whole || picked ? " open" : ""}>
-        <summary>${c.name === "(No category)" ? `<span>${esc(c.name)}</span>` : box("data-cat", c.name, whole, `${c.name}: skip the whole category`)}
+        <summary>${c.name === "(No category)" ? `<span>${esc(c.name)}</span>` : box("data-cat", c.name, whole, `${c.name}: the whole category`)}
           <span class="count">${c.items.length} item${c.items.length === 1 ? "" : "s"}</span></summary>
         <div class="skip-items">${c.items.map((n) => box("data-item", n, whole || items.has(lc(n)), n, whole)).join("")}</div>
       </details>`;
     };
-    dialog.classList.add("wide");
-    showDialog(`<h2>What the kitchen skips</h2>
-      <p class="skip-note">Ticked items stay off the kitchen board and go on the front's "Add from the front" list.
-        Ticking a category skips everything in it, including items added to it in Square later. Changes apply to the board at once.</p>
-      ${r.catalogError ? `<p class="skip-error">Couldn't read Square's items (${esc(r.catalogError)}). Only the names already on the list are shown.</p>` : ""}
-      <form id="skip-form">
-        ${r.categories.map(catHtml).join("")}
-        ${other.length ? `<details class="skip-cat" open><summary><span>Other names on the list</span></summary>
-          <div class="skip-items">${other.map((n) => box("data-item", n, true, n, false)).join("")}</div></details>` : ""}
-        <div class="actions">
-          <button type="button" data-close>Cancel</button>
-          <button type="submit" class="primary">Save</button>
-        </div>
-      </form>`);
-    const form = document.getElementById("skip-form");
+    screen({ title: "What the kitchen skips", back: true,
+      body: `<p class="m-note">Ticked items stay off the kitchen board and go on the front's "Add from the front" list.
+        A ticked category also covers items added to it in Square later.</p>
+        ${r.catalogError ? `<p class="m-error">Couldn't read Square's items (${esc(r.catalogError)}). Only the names already on the list are shown.</p>` : ""}
+        <form id="m-skip">
+          ${r.categories.map(catHtml).join("")}
+          ${other.length ? `<details class="skip-cat" open><summary><span>Other names on the list</span></summary>
+            <div class="skip-items">${other.map((n) => box("data-item", n, true, n, false)).join("")}</div></details>` : ""}
+        </form>`,
+      buttons: [{ label: "Save", submit: "m-skip", kind: "primary" }] });
+    const form = document.getElementById("m-skip");
     // A whole category ticks and locks its items, so it reads as it acts.
     form.addEventListener("change", (e) => {
       const cat = e.target.closest("[data-cat]");
@@ -767,9 +836,37 @@
         // Items inside a skipped category are covered by it; only the rest are listed.
         items: [...form.querySelectorAll("[data-item]:checked:not(:disabled)")].map((x) => x.dataset.item),
       };
-      showResult(await postJson("/api/front-skip-save", { pin: pinValue, skip }));
+      busy("What the kitchen skips", "Saving…");
+      const res = await postJson("/api/front-skip-save", { pin: pinValue, skip });
       lastJson = "";
+      result("What the kitchen skips", res);
     });
+  }
+
+  // ---- Reset for the day: its own screen, because it can't be undone.
+  function openReset() {
+    screen({ title: "Reset for the day", back: true,
+      body: `<p>Today's numbers start again from now, and the Undo lists on both screens are emptied. Orders already on the board stay.</p>
+        <label class="check m-check"><input type="checkbox" id="clear-board">
+          <span><b>Also clear every order off the board and this page.</b><br>For the morning after testing, before opening.</span></label>`,
+      buttons: [{ label: "Reset for the day", act: "do-reset", kind: "danger" }] });
+  }
+  async function runReset() {
+    const clearBoard = document.getElementById("clear-board").checked;
+    busy("Reset for the day", "Resetting…");
+    const r = await postJson("/api/front-reset", { pin: pinValue, clearBoard });
+    if (r.ok) lastJson = "";
+    result("Reset for the day", r);
+  }
+
+  // ---- Check for updates: the board's own update; it restarts if there's one.
+  async function runUpdate() {
+    busy("Check for updates", "Checking…");
+    const r = await postJson("/api/front-update", { pin: pinValue });
+    if (r.restarting) {
+      screen({ title: "Updating", back: false, body: `<p class="m-result good">${esc(r.message)}</p>`,
+        buttons: [{ label: "Done", act: "close", kind: "primary" }] });
+    } else result("Check for updates", r);
   }
 
   setInterval(tick, 15000);

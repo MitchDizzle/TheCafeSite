@@ -324,9 +324,13 @@ async function loadCatalog() {
 
 // The front sets the day's prices from Manage -> Today's specials. This is
 // the one place the board WRITES to Square, so it is narrow on purpose: only
-// the items in cfg.dailyItems, only their variations' price, and for a
-// one-size item the variation's name ("BBQ Ribs"), which is what prints on
-// the kitchen ticket after the item name. Every save reads the item fresh
+// the items in cfg.dailyItems, only their variations' prices and names.
+// "What it is today" goes in the variation name, because that is what
+// prints on the kitchen ticket after the item name: a one-size item's only
+// size becomes "BBQ Ribs"; an item in sizes keeps them, as "Cup · Chicken
+// Dumpling" and "Bowl · Chicken Dumpling". The item's own name never
+// changes, so nothing that finds it by name (this list, the skip list)
+// loses track of it. Every save reads the item fresh
 // and sends it back whole with Square's version number, so a change made in
 // the Dashboard meanwhile is never overwritten: Square refuses the save
 // instead, and the front is told to try again.
@@ -347,6 +351,18 @@ async function writeItem(object) {
 }
 
 const dollars = (m) => (m && m.amount != null ? (m.amount / 100).toFixed(2) : "");
+const TODAY_SEP = " · ";
+// A size's own name, without today's text: "Cup · Chicken Dumpling" -> "Cup".
+const sizeOf = (name) => String(name || "").split(TODAY_SEP)[0].trim();
+// What today's text is, read back from the variation names.
+function todayOf(vars) {
+  if (vars.length === 1) {
+    const n = vars[0].item_variation_data.name || "";
+    return n === "Regular" ? "" : n;
+  }
+  const n = (vars[0] && vars[0].item_variation_data.name) || "";
+  return n.includes(TODAY_SEP) ? n.slice(n.indexOf(TODAY_SEP) + TODAY_SEP.length) : "";
+}
 
 async function dailyItems() {
   await loadCatalog();
@@ -355,18 +371,20 @@ async function dailyItems() {
     const id = catalog.itemIds.get(name.trim().toLowerCase());
     if (!id) { out.push({ name, missing: true }); continue; }
     const item = await readItem(id);
-    const vars = (item.item_data.variations || []).map((v) => ({
+    const raw = item.item_data.variations || [];
+    const vars = raw.map((v) => ({
       id: v.id,
-      name: v.item_variation_data.name || "",
+      size: raw.length === 1 ? "" : sizeOf(v.item_variation_data.name),
       price: v.item_variation_data.pricing_type === "VARIABLE_PRICING" ? "" : dollars(v.item_variation_data.price_money),
     }));
-    out.push({ id, name: item.item_data.name, variations: vars, oneSize: vars.length === 1 });
+    out.push({ id, name: item.item_data.name, today: todayOf(raw), variations: vars });
   }
   return out;
 }
 
-// changes: [{ id, variations: [{ id, price: "10.00" | "", name? }] }]
-// A blank price means "typed at the till" (variable pricing).
+// changes: [{ id, today: "BBQ Ribs" | "", variations: [{ id, price: "10.00" | "" }] }]
+// A blank price means "typed at the till" (variable pricing); a blank today
+// puts the plain size names back ("Regular", "Cup", "Bowl").
 async function saveDaily(changes) {
   const done = [];
   // Every price checked before anything is written, so a typo in the last
@@ -404,8 +422,9 @@ async function saveDaily(changes) {
           changed = true;
         }
       }
-      if (vars.length === 1 && vc.name !== undefined) {
-        const name = String(vc.name).trim().slice(0, 60) || "Regular";
+      if (ch.today !== undefined) {
+        const today = String(ch.today).replace(/\s+/g, " ").trim().slice(0, 60);
+        const name = vars.length === 1 ? today || "Regular" : today ? `${sizeOf(d.name)}${TODAY_SEP}${today}` : sizeOf(d.name);
         if (d.name !== name) { d.name = name; changed = true; }
       }
     }
@@ -1186,7 +1205,7 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/front-unlock", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset"]);
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
 let pinFails = [];
@@ -1267,6 +1286,12 @@ const server = http.createServer(async (req, res) => {
     saveState();
     console.log(`Front page: unpaid order ...${id.slice(-4)} canceled (${new Date().toLocaleTimeString()}).`);
     return send(res, 200, frontSnapshot());
+  }
+  // Manage's first screen: is the PIN right? (Every action checks it again;
+  // this only lets the front say "Wrong PIN" before showing the menu.)
+  if (req.method === "POST" && url.pathname === "/api/front-unlock") {
+    const refused = pinRefusal((await readBody(req)).pin);
+    return send(res, 200, refused ? { ok: false, message: refused } : { ok: true });
   }
   // What the kitchen skips, behind the PIN: read it (with a fresh read of
   // the Square catalog to choose from) and save it. A save applies at once,
