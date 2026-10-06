@@ -1,0 +1,23 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Receipt logo, full (1280 × 648)"
+canvasW: "1280px"
+canvasH: "648px"
+pageCss: "/assets/css/receipt-logo.css"
+
+tags: studio
+studioTitle: "Receipt logo — full"
+studioCategory: "Square"
+studioSize: "1280 × 648 px · digital receipts and invoices"
+studioNote: "Square's full logo, the wide one at the top of emailed and texted receipts. Square asks for at least 1280 × 648. Upload in the Dashboard under the receipt settings."
+studioW: 1280
+studioH: 648
+studioOrder: 60
+---
+{#- The site hero's ground and wordmark treatment, so a receipt and the
+    website read as the same place. Nothing else: Square shows this small. -#}
+<div class="canvas rlogo rlogo--full">
+    <div class="wordmark wordmark--light wordmark--hero rlogo-mark">
+        {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+    </div>
+</div>

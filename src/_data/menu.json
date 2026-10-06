@@ -59,6 +59,8 @@
           "name": "Breakfast Sandwich",
           "description": "One egg, cheese & choice of bacon, sausage or ham, on a biscuit, croissant or English muffin.",
           "dietOnRequest": ["V"],
+          "_note_price": "The menus advertise the price WITH meat, $5.50. In Square (client 2026-10-06) the item is `squareBase` and its Meat list adds $1 for bacon, sausage or ham, nothing for No Meat. Change both together.",
+          "squareBase": 4.50,
           "price": 5.50
         }
       ]

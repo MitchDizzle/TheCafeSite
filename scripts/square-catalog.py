@@ -78,7 +78,8 @@ om = item("breakfast", "2 / 3 Egg Omelet")
 add("Omelet", B, [("2 Egg", om["prices"][0]), ("3 Egg", om["prices"][1])],
     "Build your own: bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 11am.")
 i = item("breakfast", "Breakfast Sandwich")
-one("Breakfast Sandwich", B, i["price"], i["description"] + " Served until 11am.", skip_detail=False)
+# Meat is a +$1 add-on in Square (client 2026-10-06), as on the Big Breakfast.
+one("Breakfast Sandwich", B, i.get("squareBase", i["price"]), i["description"] + " Served until 11am.", skip_detail=False)
 
 # ── Breakfast sides ────────────────────────────────────────
 BS = "Breakfast Sides"

@@ -1,0 +1,24 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Receipt logo, small (400 × 400)"
+canvasW: "800px"
+canvasH: "800px"
+pageCss: "/assets/css/receipt-logo.css"
+
+tags: studio
+studioTitle: "Receipt logo — small"
+studioCategory: "Square"
+studioSize: "400 × 400 px · square logo"
+studioNote: "Square's small, square logo (400 × 400), used where the wide one doesn't fit. Same ground and wordmark as the full one."
+studioW: 800
+studioH: 800
+# Drawn at 800 and exported at half: headless Chrome will not open a window
+# narrower than about 500px, so a 400px canvas renders off-centre.
+studioExportScale: 0.5
+studioOrder: 61
+---
+<div class="canvas rlogo rlogo--small">
+    <div class="wordmark wordmark--light wordmark--hero rlogo-mark">
+        {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+    </div>
+</div>
