@@ -17,6 +17,11 @@
  *   - Counter (POS) sales from today. Square marks these COMPLETED the moment
  *     they're paid, so Square never "finishes" them for us — the cooks bump
  *     them off with Done. Bumps are kept in state.json, local to this PC.
+ *   - A counter sale with nothing paid on it shows like any other, tagged
+ *     NOT PAID: a pay-later phone order is cooked straight away and kept
+ *     warm. If it was a sale that fell through (card declined, payment
+ *     canceled on the terminal), the front takes it off both screens with
+ *     "Canceled". Once it's paid in Square the tag goes away by itself.
  *   - Online / pickup orders due today (or within SHOW_AHEAD of now), until a
  *     cook bumps them OR the front marks them ready/picked up in Square —
  *     whichever comes first.
@@ -59,15 +64,18 @@ const DEFAULTS = {
   sound: true, // new-order chime and lost-connection alarm
   showAheadMinutes: 60, // pickup orders appear this long before they're due
   openLookbackDays: 14, // how far back to look for pre-ordered pickups
-  skipItems: [], // item names the kitchen never makes, e.g. "Fountain Drink"
+  skipItems: [], // the skip list to start from; after that it's edited live on /front (Manage)
   frontOnNetwork: true, // serve /front to other devices on the wifi; false = this PC only
   frontKey: "", // if set, other devices must open /front?key=<this>
   updatePin: "", // if set, /front can run Check for updates with this PIN
+  // Items whose price (and, for a one-size item, what it is today) the front
+  // can set each morning: Manage -> Today's specials. Names as in Square.
+  dailyItems: ["Lunch Special", "Soup of the Day", "Salad of the Day"],
 };
 
 // Settings that are the cafe's own and have no meaningful default: never
 // flagged as "differs from the default".
-const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin"]);
+const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems"]);
 
 // What's worth knowing about config.json, in plain words. Written to the
 // program window at startup and shown on /check.
@@ -121,7 +129,6 @@ function loadConfig() {
     console.error("config.json has no accessToken.");
     process.exit(1);
   }
-  cfg.skip = new Set(cfg.skipItems.map((s) => s.trim().toLowerCase()));
   return cfg;
 }
 
@@ -140,6 +147,13 @@ const DEMO_MINUTES = 30;
 let demo = null; // { startedAt, until } while running
 const isDemo = (id) => String(id).startsWith(DEMO_PREFIX);
 let handedOff = {}; // orderId -> ISO time the front pressed Handed off (/front)
+let canceled = {}; // orderId -> ISO time the front took an unpaid order off both screens
+// What the kitchen never makes: item names and whole Square categories.
+// Edited live from /front (Manage -> What the kitchen skips) and kept in
+// state.json. config.json's skipItems is only the starting list, used until
+// the first edit.
+let skip = { items: [], categories: [] };
+let skipEdited = false; // false: still config.json's list, not written to state.json
 // "Reset for the day" (board Settings): nothing cleared before this time
 // can be brought back with Undo, on either screen. Stats are not affected.
 let undoFloor = null;
@@ -152,11 +166,16 @@ function loadState() {
     const state = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
     bumped = state.bumped || {};
     handedOff = state.handedOff || {};
+    canceled = state.canceled || {};
+    skipEdited = !!state.skip;
+    skip = state.skip || { items: cfg.skipItems, categories: [] };
     undoFloor = state.undoFloor || null;
     statsFloor = state.statsFloor || null;
   } catch {
     bumped = {};
     handedOff = {};
+    canceled = {};
+    skip = { items: cfg.skipItems, categories: [] };
     undoFloor = null;
     statsFloor = null;
   }
@@ -165,14 +184,14 @@ function loadState() {
 function saveState() {
   // Three days is plenty; nothing older can reappear on either screen anyway.
   const cutoff = Date.now() - 3 * 864e5;
-  for (const map of [bumped, handedOff]) {
+  for (const map of [bumped, handedOff, canceled]) {
     for (const [id, at] of Object.entries(map)) {
       if (Date.parse(at) < cutoff) delete map[id];
     }
   }
   // Demo tickets are practice: never written down, gone when the demo ends.
   const real = (map) => Object.fromEntries(Object.entries(map).filter(([id]) => !isDemo(id)));
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), handedOff: real(handedOff), undoFloor, statsFloor }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), handedOff: real(handedOff), canceled: real(canceled), skip: skipEdited ? skip : undefined, undoFloor, statsFloor }, null, 2));
 }
 
 loadState();
@@ -236,6 +255,197 @@ function startOfToday() {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   return d;
+}
+
+// ---------------------------------------------------------------- catalog
+
+// Square's item list, for skipping whole categories: an order's line item
+// names its variation, not its category, so the catalog says which
+// categories each item is in. Read at startup, every CATALOG_MINUTES, and
+// whenever the skip list is opened on /front, so a category made in Square
+// today can be picked without a restart.
+const CATALOG_MINUTES = 10;
+let catalog = { byVariation: new Map(), byName: new Map(), itemIds: new Map(), categories: [], loadedAt: null, error: null };
+
+function buildCatalog(objects) {
+  // Ordinary categories only. The Restaurants POS also keeps MENU categories
+  // (the Breakfast and Lunch screens and their tabs), with some of the same
+  // names; skipping "Breakfast" must not mean the whole breakfast screen.
+  const catName = new Map(objects
+    .filter((o) => o.type === "CATEGORY" && (o.category_data || {}).category_type !== "MENU_CATEGORY")
+    .map((o) => [o.id, (o.category_data || {}).name || ""]));
+  const byVariation = new Map();
+  const byName = new Map();
+  const itemIds = new Map(); // item name (lower case) -> catalog id, for Today's specials
+  const members = new Map(); // category name -> item names
+  for (const o of objects) {
+    if (o.type !== "ITEM" || o.is_deleted) continue;
+    const d = o.item_data || {};
+    const ids = new Set([...(d.categories || []).map((c) => c.id), d.category_id, d.reporting_category && d.reporting_category.id].filter(Boolean));
+    const cats = [...ids].map((id) => catName.get(id)).filter(Boolean);
+    const entry = { name: d.name || "", cats };
+    for (const v of d.variations || []) byVariation.set(v.id, entry);
+    byName.set(entry.name.trim().toLowerCase(), cats);
+    itemIds.set(entry.name.trim().toLowerCase(), o.id);
+    for (const c of cats.length ? cats : ["(No category)"]) {
+      if (!members.has(c)) members.set(c, new Set());
+      members.get(c).add(entry.name);
+    }
+  }
+  const categories = [...members]
+    .map(([name, items]) => ({ name, items: [...items].sort((a, b) => a.localeCompare(b)) }))
+    .sort((a, b) => (a.name === "(No category)") - (b.name === "(No category)") || a.name.localeCompare(b.name));
+  return { byVariation, byName, itemIds, categories };
+}
+
+async function loadCatalog() {
+  try {
+    let objects = [];
+    if (MOCK) objects = mockCatalog();
+    else {
+      let cursor;
+      do {
+        const q = `/catalog/list?types=ITEM,CATEGORY${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+        const json = await square("GET", q);
+        objects = objects.concat(json.objects || []);
+        cursor = json.cursor;
+      } while (cursor);
+    }
+    catalog = { ...buildCatalog(objects), loadedAt: new Date().toISOString(), error: null };
+  } catch (err) {
+    // Keep the last good catalog; skipping by item name works without one.
+    if (catalog.error !== err.message) console.error(`Square catalog: ${err.message}`);
+    catalog.error = err.message;
+  }
+  return catalog;
+}
+
+// ---------------------------------------------------------------- today's specials
+
+// The front sets the day's prices from Manage -> Today's specials. This is
+// the one place the board WRITES to Square, so it is narrow on purpose: only
+// the items in cfg.dailyItems, only their variations' price, and for a
+// one-size item the variation's name ("BBQ Ribs"), which is what prints on
+// the kitchen ticket after the item name. Every save reads the item fresh
+// and sends it back whole with Square's version number, so a change made in
+// the Dashboard meanwhile is never overwritten: Square refuses the save
+// instead, and the front is told to try again.
+const mockItems = new Map(); // test mode's stand-in for Square's copy
+
+async function readItem(id) {
+  if (MOCK) return structuredClone(mockItems.get(id));
+  return (await square("GET", `/catalog/object/${encodeURIComponent(id)}`)).object;
+}
+
+async function writeItem(object) {
+  if (MOCK) {
+    if (object.version !== mockItems.get(object.id).version) throw new Error("Square 409: version mismatch");
+    mockItems.set(object.id, { ...object, version: object.version + 1 });
+    return;
+  }
+  await square("POST", "/catalog/object", { idempotency_key: `kitchen-${object.id}-${Date.now()}`, object });
+}
+
+const dollars = (m) => (m && m.amount != null ? (m.amount / 100).toFixed(2) : "");
+
+async function dailyItems() {
+  await loadCatalog();
+  const out = [];
+  for (const name of cfg.dailyItems) {
+    const id = catalog.itemIds.get(name.trim().toLowerCase());
+    if (!id) { out.push({ name, missing: true }); continue; }
+    const item = await readItem(id);
+    const vars = (item.item_data.variations || []).map((v) => ({
+      id: v.id,
+      name: v.item_variation_data.name || "",
+      price: v.item_variation_data.pricing_type === "VARIABLE_PRICING" ? "" : dollars(v.item_variation_data.price_money),
+    }));
+    out.push({ id, name: item.item_data.name, variations: vars, oneSize: vars.length === 1 });
+  }
+  return out;
+}
+
+// changes: [{ id, variations: [{ id, price: "10.00" | "", name? }] }]
+// A blank price means "typed at the till" (variable pricing).
+async function saveDaily(changes) {
+  const done = [];
+  // Every price checked before anything is written, so a typo in the last
+  // box never leaves the first items saved and the rest not.
+  for (const ch of changes || []) {
+    for (const vc of ch.variations || []) {
+      const text = String(vc.price ?? "").replace(/[$\s]/g, "");
+      if (text !== "" && !/^\d{1,3}(\.\d{1,2})?$/.test(text)) {
+        throw Object.assign(new Error(`"${vc.price}" isn't a price. Use numbers like 10 or 10.50. Nothing was saved.`), { plain: true });
+      }
+    }
+  }
+  for (const ch of changes || []) {
+    if (!cfg.dailyItems.some((n) => catalog.itemIds.get(n.trim().toLowerCase()) === ch.id)) {
+      throw Object.assign(new Error("That item isn't on the Today's specials list."), { plain: true });
+    }
+    const item = await readItem(ch.id);
+    const vars = item.item_data.variations || [];
+    let changed = false;
+    for (const vc of ch.variations || []) {
+      const v = vars.find((x) => x.id === vc.id);
+      if (!v) throw Object.assign(new Error(`${item.item_data.name} changed in Square; open Today's specials again.`), { plain: true });
+      const d = v.item_variation_data;
+      const text = String(vc.price ?? "").replace(/[$\s]/g, "");
+      if (text === "") {
+        if (d.pricing_type !== "VARIABLE_PRICING") { d.pricing_type = "VARIABLE_PRICING"; delete d.price_money; changed = true; }
+      } else {
+        if (!/^\d{1,3}(\.\d{1,2})?$/.test(text)) {
+          throw Object.assign(new Error(`"${vc.price}" isn't a price. Use numbers like 10 or 10.50. Nothing was saved.`), { plain: true });
+        }
+        const amount = Math.round(Number(text) * 100);
+        if (d.pricing_type !== "FIXED_PRICING" || !d.price_money || d.price_money.amount !== amount) {
+          d.pricing_type = "FIXED_PRICING";
+          d.price_money = { amount, currency: (d.price_money && d.price_money.currency) || "USD" };
+          changed = true;
+        }
+      }
+      if (vars.length === 1 && vc.name !== undefined) {
+        const name = String(vc.name).trim().slice(0, 60) || "Regular";
+        if (d.name !== name) { d.name = name; changed = true; }
+      }
+    }
+    if (changed) {
+      await writeItem(item);
+      done.push(item.item_data.name);
+    }
+  }
+  if (done.length) {
+    console.log(`Today's specials changed from the front page (${new Date().toLocaleTimeString()}): ${done.join(", ")}.`);
+    await loadCatalog();
+  }
+  return done;
+}
+
+// The categories a line item's item is in: by its catalog id, or by name
+// for anything the catalog id doesn't match.
+function categoriesOf(li) {
+  const hit = li.catalog_object_id && catalog.byVariation.get(li.catalog_object_id);
+  if (hit) return hit.cats;
+  return catalog.byName.get(itemName(li).trim().toLowerCase()) || [];
+}
+
+const lowerSet = (list) => new Set(list.map((x) => String(x).trim().toLowerCase()));
+let skipItemSet = new Set();
+let skipCatSet = new Set();
+function setSkip(next) {
+  const clean = (list) => [...new Set((Array.isArray(list) ? list : []).map((x) => String(x).trim()).filter(Boolean))];
+  skip = { items: clean(next.items), categories: clean(next.categories) };
+  skipItemSet = lowerSet(skip.items);
+  skipCatSet = lowerSet(skip.categories);
+}
+setSkip(skip);
+
+const skipSummary = () => [...skip.categories.map((c) => `all of ${c}`), ...skip.items].join(", ") || "nothing";
+
+// On the skip list by name, or in a skipped category.
+function isSkipped(li) {
+  if (skipItemSet.has(itemName(li).trim().toLowerCase())) return true;
+  return categoriesOf(li).some((c) => skipCatSet.has(c.trim().toLowerCase()));
 }
 
 async function fetchOrders() {
@@ -304,7 +514,7 @@ function toTicket(order) {
     note: li.name && li.note ? li.note : null,
   });
   const food = lines.filter((li) => !NOT_FOOD.has(li.item_type));
-  const isSkip = (li) => cfg.skip.has(itemName(li).trim().toLowerCase());
+  const isSkip = isSkipped;
   // items: what the kitchen makes. front: what the counter adds to the bag.
   const items = food.filter((li) => !isSkip(li)).map(toItem);
   const front = food.filter(isSkip).map(toItem);
@@ -330,12 +540,36 @@ function toTicket(order) {
   const details = f && (f.pickup_details || f.delivery_details || f.shipment_details);
   const recipient = details && details.recipient;
   const dueAt = (f && f.pickup_details && f.pickup_details.pickup_at) || null;
+  // A counter sale still OPEN with nothing paid: usually a pay-later phone
+  // order (cooked now, kept warm), sometimes a sale that fell through (card
+  // declined, payment canceled on the terminal). Shown and cooked either
+  // way, tagged NOT PAID; the front removes a dead one with "Canceled".
+  const unpaid = !online && order.state === "OPEN" && !(order.tenders || []).length;
+  const due = order.net_amount_due_money && order.net_amount_due_money.amount;
+  // The ticket name the counter typed. A bare number is a table number (the
+  // cafe hands them out to people eating in); TEST marks a practice order.
+  const ticketName = (order.ticket_name || "").trim();
+  const table = !online && /^\d{1,3}$/.test(ticketName) ? ticketName : null;
+  const test = /^test\b/i.test(ticketName);
+  // To go or for here. The Restaurants POS records the dining option as the
+  // fulfillment: "To Go" is PICKUP, "For Here" is IN_STORE. To Go is the
+  // POS default, so a table number wins: someone sitting down with a number
+  // is eating here even if nobody changed the dining option.
+  const toGo = online || (!table && !!(f && /^(PICKUP|DELIVERY|SHIPMENT)$/.test(f.type)));
+  // What to call it. Square's own order id means nothing at the counter;
+  // the receipt number (the start of the payment's id, as printed on the
+  // receipt) does, so an order with no name goes by that once it's paid.
+  const tender = (order.tenders || [])[0];
+  const receipt = tender && tender.id ? tender.id.slice(0, 4).toUpperCase() : null;
 
   return { ticket: {
     id: order.id,
     kind: online ? f.type : "COUNTER", // PICKUP, DELIVERY, SHIPMENT, or COUNTER
     name: (recipient && recipient.display_name) || order.ticket_name || null,
     shortId: order.id.slice(-4).toUpperCase(),
+    label: table ? `Table ${table}` : (recipient && recipient.display_name) || ticketName || `#${receipt || order.id.slice(-4).toUpperCase()}`,
+    table,
+    test,
     source: (order.source && order.source.name) || null,
     createdAt: order.created_at,
     dueAt,
@@ -343,6 +577,9 @@ function toTicket(order) {
     front,
     // Marked ready in Order Manager: the customer has been texted.
     squareReady: !!(online && f.state === "PREPARED"),
+    unpaid,
+    toGo,
+    due: unpaid && due ? due / 100 : null,
     note: (details && details.note) || null,
     detail: orderDetail(order),
   } };
@@ -360,6 +597,7 @@ function outOfWindow(t, now) {
 // null if the ticket belongs on the kitchen board, else why not.
 function hiddenReason(t, now) {
   if (bumped[t.id]) return "cleared with Done";
+  if (canceled[t.id]) return "not paid; canceled at the front";
   if (t.squareReady) return "front already marked it prepared";
   if (!t.items.length) return "every item is on the skip list (front only)";
   return outOfWindow(t, now);
@@ -368,6 +606,7 @@ function hiddenReason(t, now) {
 // null if the ticket belongs on /front, else why not.
 function frontHiddenReason(t, now) {
   if (handedOff[t.id]) return "handed off at the front";
+  if (canceled[t.id]) return "not paid; canceled at the front";
   return outOfWindow(t, now);
 }
 
@@ -393,7 +632,7 @@ function undoList(map) {
     .map((id) => {
       const t = byId.get(id);
       const first = t.items[0] || t.front[0];
-      return { id, label: t.name || `#${t.shortId}`, main: first ? first.name : "", at: map[id] };
+      return { id, label: t.label, main: first ? first.name : "", at: map[id] };
     });
 }
 
@@ -497,6 +736,7 @@ function statsToday() {
     const f = (o.fulfillments || [])[0];
     if (o.state === "CANCELED" || (f && (f.state === "CANCELED" || f.state === "FAILED"))) continue;
     if (o.state === "OPEN" && !(o.tenders || []).length && !(f && f.pickup_details && f.pickup_details.pickup_at)) continue;
+    if (/^test\b/i.test((o.ticket_name || "").trim())) continue; // a practice order
     const when = Date.parse((f && f.pickup_details && f.pickup_details.pickup_at) || o.created_at);
     if (when < today || when >= tomorrow) continue;
     const food = (o.line_items || []).filter((li) => !NOT_FOOD.has(li.item_type));
@@ -511,10 +751,10 @@ function statsToday() {
   // Time in the kitchen: rung up to Done, counter orders only. A pickup's
   // order time can be hours before it's started, so it would skew this.
   const times = all
-    .filter((t) => !t.demo && t.kind === "COUNTER" && bumped[t.id] && Date.parse(t.createdAt) >= today)
+    .filter((t) => !t.demo && !t.test && t.kind === "COUNTER" && bumped[t.id] && Date.parse(t.createdAt) >= today)
     .map((t) => (Date.parse(bumped[t.id]) - Date.parse(t.createdAt)) / 6e4)
     .filter((m) => m >= 0 && m < 240);
-  out.kitchenDone = all.filter((t) => !t.demo && bumped[t.id] && Date.parse(t.dueAt || t.createdAt) >= today).length;
+  out.kitchenDone = all.filter((t) => !t.demo && !t.test && bumped[t.id] && Date.parse(t.dueAt || t.createdAt) >= today).length;
   if (times.length) {
     out.avgMinutes = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
     out.longestMinutes = Math.round(Math.max(...times));
@@ -587,12 +827,16 @@ function mockOrders() {
       state: "COMPLETED",
       created_at: at(-9),
       ticket_name: "Bob",
+      fulfillments: [{ type: "PICKUP", state: "COMPLETED", pickup_details: { schedule_type: "ASAP" } }],
       line_items: [li(1, "Cheeseburger", { modifiers: [{ name: "Add bacon" }, { name: "No onion" }, { name: "Ketchup packet", quantity: "2" }] })],
     },
     {
       id: "MOCKCOUNTER0004",
       state: "COMPLETED",
       created_at: at(-2),
+      ticket_name: "5",
+      fulfillments: [{ type: "PICKUP", state: "COMPLETED", pickup_details: { schedule_type: "ASAP" } }],
+      tenders: [{ id: "R7KQ2mXpLw", type: "CARD" }],
       line_items: [li(2, "Grilled Cheese"), li(2, "Kids Side", { variation_name: "Applesauce" })],
     },
     {
@@ -638,6 +882,18 @@ function mockOrders() {
     fulfillments: [{ type: "PICKUP", state: "COMPLETED", pickup_details: { pickup_at: at(-10) } }],
     line_items: [li(1, "Chef Salad")],
   });
+  // A counter sale whose card payment was canceled on the terminal: OPEN,
+  // nothing paid. Held on /front under "Not paid", never on the board.
+  orders.push({
+    id: "MOCKUNPAID00009",
+    state: "OPEN",
+    created_at: at(-4),
+    ticket_name: "Tammy",
+    source: { name: "Point of Sale" },
+    net_amount_due_money: { amount: 1200, currency: "USD" },
+    fulfillments: [{ type: "PICKUP", state: "PROPOSED", pickup_details: { schedule_type: "ASAP" } }],
+    line_items: [li(1, "Breakfast Burrito")],
+  });
   // A new counter order every 45 seconds, so the chime can be heard.
   const extra = Math.floor((Date.now() - mockStart) / 45000);
   for (let i = 0; i < Math.min(extra, 6); i++) {
@@ -651,6 +907,46 @@ function mockOrders() {
   return orders;
 }
 
+// Test mode's stand-in for the Square catalog, by item name: enough to try
+// skipping a whole category.
+function mockCatalog() {
+  const groups = {
+    Drinks: ["Iced Tea / Fountain Drink", "Coffee", "Bottle Juice", "Bottle Water"],
+    "Chips & Sweets": ["Chips", "Chocolate Chip Cookie"],
+    Breakfast: ["Big Breakfast", "Breakfast Burrito", "Breakfast Sandwich"],
+    Sandwiches: ["Turkey Club", "Reuben", "BLT", "Patty Melt", "Chicken Salad Croissant", "Build Your Own", "Grilled Cheese",
+      "Cheeseburger", "Philly Steak Sandwich", "Clubhouse Wrap", "Reuben Sandwich", "BLT Sandwich", "Cordon Bleu Burger"],
+    "Soups & Salads": ["Soup of the Day", "Chef Salad"],
+    Kids: ["Kids Meal", "Kids Side"],
+    Catering: ["Sandwich Tray"],
+  };
+  const out = [];
+  for (const [name, items] of Object.entries(groups)) {
+    const id = `CAT-${name}`;
+    out.push({ type: "CATEGORY", id, category_data: { name } });
+    for (const item of items) out.push({ type: "ITEM", id: `ITEM-${item}`, item_data: { name: item, categories: [{ id }] } });
+  }
+  // A Restaurants POS menu screen with a clashing name: must not show up
+  // as a category to skip.
+  out.push({ type: "CATEGORY", id: "MENU-Breakfast", category_data: { name: "Breakfast", category_type: "MENU_CATEGORY" } });
+  // The daily items, shaped like Square's: Lunch Special priced at the till,
+  // soup in two fixed sizes.
+  const v = (id, name, price) => ({ id, type: "ITEM_VARIATION", item_variation_data: price == null
+    ? { name, pricing_type: "VARIABLE_PRICING" } : { name, pricing_type: "FIXED_PRICING", price_money: { amount: price, currency: "USD" } } });
+  const daily = [
+    { type: "ITEM", id: "ITEM-Lunch Special", version: 1, item_data: { name: "Lunch Special", categories: [{ id: "CAT-Specials" }], variations: [v("VAR-LS", "Regular", null)] } },
+    { type: "ITEM", id: "ITEM-Soup of the Day", version: 1, item_data: { name: "Soup of the Day", categories: [{ id: "CAT-Soups & Salads" }], variations: [v("VAR-SC", "Cup", 500), v("VAR-SB", "Bowl", 700)] } },
+  ];
+  out.push({ type: "CATEGORY", id: "CAT-Specials", category_data: { name: "Lunch Specials" } });
+  for (const item of daily) {
+    if (!mockItems.has(item.id)) mockItems.set(item.id, item);
+    const i = out.findIndex((o) => o.id === item.id);
+    if (i >= 0) out.splice(i, 1);
+    out.push(mockItems.get(item.id));
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------- demo
 
 function startDemo() {
@@ -661,7 +957,7 @@ function startDemo() {
 
 function endDemo() {
   demo = null;
-  for (const map of [bumped, handedOff]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
+  for (const map of [bumped, handedOff, canceled]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
   console.log(`Demo ended (${new Date().toLocaleTimeString()}).`);
 }
 
@@ -734,7 +1030,7 @@ function checkPage() {
     ...all.map((t) => ({
       id: t.id,
       created: t.createdAt,
-      kind: t.kind,
+      kind: `${t.kind} · ${t.toGo ? "to go" : "for here"}${t.table ? ` · table ${t.table}` : ""}${t.unpaid ? " · NOT PAID" : ""}${t.test ? " · TEST" : ""}`,
       detail: t.detail,
       items: t.items.map((i) => `${i.qty}× ${i.name}`).join(", "),
       status: hiddenReason(t, now) || "ON THE BOARD",
@@ -764,6 +1060,8 @@ ${MOCK ? "<p><b>TEST MODE</b> — fake orders, not Square.</p>" : ""}
 <p>Locations: ${esc(locationIds.join(", ") || "not looked up yet")} · Showing counter sales since
 ${esc(startOfToday().toLocaleString())} and pickups due within ${cfg.showAheadMinutes} min.</p>
 ${status}
+<p>Kitchen skips: ${esc(skipSummary())}. Square catalog:
+${catalog.error ? `<b style="color:#A02F26">${esc(catalog.error)}</b> (skipping whole categories needs it)` : catalog.loadedAt ? `${catalog.categories.length} categories, read at ${esc(new Date(catalog.loadedAt).toLocaleTimeString())}` : "not read yet"}.</p>
 ${cfg.notes.length ? `<h2>config.json</h2><ul>${cfg.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : "<p>config.json: no problems found.</p>"}
 <p>${rows.length} order(s) came back from Square. Refresh to update.</p>
 <table><tr><th>Created</th><th>Order</th><th>Board type</th><th>From Square</th><th>Items</th><th>Board</th></tr>
@@ -888,7 +1186,7 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset"]);
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
 let pinFails = [];
@@ -957,10 +1255,64 @@ const server = http.createServer(async (req, res) => {
     saveState();
     return send(res, 200, frontSnapshot());
   }
+  // An unpaid order that was never going to be paid (card declined, sale
+  // abandoned): off the kitchen board and the front page at once. It goes
+  // on the front's Undo list like a hand-off, so a wrong tap comes back.
+  if (req.method === "POST" && url.pathname === "/api/cancel-unpaid") {
+    const { id } = await readBody(req);
+    if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
+    const at = new Date().toISOString();
+    canceled[id] = at;
+    handedOff[id] = at;
+    saveState();
+    console.log(`Front page: unpaid order ...${id.slice(-4)} canceled (${new Date().toLocaleTimeString()}).`);
+    return send(res, 200, frontSnapshot());
+  }
+  // What the kitchen skips, behind the PIN: read it (with a fresh read of
+  // the Square catalog to choose from) and save it. A save applies at once,
+  // to the tickets already up too.
+  if (req.method === "POST" && (url.pathname === "/api/front-skip" || url.pathname === "/api/front-skip-save")) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    if (url.pathname === "/api/front-skip-save") {
+      setSkip(body.skip || {});
+      skipEdited = true;
+      saveState();
+      console.log(`Skip list changed from the front page (${new Date().toLocaleTimeString()}): ${skipSummary()}.`);
+      await poll();
+      return send(res, 200, { ok: true, message: "Saved. The kitchen board is updated." });
+    }
+    await loadCatalog();
+    return send(res, 200, { ok: true, skip, categories: catalog.categories, catalogError: catalog.error });
+  }
+  // Today's specials, behind the PIN: read the items fresh from Square, and
+  // save the prices (see saveDaily). The save is the board's only write to
+  // Square.
+  if (req.method === "POST" && (url.pathname === "/api/front-daily" || url.pathname === "/api/front-daily-save")) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    try {
+      if (url.pathname === "/api/front-daily") return send(res, 200, { ok: true, items: await dailyItems() });
+      const saved = await saveDaily(body.items);
+      return send(res, 200, { ok: true, message: saved.length
+        ? `Saved in Square: ${saved.join(", ")}. The POS picks it up within a minute or so.`
+        : "Nothing changed." });
+    } catch (err) {
+      console.error(`Today's specials: ${err.message}`);
+      const conflict = /409|VERSION_MISMATCH|version/i.test(err.message);
+      if (err.plain) return send(res, 200, { ok: false, message: err.message });
+      return send(res, 200, { ok: false, message: conflict
+        ? "Someone changed that item in Square a moment ago. Open Today's specials again and re-enter it."
+        : `Square didn't take it: ${err.message}` });
+    }
+  }
   if (req.method === "POST" && url.pathname === "/api/unhandoff") {
     const { id } = await readBody(req);
     if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
     delete handedOff[id];
+    delete canceled[id];
     saveState();
     return send(res, 200, frontSnapshot());
   }
@@ -974,6 +1326,7 @@ const server = http.createServer(async (req, res) => {
     const last = lastHandedOff();
     if (last) {
       delete handedOff[last.id];
+      delete canceled[last.id];
       saveState();
     }
     return send(res, 200, frontSnapshot());
@@ -1067,5 +1420,7 @@ server.listen(cfg.port, HOST, () => {
   console.log(`Checking Square every ${cfg.pollSeconds} s.`);
   if (!cfg.sound || MUTE) console.log("Sound is OFF.");
   for (const note of cfg.notes) console.log(`config.json: ${note}`);
-  poll();
+  // The catalog first, so a skipped category is never on the first board.
+  loadCatalog().finally(poll);
+  setInterval(loadCatalog, CATALOG_MINUTES * 6e4);
 });

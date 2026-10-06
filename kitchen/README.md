@@ -7,8 +7,12 @@ Not part of the website. Nothing in this folder is built or uploaded.
 ## What shows up
 
 - **Counter orders** rung up on Square POS today. Square marks these finished as soon as they're paid; the Restaurants app also marks their pickup step complete. Because of that, the board ignores Square's "completed" on counter orders, and they stay up until a cook presses **Done**. They appear once paid: a check that was sent but not charged yet can't be seen by the board, only by the kitchen printer.
+- **Unpaid counter orders** (pay-later phone orders) go to the kitchen straight away like any other, tagged **NOT PAID**: cook it and keep it in the warmer. The tag goes away by itself once it's paid in Square. If it was a sale that fell through (a declined card, a payment canceled on the terminal), the front presses **Canceled** and it leaves both screens.
 - **Online / pickup orders** due today, starting an hour before pickup time. They leave the board when a cook presses **Done** *or* when the front marks them ready or picked up in Square Order Manager.
-- Items listed in `skipItems` (drinks, chips) are left off. An order made up only of those items doesn't show at all.
+- **What the kitchen skips** (drinks, chips) is left off: single items, or whole Square categories. Skipped items go on the front page's "Add from the front" list instead. An order made up only of those items doesn't show at all. The list is changed live from the front page: **Manage → What the kitchen skips**. A ticked category also covers items added to it in Square later.
+- Every ticket says **TO GO** (solid tag) or **FOR HERE** (outlined), as rung on the POS ("To Go" is the POS default). Online orders are always to go.
+- **What a ticket is called:** the customer's name if one was typed. A ticket name that is just a number is a **table number**: it shows as **Table 5** and counts as **FOR HERE**, even if the dining option was left on To Go. With no name, a paid order shows its receipt number (`#` and four letters, the start of the payment's id); compare one against a printed receipt before relying on it.
+- A ticket named **TEST** (or starting with it) is marked TEST and left out of the day's numbers.
 - Amounts typed on the POS keypad show too, under the note typed with them (or "Custom amount"), in case a special or an off-menu plate gets rung up that way.
 
 Header colors:
@@ -59,7 +63,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
    3. Switch to **Production**, open **Credentials**, and copy the **Production Access token**.
 
    Treat the token like a password. It never goes in git, an email, or a text message.
-4. **Copy `config.example.json` to `config.json`** and paste in the token. `config.json` is gitignored, so updates never touch it. Adjust `skipItems` to match item names exactly as they appear in Square. Keep only those two settings: every other setting has a built-in default, and a line in `config.json` pins that setting so updates can't improve it. The board lists any such line when it starts and on `/check`.
+4. **Copy `config.example.json` to `config.json`** and paste in the token. `config.json` is gitignored, so updates never touch it. `skipItems` is only the starting skip list; once it's changed from the front page (Manage → What the kitchen skips), that list is kept on the PC and `skipItems` no longer matters. Keep only those two settings: every other setting has a built-in default, and a line in `config.json` pins that setting so updates can't improve it. The board lists any such line when it starts and on `/check`.
 5. **Double-click `start-kitchen.bat`.** It first pulls the latest board code with git (if the internet is down, it starts the version already on the PC). Then a minimized window runs the board program, and Chrome opens full-screen on the board. Press **Alt+F4** to leave full-screen. A desktop shortcut to it is fine. Running it again replaces the board program and the board window, never stacks a second one, and leaves everything else on the PC alone.
 6. **Start it automatically.** Press Win+R and type `shell:startup`, then put a shortcut to `start-kitchen.bat` in that folder. Also set:
    - Settings → System → Power: **screen and sleep to Never**.
@@ -83,6 +87,7 @@ Push the change to the `kitchen-board` branch from any computer, then restart th
 
 The same orders for the counter, on any laptop, tablet or phone on the cafe wifi: `http://<kitchen PC name>:8090/front`. The board program prints the exact address when it starts, and `/check` shows it too. Bookmark it by the PC's name, not its IP address, because the router can change the address.
 
+- **Not paid:** an order with no payment on it has a red band with how much is due, and a **Canceled** button next to Handed off. Canceled takes it off the kitchen board too; Undo in the top bar brings it back to both.
 - **Ready** (green, on top): the kitchen pressed Done, so the food is coming out. It chimes once the laptop's **Sound** button is on.
 - **Cooking:** still on the kitchen board. A pickup counts down to its pickup time; a counter order counts up from when it was rung.
 - **Add from the front:** the order's skip-list items (drinks, chips) and any condiment packets: what the counter puts in the bag. A Square modifier with **"packet"** in its name ("Ketchup packet") is moved off the kitchen ticket and onto this list, totalled across the order. Tap a line to tick it off while bagging. Ticks are kept on that device only.
@@ -109,11 +114,13 @@ Settings in `config.json`, both optional:
 |---|---|---|
 | `frontOnNetwork` | `true` | `false` keeps everything on the kitchen PC; `/front` then works only there. |
 | `frontKey` | none | If set, other devices must open `/front?key=<the key>`. Bookmark the full address. Worth setting if customers ever share the staff wifi. |
-| `updatePin` | none | Turns on **Manage** on the front page. With this PIN it can **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+| `updatePin` | none | Turns on **Manage** on the front page. With this PIN it can set **Today's specials** (the prices of the items in `dailyItems`, saved straight into Square; see below), change **What the kitchen skips** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
 
 ## When an order doesn't show up
 
-Open **http://localhost:8090/check** in a normal Chrome window. Alt+Tab out of the board, or press Alt+F4 and reopen it with `start-kitchen.bat` afterwards. The page lists every order Square sent on its last check. For each one it says whether it's on the board, and if not, why: cleared with Done, every item on the skip list, pickup still more than an hour away, and so on.
+Open **http://localhost:8090/check** in a normal Chrome window. Alt+Tab out of the board, or press Alt+F4 and reopen it with `start-kitchen.bat` afterwards. The page lists every order Square sent on its last check. For each one it says whether it's on the board, and if not, why: cleared with Done, every item on the skip list, pickup still more than an hour away, and so on. It also shows the current skip list and whether the Square catalog (needed to skip whole categories) could be read.
+
+- **A ticket says TO GO when it should say FOR HERE, or the other way round:** the "Board type" column says which the board decided, and "From Square" shows what it was decided from. The POS records "To Go" as a PICKUP fulfillment; an order with no fulfillment, or any other kind, counts as for here.
 
 - **If the order is missing from the list entirely**, Square didn't return it. Check the location shown at the top of the page, and check that the token belongs to the cafe's Square account.
 - The minimized **"Kitchen board program"** window logs every new order it sees the same way, along with any errors from Square.
@@ -142,3 +149,9 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `state.json` | Which orders have been cleared. Created automatically; gitignored. |
 | `start-kitchen.bat` | Pulls updates, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. |
 | `focus-board.ps1` | Run by `start-kitchen.bat` after Chrome opens: brings the board window to the front so the number pad types into it, not into a console window. Tries for 20 seconds; if it can't, click the board once. |
+
+## Today's specials (Manage on the front page)
+
+Sets the day's prices in Square from the front page, with the PIN: the items named in `dailyItems` in `config.json` (default: Lunch Special, Soup of the Day, Salad of the Day; names exactly as in Square). For each size there is a price box; leave it blank to have the till ask for the price. A one-size item also has **What it is today** ("BBQ Ribs"), which becomes the item's only size in Square, so it prints on the kitchen ticket and the receipt after the item name. On a day nothing changes, nobody needs to open it.
+
+This is the **only thing the board writes to Square**. It changes nothing but those items' prices and that one name, reads each item fresh before saving, and if someone changed the item in the Dashboard a moment before, Square refuses the save and the front is asked to open it again, so nothing is overwritten. A mistyped price saves nothing at all.

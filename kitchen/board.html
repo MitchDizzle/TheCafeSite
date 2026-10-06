@@ -269,6 +269,30 @@
   .ticket.demo { outline: 0.25rem dashed #B48BD6; outline-offset: 0.1rem; }
   .alert.demo-banner { background: #E7D9F3; color: #3D1A5C; }
   .ticket.warn .fresh-tag, .ticket.late .fresh-tag { background: #1A1A1A; color: var(--amber); }
+  /* To go or for here, on every ticket: solid for to go (it needs boxing),
+     outlined for here. Readable on every header color. */
+  .dining {
+    display: inline-block;
+    padding: 0 0.45rem;
+    margin-right: 0.45rem;
+    border-radius: 0.3rem;
+    background: #fff;
+    color: #1A1A1A;
+    font-weight: 900;
+  }
+  .dining.here { background: transparent; color: inherit; box-shadow: inset 0 0 0 0.12rem currentColor; }
+  /* Not paid yet: cook it anyway (pay-later orders wait in the warmer).
+     Only the front needs to act, so it's a quiet tag, not an alarm. */
+  .unpaid-tag, .test-tag {
+    display: inline-block;
+    padding: 0 0.45rem;
+    margin-right: 0.45rem;
+    border-radius: 0.3rem;
+    background: #1A1A1A;
+    color: #fff;
+    font-weight: 900;
+  }
+  .test-tag { background: #DDE3E6; color: #1A1A1A; }
 
   /* A flash around the edge of the whole screen when an order arrives, for
      the same reason: something visible from anywhere in the kitchen. */
@@ -511,7 +535,7 @@
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fmtTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  const label = (t) => t.name || `#${t.shortId}`;
+  const label = (t) => t.label || t.name || `#${t.shortId}`;
 
   function mmss(ms) {
     const s = Math.max(0, Math.floor(ms / 1000));
@@ -589,7 +613,7 @@
             <span class="key">${slots[t.id] || ""}</span>
             <span class="who">
               <span class="name">${esc(label(t))}</span>
-              <span class="kind">${t.demo ? '<span class="demo-tag">DEMO</span>' : ""}<span class="fresh-tag">NEW</span>${esc(kindLabel(t))}</span>
+              <span class="kind">${t.demo ? '<span class="demo-tag">DEMO</span>' : ""}<span class="fresh-tag">NEW</span>${t.test ? '<span class="test-tag">TEST</span>' : ""}${t.unpaid ? '<span class="unpaid-tag">NOT PAID</span>' : ""}${t.toGo ? '<span class="dining">TO GO</span>' : '<span class="dining here">FOR HERE</span>'}${esc(kindLabel(t))}</span>
             </span>
             <span class="timer"></span>
           </header>

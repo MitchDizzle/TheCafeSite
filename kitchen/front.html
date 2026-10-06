@@ -120,6 +120,27 @@
   .dialog .check { display: flex; gap: 0.5rem; align-items: flex-start; margin: 0.8rem 0 0; font-size: 0.95rem; cursor: pointer; }
   .dialog .check input { width: auto; font-size: 1rem; padding: 0; margin-top: 0.2rem; letter-spacing: 0; }
 
+  /* What the kitchen skips: Square's categories, each with its items. */
+  .dialog.wide { width: min(42rem, 94vw); max-height: 88vh; overflow-y: auto; }
+  .skip-cat { border: 1px solid var(--line); border-radius: 0.45rem; margin: 0 0 0.5rem; }
+  .skip-cat > summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; cursor: pointer; font-weight: 800; }
+  .skip-cat > summary .count { margin-left: auto; font-weight: 400; color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
+  .skip-cat[data-whole="1"] > summary { background: #FFF7E6; }
+  .skip-cat .skip-items { padding: 0.2rem 0.7rem 0.6rem 2.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.1rem 0.8rem; }
+  .dialog .skip-cat .check { margin: 0.15rem 0; }
+  .dialog .skip-cat input:disabled + span { color: var(--muted); }
+  .dialog .skip-note { color: var(--muted); font-size: 0.92rem; }
+  .dialog .skip-error { color: var(--red-dark); font-weight: 700; }
+  .daily-item { border: 1px solid var(--line); border-radius: 0.45rem; padding: 0.6rem 0.8rem; margin: 0 0 0.6rem; }
+  .daily-item h3 { margin: 0 0 0.4rem; font-size: 1.1rem; }
+  .daily-row { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; align-items: center; padding: 0.2rem 0; }
+  .daily-row label { display: flex; gap: 0.5rem; align-items: center; font-weight: 700; }
+  .dialog .daily-row input { width: auto; font-size: 1.15rem; padding: 0.35rem 0.5rem; letter-spacing: 0; }
+  .dialog .daily-row input[data-field="name"] { width: 14rem; }
+  .daily-size { min-width: 4rem; font-weight: 800; }
+  .dining { display: inline-block; padding: 0 0.35rem; border-radius: 0.25rem; background: var(--teal-dark); color: var(--cream); }
+  .dining.here { background: transparent; color: var(--teal-dark); border: 1.5px solid var(--teal-dark); }
+
   main { padding: 1rem 1.2rem 3rem; max-width: 90rem; margin: 0 auto; }
   h2 {
     margin: 1.2rem 0 0.6rem;
@@ -216,6 +237,26 @@
   /* Still cooking: the button is there (the customer may take part of it
      early, or the kitchen forgot Done) but it doesn't invite a tap. */
   .order.cooking .handoff { background: transparent; color: var(--muted); border: 2px solid var(--line); }
+
+  /* Not paid: cooked like any other order, but the front collects. */
+  .unpaid-band { background: #FBE3E1; color: #7A1F18; font-weight: 800; }
+  .unpaid-band small { display: block; font-weight: 400; font-size: 0.9rem; color: var(--text); margin-top: 0.15rem; }
+  .order.unpaid { border-color: var(--red); }
+  .order .actions.two { display: flex; gap: 0.6rem; }
+  .order .actions.two button { flex: 1; }
+  .cancel-unpaid {
+    padding: 0.65rem;
+    border: 2px solid var(--red);
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--red-dark);
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .cancel-unpaid:hover { background: #FBE3E1; }
+  .test-tag { display: inline-block; padding: 0 0.4rem; margin-right: 0.4rem; border-radius: 0.25rem; background: #DDE3E6; color: var(--text); font-weight: 900; }
 </style>
 </head>
 <body>
@@ -269,7 +310,7 @@
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fmtTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  const label = (o) => o.name || `#${o.shortId}`;
+  const label = (o) => o.label || o.name || `#${o.shortId}`;
   const mins = (ms) => Math.max(0, Math.floor(ms / 6e4));
   const ALLERGY = /allerg|anaphyla|epi-?pen|gluten|celiac|coeliac|peanut|tree ?nut|\bnuts?\b|shellfish|dairy|lactose|\begg[- ]free|\bsoy\b|sesame/i;
 
@@ -322,6 +363,9 @@
   renderSound();
 
   // ---- rendering
+  // To go or for here, as a tag after the order type. Online is always to go.
+  const diningHtml = (o) => o.toGo ? ` · <span class="dining">To go</span>` : ` · <span class="dining here">For here</span>`;
+
   function kindLabel(o) {
     if (o.kind === "COUNTER") return "Counter";
     const k = o.kind === "PICKUP" && (!o.source || /square online/i.test(o.source)) ? "Online" : (o.source || o.kind);
@@ -348,11 +392,13 @@
       ? `<div class="square done">✓ Marked ready in Square. Customer texted.</div>`
       : ready ? `<div class="square todo">Mark it ready in Square Order Manager to text the customer.</div>` : "";
     return `
-      <article class="order ${ready ? "ready" : "cooking"}${o.demo ? " demo" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
+      <article class="order ${ready ? "ready" : "cooking"}${o.unpaid ? " unpaid" : ""}${o.demo ? " demo" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
         <header>
-          <span><span class="name">${esc(label(o))}</span><span class="kind">${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${esc(kindLabel(o))}</span></span>
+          <span><span class="name">${esc(label(o))}</span><span class="kind">${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${o.test ? '<span class="test-tag">TEST</span>' : ""}${esc(kindLabel(o))}${diningHtml(o)}</span></span>
           <span class="status" data-status></span>
         </header>
+        ${o.unpaid ? `<div class="section unpaid-band">Not paid${o.due ? `: $${o.due.toFixed(2)} due` : ""}
+          <small>Collect when they pick up. If the sale fell through, press Canceled to take it off the kitchen board too.</small></div>` : ""}
         <div class="section">
           <div class="label">From the kitchen</div>
           ${o.items.length ? itemsHtml(o.items, false, o.id) : `<div class="nothing">Nothing from the kitchen</div>`}
@@ -363,7 +409,7 @@
           ${itemsHtml(o.front, true, o.id)}
         </div>` : ""}
         ${square ? `<div class="section">${square}</div>` : ""}
-        <div class="actions"><button class="handoff" type="button">Handed off</button></div>
+        <div class="actions${o.unpaid ? " two" : ""}"><button class="handoff" type="button">Handed off</button>${o.unpaid ? `<button class="cancel-unpaid" type="button">Canceled</button>` : ""}</div>
       </article>`;
   }
 
@@ -466,6 +512,13 @@
     const card = e.target.closest(".order");
     if (!card) return;
     const id = card.dataset.id;
+    if (e.target.closest(".cancel-unpaid")) {
+      // Off both screens; Undo in the top bar brings it back.
+      orders = orders.filter((o) => o.id !== id);
+      render();
+      post("/api/cancel-unpaid", { id }).catch(() => {});
+      return;
+    }
     if (e.target.closest(".handoff")) {
       // Gone from this screen at once; the server confirms.
       orders = orders.filter((o) => o.id !== id);
@@ -538,12 +591,14 @@
   const scrim = document.getElementById("scrim");
   const dialog = document.getElementById("dialog");
   function showDialog(html) { dialog.innerHTML = html; scrim.hidden = false; }
-  function closeDialog() { scrim.hidden = true; dialog.innerHTML = ""; }
+  function closeDialog() { scrim.hidden = true; dialog.innerHTML = ""; dialog.classList.remove("wide"); }
   scrim.addEventListener("click", (e) => {
     if (e.target === scrim || e.target.closest("[data-close]")) closeDialog();
   });
-  // Manage: the two things the front can do to the whole board, both
-  // behind the PIN (updatePin in the kitchen PC's config.json).
+  // Manage: the things the front can do to the whole board, all behind the
+  // PIN (updatePin in the kitchen PC's config.json).
+  //   What the kitchen skips: items and whole Square categories that go on
+  //     the front's "Add from the front" list instead of the kitchen board.
   //   Check for updates: the board's own update; it restarts if there's one.
   //   Reset for the day: empties the Undo lists, restarts today's stats from
   //     now, and optionally clears every order on the board.
@@ -555,6 +610,8 @@
         <label class="check"><input type="checkbox" id="clear-board"> When resetting, also clear every order on the board (after testing, before opening)</label>
         <div class="actions">
           <button type="button" data-close>Cancel</button>
+          <button type="button" data-act="daily">Today's specials</button>
+          <button type="button" data-act="skip">What the kitchen skips</button>
           <button type="button" data-act="reset">Reset for the day</button>
           <button type="submit" class="primary" data-act="update">Check for updates</button>
         </div>
@@ -583,7 +640,137 @@
     }
     form.addEventListener("submit", (e) => { e.preventDefault(); run("update"); });
     form.querySelector('[data-act="reset"]').addEventListener("click", () => run("reset"));
+    form.querySelector('[data-act="skip"]').addEventListener("click", () => openSkip(pin.value));
+    form.querySelector('[data-act="daily"]').addEventListener("click", () => openDaily(pin.value));
   });
+
+  // ---- Today's specials: the morning's prices, saved straight into Square.
+  // Only the items listed in the kitchen PC's config (dailyItems). A blank
+  // price means the till asks for one, as Lunch Special did on opening day.
+  async function openDaily(pinValue) {
+    showDialog(`<h2>Reading from Square…</h2><p>One moment.</p>`);
+    const r = await postJson("/api/front-daily", { pin: pinValue });
+    if (!r.ok) return showResult(r);
+    const itemHtml = (it) => it.missing
+      ? `<div class="daily-item"><h3>${esc(it.name)}</h3><p class="skip-error">Not found in Square under this name.</p></div>`
+      : `<div class="daily-item" data-id="${esc(it.id)}">
+        <h3>${esc(it.name)}</h3>
+        ${it.variations.map((v) => `<div class="daily-row" data-var="${esc(v.id)}">
+          ${it.oneSize ? `<label>What it is today <input type="text" data-field="name" value="${esc(v.name === "Regular" ? "" : v.name)}" placeholder="e.g. BBQ Ribs" maxlength="60"></label>`
+            : `<span class="daily-size">${esc(v.name)}</span>`}
+          <label>Price $ <input type="text" inputmode="decimal" data-field="price" value="${esc(v.price)}" placeholder="at the till" size="7"></label>
+        </div>`).join("")}
+      </div>`;
+    dialog.classList.add("wide");
+    showDialog(`<h2>Today's specials</h2>
+      <p class="skip-note">Saved straight into Square: the POS and online ordering use the new price within a minute or so.
+        Leave a price blank to have the till ask for it. "What it is today" prints on the kitchen ticket after the item name.</p>
+      <form id="daily-form">
+        ${r.items.map(itemHtml).join("")}
+        <div class="actions">
+          <button type="button" data-close>Cancel</button>
+          <button type="submit" class="primary">Save to Square</button>
+        </div>
+      </form>`);
+    const form = document.getElementById("daily-form");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const items = [...form.querySelectorAll(".daily-item[data-id]")].map((el) => ({
+        id: el.dataset.id,
+        variations: [...el.querySelectorAll("[data-var]")].map((row) => {
+          const name = row.querySelector('[data-field="name"]');
+          return { id: row.dataset.var, price: row.querySelector('[data-field="price"]').value, ...(name ? { name: name.value } : {}) };
+        }),
+      }));
+      showDialog(`<h2>Saving to Square…</h2><p>One moment.</p>`);
+      showResult(await postJson("/api/front-daily-save", { pin: pinValue, items }));
+    });
+  }
+
+  // ---- What the kitchen skips
+  async function postJson(path, body) {
+    try {
+      const res = await fetch(api(path), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      return await res.json();
+    } catch {
+      return { ok: false, message: "The kitchen PC didn't answer." };
+    }
+  }
+
+  function showResult(r) {
+    dialog.classList.remove("wide");
+    showDialog(`<h2>${r.ok ? "Done" : "Didn't work"}</h2><p>${esc(r.message || "")}</p>
+      <div class="actions"><button type="button" class="primary" data-close>OK</button></div>`);
+  }
+
+  async function openSkip(pinValue) {
+    showDialog(`<h2>Reading Square's items…</h2><p>One moment.</p>`);
+    const r = await postJson("/api/front-skip", { pin: pinValue });
+    if (!r.ok) return showResult(r);
+    const lc = (x) => x.trim().toLowerCase();
+    const cats = new Set(r.skip.categories.map(lc));
+    const items = new Set(r.skip.items.map(lc));
+    const known = new Set(r.categories.flatMap((c) => c.items).map(lc));
+    // Names on the list that aren't Square items (renamed, deleted, or typed
+    // into config.json): kept unless unticked.
+    const other = r.skip.items.filter((n) => !known.has(lc(n)));
+    const box = (attr, value, checked, text, disabled) =>
+      `<label class="check"><input type="checkbox" ${attr}="${esc(value)}"${checked ? " checked" : ""}${disabled ? " disabled" : ""}><span>${esc(text)}</span></label>`;
+    const catHtml = (c) => {
+      const whole = cats.has(lc(c.name)) && c.name !== "(No category)";
+      const picked = c.items.filter((n) => items.has(lc(n))).length;
+      return `<details class="skip-cat" data-whole="${whole ? 1 : 0}"${whole || picked ? " open" : ""}>
+        <summary>${c.name === "(No category)" ? `<span>${esc(c.name)}</span>` : box("data-cat", c.name, whole, `${c.name}: skip the whole category`)}
+          <span class="count">${c.items.length} item${c.items.length === 1 ? "" : "s"}</span></summary>
+        <div class="skip-items">${c.items.map((n) => box("data-item", n, whole || items.has(lc(n)), n, whole)).join("")}</div>
+      </details>`;
+    };
+    dialog.classList.add("wide");
+    showDialog(`<h2>What the kitchen skips</h2>
+      <p class="skip-note">Ticked items stay off the kitchen board and go on the front's "Add from the front" list.
+        Ticking a category skips everything in it, including items added to it in Square later. Changes apply to the board at once.</p>
+      ${r.catalogError ? `<p class="skip-error">Couldn't read Square's items (${esc(r.catalogError)}). Only the names already on the list are shown.</p>` : ""}
+      <form id="skip-form">
+        ${r.categories.map(catHtml).join("")}
+        ${other.length ? `<details class="skip-cat" open><summary><span>Other names on the list</span></summary>
+          <div class="skip-items">${other.map((n) => box("data-item", n, true, n, false)).join("")}</div></details>` : ""}
+        <div class="actions">
+          <button type="button" data-close>Cancel</button>
+          <button type="submit" class="primary">Save</button>
+        </div>
+      </form>`);
+    const form = document.getElementById("skip-form");
+    // A whole category ticks and locks its items, so it reads as it acts.
+    form.addEventListener("change", (e) => {
+      const cat = e.target.closest("[data-cat]");
+      if (!cat) return;
+      const details = cat.closest(".skip-cat");
+      details.dataset.whole = cat.checked ? "1" : "0";
+      for (const it of details.querySelectorAll("[data-item]")) {
+        it.disabled = cat.checked;
+        if (cat.checked) it.checked = true;
+      }
+      if (cat.checked) details.open = true;
+    });
+    // The summary's checkbox must tick, not also fold the category.
+    form.addEventListener("click", (e) => {
+      if (e.target.closest("summary label")) e.stopPropagation();
+    });
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const skip = {
+        categories: [...form.querySelectorAll("[data-cat]:checked")].map((x) => x.dataset.cat),
+        // Items inside a skipped category are covered by it; only the rest are listed.
+        items: [...form.querySelectorAll("[data-item]:checked:not(:disabled)")].map((x) => x.dataset.item),
+      };
+      showResult(await postJson("/api/front-skip-save", { pin: pinValue, skip }));
+      lastJson = "";
+    });
+  }
 
   setInterval(tick, 15000);
   load();
