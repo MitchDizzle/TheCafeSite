@@ -25,6 +25,7 @@
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
 {%- set kids = (menu.categories | where("id", "kids"))[0] %}
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
+{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
 
 {%- from "partials/menu-large-print-parts.njk" import category, dietLegend %}
@@ -66,7 +67,7 @@
         </div>
     </div>
 
-    <p class="fold-legend">Back &mdash; hot sandwiches, soup, sides, salads &amp; kids</p>
+    <p class="fold-legend">Back &mdash; hot sandwiches, soup, sides, salads, kids &amp; desserts</p>
 
     <div class="canvas lp-canvas">
         <header class="lp-head lp-head--run">
@@ -83,6 +84,9 @@
             <div class="lp-col">
                 {{ category(salads, menu) }}
                 {{ category(kids, menu) }}
+                {#- Desserts (2026-10-05) here, not after the sides: the left
+                    column is full and this one had room under the kids. -#}
+                {{ category(desserts, menu) }}
 
                 <div class="panel-spacer"></div>
                 {{ dietLegend(menu) }}

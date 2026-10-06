@@ -171,12 +171,16 @@ for i in cats["drinks"]["items"]:
         # variation only says which cup was sold.
         add("Iced Tea / Fountain Drink", D, [("Iced Tea", i["price"]), ("Fountain Drink", i["price"])],
             "Fountain drinks are self-serve Pepsi products.")
-    elif i["name"] == "Bottle Juice" and i.get("description"):
-        # One tile, a variation per flavour, like the chips: the flavours
-        # come and go, and the variation counts which one sold.
-        add("Bottle Juice", D, [(v.strip(), i["price"]) for v in i["description"].split(",")])
+    elif i["name"] == "Bottle Juice":
+        # One item; the flavour is the Juice modifier list in Square (made by
+        # hand, see square/README.md), as the till was set up on 2026-10-05.
+        one("Bottle Juice", D, i["price"], i.get("description", "") + ".")
     else:
         one(i["name"], D, i["price"])
+
+# ── Desserts (sold all day) ────────────────────────────────
+for i in cats["desserts"]["items"]:
+    one(i["name"], "Desserts", i["price"], (i["description"] + ".") if i.get("description") else "")
 
 # ── Write: template's five header lines verbatim, then rows ─
 raw = open(TEMPLATE, encoding="utf-8", newline="").read()

@@ -342,6 +342,11 @@
     margin-top: 0.04in;
 }
 
+/* Desserts, under the catering note (see the template). */
+.panel-back-desserts {
+    margin-top: 0.3in;
+}
+
 /* Two codes across a 3.667in panel with 0.35in padding a side: 2.967in of
    live width less a 0.2in gap, so about 1.38in a column. qr-*.svg carry no
    quiet zone of their own — .code-qr's padding IS the quiet zone, four
