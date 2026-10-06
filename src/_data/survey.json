@@ -10,11 +10,6 @@
   ],
   "choices": [
     {
-      "name": "ordered",
-      "label": "How did you order today?",
-      "options": ["At the counter", "Online", "Catering"]
-    },
-    {
       "name": "heard",
       "label": "How did you hear about us?",
       "options": ["Been coming for years", "Friend or family", "Facebook", "Google", "Drove by", "Other"]
@@ -22,6 +17,7 @@
   ],
   "open": [
     { "name": "add_to_menu", "label": "What should we add to the menu?" },
+    { "name": "come_more", "label": "What would bring you in more often?" },
     { "name": "do_better", "label": "Anything we could do better?" }
   ]
 }
