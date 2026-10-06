@@ -140,6 +140,20 @@ const cfg = loadConfig();
 // ---------------------------------------------------------------- bump state
 
 let bumped = {}; // orderId -> ISO time a cook pressed Done (kitchen board)
+// orderId -> { ms, at }: how long a ticket sat cleared before Undo brought it
+// back, and when. Taken off its kitchen time, so a ticket undone and Done
+// again counts only its time on the board, not the gap, in the stats.
+let offBoard = {};
+
+// Undo on the board: back on the screen, with the time it spent cleared kept
+// out of the stats.
+function unbump(id) {
+  if (!bumped[id]) return;
+  const now = Date.now();
+  const gap = Math.max(0, now - Date.parse(bumped[id]));
+  offBoard[id] = { ms: ((offBoard[id] && offBoard[id].ms) || 0) + gap, at: new Date(now).toISOString() };
+  delete bumped[id];
+}
 
 // Demo mode (board Settings): practice orders for training, mixed in with
 // the real ones, which keep showing. Practice tickets carry DEMO- ids, are
@@ -168,6 +182,7 @@ function loadState() {
   try {
     const state = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
     bumped = state.bumped || {};
+    offBoard = state.offBoard || {};
     handedOff = state.handedOff || {};
     canceled = state.canceled || {};
     skipEdited = !!state.skip;
@@ -176,6 +191,7 @@ function loadState() {
     statsFloor = state.statsFloor || null;
   } catch {
     bumped = {};
+    offBoard = {};
     handedOff = {};
     canceled = {};
     skip = { items: cfg.skipItems, categories: [] };
@@ -192,9 +208,10 @@ function saveState() {
       if (Date.parse(at) < cutoff) delete map[id];
     }
   }
+  for (const [id, o] of Object.entries(offBoard)) if (Date.parse(o.at) < cutoff) delete offBoard[id];
   // Demo tickets are practice: never written down, gone when the demo ends.
   const real = (map) => Object.fromEntries(Object.entries(map).filter(([id]) => !isDemo(id)));
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), handedOff: real(handedOff), canceled: real(canceled), skip: skipEdited ? skip : undefined, undoFloor, statsFloor }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), handedOff: real(handedOff), canceled: real(canceled), skip: skipEdited ? skip : undefined, undoFloor, statsFloor }, null, 2));
 }
 
 loadState();
@@ -901,9 +918,10 @@ function statsToday() {
   }
   // Time in the kitchen: rung up to Done, counter orders only. A pickup's
   // order time can be hours before it's started, so it would skew this.
+  // Time a ticket sat cleared before an Undo doesn't count.
   const times = all
     .filter((t) => !t.demo && !t.test && t.kind === "COUNTER" && bumped[t.id] && Date.parse(t.createdAt) >= today)
-    .map((t) => (Date.parse(bumped[t.id]) - Date.parse(t.createdAt)) / 6e4)
+    .map((t) => (Date.parse(bumped[t.id]) - Date.parse(t.createdAt) - ((offBoard[t.id] && offBoard[t.id].ms) || 0)) / 6e4)
     .filter((m) => m >= 0 && m < 240);
   out.kitchenDone = all.filter((t) => !t.demo && !t.test && bumped[t.id] && Date.parse(t.dueAt || t.createdAt) >= today).length;
   if (times.length) {
@@ -1117,7 +1135,7 @@ function startDemo() {
 
 function endDemo() {
   demo = null;
-  for (const map of [bumped, handedOff, canceled]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
+  for (const map of [bumped, offBoard, handedOff, canceled]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
   console.log(`Demo ended (${new Date().toLocaleTimeString()}).`);
 }
 
@@ -1580,7 +1598,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "POST" && url.pathname === "/api/undo") {
     const last = lastCleared();
     if (last) {
-      delete bumped[last.id];
+      unbump(last.id);
       saveState();
     }
     return send(res, 200, snapshot());
@@ -1589,7 +1607,7 @@ const server = http.createServer(async (req, res) => {
     const { id } = await readBody(req);
     if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
     if (url.pathname === "/api/bump") bumped[id] = new Date().toISOString();
-    else delete bumped[id];
+    else unbump(id);
     saveState();
     return send(res, 200, snapshot());
   }

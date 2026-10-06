@@ -94,7 +94,7 @@ The same orders for the counter, on any laptop, tablet or phone on the cafe wifi
 - **Online orders** say whether they've been marked ready in Square Order Manager. That step is still what texts the customer, and an order marked ready there stays on the front page until it's handed off.
 - **An online order of only drinks or chips** shows on the front page only, as Ready: there's nothing for the kitchen to make. A counter sale of only those doesn't show anywhere, because it's handed over as it's rung up.
 - **Handed off** clears an order from the front page only; it never touches the kitchen board. **Undo** in the top bar lists today's hand-offs; click one to bring it back.
-- **Today**, under the orders: how many orders so far, breakfast vs lunch (before or after 11am, by when it was rung up or due), counter vs online, average and longest time in the kitchen (counter orders, rung up to Done), and the most ordered items. Canceled orders and unpaid open checks aren't counted.
+- **Today**, under the orders: how many orders so far, breakfast vs lunch (before or after 11am, by when it was rung up or due), counter vs online, average and longest time in the kitchen (counter orders, rung up to Done; if a ticket is undone and Done again, the time it sat cleared doesn't count), and the most ordered items. Canceled orders and unpaid open checks aren't counted.
 
 Only the front page, its Handed off and Undo, and the PIN-protected Manage actions answer other devices. The kitchen board, `/check`, Done, the power menu and updates answer the kitchen PC alone.
 
