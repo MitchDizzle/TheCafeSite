@@ -84,6 +84,9 @@ add("Toast, Biscuit or English Muffin", BS,
 for n, label in [("Bacon (4 slices)", "Bacon (4 slices)"), ("Sausage Patty", "Sausage Patty"),
                  ("Fried Potatoes", "Fried Potatoes"), ("Side of Gravy", "Side of Gravy")]:
     one(label, BS, item("breakfast_sides", n)["price"])
+eg = item("breakfast_sides", "1 / 2 / 3 Eggs")
+add("Side of Eggs", BS, [(f"{n} Egg{'s' if n > 1 else ''}", p) for n, p in zip((1, 2, 3), eg["prices"])],
+    "Cooked your way.", skip_detail=False)
 
 # ── Wraps (flat price from the category sizing line) ───────
 W = "Wraps"

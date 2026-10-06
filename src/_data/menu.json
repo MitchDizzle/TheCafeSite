@@ -69,7 +69,8 @@
         { "name": "Bacon (4 slices)", "price": 4.50 },
         { "name": "Sausage Patty", "price": 3.00 },
         { "name": "Fried Potatoes", "diet": ["V", "GF"], "price": 3.00 },
-        { "name": "Side of Gravy", "price": 2.00 }
+        { "name": "Side of Gravy", "price": 2.00 },
+        { "name": "1 / 2 / 3 Eggs", "_note": "Added 2026-10-06: $1.75 an egg. No description on purpose: the tri-fold's breakfast flap had one row left, and a description line would put the dietary key inside a desktop printer's unprintable margin. `prices` follows the sizes in the name, like the omelet. In Square it is one item, Side of Eggs, with 1 Egg / 2 Eggs / 3 Eggs sizes and the Eggs style list.", "diet": ["V", "GF"], "prices": [1.75, 3.50, 5.25] }
       ]
     },
     {
