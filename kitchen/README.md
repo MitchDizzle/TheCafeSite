@@ -114,7 +114,7 @@ Settings in `config.json`, both optional:
 |---|---|---|
 | `frontOnNetwork` | `true` | `false` keeps everything on the kitchen PC; `/front` then works only there. |
 | `frontKey` | none | If set, other devices must open `/front?key=<the key>`. Bookmark the full address. Worth setting if customers ever share the staff wifi. |
-| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN). With this PIN it can set **Today's specials** (the prices of the items in `dailyItems`, saved straight into Square; see below), change **What the kitchen skips** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN). With this PIN it can change the **Desserts** (see below), set **Today's specials** (the prices of the items in `dailyItems`, saved straight into Square; see below), change **What the kitchen skips** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
 
 ## When an order doesn't show up
 
@@ -155,3 +155,13 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 Sets the day's prices in Square from the front page, with the PIN: the items named in `dailyItems` in `config.json` (default: Lunch Special, Soup of the Day, Salad of the Day; names exactly as in Square). Each item has **What it is today** and a price box per size; leave a price blank to have the till ask for it. What it is today is added to the item's size names in Square, so it prints on the kitchen ticket and the receipt after the item name: Lunch Special's one size becomes "BBQ Ribs", and the soup's sizes become "Cup · Chicken Dumpling" and "Bowl · Chicken Dumpling". Clearing the box puts the plain names back. The item's own name never changes. On a day nothing changes, nobody needs to open it.
 
 This is the **only thing the board writes to Square**. It changes nothing but those items' prices and size names, reads each item fresh before saving, and if someone changed the item in the Dashboard a moment before, Square refuses the save and the front is asked to open it again, so nothing is overwritten. A mistyped price saves nothing at all.
+
+## Desserts (Manage on the front page)
+
+For the items in `dessertItems` in `config.json` (default: Cheesecake, Dessert Bar; names exactly as in Square): the item's photo and the options in its modifier lists, such as the cheesecake flavors. Works on a phone on the cafe wifi.
+
+- **Untick an option** to hide it from online ordering (Square's "hidden online"). It stays in Square, and ticking it again brings it back. Square doesn't let other programs mark something sold out at the till; do that on the iPad.
+- **Add** puts a new option on the list, at no extra charge; it's created in Square when you press Save.
+- **Change photo** opens the phone's camera or photo library. The phone shrinks the picture and re-draws it before uploading, which also strips the GPS location phones save in photos. It becomes the item's main picture in Square, the one online ordering shows.
+
+Like Today's specials, every save reads fresh from Square first, so a change made in the Dashboard meanwhile is never overwritten.

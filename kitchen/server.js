@@ -71,11 +71,14 @@ const DEFAULTS = {
   // Items whose price (and, for a one-size item, what it is today) the front
   // can set each morning: Manage -> Today's specials. Names as in Square.
   dailyItems: ["Lunch Special", "Soup of the Day", "Salad of the Day"],
+  // Items whose photo and options (flavors) the front can change: Manage ->
+  // Desserts. Names as in Square.
+  dessertItems: ["Cheesecake", "Dessert Bar"],
 };
 
 // Settings that are the cafe's own and have no meaningful default: never
 // flagged as "differs from the default".
-const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems"]);
+const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems"]);
 
 // What's worth knowing about config.json, in plain words. Written to the
 // program window at startup and shown on /check.
@@ -438,6 +441,135 @@ async function saveDaily(changes) {
     await loadCatalog();
   }
   return done;
+}
+
+// ---------------------------------------------------------------- desserts
+
+// Manage -> Desserts: for each item in cfg.dessertItems, its photo and the
+// options in its modifier lists (cheesecake flavors). The front can:
+//   - turn an option off or on. Off is Square's hidden_online: gone from
+//     online ordering, kept in Square, one tap to bring back. Square lets
+//     only the iPad itself mark an option sold out at the till.
+//   - add an option (no price: the flavors cost the same).
+//   - replace the item's photo (what online ordering shows).
+// Each save reads the list fresh and writes it back with Square's version,
+// like Today's specials.
+const mockImages = new Map(); // test mode: item id -> data URL
+
+async function readObject(id) {
+  if (MOCK) return structuredClone(mockItems.get(id));
+  return (await square("GET", `/catalog/object/${encodeURIComponent(id)}`)).object;
+}
+
+async function writeObject(object) {
+  if (MOCK) return writeItem(object);
+  await square("POST", "/catalog/object", { idempotency_key: `kitchen-${object.id}-${Date.now()}`, object });
+}
+
+async function dessertItems() {
+  await loadCatalog();
+  const out = [];
+  for (const name of cfg.dessertItems) {
+    const id = catalog.itemIds.get(name.trim().toLowerCase());
+    if (!id) { out.push({ name, missing: true }); continue; }
+    const item = await readObject(id);
+    let photo = null;
+    const imageId = (item.item_data.image_ids || [])[0];
+    if (MOCK) photo = mockImages.get(id) || null;
+    else if (imageId) {
+      try { photo = (await readObject(imageId)).image_data.url || null; } catch { photo = null; }
+    }
+    const lists = [];
+    for (const info of item.item_data.modifier_list_info || []) {
+      if (info.enabled === false) continue;
+      const list = await readObject(info.modifier_list_id);
+      const d = list.modifier_list_data;
+      lists.push({
+        id: list.id,
+        name: d.name,
+        options: [...(d.modifiers || [])]
+          .sort((a, b) => (a.modifier_data.ordinal ?? 0) - (b.modifier_data.ordinal ?? 0))
+          .map((m) => ({ id: m.id, name: m.modifier_data.name, off: !!m.modifier_data.hidden_online })),
+      });
+    }
+    out.push({ id, name: item.item_data.name, photo, lists });
+  }
+  return out;
+}
+
+// The lists the dessert items use: the only lists this may write.
+async function dessertListIds() {
+  const ids = new Set();
+  for (const name of cfg.dessertItems) {
+    const id = catalog.itemIds.get(name.trim().toLowerCase());
+    if (!id) continue;
+    for (const info of (await readObject(id)).item_data.modifier_list_info || []) ids.add(info.modifier_list_id);
+  }
+  return ids;
+}
+
+// changes: [{ id: listId, options: [{ id, off }], add: ["Turtle"] }]
+async function saveDesserts(changes) {
+  const allowed = await dessertListIds();
+  const done = [];
+  for (const ch of changes || []) {
+    if (!allowed.has(ch.id)) throw Object.assign(new Error("That list isn't on a dessert item."), { plain: true });
+    const list = await readObject(ch.id);
+    const d = list.modifier_list_data;
+    const mods = (d.modifiers ||= []);
+    let changed = false;
+    for (const oc of ch.options || []) {
+      const m = mods.find((x) => x.id === oc.id);
+      if (!m) throw Object.assign(new Error(`${d.name} changed in Square; open Desserts again.`), { plain: true });
+      if (!!m.modifier_data.hidden_online !== !!oc.off) { m.modifier_data.hidden_online = !!oc.off; changed = true; }
+    }
+    const names = new Set(mods.map((m) => m.modifier_data.name.trim().toLowerCase()));
+    let next = Math.max(-1, ...mods.map((m) => m.modifier_data.ordinal ?? 0)) + 1;
+    for (const raw of ch.add || []) {
+      const name = String(raw).replace(/\s+/g, " ").trim().slice(0, 60);
+      if (!name || names.has(name.toLowerCase())) continue;
+      names.add(name.toLowerCase());
+      const where = { present_at_all_locations: list.present_at_all_locations, present_at_location_ids: list.present_at_location_ids };
+      mods.push({ type: "MODIFIER", id: `#new-${next}`, ...where, modifier_data: { name, ordinal: next++, modifier_list_id: list.id } });
+      changed = true;
+    }
+    if (changed) {
+      await writeObject(list);
+      done.push(d.name);
+    }
+  }
+  if (done.length) console.log(`Desserts changed from the front page (${new Date().toLocaleTimeString()}): ${done.join(", ")}.`);
+  return done;
+}
+
+// A new photo for a dessert item, as the online menu's picture. The phone
+// has already shrunk it and re-drawn it, which also drops its GPS data.
+async function saveDessertPhoto(itemId, dataUrl) {
+  const allowed = cfg.dessertItems.map((n) => catalog.itemIds.get(n.trim().toLowerCase()));
+  if (!allowed.includes(itemId)) throw Object.assign(new Error("That item isn't on the Desserts list."), { plain: true });
+  const m = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
+  if (!m) throw Object.assign(new Error("That photo didn't come through. Try again."), { plain: true });
+  const bytes = Buffer.from(m[1], "base64");
+  if (bytes.length > 5 * 1024 * 1024) throw Object.assign(new Error("That photo is too big."), { plain: true });
+  if (MOCK) { mockImages.set(itemId, dataUrl); return; }
+  const item = await readObject(itemId);
+  const form = new FormData();
+  form.append("request", new Blob([JSON.stringify({
+    idempotency_key: `kitchen-photo-${itemId}-${Date.now()}`,
+    object_id: itemId,
+    is_primary: true,
+    image: { type: "IMAGE", id: "#photo", image_data: { name: `${item.item_data.name} ${new Date().toISOString().slice(0, 10)}` } },
+  })], { type: "application/json" }), "request.json");
+  form.append("image_file", new Blob([bytes], { type: "image/jpeg" }), "photo.jpg");
+  const res = await fetch(`${API}/catalog/images`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${cfg.accessToken}`, "Square-Version": SQUARE_VERSION },
+    body: form,
+    signal: AbortSignal.timeout(30000),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`Square ${res.status}: ${(json.errors || []).map((e) => e.detail || e.code).join("; ") || res.statusText}`);
+  console.log(`Dessert photo changed from the front page (${new Date().toLocaleTimeString()}): ${item.item_data.name}.`);
 }
 
 // The categories a line item's item is in: by its catalog id, or by name
@@ -957,6 +1089,15 @@ function mockCatalog() {
     { type: "ITEM", id: "ITEM-Soup of the Day", version: 1, item_data: { name: "Soup of the Day", categories: [{ id: "CAT-Soups & Salads" }], variations: [v("VAR-SC", "Cup", 500), v("VAR-SB", "Bowl", 700)] } },
   ];
   out.push({ type: "CATEGORY", id: "CAT-Specials", category_data: { name: "Lunch Specials" } });
+  const flavor = (id, name, ordinal) => ({ type: "MODIFIER", id, modifier_data: { name, ordinal, modifier_list_id: "LIST-Flavors" } });
+  daily.push(
+    { type: "ITEM", id: "ITEM-Cheesecake", version: 1, item_data: { name: "Cheesecake", categories: [{ id: "CAT-Chips & Sweets" }],
+      variations: [v("VAR-CC", "Regular", 350)], modifier_list_info: [{ modifier_list_id: "LIST-Flavors", enabled: true }] } },
+    { type: "ITEM", id: "ITEM-Dessert Bar", version: 1, item_data: { name: "Dessert Bar", categories: [{ id: "CAT-Chips & Sweets" }],
+      variations: [v("VAR-DB", "Regular", 150)] } },
+    { type: "MODIFIER_LIST", id: "LIST-Flavors", version: 1, modifier_list_data: { name: "Cheesecake Flavors", selection_type: "MULTIPLE",
+      modifiers: [flavor("MOD-Plain", "Plain", 0), flavor("MOD-Caramel", "Caramel", 1), flavor("MOD-Pumpkin", "Pumpkin", 2)] } },
+  );
   for (const item of daily) {
     if (!mockItems.has(item.id)) mockItems.set(item.id, item);
     const i = out.findIndex((o) => o.id === item.id);
@@ -1100,10 +1241,16 @@ function send(res, status, body, type = "application/json; charset=utf-8") {
   res.end(typeof body === "string" ? body : JSON.stringify(body));
 }
 
+// Up to 8 MB: a dessert photo arrives as base64 in JSON (the phone shrinks
+// it to about 1600px first, so a few hundred KB is usual).
+const MAX_BODY = 8 * 1024 * 1024;
 function readBody(req) {
   return new Promise((resolve) => {
     let data = "";
-    req.on("data", (c) => (data += c));
+    req.on("data", (c) => {
+      data += c;
+      if (data.length > MAX_BODY) { data = ""; req.destroy(); }
+    });
     req.on("end", () => {
       try {
         resolve(JSON.parse(data || "{}"));
@@ -1205,7 +1352,7 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/front-unlock", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset"]);
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
 let pinFails = [];
@@ -1286,6 +1433,33 @@ const server = http.createServer(async (req, res) => {
     saveState();
     console.log(`Front page: unpaid order ...${id.slice(-4)} canceled (${new Date().toLocaleTimeString()}).`);
     return send(res, 200, frontSnapshot());
+  }
+  // Desserts, behind the PIN: read (photos and options), save options, and
+  // replace a photo.
+  if (req.method === "POST" && /^\/api\/front-dessert(s|s-save|-photo)$/.test(url.pathname)) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    try {
+      if (url.pathname === "/api/front-desserts") return send(res, 200, { ok: true, items: await dessertItems() });
+      if (url.pathname === "/api/front-dessert-photo") {
+        await loadCatalog();
+        await saveDessertPhoto(body.itemId, body.photo);
+        return send(res, 200, { ok: true, message: "Photo saved. Online ordering shows it within a few minutes." });
+      }
+      await loadCatalog();
+      const saved = await saveDesserts(body.lists);
+      return send(res, 200, { ok: true, message: saved.length
+        ? `Saved in Square: ${saved.join(", ")}. Online ordering updates within a minute or so.`
+        : "Nothing changed." });
+    } catch (err) {
+      console.error(`Desserts: ${err.message}`);
+      if (err.plain) return send(res, 200, { ok: false, message: err.message });
+      const conflict = /409|VERSION_MISMATCH|version/i.test(err.message);
+      return send(res, 200, { ok: false, message: conflict
+        ? "Someone changed that in Square a moment ago. Open Desserts again."
+        : `Square didn't take it: ${err.message}` });
+    }
   }
   // Manage's first screen: is the PIN right? (Every action checks it again;
   // this only lets the front say "Wrong PIN" before showing the menu.)
