@@ -47,6 +47,8 @@
   },
 
   "_comment_construction": "Set to false to remove the under-construction banner from every page at once.",
+  "_comment_survey": "Where /survey sends its answers (Formspree, by email). It shares the newsletter form on /contact until a form of its own is made in Formspree: swap the URL here and every survey link follows. Survey emails carry the subject 'Customer survey'. Mind Formspree's monthly submission limit on the free plan, which is shared across every form on the account.",
+  "survey": { "formUrl": "https://formspree.io/f/mdarqnql" },
   "underConstruction": false,
 
   "_comment_phoneOrders": "false while the kitchen can't take food orders by phone (client, 2026-10-02: not for the first few weeks after opening, for capacity). Every 'call ahead' line on the site and in the generated post captions is conditional on this, so flipping it to true turns them all back on. Catering inquiries by phone are separate and always shown.",

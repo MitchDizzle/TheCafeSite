@@ -1,0 +1,97 @@
+{#- ===========================================================
+    Menu handout: one letter sheet, both sides. Shared by
+    menu-handout.njk (colour) and menu-handout-bw.njk (`bw: true`).
+
+    The menu and nothing else: no catering block, no phone or address, no
+    QR codes. It's for passing around the line and for clear sign holders
+    on the tables, where the menu is the only job. The tri-fold carries the
+    rest.
+
+    Same markup as the two large-print pieces
+    (partials/menu-large-print-parts.njk) and the same stylesheet, sized
+    down by .lp-stack--handout in menu-large-print.css: descriptions about
+    9pt, between the tri-fold's 7.5pt and the large print's 10pt.
+
+    COLUMN ASSIGNMENT is by hand. The sheet does not scroll: a column that
+    overruns is clipped, not continued. Proof the PNG after a menu change.
+    =========================================================== -#}
+{%- set breakfast = (menu.categories | where("id", "breakfast"))[0] %}
+{%- set breakfastSides = (menu.categories | where("id", "breakfast_sides"))[0] %}
+{%- set wraps = (menu.categories | where("id", "wraps"))[0] %}
+{%- set sandwiches = (menu.categories | where("id", "sandwiches"))[0] %}
+{%- set hotSandwiches = (menu.categories | where("id", "hot_sandwiches"))[0] %}
+{%- set buildSandwich = (menu.categories | where("id", "build_sandwich"))[0] %}
+{%- set salads = (menu.categories | where("id", "salads"))[0] %}
+{%- set soup = (menu.categories | where("id", "soup"))[0] %}
+{%- set kids = (menu.categories | where("id", "kids"))[0] %}
+{%- set sides = (menu.categories | where("id", "sides"))[0] %}
+{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
+{%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
+
+{%- from "partials/menu-large-print-parts.njk" import category, dietLegend %}
+
+<div class="lp-stack lp-stack--handout{% if bw %} lp-stack--bw{% endif %}{% if not menu.dietsConfirmed %} diets-unconfirmed{% endif %}">
+
+    {%- if not menu.dietsConfirmed %}
+    <p class="fold-legend fold-legend--review fold-legend--warn">Dietary marks are drafted from the ingredient lists and are <strong>not kitchen-confirmed</strong> &mdash; they are left off the printed PDF until they are. Screen and PNG proof only.</p>
+    {%- endif %}
+
+    <p class="fold-legend">Front &mdash; breakfast, drinks, wraps &amp; sandwiches</p>
+
+    <div class="canvas lp-canvas">
+        <header class="lp-head">
+            {%- if bw %}
+            <h1 class="p-display lp-type-title">{{ site.name }}</h1>
+            {%- else %}
+            <div class="wordmark wordmark--ink lp-wordmark">
+                {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+            </div>
+            {%- endif %}
+            <div class="lp-head-meta">
+                <p class="p-display-italic lp-tagline ink-teal">Breakfast &amp; Lunch</p>
+                <p class="p-body lp-head-line">{{ site.opening.hoursDays }} &middot; {{ site.opening.opens.time }} {{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }} {{ site.opening.closes.meridiem }}</p>
+            </div>
+        </header>
+
+        <div class="lp-cols">
+            <div class="lp-col">
+                {{ category(breakfast, menu) }}
+                {{ category(breakfastSides, menu) }}
+                {{ category(drinks, menu) }}
+            </div>
+            <div class="lp-col">
+                {{ category(wraps, menu) }}
+                {{ category(sandwiches, menu) }}
+                {{ category(buildSandwich, menu) }}
+            </div>
+        </div>
+    </div>
+
+    <p class="fold-legend">Back &mdash; hot sandwiches, soup, sides, salads, kids &amp; desserts</p>
+
+    <div class="canvas lp-canvas">
+        <header class="lp-head lp-head--run">
+            <p class="p-display lp-runhead ink-teal">{{ site.name }} &middot; Menu</p>
+            <p class="p-body lp-head-line ink-teal">Breakfast until 11am &middot; soup from 11am</p>
+        </header>
+
+        <div class="lp-cols">
+            <div class="lp-col">
+                {{ category(hotSandwiches, menu) }}
+                {{ category(soup, menu) }}
+                {{ category(sides, menu) }}
+            </div>
+            <div class="lp-col">
+                {{ category(salads, menu) }}
+                {{ category(kids, menu) }}
+                {#- Desserts (2026-10-05) here, not after the sides: the left
+                    column is full and this one had room under the kids. -#}
+                {{ category(desserts, menu) }}
+
+                <div class="panel-spacer"></div>
+                {{ dietLegend(menu) }}
+            </div>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,41 @@
+/* ============================================================
+   Receipt logos for Square — three sizes Square asks for.
+   Pieces: src/studio/receipt-logo-full.njk (1280 × 648),
+           receipt-logo-small.njk (400 × 400),
+           receipt-logo-print.njk (800 × 400, black and white).
+   ============================================================ */
+
+.rlogo {
+    display: grid;
+    place-items: center;
+}
+
+/* Digital: the site hero's teal ground, cream wordmark. */
+.rlogo--full,
+.rlogo--small {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+}
+
+.rlogo--full .rlogo-mark {
+    --mark-w: 860px;
+}
+
+.rlogo--small .rlogo-mark {
+    --mark-w: 660px;
+}
+
+/* Printed: black on solid white, every pixel one or the other. */
+.rlogo--print {
+    background: #fff;
+}
+
+.rlogo--print .rlogo-mark {
+    --mark-w: 700px;
+    --mark-shadow-color: transparent;
+}
+
+.rlogo--print .rlogo-mark svg {
+    fill: #000;
+    filter: none;
+    shape-rendering: crispEdges;
+}

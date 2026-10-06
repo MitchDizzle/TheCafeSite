@@ -1,0 +1,89 @@
+---
+layout: layouts/page.njk
+title: "How Did We Do? | The Café"
+description: "Tell The Café in Leavenworth, KS how we did: a two-minute survey about the food, the service and what to add to the menu."
+pageCss: "/assets/css/survey.css"
+noindex: true
+---
+<!-- The customer survey, reached from the QR on the counter sign
+     (studio/sign-survey) and the paper card. Unlisted: off the nav and the
+     sitemap, noindex, because it's for people who were just here.
+
+     The questions live in src/_data/survey.json, shared with the printed
+     card, so the paper and the page always ask the same thing. Answers go
+     by email through Formspree (site.survey.formUrl); every question is
+     optional, so a half-finished survey still sends what it has. Name and
+     contact are asked for only if the customer wants a reply. -->
+
+        <section class="section" aria-labelledby="survey-heading">
+            <div class="container survey">
+                <h1 id="survey-heading">How did we do?</h1>
+                <p class="survey-intro">
+                    Two minutes, and every question is optional. We read every one.
+                </p>
+
+                <form action="{{ site.survey.formUrl }}" method="POST" novalidate
+                      data-success="Thank you! We read every survey, and yours helps us get better.">
+
+                    <!-- honeypot: humans never see or fill this -->
+                    <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
+                           style="position:absolute; left:-9999px;" aria-hidden="true">
+                    <input type="hidden" name="_subject" value="Customer survey">
+
+                    <div class="form-grid">
+
+                        {%- for q in survey.ratings %}
+                        <fieldset class="rate">
+                            <legend>{{ q.label }}</legend>
+                            <div class="pills">
+                                {%- for opt in survey.scale %}
+                                <label class="pill"><input type="radio" name="{{ q.name }}" value="{{ opt }}"><span>{{ opt }}</span></label>
+                                {%- endfor %}
+                            </div>
+                        </fieldset>
+                        {%- endfor %}
+
+                        {%- for q in survey.choices %}
+                        <fieldset class="rate">
+                            <legend>{{ q.label }}</legend>
+                            <div class="pills pills--wrap">
+                                {%- for opt in q.options %}
+                                <label class="pill"><input type="radio" name="{{ q.name }}" value="{{ opt }}"><span>{{ opt }}</span></label>
+                                {%- endfor %}
+                            </div>
+                        </fieldset>
+                        {%- endfor %}
+
+                        {%- for q in survey.open %}
+                        <div class="form-group">
+                            <label for="{{ q.name }}">{{ q.label }}</label>
+                            <textarea id="{{ q.name }}" name="{{ q.name }}" rows="3"></textarea>
+                        </div>
+                        {%- endfor %}
+
+                        <fieldset class="reply">
+                            <legend>Want us to get back to you? <span class="optional">(optional)</span></legend>
+                            <div class="reply-fields">
+                                <div class="form-group">
+                                    <label for="name">Name</label>
+                                    <input type="text" id="name" name="name" autocomplete="name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact">Phone or email</label>
+                                    <input type="text" id="contact" name="contact" autocomplete="email">
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <div class="form-submit">
+                            <button type="submit" class="btn btn-primary">Send</button>
+                            <p class="form-privacy">
+                                We only use your answers to improve the cafe, and your contact details only to reply.
+                                See our <a href="/privacy">privacy policy</a>.
+                            </p>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </section>

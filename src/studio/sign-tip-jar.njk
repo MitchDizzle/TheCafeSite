@@ -1,0 +1,32 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Tip jar label"
+canvasW: "11in"
+canvasH: "8.5in"
+pageSize: "11in 8.5in"
+pageCss: "/assets/css/sign.css"
+bw: true
+tags: studio
+studioTitle: "Tip jar label"
+studioCategory: "Signs"
+studioSize: "11 × 8.5 in landscape · two 10 × 3.6 in labels, cut apart"
+studioNote: "For the pickle jar. Two labels per sheet (one spare): cut on the dashed lines and tape it across the front of the jar rather than all the way round. A flat 10in strip curves onto a gallon jar and still reads face-on. Black ink only, logo like the other signs. Print at 100%."
+studioW: 1056
+studioH: 816
+studioOrder: 37
+---
+{#- A label, not a wrap. A gallon pickle jar is about 20in round, more than
+    a letter sheet, and a wrap's ends meet behind the jar where nobody reads
+    them. A 10in strip covers the half that faces the counter. Everything is
+    centred and kept off the ends, which curve away from view. -#}
+<div class="canvas sign sign--bw tipjar-sheet">
+    {%- for n in [1, 2] %}
+    <div class="tipjar">
+        <div class="wordmark wordmark--ink tipjar-mark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-display tipjar-word">Tips</p>
+        <p class="p-display-italic tipjar-thanks">Thank you!</p>
+    </div>
+    {%- endfor %}
+</div>

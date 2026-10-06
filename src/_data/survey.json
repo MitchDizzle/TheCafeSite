@@ -1,0 +1,23 @@
+{
+  "_note": "The customer survey's questions, shared by the /survey page and the printed survey card (src/studio/survey-card.njk), so the two always ask the same thing. Keep it short: every question added is a customer who stops halfway. `ratings` are tap-one-of-four on the page and circle-one on paper; `choices` are pick-one; `open` are free text. `name` is the field name in the email Formspree sends.",
+  "scale": ["Great", "Good", "Okay", "Poor"],
+  "ratings": [
+    { "name": "food", "label": "The food" },
+    { "name": "service", "label": "The service" },
+    { "name": "wait", "label": "How long it took" },
+    { "name": "value", "label": "Value for the price" },
+    { "name": "place", "label": "Cleanliness & seating" }
+  ],
+  "choices": [
+    {
+      "name": "heard",
+      "label": "How did you hear about us?",
+      "options": ["Been coming for years", "Friend or family", "Facebook", "Google", "Drove by", "Other"]
+    }
+  ],
+  "open": [
+    { "name": "add_to_menu", "label": "What should we add to the menu?" },
+    { "name": "come_more", "label": "What would bring you in more often?" },
+    { "name": "do_better", "label": "Anything we could do better?" }
+  ]
+}

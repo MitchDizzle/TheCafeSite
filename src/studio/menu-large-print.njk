@@ -58,6 +58,7 @@ studioOrder: 21
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
 {%- set kids = (menu.categories | where("id", "kids"))[0] %}
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
+{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
 
 {%- from "partials/menu-large-print-parts.njk" import category, dietLegend %}
@@ -139,6 +140,7 @@ studioOrder: 21
             <div class="lp-col">
                 {{ category(kids, menu) }}
                 {{ category(sides, menu) }}
+                {{ category(desserts, menu) }}
             </div>
             <div class="lp-col">
                 {#- Build Your Own is here, not under the cold sandwiches on

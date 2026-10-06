@@ -25,6 +25,23 @@ html {
     font-size: min(100vh / 54, 100vw / 96);
 }
 
+/* One meal at a time (see the template): each board's own size. Same rule,
+   smaller divisors = bigger everything. Breakfast is a quarter of the menu,
+   so it can be set far larger; lunch gains a little from losing breakfast.
+   Re-proof at 1920x1080 (?meal=breakfast, ?meal=lunch) after a change. */
+html.meal-breakfast {
+    font-size: min(100vh / 36, 100vw / 64);
+}
+
+/* At breakfast size the whole tagline wraps under the wordmark. */
+html.meal-breakfast .board-tagline-more {
+    display: none;
+}
+
+html.meal-lunch {
+    font-size: min(100vh / 50, 100vw / 89);
+}
+
 /* No scrollbars, ever. The board either fits or it is wrong — a TV has no
    scroll wheel and nobody is going to notice a cut-off Drinks column. */
 .board-body {
@@ -117,6 +134,20 @@ html {
        not type, is what gives. The board is now AT CAPACITY: the next item
        added needs a fifth column or something off, not another squeeze. */
     padding: 0.7rem 0 0.6rem;
+}
+
+/* The grid for the meal not being served. (display: grid above would
+   otherwise beat the hidden attribute.) */
+.board-grid[hidden] {
+    display: none;
+}
+
+.board-grid--breakfast {
+    grid-template-columns: 1fr 1.18fr 0.98fr;
+}
+
+.board-grid--lunch {
+    grid-template-columns: 1fr 1.12fr 1.06fr 0.94fr;
 }
 
 .board-col {

@@ -65,7 +65,10 @@ i = item("breakfast", "Big Breakfast")
 # are cooked any style but poached (the Eggs modifier, client 2026-09-30), the
 # meat is the Breakfast Meat modifier and the toast defaults to white. Square
 # only — the printed menus keep "2 eggs, potatoes, meat & toast".
-one("Big Breakfast", B, i["price"],
+# The meat is priced as an add-on in Square (client 2026-10-06): the item is
+# `squareBase` ($8), the Meat list adds $2 for bacon, sausage or ham and
+# nothing for No Meat. The menus still say $10, the price with meat.
+one("Big Breakfast", B, i.get("squareBase", i["price"]),
     "2 eggs your way, potatoes, choice of bacon, sausage or ham, and white toast. Served until 11am.",
     skip_detail=False)
 one("Burrito", B, item("breakfast", "Burrito")["price"],
@@ -75,7 +78,8 @@ om = item("breakfast", "2 / 3 Egg Omelet")
 add("Omelet", B, [("2 Egg", om["prices"][0]), ("3 Egg", om["prices"][1])],
     "Build your own: bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 11am.")
 i = item("breakfast", "Breakfast Sandwich")
-one("Breakfast Sandwich", B, i["price"], i["description"] + " Served until 11am.", skip_detail=False)
+# Meat is a +$1 add-on in Square (client 2026-10-06), as on the Big Breakfast.
+one("Breakfast Sandwich", B, i.get("squareBase", i["price"]), i["description"] + " Served until 11am.", skip_detail=False)
 
 # ── Breakfast sides ────────────────────────────────────────
 BS = "Breakfast Sides"
@@ -84,6 +88,9 @@ add("Toast, Biscuit or English Muffin", BS,
 for n, label in [("Bacon (4 slices)", "Bacon (4 slices)"), ("Sausage Patty", "Sausage Patty"),
                  ("Fried Potatoes", "Fried Potatoes"), ("Side of Gravy", "Side of Gravy")]:
     one(label, BS, item("breakfast_sides", n)["price"])
+eg = item("breakfast_sides", "1 / 2 / 3 Eggs")
+add("Side of Eggs", BS, [(f"{n} Egg{'s' if n > 1 else ''}", p) for n, p in zip((1, 2, 3), eg["prices"])],
+    "Cooked your way.", skip_detail=False)
 
 # ── Wraps (flat price from the category sizing line) ───────
 W = "Wraps"
@@ -171,8 +178,16 @@ for i in cats["drinks"]["items"]:
         # variation only says which cup was sold.
         add("Iced Tea / Fountain Drink", D, [("Iced Tea", i["price"]), ("Fountain Drink", i["price"])],
             "Fountain drinks are self-serve Pepsi products.")
+    elif i["name"] == "Bottle Juice":
+        # One item; the flavour is the Juice modifier list in Square (made by
+        # hand, see square/README.md), as the till was set up on 2026-10-05.
+        one("Bottle Juice", D, i["price"], i.get("description", "") + ".")
     else:
         one(i["name"], D, i["price"])
+
+# ── Desserts (sold all day) ────────────────────────────────
+for i in cats["desserts"]["items"]:
+    one(i["name"], "Desserts", i["price"], (i["description"] + ".") if i.get("description") else "")
 
 # ── Write: template's five header lines verbatim, then rows ─
 raw = open(TEMPLATE, encoding="utf-8", newline="").read()

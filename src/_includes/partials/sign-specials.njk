@@ -1,0 +1,46 @@
+{#- This week's specials counter sign, shared by sign-specials.njk (colour)
+    and sign-specials-bw.njk (`bw: true`). Read from src/_data/specials.json
+    like the /menu box and the Facebook post: replace the week there, build,
+    print. Day names and dates are computed from `date`, never typed.
+
+    No price on the plate, on purpose: specials.json carries none (they live
+    in Square, and a printed price could disagree with the till). The soup's
+    Cup / Bowl prices DO print, because they come from menu.json. -#}
+{%- set week = specials.week %}
+{%- set soup = (menu.categories | where("id", "soup"))[0] %}
+{%- set first = week[0].date | dayDate("monthDay") %}
+{%- set last = week[week.length - 1].date | dayDate("monthDay") %}
+{%- if first.split(" ")[0] == last.split(" ")[0] %}
+{%- set range = first + " – " + last.split(" ")[1] %}
+{%- else %}
+{%- set range = first + " – " + last %}
+{%- endif %}
+<div class="canvas sign{% if bw %} sign--bw{% endif %}">
+    {% include "partials/sign-mast.njk" %}
+
+    <div class="sign-heading">
+        <h2 class="p-display sign-heading-title ink-teal">This Week&rsquo;s Specials</h2>
+        <p class="p-label sign-heading-sub ink-accent">{{ range }}</p>
+    </div>
+
+    <ul class="sign-days">
+        {%- for d in week %}
+        <li class="sign-day">
+            <p class="p-display sign-day-name ink-teal">{{ d.date | dayDate("weekday") }}<span class="p-body sign-day-date">{{ d.date | dayDate("monthDay") }}</span></p>
+            <div>
+                <p class="sign-day-special">{{ d.special }}</p>
+                {%- if d.sides and d.sides.length %}
+                {#- "A and B", "A, B and C": an "&" join turned "Mashed Potatoes & Gravy" plus a second side into a chain of ampersands. -#}
+                <p class="sign-day-sides">with {% for side in d.sides %}{{ side }}{% if loop.revindex == 2 %} and {% elif not loop.last %}, {% endif %}{% endfor %}</p>
+                {%- endif %}
+                {%- if d.soup %}
+                <p class="sign-day-soup"><b class="ink-accent">Soup</b>&ensp;{{ d.soup }}</p>
+                {%- endif %}
+            </div>
+        </li>
+        {%- endfor %}
+    </ul>
+
+    <div class="sign-spacer"></div>
+    <p class="p-body sign-foot">Soup of the day from 11am{% if soup and soup.items %} &middot; {% for i in soup.items %}{{ i.name }} {{ i.price | money }}{% if not loop.last %} &middot; {% endif %}{% endfor %}{% endif %}</p>
+</div>

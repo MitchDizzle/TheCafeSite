@@ -1,5 +1,5 @@
 {
-  "_updated": "2026-09-29",
+  "_updated": "2026-10-05",
   "_note": "Items with 'verify: true' had handwriting that was difficult to read precisely — confirm before publishing.",
   "_note_no_fryer": "There is no fryer. The kitchen is deli-style and nothing on this menu is deep-fried: the Fried Potatoes are pan-fried on the flat-top, the kids' tater tots and chicken strips come off the flat-top or out of the oven, and the chips come out of a bag. Do not add a deep-fried item without settling that first.",
   "_note_serving": "`serving` is an optional per-category time window ('Serving until 11am'). Breakfast stops at 11 and soup starts at 11 so the kitchen has time to change over; every menu template prints it next to the category name.",
@@ -39,6 +39,8 @@
           "name": "Big Breakfast",
           "description": "2 eggs, potatoes, meat & toast",
           "dietOnRequest": ["GF"],
+          "_note_price": "The menus advertise the price WITH meat, $10. In Square (client 2026-10-06) the item is `squareBase` and the Meat list adds $2 for bacon, sausage or ham, nothing for No Meat, so a meatless one rings up $2 less. Online ordering therefore shows $8 plus the meat choice. Change both together.",
+          "squareBase": 8.00,
           "price": 10.00
         },
         {
@@ -57,6 +59,8 @@
           "name": "Breakfast Sandwich",
           "description": "One egg, cheese & choice of bacon, sausage or ham, on a biscuit, croissant or English muffin.",
           "dietOnRequest": ["V"],
+          "_note_price": "The menus advertise the price WITH meat, $5.50. In Square (client 2026-10-06) the item is `squareBase` and its Meat list adds $1 for bacon, sausage or ham, nothing for No Meat. Change both together.",
+          "squareBase": 4.50,
           "price": 5.50
         }
       ]
@@ -69,7 +73,8 @@
         { "name": "Bacon (4 slices)", "price": 4.50 },
         { "name": "Sausage Patty", "price": 3.00 },
         { "name": "Fried Potatoes", "diet": ["V", "GF"], "price": 3.00 },
-        { "name": "Side of Gravy", "price": 2.00 }
+        { "name": "Side of Gravy", "price": 2.00 },
+        { "name": "1 / 2 / 3 Eggs", "_note": "Added 2026-10-06: $1.75 an egg. No description on purpose: the tri-fold's breakfast flap had one row left, and a description line would put the dietary key inside a desktop printer's unprintable margin. `prices` follows the sizes in the name, like the omelet. In Square it is one item, Side of Eggs, with 1 Egg / 2 Eggs / 3 Eggs sizes and the Eggs style list.", "diet": ["V", "GF"], "prices": [1.75, 3.50, 5.25] }
       ]
     },
     {
@@ -215,6 +220,7 @@
     {
       "id": "salads",
       "name": "Salads",
+      "note": "Dressings: Ranch, Italian, Caesar or Honey Dijon",
       "sizing": [
         { "size": "Full", "price": 12.00 },
         { "size": "Half", "price": 7.00 }
@@ -287,7 +293,18 @@
         { "name": "Tortellini Salad", "diet": ["V"], "price": 3.00 },
         { "name": "Cottage Cheese", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Salad of the Day", "price": 3.00 },
-        { "name": "Chips", "description": "Regular, Baked Lays, BBQ, Cheetos, Doritos", "diet": ["V"], "price": 1.75 }
+        { "name": "Chips", "description": "Regular, Baked Lays, BBQ, Cheetos, Doritos", "diet": ["V"], "price": 1.75 },
+        { "name": "Fruit Side", "description": "Fresh fruit; it changes daily", "_note": "Added 2026-10-05 to match Square. What the fruit is changes day to day, so the menu never names it.", "price": 1.00 },
+        { "name": "Special Side", "description": "A side from today's special", "_note": "Added 2026-10-05 to match Square: a side dish from the daily special, ordered on its own.", "price": 2.00 }
+      ]
+    },
+    {
+      "id": "desserts",
+      "name": "Desserts",
+      "_note": "Added 2026-10-05 to match Square, where both are sold all day (on the Breakfast and Lunch menus). Cheesecake flavours and the two dessert bars are modifier lists in Square at no extra charge; the list there can be switched on and off from the kitchen board's front page (Manage -> Desserts), so a flavour on this list may be off on a given day.",
+      "items": [
+        { "name": "Cheesecake", "description": "Plain, Caramel or Pumpkin", "price": 3.50 },
+        { "name": "Dessert Bar", "description": "Marshmallow Treat or Magic Bar", "price": 1.50 }
       ]
     },
     {
@@ -295,8 +312,9 @@
       "name": "Drinks",
       "items": [
         { "name": "Iced Tea / Fountain Drink", "price": 2.00 },
+        { "name": "Coffee", "price": 1.00 },
         { "name": "Bottle Water", "price": 1.50 },
-        { "name": "Bottle Juice", "price": 3.00 }
+        { "name": "Bottle Juice", "description": "Orange, Apple, Cranberry, V8, Tomato", "_note_flavours": "The flavours are left over from the old contract and change as they run out: edit this list rather than adding rows. In Square the flavour is a modifier list (Juice) on one Regular item, not a variation per flavour, so a changed flavour here must also be changed there by hand.", "price": 3.00 }
       ]
     }
   ]

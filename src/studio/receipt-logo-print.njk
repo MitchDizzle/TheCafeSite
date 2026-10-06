@@ -1,0 +1,25 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Printed receipt logo (800 × 400)"
+canvasW: "800px"
+canvasH: "400px"
+pageCss: "/assets/css/receipt-logo.css"
+
+tags: studio
+studioTitle: "Receipt logo — printed"
+studioCategory: "Square"
+studioSize: "800 × 400 px · pure black and white"
+studioNote: "For the paper receipt printer. Square wants at least 400 × 200 and strictly black and white: no grey, no color, and no transparency (a transparent background prints as a black block). This is black ink on solid white with edge smoothing switched off, so every pixel is one or the other."
+studioW: 800
+studioH: 400
+studioOrder: 62
+---
+{#- The solid one-colour wordmark (.wordmark--ink), not the outlined one: on
+    a thermal printer an outline breaks up. shape-rendering: crispEdges in
+    receipt-logo.css turns off anti-aliasing, which is what would otherwise
+    put grey pixels round every letter. -#}
+<div class="canvas rlogo rlogo--print">
+    <div class="wordmark wordmark--ink rlogo-mark">
+        {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+    </div>
+</div>

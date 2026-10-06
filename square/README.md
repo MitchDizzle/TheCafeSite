@@ -82,7 +82,15 @@ default in the description". (`defaultBread` in `menu.json`.)
 | **Kids Side** | Cinnamon Apples, Mac & Cheese, Tater Tots, Fresh Fruit | Pick 1, required | Kids Meal |
 | **Salad Protein** | Chicken salad, Tuna salad | Pick 1, required | Salad Plate |
 | **Plate Protein** | Grilled chicken, Hamburger patty | Pick 1, required | Healthy Plate |
-| **Dressing** | Ranch, French (more to come) | Pick 1, required | Strawberry Chicken, Buffalo Chicken, Chef and Dinner Salads. **Not** the Taco Salad — it comes with salsa & sour cream. |
+| **Dressing** | Ranch, Italian, Caesar, Honey Dijon | Pick 1, required | Strawberry Chicken, Buffalo Chicken, Chef and Dinner Salads. **Not** the Taco Salad — it comes with salsa & sour cream. |
+
+| **Add (on the food)** | Ketchup, Mustard, Mayo | Pick any, optional | Every Hot and Cold Sandwich, the burgers, Build Your Own, wraps, Breakfast Sandwich. A cooking instruction: prints on the kitchen ticket. |
+| **Packets (in the bag)** | Ketchup packet, Mustard packet, Mayo packet | Pick any, optional | The same items, plus Kids Meal and Fried Potatoes. **Keep the word "packet" in each name**: the kitchen board moves any modifier named "… packet" off the kitchen ticket and onto the front page's "Add from the front" list. |
+
+Juice is one item, **Bottle Juice**, with a variation per flavour (Orange,
+Apple, Cranberry today; they're left over from the old contract and change
+as they run out). Edit the list in `menu.json` and rebuild, or just
+deactivate a variation in the Dashboard when a flavour runs out.
 
 Fountain drinks are **self-serve Pepsi products** — no flavour list; the
 variation only records that a fountain cup was sold.

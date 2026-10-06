@@ -1,0 +1,67 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Survey card (2 per letter sheet)"
+canvasW: "11in"
+canvasH: "8.5in"
+pageSize: "11in 8.5in"
+pageCss: "/assets/css/survey-card.css"
+
+tags: studio
+studioTitle: "Survey card — paper"
+studioCategory: "Signs"
+studioSize: "11 × 8.5 in landscape · two 5.5 × 8.5 cards, cut in half · one ink"
+studioNote: "The /survey questions on paper, for anyone who'd rather not use a phone. Two cards per letter sheet: print landscape at 100%, cut on the dashed line. Black ink only, for the cafe's printer. Same questions as the web page (src/_data/survey.json), so the answers can be tallied together."
+studioW: 1056
+studioH: 816
+studioOrder: 36
+---
+{#- Two identical cards side by side, so one letter sheet makes two and
+    the cut is a single straight line. Everything is set in black: this is
+    printed on the cafe's black-only printer and filled in with a pen, so
+    circles to mark and ruled lines to write on, nothing in colour. -#}
+{%- macro card() %}
+<section class="card">
+    <header class="card-head">
+        <h1 class="p-display card-name">{{ site.name }}</h1>
+        <p class="p-display-italic card-title">How did we do?</p>
+        <p class="p-body card-intro">Circle one for each. Every question is optional.</p>
+    </header>
+
+    <table class="card-rates">
+        <thead>
+            <tr><th></th>{% for opt in survey.scale %}<th>{{ opt }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+            {%- for q in survey.ratings %}
+            <tr><th scope="row">{{ q.label }}</th>{% for opt in survey.scale %}<td><span class="o"></span></td>{% endfor %}</tr>
+            {%- endfor %}
+        </tbody>
+    </table>
+
+    {%- for q in survey.choices %}
+    <div class="card-q">
+        <p class="card-label">{{ q.label }}</p>
+        <p class="card-opts">{% for opt in q.options %}<span class="opt"><span class="o"></span>{{ opt }}</span>{% endfor %}</p>
+    </div>
+    {%- endfor %}
+
+    {%- for q in survey.open %}
+    <div class="card-q">
+        <p class="card-label">{{ q.label }}</p>
+        <div class="card-lines"><span></span><span></span></div>
+    </div>
+    {%- endfor %}
+
+    <div class="card-q card-reply">
+        <p class="card-label">Want us to get back to you? Name and phone or email:</p>
+        <div class="card-lines"><span></span></div>
+    </div>
+
+    <p class="card-foot">Thank you! Hand it back at the counter.</p>
+</section>
+{%- endmacro %}
+<div class="canvas survey-sheet">
+    {{ card() }}
+    <div class="cut" aria-hidden="true"></div>
+    {{ card() }}
+</div>

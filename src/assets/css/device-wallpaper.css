@@ -1,0 +1,103 @@
+/* ============================================================
+   Device wallpapers: the kitchen PC's desktop and the cafe phone.
+   Pieces: src/studio/desktop-wallpaper.njk (1920 × 1080)
+           src/studio/phone-wallpaper.njk (540 × 1170 at 2x = 1080 × 2340)
+
+   Same ground and wordmark as the iPad wallpaper (ipad-wallpaper.css), so
+   every screen in the cafe reads as one brand. Kept in their own file
+   because each screen has its own safe area: icons, clocks and taskbars
+   land in different places.
+   ============================================================ */
+
+.wallpaper {
+    background:
+        radial-gradient(circle at 50% 50%, rgba(142, 217, 212, 0.14) 0%, rgba(142, 217, 212, 0) 46%),
+        linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    display: grid;
+    place-items: center;
+}
+
+.wallpaper-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.wallpaper-filigree {
+    color: var(--mint);
+    opacity: 0.85;
+}
+
+.wallpaper-eyebrow {
+    color: var(--cream);
+    opacity: 0.8;
+    /* .p-eyebrow tracks its letters, including after the last one; a
+       matching indent re-centres the line. */
+    text-indent: 0.3em;
+}
+
+/* ── Kitchen PC desktop, 1920 × 1080 ─────────────────────────
+   Hidden behind the board almost all the time; it shows while the PC
+   starts and whenever the board is closed. So it carries one practical
+   line for whoever is looking at it then. Lifted 24px off centre to
+   clear the 48px Windows taskbar. */
+
+.wallpaper--desktop .wallpaper-content {
+    transform: translateY(-24px);
+}
+
+.wallpaper--desktop .wordmark {
+    --mark-w: 760px;
+}
+
+.wallpaper--desktop .wallpaper-filigree {
+    width: 340px;
+    margin-top: 34px;
+}
+
+.wallpaper--desktop .wallpaper-eyebrow {
+    font-size: 26px;
+    margin-top: 24px;
+}
+
+.wallpaper-help {
+    margin-top: 46px;
+    padding: 14px 30px;
+    border: 2px solid rgba(250, 247, 242, 0.35);
+    border-radius: 10px;
+    font-family: 'Lato', sans-serif;
+    font-size: 28px;
+    line-height: 1.4;
+    color: var(--cream);
+}
+
+.wallpaper-help strong {
+    color: #fff;
+    font-weight: 900;
+}
+
+/* ── Cafe phone, Galaxy A17 5G (SM-A176U), 1080 × 2340 ───────
+   Drawn at 540 × 1170 and exported at 2x. The lock-screen clock takes
+   the top third and notifications stack below it, so the mark sits a
+   little under centre; on the home screen the icon grid covers some of it
+   whatever we do, which is fine for a wallpaper. Narrow enough that a
+   Samsung crop or parallax shift can't clip it. */
+
+.wallpaper--phone .wallpaper-content {
+    transform: translateY(70px);
+}
+
+.wallpaper--phone .wordmark {
+    --mark-w: 380px;
+}
+
+.wallpaper--phone .wallpaper-filigree {
+    width: 190px;
+    margin-top: 20px;
+}
+
+.wallpaper--phone .wallpaper-eyebrow {
+    font-size: 13px;
+    margin-top: 14px;
+}
