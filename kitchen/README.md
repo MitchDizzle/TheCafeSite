@@ -94,9 +94,19 @@ The same orders for the counter, on any laptop, tablet or phone on the cafe wifi
 - **Online orders** say whether they've been marked ready in Square Order Manager. That step is still what texts the customer, and an order marked ready there stays on the front page until it's handed off.
 - **An online order of only drinks or chips** shows on the front page only, as Ready: there's nothing for the kitchen to make. A counter sale of only those doesn't show anywhere, because it's handed over as it's rung up.
 - **Handed off** clears an order from the front page only; it never touches the kitchen board. **Undo** in the top bar lists today's hand-offs; click one to bring it back.
+- **Ready orders clear themselves** after 10 minutes if nobody presses Handed off (`autoHandoffMinutes`; the Ready heading says so). They go on Undo, marked "cleared by itself", and one brought back stays until it's handed off by hand. Two kinds never clear themselves: a **not paid** order, and an **online order not yet marked ready in Square** (that step texts the customer).
 - **Today**, under the orders: how many orders so far, breakfast vs lunch (before or after 11am, by when it was rung up or due), counter vs online, average and longest time in the kitchen (counter orders, rung up to Done; if a ticket is undone and Done again, the time it sat cleared doesn't count), and the most ordered items. Canceled orders and unpaid open checks aren't counted.
 
 Only the front page, its Handed off and Undo, and the PIN-protected Manage actions answer other devices. The kitchen board, `/check`, Done, the power menu and updates answer the kitchen PC alone.
+
+### On a phone, like an app
+
+The front page works on a phone on the cafe wifi: the orders stack in one column, and Manage opens full screen.
+
+- **Put it on the home screen.** iPhone: open the front page in Safari, tap Share, then **Add to Home Screen**. Android: open it in Chrome, tap ⋮, then **Add to Home screen**. The icon is a cream C on teal, named "Café Front". On an iPhone it opens full screen, with no address bar. Android may open it in an ordinary Chrome tab, because the kitchen PC isn't on https; it works the same.
+- **If the phone can't find the PC by name** (`http://kitchen-pc:8090/front`), try the name with `.local` on the end (`http://kitchen-pc.local:8090/front`). Phones often don't know Windows names without it.
+- **Remember on this device**, under the PIN, keeps the PIN on that phone, so Manage opens straight to its menu. Use it on your own phone only. **Forget the PIN here** at the foot of the Manage menu removes it, and a phone forgets it by itself if the PIN is changed in `config.json`.
+- **Only on the cafe wifi.** The kitchen PC isn't on the internet, on purpose, so the page doesn't open from home or on mobile data.
 
 ### Setting it up (one time, on the kitchen PC)
 
@@ -114,7 +124,10 @@ Settings in `config.json`, both optional:
 |---|---|---|
 | `frontOnNetwork` | `true` | `false` keeps everything on the kitchen PC; `/front` then works only there. |
 | `frontKey` | none | If set, other devices must open `/front?key=<the key>`. Bookmark the full address. Worth setting if customers ever share the staff wifi. |
-| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN). With this PIN it can change the **Desserts** (see below), set **Today's specials** (the prices of the items in `dailyItems`, saved straight into Square; see below), change **What the kitchen skips** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+| `autoHandoffMinutes` | `10` | Ready orders leave the front page by themselves after this long (see above). `0` turns it off. |
+| `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Plan the week** reads the website's specials from. `""` turns that off. |
+| `openDays` | `[1, 2, 3, 4, 5]` | The days Plan the week lists (0 is Sunday, 6 Saturday). |
+| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can **Plan the week** (see below), change the **Desserts** (see below), set **Today's specials** (the prices of the items in `dailyItems`, saved straight into Square; see below), change **What the kitchen skips** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
 
 ## When an order doesn't show up
 
@@ -147,6 +160,8 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `front.html` | The front page for the counter (`/front`). |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `state.json` | Which orders have been cleared. Created automatically; gitignored. |
+| `specials-plan.json` | Plan the week: the days ahead and which are in Square already. Created automatically; gitignored. |
+| `icon-*.png` | The front page's home-screen icon. |
 | `start-kitchen.bat` | Pulls updates, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. |
 | `focus-board.ps1` | Run by `start-kitchen.bat` after Chrome opens: brings the board window to the front so the number pad types into it, not into a console window. Tries for 20 seconds; if it can't, click the board once. |
 
@@ -155,6 +170,22 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 Sets the day's prices in Square from the front page, with the PIN: the items named in `dailyItems` in `config.json` (default: Lunch Special, Soup of the Day, Salad of the Day; names exactly as in Square). Each item has **What it is today** and a price box per size; leave a price blank to have the till ask for it. What it is today is added to the item's size names in Square, so it prints on the kitchen ticket and the receipt after the item name: Lunch Special's one size becomes "BBQ Ribs", and the soup's sizes become "Cup · Chicken Dumpling" and "Bowl · Chicken Dumpling". Clearing the box puts the plain names back. The item's own name never changes. On a day nothing changes, nobody needs to open it.
 
 This is the **only thing the board writes to Square**. It changes nothing but those items' prices and size names, reads each item fresh before saving, and if someone changed the item in the Dashboard a moment before, Square refuses the save and the front is asked to open it again, so nothing is overwritten. A mistyped price saves nothing at all.
+
+## Plan the week (Manage on the front page)
+
+The specials for today and the next two weeks, set ahead of time. **Each morning the board puts that day's specials into Square by itself**, as soon as it starts (or, if it was left on overnight, within a minute of midnight). Nothing has to be opened on the day. It's the same write as Today's specials below: the "what it is today" name, and a price only if one is planned.
+
+- **One row per day the cafe is open.** Tap a day to open it: the special and the soup (every item in `dailyItems`), each with its price boxes. **A blank price keeps whatever Square has** (shown faintly; "till" means the till asks for one). Type a price only when it changes that day.
+- **Days come in from the website by themselves.** Every half hour the board reads the specials the website publishes (`specialsUrl`, built from the site's `src/_data/specials.json`, the same days as the /menu box and the Facebook post). The plate goes into Lunch Special and the soup into Soup of the Day. They're tagged **From the website**.
+- **The website never overwrites:**
+  - **today**, once it's in Square (and no earlier day);
+  - **a day changed here**, tagged **Set here**. From then on the website's copy of that day is ignored.
+  
+  So putting next week on the website mid-week changes nothing for this week. A day the website still lists can't be blanked here (clearing it lets the website's copy back in on the next read); change it on the website instead, or type something else here.
+- **Today** shows whether it's in Square yet. Saving today puts it in straight away. If Square refuses (no internet, say), it says so and the board tries again every 5 minutes.
+- **A day with nothing planned** puts the plain names back ("Regular", "Cup", "Bowl") that morning, so yesterday's plate never prints on today's tickets. Prices are left alone. A board that has never had a plan leaves Square alone.
+- **Today's specials** (below) still works for a change during the day. It edits Square directly and isn't undone by the plan; the plan only writes again if today's plan is changed.
+- The plan is kept in `specials-plan.json` on the kitchen PC (gitignored). The program window logs every day it reads from the website and every write to Square.
 
 ## Desserts (Manage on the front page)
 

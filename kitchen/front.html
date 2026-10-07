@@ -2,8 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Front · Orders</title>
+<!-- Add to Home Screen: an icon that opens this page full screen, like an
+     app. The manifest link is added by the script below, so it carries the
+     page's ?key= when there is one. -->
+<meta name="theme-color" content="#1F4552">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Café Front">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/front-icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/front-icon-192.png">
 <style>
   /* The counter's view of the kitchen board, for a laptop or tablet on the
      cafe wifi. Read at arm's length, not across a kitchen, so sizes are
@@ -39,8 +49,12 @@
     z-index: 5;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
     padding: 0.7rem 1.2rem;
+    padding-top: max(0.7rem, env(safe-area-inset-top));
+    padding-left: max(1.2rem, env(safe-area-inset-left));
+    padding-right: max(1.2rem, env(safe-area-inset-right));
     background: var(--teal-dark);
     color: var(--cream);
   }
@@ -68,7 +82,7 @@
     right: 0;
     top: calc(100% + 0.4rem);
     z-index: 10;
-    min-width: 20rem;
+    min-width: min(20rem, calc(100vw - 2rem));
     max-height: 70vh;
     overflow-y: auto;
     padding: 0.3rem;
@@ -187,6 +201,30 @@
   .m-money input { width: 7rem; font: inherit; padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
   .m-field input:focus, .m-money input:focus { outline: none; border-color: var(--teal); }
 
+  /* Plan the week: one fold-out row per day, today's open. */
+  .m-day { border: 1px solid var(--line); border-radius: 0.55rem; margin: 0 0 0.55rem; }
+  .m-day > summary { display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 0.6rem; padding: 0.65rem 0.9rem; cursor: pointer; list-style: none; }
+  .m-day > summary::-webkit-details-marker { display: none; }
+  .m-day > summary::after { content: "›"; grid-row: 1 / span 2; grid-column: 2; align-self: center; font-size: 1.5rem; color: var(--muted); transition: transform 0.15s; }
+  .m-day[open] > summary::after { transform: rotate(90deg); }
+  .m-day .d-date { font-weight: 800; font-size: 1.08rem; }
+  .m-day .d-what { grid-column: 1; color: var(--muted); font-size: 0.92rem; overflow-wrap: anywhere; }
+  .m-day .d-what.none { font-style: italic; }
+  .m-day.today { border-color: var(--teal); }
+  .m-day.edited { border-color: var(--amber); background: #FFFBF2; }
+  .d-tag { display: inline-block; margin-left: 0.4rem; padding: 0 0.4rem; border-radius: 0.25rem; font-size: 0.78rem; font-weight: 800; vertical-align: 0.1em; }
+  .d-tag.site { background: #E3EEF1; color: var(--teal-dark); }
+  .d-tag.front { background: #FFF0C2; color: #6B4A08; }
+  .d-tag.now { background: var(--teal); color: var(--cream); }
+  .d-body { padding: 0 0.9rem 0.8rem; display: grid; gap: 0.8rem; }
+  .d-item { display: grid; gap: 0.4rem; }
+  .d-item .m-prices { margin-top: 0; }
+  .d-status { font-size: 0.92rem; font-weight: 700; }
+  .d-status.good { color: var(--green); }
+  .d-status.bad { color: var(--red-dark); }
+  .d-clear { justify-self: start; font: inherit; font-size: 0.92rem; font-weight: 700; padding: 0.3rem 0.6rem; border: 1.5px solid var(--line); border-radius: 0.35rem; background: transparent; color: var(--muted); cursor: pointer; }
+  .m-site { font-size: 0.9rem; }
+
   .dialog .check { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.98rem; cursor: pointer; }
   .dialog .check input { margin-top: 0.25rem; }
   .m-check { padding: 0.8rem 1rem; border: 1px solid var(--line); border-radius: 0.55rem; }
@@ -226,7 +264,7 @@
   .dining { display: inline-block; padding: 0 0.35rem; border-radius: 0.25rem; background: var(--teal-dark); color: var(--cream); }
   .dining.here { background: transparent; color: var(--teal-dark); border: 1.5px solid var(--teal-dark); }
 
-  main { padding: 1rem 1.2rem 3rem; max-width: 90rem; margin: 0 auto; }
+  main { padding: 1rem 1.2rem max(3rem, env(safe-area-inset-bottom)); max-width: 90rem; margin: 0 auto; }
   h2 {
     margin: 1.2rem 0 0.6rem;
     font-size: 0.95rem;
@@ -236,11 +274,33 @@
   }
   .list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
     gap: 0.9rem;
     align-items: start;
   }
   .empty { color: var(--muted); font-size: 1.1rem; margin: 0.4rem 0 0; }
+  .h-note { font-weight: 400; letter-spacing: 0; text-transform: none; font-size: 0.9rem; }
+
+  /* Phone: the bar's buttons on their own row under the title and clock,
+     Manage as a full-screen sheet, and nothing wider than the screen. */
+  @media (max-width: 36rem) {
+    html { font-size: 16px; }
+    .bar { padding-left: max(0.8rem, env(safe-area-inset-left)); padding-right: max(0.8rem, env(safe-area-inset-right)); }
+    .bar h1 { font-size: 1.1rem; }
+    .bar .spacer { flex-basis: 0; }
+    .bar .counts { order: 2; flex-basis: 100%; font-size: 0.9rem; }
+    .bar .clock { order: 1; margin-left: auto; font-size: 1.15rem; }
+    .bar .undo-wrap, .bar #manage, .bar #sound { order: 3; }
+    .bar button { padding: 0.45rem 0.7rem; }
+    .undo-wrap { position: static; }
+    .undo-menu { left: 0.5rem; right: 0.5rem; top: auto; margin-top: 0.4rem; }
+    main { padding-left: 0.8rem; padding-right: 0.8rem; }
+    .scrim { padding: 0; place-items: stretch; }
+    .dialog { width: 100%; max-height: none; height: 100%; height: 100dvh; border-radius: 0; }
+    .m-head { padding-top: max(0.7rem, env(safe-area-inset-top)); }
+    .m-foot { padding-bottom: max(0.8rem, env(safe-area-inset-bottom)); }
+    .m-foot .m-btn { flex: 1; }
+  }
 
   .order {
     background: var(--paper);
@@ -359,7 +419,7 @@
   </div>
   <div class="alert" id="alert" hidden></div>
   <main>
-    <h2>Ready</h2>
+    <h2>Ready <span class="h-note" id="auto-note"></span></h2>
     <div class="list" id="ready"></div>
     <h2>Cooking</h2>
     <div class="list" id="cooking"></div>
@@ -378,6 +438,7 @@
   // bookmarked /front?key=... keeps working (see frontKey in server.js).
   const key = new URLSearchParams(location.search).get("key");
   const api = (p) => (key ? `${p}?key=${encodeURIComponent(key)}` : p);
+  document.head.appendChild(Object.assign(document.createElement("link"), { rel: "manifest", href: api("/front.webmanifest") }));
 
   const readyEl = document.getElementById("ready");
   const cookingEl = document.getElementById("cooking");
@@ -547,6 +608,8 @@
     undoWrap.hidden = !data.lastHandedOff;
     if (data.lastHandedOff) undoBtn.textContent = `↶ Undo ${data.lastHandedOff.label}`;
     handedOffList = data.handedOffList || [];
+    document.getElementById("auto-note").textContent = data.autoHandoffMinutes
+      ? `· clears itself after ${data.autoHandoffMinutes} min` : "";
     if (!undoMenu.hidden) renderUndoMenu();
     renderStats(data.stats);
 
@@ -627,7 +690,7 @@
   function renderUndoMenu() {
     undoMenu.innerHTML = handedOffList.length
       ? handedOffList.map((h) => `<button type="button" role="menuitem" data-unhand="${esc(h.id)}">
-          <span>${esc(h.label)}${h.main ? ` <span class="main">· ${esc(h.main)}</span>` : ""}</span>
+          <span>${esc(h.label)}${h.main ? ` <span class="main">· ${esc(h.main)}</span>` : ""}${h.auto ? ` <span class="main">(cleared by itself)</span>` : ""}</span>
           <span class="when">${ago(h.at)}</span></button>`).join("")
       : `<div style="padding:0.6rem">Nothing to bring back.</div>`;
   }
@@ -679,6 +742,13 @@
   const scrim = document.getElementById("scrim");
   const dialog = document.getElementById("dialog");
   let pinValue = "";
+  // "Remember on this device": for the owner's own phone, so the home-screen
+  // icon goes straight to the menu. Forgotten the moment the kitchen PC says
+  // it's wrong (the PIN was changed).
+  const savedPin = {
+    get() { try { return localStorage.getItem("front-pin") || ""; } catch { return ""; } },
+    set(v) { try { v ? localStorage.setItem("front-pin", v) : localStorage.removeItem("front-pin"); } catch {} },
+  };
 
   async function postJson(path, body) {
     try {
@@ -708,7 +778,7 @@
     scrim.hidden = false;
   }
   const busy = (title, what) => screen({ title, back: false, body: `<p class="m-busy">${esc(what)}</p>` });
-  function closeManage() { scrim.hidden = true; dialog.innerHTML = ""; pinValue = ""; }
+  function closeManage() { scrim.hidden = true; dialog.innerHTML = ""; pinValue = savedPin.get(); }
 
   // The outcome of a job, with a way back to the menu.
   function result(title, r) {
@@ -725,6 +795,8 @@
     if (to === "close") closeManage();
     else if (to === "menu") showMenu();
     else if (to === "daily") openDaily();
+    else if (to === "plan") openPlan();
+    else if (to === "forget") { savedPin.set(""); closeManage(); }
     else if (to === "skip") openSkip();
     else if (to === "desserts") openDesserts();
     else if (to === "reset") openReset();
@@ -742,6 +814,7 @@
         <label for="pin">Enter the PIN</label>
         <input id="pin" type="password" inputmode="numeric" autocomplete="off" aria-describedby="pin-msg">
         <p id="pin-msg" class="m-error" ${message ? "" : "hidden"}>${esc(message || "")}</p>
+        <label class="check"><input type="checkbox" id="pin-keep"><span>Remember on this device</span></label>
       </form>`,
       buttons: [{ label: "Unlock", submit: "m-lock", kind: "primary" }] });
     const pin = document.getElementById("pin");
@@ -751,10 +824,19 @@
       const r = await postJson("/api/front-unlock", { pin: pin.value });
       if (!r.ok) return showLock(r.message);
       pinValue = pin.value;
+      if (document.getElementById("pin-keep").checked) savedPin.set(pinValue);
       showMenu();
     });
   }
-  document.getElementById("manage").addEventListener("click", () => (pinValue ? showMenu() : showLock()));
+  document.getElementById("manage").addEventListener("click", async () => {
+    if (!pinValue) pinValue = savedPin.get();
+    if (!pinValue) return showLock();
+    busy("Manage", "Checking…");
+    const r = await postJson("/api/front-unlock", { pin: pinValue });
+    if (r.ok) return showMenu();
+    if (/wrong pin/i.test(r.message || "")) { savedPin.set(""); pinValue = ""; }
+    showLock(r.message);
+  });
 
   // ---- 2. The menu
   function showMenu() {
@@ -762,13 +844,14 @@
       <span><b>${title}</b><small>${sub}</small></span><span class="m-chev" aria-hidden="true">›</span></button>`;
     screen({ title: "Manage", back: false,
       body: `<div class="m-menu">
-        ${row("daily", "Today's specials", "Today's special and soup, and their prices. Saved to Square.")}
+        ${row("plan", "Plan the week", "The specials for the days ahead. Each goes into Square by itself on its morning.")}
+        ${row("daily", "Today's specials", "Today's special and soup, and their prices, as Square has them now.")}
         ${row("desserts", "Desserts", "Flavors on or off, and the photo online ordering shows.")}
         ${row("skip", "What the kitchen skips", "Items and categories that go on the front's list instead.")}
         ${row("reset", "Reset for the day", "Start today's numbers and the Undo lists fresh.", true)}
         ${row("update", "Check for updates", "Install a new version of the board, if there is one.")}
       </div>`,
-      buttons: [{ label: "Lock", act: "close" }] });
+      buttons: [savedPin.get() ? { label: "Forget the PIN here", act: "forget" } : null, { label: "Lock", act: "close" }].filter(Boolean) });
   }
 
   // ---- Today's specials: saved straight into Square. Only the items in the
@@ -802,6 +885,91 @@
       }));
       busy("Today's specials", "Saving to Square…");
       result("Today's specials", await postJson("/api/front-daily-save", { pin: pinValue, items }));
+    });
+  }
+
+  // ---- Plan the week: the specials for today and the days ahead. The
+  // kitchen PC puts each day's into Square by itself on that morning. Days
+  // the website lists fill in by themselves; a day changed here is kept as
+  // typed, and the website no longer changes it.
+  async function openPlan() {
+    busy("Plan the week", "Reading the plan and Square…");
+    const r = await postJson("/api/front-plan", { pin: pinValue });
+    if (!r.ok) return result("Plan the week", r);
+    const words = (date, opts) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", opts);
+    // One line for the folded row: "Meatloaf · Baked Potato Soup".
+    const summary = (plan) => plan ? r.items.map((it) => plan.items[it.key] && plan.items[it.key].today).filter(Boolean).join(" · ") : "";
+    const status = (d) => {
+      if (d.date !== r.today) return "";
+      if (d.applied && d.applied.at && d.applied.sig !== "clear") return `<p class="d-status good">✓ In Square since ${fmtTime(d.applied.at)}</p>`;
+      if (d.applied && d.applied.error) return `<p class="d-status bad">Not in Square yet: ${esc(d.applied.error)}. The board tries again every few minutes.</p>`;
+      return d.plan ? `<p class="d-status">Going into Square now.</p>` : "";
+    };
+    const dayHtml = (d) => {
+      const plan = d.plan;
+      const isToday = d.date === r.today;
+      const tag = plan ? (plan.from === "site" ? `<span class="d-tag site">From the website</span>` : `<span class="d-tag front">Set here</span>`) : "";
+      const what = summary(plan);
+      return `<details class="m-day${isToday ? " today" : ""}" data-date="${d.date}"${isToday ? " open" : ""}>
+        <summary>
+          <span class="d-date">${isToday ? '<span class="d-tag now">Today</span> ' : ""}${esc(words(d.date, { weekday: "short", month: "short", day: "numeric" }))}${tag}</span>
+          <span class="d-what${what ? "" : " none"}">${esc(what || "Nothing planned")}</span>
+        </summary>
+        <div class="d-body">
+          ${status(d)}
+          ${r.items.map((it) => {
+            const p = (plan && plan.items[it.key]) || { today: "", prices: {} };
+            return `<div class="d-item" data-key="${esc(it.key)}">
+              <label class="m-field">${esc(it.name)}
+                <input type="text" data-field="today" value="${esc(p.today || "")}" maxlength="60" autocomplete="off"
+                  placeholder="${/soup/i.test(it.key) ? "e.g. Chicken Dumpling" : /salad/i.test(it.key) ? "e.g. Cobb" : "e.g. Meatloaf"}"></label>
+              <div class="m-prices">${it.sizes.map((sz) => `<label class="m-price" data-size="${esc(sz.size)}">
+                <span>${esc(sz.size ? `${sz.size} price` : "Price")}</span>
+                <span class="m-money">$<input type="text" inputmode="decimal" data-field="price" value="${esc((p.prices || {})[sz.size] || "")}"
+                  placeholder="${esc(sz.price || "till")}" aria-describedby="keep-note"></span>
+              </label>`).join("")}</div>
+            </div>`;
+          }).join("")}
+          <button type="button" class="d-clear" data-clear>Clear this day</button>
+        </div>
+      </details>`;
+    };
+    const site = r.site.url ? (r.site.error
+      ? `<p class="m-site m-error">Couldn't read the website's specials (${esc(r.site.error)}). Days already here are kept.</p>`
+      : `<p class="m-site m-note">The website's specials were read at ${fmtTime(r.site.checkedAt)}.</p>`) : "";
+    screen({ title: "Plan the week", back: true,
+      body: `<p class="m-note">Each morning the kitchen PC puts that day's specials into Square by itself.
+        Days the website lists fill in on their own; a day changed here stays as you typed it.</p>
+        <p class="m-note" id="keep-note">A blank price keeps what Square has now, shown faintly ("till": the till asks for one).</p>
+        ${site}
+        ${r.missing.length ? `<p class="m-error">Not found in Square under these names: ${esc(r.missing.join(", "))}.</p>` : ""}
+        <form id="m-plan">${r.days.map(dayHtml).join("")}</form>`,
+      buttons: [{ label: "Save", submit: "m-plan", kind: "primary" }] });
+    const form = document.getElementById("m-plan");
+    // What each day held when opened, so only the days changed are sent: a
+    // day from the website that nobody touched stays the website's.
+    const read = (day) => ({ items: Object.fromEntries([...day.querySelectorAll(".d-item")].map((el) => [el.dataset.key, {
+      today: el.querySelector('[data-field="today"]').value.trim(),
+      prices: Object.fromEntries([...el.querySelectorAll("[data-size]")].map((row) => [row.dataset.size, row.querySelector("input").value.trim()])),
+    }])) });
+    const before = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(read(day))]));
+    const mark = (day) => day.classList.toggle("edited", JSON.stringify(read(day)) !== before.get(day.dataset.date));
+    form.addEventListener("input", (e) => mark(e.target.closest(".m-day")));
+    form.addEventListener("click", (e) => {
+      if (!e.target.closest("[data-clear]")) return;
+      const day = e.target.closest(".m-day");
+      for (const input of day.querySelectorAll("input")) input.value = "";
+      mark(day);
+    });
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const days = {};
+      for (const day of form.querySelectorAll(".m-day")) {
+        const now = read(day);
+        if (JSON.stringify(now) !== before.get(day.dataset.date)) days[day.dataset.date] = now;
+      }
+      busy("Plan the week", "Saving…");
+      result("Plan the week", await postJson("/api/front-plan-save", { pin: pinValue, days }));
     });
   }
 

@@ -74,11 +74,23 @@ const DEFAULTS = {
   // Items whose photo and options (flavors) the front can change: Manage ->
   // Desserts. Names as in Square.
   dessertItems: ["Cheesecake", "Dessert Bar"],
+  // The week's specials as the website publishes them (built from the site's
+  // src/_data/specials.json). Read every half hour into Manage -> Plan the
+  // week; "" turns that off and the plan is only what the front types in.
+  specialsUrl: "https://lvcafetogo.com/specials.json",
+  // Days the cafe is open (0 = Sunday ... 6 = Saturday): the days Plan the
+  // week offers.
+  openDays: [1, 2, 3, 4, 5],
+  // A ready order nobody pressed Handed off for leaves the front page by
+  // itself after this many minutes (it goes on Undo like any hand-off).
+  // 0 = never. Not for unpaid orders, or online orders not yet marked ready
+  // in Square: those still need someone.
+  autoHandoffMinutes: 10,
 };
 
 // Settings that are the cafe's own and have no meaningful default: never
 // flagged as "differs from the default".
-const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems"]);
+const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems", "openDays", "autoHandoffMinutes"]);
 
 // What's worth knowing about config.json, in plain words. Written to the
 // program window at startup and shown on /check.
@@ -165,6 +177,11 @@ let demo = null; // { startedAt, until } while running
 const isDemo = (id) => String(id).startsWith(DEMO_PREFIX);
 let handedOff = {}; // orderId -> ISO time the front pressed Handed off (/front)
 let canceled = {}; // orderId -> ISO time the front took an unpaid order off both screens
+// orderId -> ISO time the front brought it back with Undo after it cleared
+// itself (autoHandoffMinutes): it stays until someone hands it off by hand.
+let keepOnFront = {};
+const autoOff = new Set(); // ids cleared by autoHandoff, so Undo can say so
+const readySince = {}; // orderId -> ms first seen ready, for autoHandoff (not saved)
 // What the kitchen never makes: item names and whole Square categories.
 // Edited live from /front (Manage -> What the kitchen skips) and kept in
 // state.json. config.json's skipItems is only the starting list, used until
@@ -185,6 +202,7 @@ function loadState() {
     offBoard = state.offBoard || {};
     handedOff = state.handedOff || {};
     canceled = state.canceled || {};
+    keepOnFront = state.keepOnFront || {};
     skipEdited = !!state.skip;
     skip = state.skip || { items: cfg.skipItems, categories: [] };
     undoFloor = state.undoFloor || null;
@@ -194,6 +212,7 @@ function loadState() {
     offBoard = {};
     handedOff = {};
     canceled = {};
+    keepOnFront = {};
     skip = { items: cfg.skipItems, categories: [] };
     undoFloor = null;
     statsFloor = null;
@@ -203,7 +222,7 @@ function loadState() {
 function saveState() {
   // Three days is plenty; nothing older can reappear on either screen anyway.
   const cutoff = Date.now() - 3 * 864e5;
-  for (const map of [bumped, handedOff, canceled]) {
+  for (const map of [bumped, handedOff, canceled, keepOnFront]) {
     for (const [id, at] of Object.entries(map)) {
       if (Date.parse(at) < cutoff) delete map[id];
     }
@@ -211,7 +230,7 @@ function saveState() {
   for (const [id, o] of Object.entries(offBoard)) if (Date.parse(o.at) < cutoff) delete offBoard[id];
   // Demo tickets are practice: never written down, gone when the demo ends.
   const real = (map) => Object.fromEntries(Object.entries(map).filter(([id]) => !isDemo(id)));
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), handedOff: real(handedOff), canceled: real(canceled), skip: skipEdited ? skip : undefined, undoFloor, statsFloor }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), handedOff: real(handedOff), canceled: real(canceled), keepOnFront: real(keepOnFront), skip: skipEdited ? skip : undefined, undoFloor, statsFloor }, null, 2));
 }
 
 loadState();
@@ -389,7 +408,7 @@ async function dailyItems() {
   const out = [];
   for (const name of cfg.dailyItems) {
     const id = catalog.itemIds.get(name.trim().toLowerCase());
-    if (!id) { out.push({ name, missing: true }); continue; }
+    if (!id) { out.push({ key: name, name, missing: true }); continue; }
     const item = await readItem(id);
     const raw = item.item_data.variations || [];
     const vars = raw.map((v) => ({
@@ -397,7 +416,9 @@ async function dailyItems() {
       size: raw.length === 1 ? "" : sizeOf(v.item_variation_data.name),
       price: v.item_variation_data.pricing_type === "VARIABLE_PRICING" ? "" : dollars(v.item_variation_data.price_money),
     }));
-    out.push({ id, name: item.item_data.name, today: todayOf(raw), variations: vars });
+    // key: the name as config.json lists it, which is what the week's plan
+    // is filed under (Square's own spelling of it may differ in case).
+    out.push({ id, key: name, name: item.item_data.name, today: todayOf(raw), variations: vars });
   }
   return out;
 }
@@ -405,7 +426,7 @@ async function dailyItems() {
 // changes: [{ id, today: "BBQ Ribs" | "", variations: [{ id, price: "10.00" | "" }] }]
 // A blank price means "typed at the till" (variable pricing); a blank today
 // puts the plain size names back ("Regular", "Cup", "Bowl").
-async function saveDaily(changes) {
+async function saveDaily(changes, who = "the front page") {
   const done = [];
   // Every price checked before anything is written, so a typo in the last
   // box never leaves the first items saved and the rest not.
@@ -454,7 +475,7 @@ async function saveDaily(changes) {
     }
   }
   if (done.length) {
-    console.log(`Today's specials changed from the front page (${new Date().toLocaleTimeString()}): ${done.join(", ")}.`);
+    console.log(`Today's specials changed from ${who} (${new Date().toLocaleTimeString()}): ${done.join(", ")}.`);
     await loadCatalog();
   }
   return done;
@@ -587,6 +608,220 @@ async function saveDessertPhoto(itemId, dataUrl) {
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`Square ${res.status}: ${(json.errors || []).map((e) => e.detail || e.code).join("; ") || res.statusText}`);
   console.log(`Dessert photo changed from the front page (${new Date().toLocaleTimeString()}): ${item.item_data.name}.`);
+}
+
+// ---------------------------------------------------------------- the week's specials, planned ahead
+
+// Manage -> Plan the week: what each daily item is, and its price if that
+// changes, for the days to come. Each morning the board puts that day's into
+// Square by itself, through saveDaily (the same narrow write as Today's
+// specials), as soon as it starts or the date turns over. Nobody has to open
+// anything on the day.
+//
+// Two things fill the plan:
+//   - the website's published week (cfg.specialsUrl, built from the site's
+//     src/_data/specials.json: the same days as the /menu box and the
+//     Facebook post), read every SITE_MINUTES. It adds the days it lists and
+//     keeps them in step with the site, but it NEVER changes today, an
+//     earlier day, or a day set on the front page;
+//   - the front page. A day changed there is the front's from then on: the
+//     website's copy no longer touches it.
+// Kept in specials-plan.json beside state.json (gitignored).
+const PLAN_FILE = path.join(DIR, MOCK ? "specials-plan-mock.json" : "specials-plan.json");
+const SITE_MINUTES = 30;
+const RETRY_MINUTES = 5; // after Square refuses the morning's write
+const PLAN_DAYS = 14; // how far ahead Plan the week reaches
+
+// days:    { "YYYY-MM-DD": { from: "site" | "front", items: { "<dailyItems name>": { today, prices: { "<size>" | "": "10.50" } } } } }
+// applied: { "YYYY-MM-DD": { sig, at } after a good write, { sig, failedAt, error } after a bad one }
+// site:    the last read of the website, for the front to show
+let plan = { days: {}, applied: {}, site: { checkedAt: null, error: null } };
+try {
+  plan = { ...plan, ...JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")) };
+} catch {}
+
+function savePlan() {
+  // Two weeks back is plenty; a past day is never written again.
+  const old = localDate(new Date(Date.now() - 14 * 864e5));
+  for (const map of [plan.days, plan.applied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
+}
+
+// The kitchen PC's own calendar date, "2026-10-08". The PC is on the cafe's
+// time, so this is Central time.
+function localDate(d = new Date()) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+// "Thu Oct 8", for messages.
+const dayWords = (date) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+const cleanText = (s) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+const PRICE = /^\d{1,3}(\.\d{1,2})?$/;
+
+// Which of the website's fields goes into which daily item, by the item's
+// name: "Soup of the Day" takes the soup, "Lunch Special" the plate. One that
+// matches none of them is left for the front to fill.
+function siteFieldFor(name) {
+  if (/soup/i.test(name)) return "soup";
+  if (/salad/i.test(name)) return "salad";
+  if (/special/i.test(name)) return "special";
+  return null;
+}
+
+async function pullSite() {
+  if (!cfg.specialsUrl) return;
+  const today = localDate();
+  try {
+    const res = await fetch(cfg.specialsUrl, { cache: "no-store", signal: AbortSignal.timeout(15000) });
+    if (!res.ok) throw new Error(`the website answered ${res.status}`);
+    const json = await res.json();
+    // `days` is the shape; `week` is the older one, read so a board updated
+    // before the website still works.
+    const listed = (Array.isArray(json.days) ? json.days : Array.isArray(json.week) ? json.week : [])
+      .filter((d) => d && /^\d{4}-\d{2}-\d{2}$/.test(d.date));
+    const changed = [];
+    for (const d of listed) {
+      if (d.date < today) continue;
+      const have = plan.days[d.date];
+      if (have && have.from !== "site") continue; // set on the front page: theirs
+      // Today is never changed once it's in Square. It's only added, when
+      // the board starts on a day it had no plan for.
+      if (d.date === today && (have || (plan.applied[today] && plan.applied[today].sig !== "clear"))) continue;
+      const items = {};
+      for (const name of cfg.dailyItems) {
+        const field = siteFieldFor(name);
+        const text = field ? cleanText(d[field]) : "";
+        if (text) items[name] = { today: text, prices: {} };
+      }
+      if (!Object.keys(items).length) continue;
+      if (have && JSON.stringify(have.items) === JSON.stringify(items)) continue;
+      plan.days[d.date] = { from: "site", items };
+      changed.push(d.date);
+    }
+    // A day still to come that the website has since taken off.
+    const onSite = new Set(listed.map((d) => d.date));
+    for (const [date, day] of Object.entries(plan.days)) {
+      if (date > today && day.from === "site" && !onSite.has(date)) {
+        delete plan.days[date];
+        changed.push(date);
+      }
+    }
+    if (changed.length) console.log(`Specials from the website (${new Date().toLocaleTimeString()}): ${changed.sort().join(", ")}.`);
+    if (plan.site.error) console.log("Website specials readable again.");
+    plan.site = { checkedAt: new Date().toISOString(), error: null };
+  } catch (err) {
+    const message = err.name === "TimeoutError" ? "the website didn't answer"
+      : err.cause ? `can't reach the website (${err.cause.code || err.cause.message})` : err.message;
+    if (plan.site.error !== message) console.error(`Website specials: ${message}`);
+    plan.site = { checkedAt: new Date().toISOString(), error: message };
+  }
+  savePlan();
+}
+
+// Put today's planned specials into Square, once. Runs at startup, every
+// minute after (which is what catches the date turning over), and right
+// after the front saves today. A day with nothing planned puts the plain
+// size names back, so yesterday's plate never prints on today's tickets;
+// that happens only once the plan is in use, so a board that has never had
+// one leaves Square alone.
+let applying = null;
+function applyToday() {
+  if (!applying) applying = applyTodayOnce().finally(() => { applying = null; });
+  return applying;
+}
+
+async function applyTodayOnce() {
+  const today = localDate();
+  const day = plan.days[today];
+  const sig = day ? JSON.stringify(day.items) : "clear";
+  const last = plan.applied[today];
+  if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
+  if (!day && !Object.values(plan.applied).some((a) => a.at && a.sig !== "clear")) return null;
+  try {
+    const current = await dailyItems();
+    const changes = [];
+    for (const it of current) {
+      if (it.missing) continue;
+      const want = day ? day.items[it.key] : { today: "", prices: {} };
+      if (!want) continue; // not planned today: left as it is
+      changes.push({
+        id: it.id,
+        // Only a price planned and no name: the name in Square stays.
+        today: day ? want.today || undefined : "",
+        // A planned price, or the price Square has now ("" is priced at the till).
+        variations: it.variations.map((v) => ({ id: v.id, price: (want.prices || {})[v.size] || v.price })),
+      });
+    }
+    const saved = await saveDaily(changes, "the week's plan");
+    plan.applied[today] = { sig, at: new Date().toISOString() };
+    console.log(day
+      ? `Today's specials put in Square from the plan (${new Date().toLocaleTimeString()}): ${saved.join(", ") || "already there"}.`
+      : `Nothing planned for today: the specials' names are back to plain (${new Date().toLocaleTimeString()}).`);
+  } catch (err) {
+    if (!last || last.error !== err.message) console.error(`Today's specials from the plan: ${err.message}`);
+    plan.applied[today] = { sig, failedAt: new Date().toISOString(), error: err.message };
+  }
+  savePlan();
+  return plan.applied[today];
+}
+
+// What Plan the week shows: today and the next PLAN_DAYS days the cafe is
+// open (plus any other day something is planned for), with Square's own
+// sizes and prices for the price boxes.
+async function planView() {
+  const items = await dailyItems();
+  const dates = [];
+  for (let i = 0; i < PLAN_DAYS; i++) {
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    d.setDate(d.getDate() + i);
+    const date = localDate(d);
+    if (cfg.openDays.includes(d.getDay()) || plan.days[date]) dates.push(date);
+  }
+  return {
+    today: localDate(),
+    items: items.filter((it) => !it.missing).map(({ key, name, variations }) => ({ key, name, sizes: variations.map((v) => ({ size: v.size, price: v.price })) })),
+    missing: items.filter((it) => it.missing).map((it) => it.name),
+    days: dates.map((date) => ({ date, plan: plan.days[date] || null, applied: plan.applied[date] || null })),
+    site: { url: cfg.specialsUrl, ...plan.site },
+  };
+}
+
+// changes: { "YYYY-MM-DD": { items: { "<dailyItems name>": { today, prices: { "<size>": "10.50" } } } } }
+// Only the days the front changed. A day left with nothing in it is taken off
+// the plan (if the website lists it, its copy comes back on the next read).
+// Everything is checked before anything is kept.
+function savePlanDays(changes) {
+  const today = localDate();
+  const next = {};
+  for (const [date, change] of Object.entries(changes || {})) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today) {
+      throw Object.assign(new Error("That day has already gone. Open Plan the week again."), { plain: true });
+    }
+    const items = {};
+    for (const [name, it] of Object.entries((change && change.items) || {})) {
+      if (!cfg.dailyItems.includes(name)) throw Object.assign(new Error(`"${name}" isn't on the specials list.`), { plain: true });
+      const prices = {};
+      for (const [size, raw] of Object.entries((it && it.prices) || {})) {
+        const text = String(raw ?? "").replace(/[$\s]/g, "");
+        if (!text) continue;
+        if (!PRICE.test(text)) throw Object.assign(new Error(`"${raw}" isn't a price. Use numbers like 10 or 10.50. Nothing was saved.`), { plain: true });
+        prices[String(size)] = Number(text).toFixed(2);
+      }
+      const text = cleanText(it && it.today);
+      if (text || Object.keys(prices).length) items[name] = { today: text, prices };
+    }
+    next[date] = Object.keys(items).length ? { from: "front", items } : null;
+  }
+  for (const [date, day] of Object.entries(next)) {
+    if (day) plan.days[date] = day;
+    else delete plan.days[date];
+  }
+  savePlan();
+  const dates = Object.keys(next).sort();
+  if (dates.length) console.log(`Plan the week changed from the front page (${new Date().toLocaleTimeString()}): ${dates.join(", ")}.`);
+  return dates;
 }
 
 // The categories a line item's item is in: by its catalog id, or by name
@@ -866,6 +1101,7 @@ async function pollOnce() {
     lastOkAt = new Date().toISOString();
     if (lastError) console.log("Square connection restored");
     lastError = null;
+    autoHandoff();
   } catch (err) {
     if (err.message !== lastError) console.error(new Date().toLocaleTimeString(), err.message);
     lastError = err.message; // keep showing the last good tickets
@@ -932,6 +1168,34 @@ function statsToday() {
   return out;
 }
 
+// A ready order nobody pressed Handed off for clears itself off the front
+// page after cfg.autoHandoffMinutes, as if they had: one person watches the
+// front, and a list of finished orders hides the ones that aren't. Never an
+// unpaid order (money is still owed), never an online order the front hasn't
+// marked ready in Square (that's what texts the customer), and never one
+// brought back with Undo. Timed from when it turned ready: the kitchen's
+// Done, or for anything else the first poll that saw it ready.
+function autoHandoff() {
+  if (!cfg.autoHandoffMinutes) return;
+  const now = Date.now();
+  const cleared = [];
+  for (const t of all) {
+    const ready = readyAt(t);
+    if (!ready) { delete readySince[t.id]; continue; }
+    if (!readySince[t.id]) readySince[t.id] = bumped[t.id] ? Date.parse(bumped[t.id]) : now;
+    if (handedOff[t.id] || canceled[t.id] || keepOnFront[t.id]) continue;
+    if (t.unpaid || (t.kind !== "COUNTER" && !t.squareReady)) continue;
+    if (now - readySince[t.id] < cfg.autoHandoffMinutes * 6e4) continue;
+    handedOff[t.id] = new Date(now).toISOString();
+    autoOff.add(t.id);
+    cleared.push(t.label);
+  }
+  if (cleared.length) {
+    saveState();
+    console.log(`${new Date().toLocaleTimeString()}  front page: ready ${cfg.autoHandoffMinutes}+ min, cleared by itself: ${cleared.join(", ")}`);
+  }
+}
+
 // /front: ready orders first, oldest-ready at the top (the one waiting
 // longest on the counter), then what's still cooking in board order.
 function frontSnapshot() {
@@ -945,7 +1209,8 @@ function frontSnapshot() {
       return Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt);
     });
   return { orders, lastOkAt, error: lastError, mock: MOCK, lastHandedOff: lastHandedOff(),
-    handedOffList: undoList(handedOff), stats: statsToday(), demo, updatePin: !!cfg.updatePin, pollSeconds: cfg.pollSeconds };
+    handedOffList: undoList(handedOff).map((h) => ({ ...h, auto: autoOff.has(h.id) })), stats: statsToday(), demo,
+    updatePin: !!cfg.updatePin, pollSeconds: cfg.pollSeconds, autoHandoffMinutes: cfg.autoHandoffMinutes };
 }
 
 // ---------------------------------------------------------------- mock data
@@ -1370,7 +1635,16 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save"]);
+// The front page's home-screen icon and app manifest: what a phone fetches to
+// put /front on its home screen. Nothing in them is private, and a phone
+// fetches the icons without the page's ?key=, so they never need it.
+const APP_FILES = {
+  "/front.webmanifest": null, // built per request, see below
+  "/front-icon-180.png": "icon-180.png",
+  "/front-icon-192.png": "icon-192.png",
+  "/front-icon-512.png": "icon-512.png",
+};
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
 let pinFails = [];
@@ -1409,6 +1683,7 @@ function resetDay(clearBoard, from) {
   console.log(`Reset for the day from ${from} (${new Date().toLocaleTimeString()})${clearBoard ? ", board cleared" : ""}.`);
 }
 function networkAllowed(req, url) {
+  if (req.method === "GET" && url.pathname in APP_FILES) return true;
   if (!NETWORK_PATHS.has(url.pathname)) return false;
   return !cfg.frontKey || url.searchParams.get("key") === cfg.frontKey;
 }
@@ -1428,6 +1703,30 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "GET" && url.pathname === "/front") {
     return send(res, 200, fs.readFileSync(FRONT_FILE, "utf8"), "text/html; charset=utf-8");
+  }
+  // Added to a phone's home screen, /front opens like an app: its own icon,
+  // full screen, no address bar. start_url carries the key when the page
+  // asking for the manifest had the right one, so the icon keeps working
+  // with frontKey set.
+  if (req.method === "GET" && url.pathname === "/front.webmanifest") {
+    const key = cfg.frontKey && url.searchParams.get("key") === cfg.frontKey ? `?key=${encodeURIComponent(cfg.frontKey)}` : "";
+    return send(res, 200, {
+      name: "The Café · Front",
+      short_name: "Café Front",
+      start_url: `/front${key}`,
+      scope: "/",
+      display: "standalone",
+      background_color: "#FAF7F2",
+      theme_color: "#1F4552",
+      icons: [
+        { src: "/front-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+        { src: "/front-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+      ],
+    }, "application/manifest+json; charset=utf-8");
+  }
+  if (req.method === "GET" && APP_FILES[url.pathname]) {
+    res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "max-age=86400" });
+    return res.end(fs.readFileSync(path.join(DIR, APP_FILES[url.pathname])));
   }
   if (req.method === "GET" && url.pathname === "/api/front") {
     return send(res, 200, frontSnapshot());
@@ -1525,11 +1824,41 @@ const server = http.createServer(async (req, res) => {
         : `Square didn't take it: ${err.message}` });
     }
   }
+  // Plan the week, behind the PIN: read the plan (with Square's sizes and
+  // prices for the boxes) and save the days the front changed. Saving today
+  // puts it into Square straight away; other days go in on their morning.
+  if (req.method === "POST" && (url.pathname === "/api/front-plan" || url.pathname === "/api/front-plan-save")) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    try {
+      if (url.pathname === "/api/front-plan") {
+        await pullSite(); // so the website's latest is what's shown
+        return send(res, 200, { ok: true, ...(await planView()) });
+      }
+      const dates = savePlanDays(body.days);
+      if (!dates.length) return send(res, 200, { ok: true, message: "Nothing changed." });
+      let message = `Saved: ${dates.map(dayWords).join(", ")}.`;
+      if (dates.includes(localDate())) {
+        const r = await applyToday();
+        message += r && r.error ? ` Today's didn't go into Square yet (${r.error}); the board tries again in ${RETRY_MINUTES} minutes.`
+          : " Today's is in Square now.";
+      }
+      if (dates.some((d) => d > localDate())) message += " The rest go into Square by themselves on the morning of each day.";
+      return send(res, 200, { ok: true, message });
+    } catch (err) {
+      console.error(`Plan the week: ${err.message}`);
+      return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't work: ${err.message}` });
+    }
+  }
   if (req.method === "POST" && url.pathname === "/api/unhandoff") {
     const { id } = await readBody(req);
     if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
     delete handedOff[id];
     delete canceled[id];
+    // Back on the front page to stay: it won't clear itself again.
+    keepOnFront[id] = new Date().toISOString();
+    autoOff.delete(id);
     saveState();
     return send(res, 200, frontSnapshot());
   }
@@ -1544,6 +1873,8 @@ const server = http.createServer(async (req, res) => {
     if (last) {
       delete handedOff[last.id];
       delete canceled[last.id];
+      keepOnFront[last.id] = new Date().toISOString();
+      autoOff.delete(last.id);
       saveState();
     }
     return send(res, 200, frontSnapshot());
@@ -1638,6 +1969,12 @@ server.listen(cfg.port, HOST, () => {
   if (!cfg.sound || MUTE) console.log("Sound is OFF.");
   for (const note of cfg.notes) console.log(`config.json: ${note}`);
   // The catalog first, so a skipped category is never on the first board.
-  loadCatalog().finally(poll);
+  // Then the website's week, then today's specials into Square.
+  loadCatalog().finally(() => {
+    poll();
+    pullSite().finally(applyToday);
+  });
   setInterval(loadCatalog, CATALOG_MINUTES * 6e4);
+  setInterval(pullSite, SITE_MINUTES * 6e4);
+  setInterval(applyToday, 6e4);
 });

@@ -23,3 +23,6 @@ photos-originals/
 # Kitchen board — the Square token and bump state live only on the kitchen PC
 kitchen/config.json
 kitchen/state*.json
+
+# Kitchen board: the week's specials plan lives only on the kitchen PC
+kitchen/specials-plan*.json
