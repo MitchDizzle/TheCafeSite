@@ -43,7 +43,8 @@ module.exports = {
       // and the post says it's a special rather than naming a category.
       if (photo.special) {
         if (!photo.description) throw new Error(`photos.json: special "${photo.title}" needs a description`);
-        return { kicker: "Daily Special", description: photo.description, variantNote: null, titleSize: titleSizeFor(photo.title) };
+        return { kicker: "Daily Special", description: photo.description,
+          variantNote: photo.includesDrink ? "Drink included" : null, titleSize: titleSizeFor(photo.title) };
       }
       const found = lookup(photo.item);
       if (!found) throw new Error(`photos.json: "${photo.item}" is not an item in menu.json`);
@@ -71,7 +72,7 @@ module.exports = {
       if (photo.special) {
         // No price: a special's price lives in Square and changes with the
         // dish. Written for posting on the day it's served.
-        lines.push(`Today's special: ${photo.title}, ${photo.description.charAt(0).toLowerCase()}${photo.description.slice(1)}. While it lasts!`);
+        lines.push(`Today's special: ${photo.title}, ${photo.description.charAt(0).toLowerCase()}${photo.description.slice(1)}.${photo.includesDrink ? " A drink is included." : ""} While it lasts!`);
       } else {
         const found = lookup(photo.item);
         if (!found) return [];

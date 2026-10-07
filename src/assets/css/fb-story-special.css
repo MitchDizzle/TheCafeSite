@@ -1,0 +1,108 @@
+/* ============================================================
+   Daily special — Facebook Story, 1080 × 1920 px
+   Piece: src/studio/fb-story-special.njk  ·  data: src/_data/photos.json
+
+   Facebook covers about the top 230px of a Story with the profile name and
+   progress bar, and the bottom 220px with the reply box, so the wordmark
+   starts below the one and the last line ends above the other. A Story is
+   shown full screen on a phone, about 3x smaller than this canvas: nothing
+   a customer needs is under 30px.
+   ============================================================ */
+
+.story {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--teal-dark) 0%, var(--teal) 100%);
+    color: var(--cream);
+    text-align: center;
+}
+
+.story-wordmark {
+    --mark-w: 320px;
+    position: absolute;
+    top: 240px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.story-head {
+    position: absolute;
+    top: 370px;
+    left: 60px;
+    right: 60px;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.story-kicker {
+    font-size: 32px;
+    color: var(--mint);
+    text-indent: 0.18em; /* re-centre the trailing letter-spacing */
+}
+
+/* The dish post's title treatment (fb-dish.css), allowed two lines here. */
+.story-title {
+    margin: 8px 0 0;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 92px;
+    line-height: 1.05;
+    text-wrap: balance; /* "Pork Tenderloin / on a Bun", not "...on a / Bun" */
+    color: var(--cream);
+    -webkit-text-stroke: 0.07em var(--teal-dark);
+    paint-order: stroke fill;
+    filter: drop-shadow(0.03em 0.045em 0 var(--coral));
+}
+
+.story-photo {
+    position: absolute;
+    top: 640px;
+    left: 0;
+    width: 1080px;
+    height: 820px;
+    object-fit: cover;
+    object-position: 50% 55%;
+    display: block;
+    border-top: 8px solid var(--accent);
+    border-bottom: 8px solid var(--accent);
+}
+
+.story-band {
+    position: absolute;
+    top: 1476px;
+    left: 70px;
+    right: 70px;
+    bottom: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+
+.story-desc {
+    font-size: 34px;
+    line-height: 1.25;
+}
+
+/* Cream on the accent red is 5:1. Red goes on its own fill here, never as
+   text on the teal (1.3:1). */
+.story-drink {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 32px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 26px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--cream);
+}
+
+.story-call {
+    font-size: 28px;
+    color: var(--mint);
+}
