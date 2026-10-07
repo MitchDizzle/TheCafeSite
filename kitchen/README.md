@@ -160,6 +160,8 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `front.html` | The front page for the counter (`/front`). |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `state.json` | Which orders have been cleared. Created automatically; gitignored. |
+| `photos\` | Photo post: the photos and finished posts kept for the website, with `photos.json`. Gitignored. |
+| `wordmark.svg` | The Café wordmark drawn into Photo post's pictures. |
 | `stats-history.json` | Every day's orders and numbers, for Reports. Created automatically; gitignored; never deleted. |
 | `specials-plan.json` | Plan the week: the days ahead and which are in Square already. Created automatically; gitignored. |
 | `icon-*.png` | The front page's home-screen icon. |
@@ -187,6 +189,21 @@ The specials for today and the next two weeks, set ahead of time. **Each morning
 - **A day with nothing planned** puts the plain names back ("Regular", "Cup", "Bowl") that morning, so yesterday's plate never prints on today's tickets. Prices are left alone. A board that has never had a plan leaves Square alone.
 - **Today's specials** (below) still works for a change during the day. It edits Square directly and isn't undone by the plan; the plan only writes again if today's plan is changed.
 - The plan is kept in `specials-plan.json` on the kitchen PC (gitignored). The program window logs every day it reads from the website and every write to Square.
+
+## Photo post (Manage on the front page)
+
+Makes the Facebook dish post (the same 1080 × 1250 picture as the website's `/studio/` dish posts) on the phone, from a photo taken there and then. Nothing is generated anywhere else and nothing costs anything: the phone draws it.
+
+1. **Take or choose a photo.** The phone's camera or photo library.
+2. **What's in the photo:** today's special or soup (from Plan the week, with the website's sides), "A special" to type one in, or any item in Square (its category, name and description come from Square).
+3. **Change any of the words:** the name, the line above it, the words under the photo, and **Drink included** for a special. The picture redraws as you type.
+4. **Frame it:** drag the picture to move it, and zoom with the slider. The post shows a square of it.
+5. **Make the picture.** Press and hold it to save it to the phone's photos (or Download), and **Copy caption**: worded like the website's dish posts, with the order link, hours and menu link.
+
+**Keep the photo on the kitchen PC for the website** (ticked by default) saves the photo (2000px, re-drawn on the phone so its GPS location is gone) and the finished post in `photos\` on the kitchen PC, listed in `photos\photos.json` in the same shape as the website's `src/_data/photos.json`. To put them on the website, copy that folder off the PC and move the entries over (or ask Claude to); each needs its `alt` text written then.
+
+- The post's fonts load from Google Fonts on the phone, like the website's. Without internet the picture uses plain fonts and the screen says so.
+- The phone number, web address, hours and order link in the picture and caption are set near the top of the Photo post code in `front.html` (`SITE`). Change them there along with the website's `site.json`.
 
 ## Reports and the daily history (Manage on the front page)
 

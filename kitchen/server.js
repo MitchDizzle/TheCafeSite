@@ -304,7 +304,7 @@ function startOfToday() {
 // whenever the skip list is opened on /front, so a category made in Square
 // today can be picked without a restart.
 const CATALOG_MINUTES = 10;
-let catalog = { byVariation: new Map(), byName: new Map(), itemIds: new Map(), categories: [], loadedAt: null, error: null };
+let catalog = { byVariation: new Map(), byName: new Map(), itemIds: new Map(), categories: [], menuItems: [], loadedAt: null, error: null };
 
 function buildCatalog(objects) {
   // Ordinary categories only. The Restaurants POS also keeps MENU categories
@@ -317,12 +317,24 @@ function buildCatalog(objects) {
   const byName = new Map();
   const itemIds = new Map(); // item name (lower case) -> catalog id, for Today's specials
   const members = new Map(); // category name -> item names
+  const menuItems = []; // for Photo post: what each item is called, says and costs in Square
   for (const o of objects) {
     if (o.type !== "ITEM" || o.is_deleted) continue;
     const d = o.item_data || {};
     const ids = new Set([...(d.categories || []).map((c) => c.id), d.category_id, d.reporting_category && d.reporting_category.id].filter(Boolean));
     const cats = [...ids].map((id) => catName.get(id)).filter(Boolean);
     const entry = { name: d.name || "", cats };
+    const fixed = (d.variations || [])
+      .map((v) => v.item_variation_data || {})
+      .filter((v) => v.pricing_type !== "VARIABLE_PRICING" && v.price_money && v.price_money.amount != null)
+      .map((v) => v.price_money.amount);
+    menuItems.push({
+      name: entry.name,
+      category: cats[0] || "",
+      description: String(d.description_plaintext || d.description || "").replace(/<[^>]+>/g, "").trim(),
+      price: fixed.length ? Math.min(...fixed) / 100 : null,
+      sizes: fixed.length > 1,
+    });
     for (const v of d.variations || []) byVariation.set(v.id, entry);
     byName.set(entry.name.trim().toLowerCase(), cats);
     itemIds.set(entry.name.trim().toLowerCase(), o.id);
@@ -334,7 +346,8 @@ function buildCatalog(objects) {
   const categories = [...members]
     .map(([name, items]) => ({ name, items: [...items].sort((a, b) => a.localeCompare(b)) }))
     .sort((a, b) => (a.name === "(No category)") - (b.name === "(No category)") || a.name.localeCompare(b.name));
-  return { byVariation, byName, itemIds, categories };
+  menuItems.sort((a, b) => (a.category || "~").localeCompare(b.category || "~") || a.name.localeCompare(b.name));
+  return { byVariation, byName, itemIds, categories, menuItems };
 }
 
 async function loadCatalog() {
@@ -695,8 +708,10 @@ async function pullSite() {
         if (text) items[name] = { today: text, prices: {} };
       }
       if (!Object.keys(items).length) continue;
-      if (have && JSON.stringify(have.items) === JSON.stringify(items)) continue;
-      plan.days[d.date] = { from: "site", items };
+      // The sides go nowhere in Square; Photo post words the special with them.
+      const sides = Array.isArray(d.sides) ? d.sides.map(cleanText).filter(Boolean) : [];
+      if (have && JSON.stringify(have.items) === JSON.stringify(items) && JSON.stringify(have.sides || []) === JSON.stringify(sides)) continue;
+      plan.days[d.date] = { from: "site", items, sides };
       changed.push(d.date);
     }
     // A day still to come that the website has since taken off.
@@ -865,6 +880,79 @@ async function fetchOrders() {
     }),
   ]);
   return [...open, ...completed];
+}
+
+// ---------------------------------------------------------------- photo posts
+
+// Manage -> Photo post: the phone draws the post itself (canvas), from a
+// photo it just took and words it fills from the plan or Square's menu. The
+// kitchen PC only keeps the result, for the website later: the photo (already
+// shrunk to 2000px and re-drawn on the phone, which drops its GPS data) and
+// the finished post, in photos/, with photos/photos.json in the same shape as
+// the site's src/_data/photos.json so they can be moved over as they are.
+// Gitignored.
+const PHOTO_DIR = path.join(DIR, MOCK ? "photos-mock" : "photos");
+
+// What the screen starts from: today's planned special and soup (with the
+// website's sides), and every item in Square with its words and price.
+async function photoSetup() {
+  await loadCatalog();
+  const date = localDate();
+  const day = plan.days[date];
+  const today = {};
+  if (day) {
+    for (const [name, it] of Object.entries(day.items)) {
+      const field = siteFieldFor(name);
+      if (field && it.today) today[field] = it.today;
+    }
+    if (day.sides && day.sides.length) today.sides = day.sides;
+  }
+  return { date, today, items: catalog.menuItems, catalogError: catalog.error };
+}
+
+const slugOf = (s) => String(s).toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "photo";
+
+function jpegFrom(dataUrl, what) {
+  const m = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
+  if (!m) throw Object.assign(new Error(`The ${what} didn't come through. Try again.`), { plain: true });
+  const bytes = Buffer.from(m[1], "base64");
+  if (bytes.length > 8 * 1024 * 1024) throw Object.assign(new Error(`The ${what} is too big.`), { plain: true });
+  return bytes;
+}
+
+// body: { photo, post: JPEG data URLs, meta: { title, item, special, includesDrink, description, kicker } }
+function savePhotoPost(body) {
+  const meta = body.meta || {};
+  const title = cleanText(meta.title);
+  if (!title) throw Object.assign(new Error("The post needs a name."), { plain: true });
+  const photo = jpegFrom(body.photo, "photo");
+  const post = jpegFrom(body.post, "finished post");
+  fs.mkdirSync(PHOTO_DIR, { recursive: true });
+  const indexFile = path.join(PHOTO_DIR, "photos.json");
+  let index = { photos: [] };
+  try { index = JSON.parse(fs.readFileSync(indexFile, "utf8")); } catch {}
+  const date = localDate();
+  // Same dish twice (a retake): a new name, never over the earlier one.
+  let slug = slugOf(title);
+  for (let n = 2; fs.existsSync(path.join(PHOTO_DIR, `${date}-${slug}.jpg`)); n++) slug = `${slugOf(title)}-${n}`;
+  fs.writeFileSync(path.join(PHOTO_DIR, `${date}-${slug}.jpg`), photo);
+  fs.writeFileSync(path.join(PHOTO_DIR, `${date}-${slug}-post.jpg`), post);
+  index.photos.push({
+    file: `/assets/photos/${slug}.jpg`,
+    item: meta.special ? null : String(meta.item || "") || null,
+    special: !!meta.special,
+    ...(meta.special && meta.includesDrink ? { includesDrink: true } : {}),
+    variant: null,
+    title,
+    description: String(meta.description || "").replace(/\s+/g, " ").trim().slice(0, 200),
+    alt: "", // written when it moves to the website: describe the picture
+    date,
+    saved: `${date}-${slug}.jpg`,
+    post: `${date}-${slug}-post.jpg`,
+  });
+  fs.writeFileSync(indexFile, JSON.stringify(index, null, 2));
+  console.log(`Photo post saved from the front page (${new Date().toLocaleTimeString()}): ${title} -> photos/${date}-${slug}.jpg`);
+  return `${date}-${slug}.jpg`;
 }
 
 // ---------------------------------------------------------------- tickets
@@ -1621,9 +1709,10 @@ function send(res, status, body, type = "application/json; charset=utf-8") {
   res.end(typeof body === "string" ? body : JSON.stringify(body));
 }
 
-// Up to 8 MB: a dessert photo arrives as base64 in JSON (the phone shrinks
-// it to about 1600px first, so a few hundred KB is usual).
-const MAX_BODY = 8 * 1024 * 1024;
+// Up to 20 MB: photos arrive as base64 in JSON. A dessert photo is shrunk
+// to about 1600px first, Photo post's to 2000px plus the finished post, so
+// one to three MB is usual.
+const MAX_BODY = 20 * 1024 * 1024;
 function readBody(req) {
   return new Promise((resolve) => {
     let data = "";
@@ -1732,7 +1821,7 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -1741,6 +1830,7 @@ const APP_FILES = {
   "/front-icon-180.png": "icon-180.png",
   "/front-icon-192.png": "icon-192.png",
   "/front-icon-512.png": "icon-512.png",
+  "/front-wordmark.svg": "wordmark.svg", // drawn into Photo post's pictures
 };
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
@@ -1822,7 +1912,7 @@ const server = http.createServer(async (req, res) => {
     }, "application/manifest+json; charset=utf-8");
   }
   if (req.method === "GET" && APP_FILES[url.pathname]) {
-    res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "max-age=86400" });
+    res.writeHead(200, { "Content-Type": url.pathname.endsWith(".svg") ? "image/svg+xml" : "image/png", "Cache-Control": "max-age=86400" });
     return res.end(fs.readFileSync(path.join(DIR, APP_FILES[url.pathname])));
   }
   if (req.method === "GET" && url.pathname === "/api/front") {
@@ -1946,6 +2036,21 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       console.error(`Plan the week: ${err.message}`);
       return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't work: ${err.message}` });
+    }
+  }
+  // Photo post, behind the PIN: what the screen starts from, and keeping
+  // the photo and the finished post on this PC.
+  if (req.method === "POST" && (url.pathname === "/api/front-photo" || url.pathname === "/api/front-photo-save")) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    try {
+      if (url.pathname === "/api/front-photo") return send(res, 200, { ok: true, ...(await photoSetup()) });
+      const name = savePhotoPost(body);
+      return send(res, 200, { ok: true, message: `Kept on the kitchen PC for the website (photos\\${name}).` });
+    } catch (err) {
+      console.error(`Photo post: ${err.message}`);
+      return send(res, 200, { ok: false, message: err.plain ? err.message : `Couldn't keep it: ${err.message}` });
     }
   }
   // Reports, behind the PIN: the saved daily history for a date range.
