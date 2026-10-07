@@ -1,37 +1,51 @@
 {
-  "_note": "The week's daily specials — one entry per day the cafe is open, written a week ahead. This file is the contract: /menu's 'Today's special' box and the weekly Facebook post (src/studio/fb-weekly-specials.njk, with its caption) are all built from it, and the specials web panel planned in CafeWork/DAILY-SPECIALS.md will write this same shape instead of someone editing it by hand. Change the shape and all three change.",
+  "_note": "The daily specials, a day per entry, written a week ahead. This file is the contract: /menu's 'Today's special' box, the weekly Facebook post (src/studio/fb-weekly-specials.njk, with its caption), the counter sign, and /specials.json are all built from it. /specials.json is what the kitchen PC reads (kitchen/README.md, Plan the week): each morning it puts that day's plate and soup into Square by itself. Change the shape and all of them change.",
   "_note_fields": "`date` is YYYY-MM-DD and is the ONLY date — weekday names and 'October 5' are computed from it, so a day can never be labelled wrong. `soup` is the soup of the day (it starts at 11am; prices are Cup/Bowl on the menu). `special` is the plate and `sides` what comes with it. No prices on purpose: they live in Square, and a price here could disagree with the till. `photo` is reserved for later — a path under /assets/ once there are food photos; nothing reads it yet.",
-  "_note_expiry": "Nothing here expires by itself, and nothing has to: /menu picks today's entry in the visitor's browser on Central time and shows nothing at all on a day that is not listed — weekends, and every day after the last one. An old week left in place is therefore hidden, never shown. Replace the whole week each time; do not append.",
-  "week": [
+  "_note_weeks": "ADD next week; don't replace this one. Next week goes in a week ahead (for the Facebook post) while this week is still on /menu, so the file holds both side by side. /menu lists one week at a time by the visitor's date; the Facebook post, its caption and the counter sign show the NEWEST week in the file (the latestWeek filter). Delete a week once it's over, or leave it: a past day is never shown.",
+  "_note_kitchen": "The kitchen PC reads /specials.json every half hour and never changes today, an earlier day, or a day set on its own front page (Manage > Plan the week) from it. So adding next week, or fixing a later day here, can't disturb today's specials in Square; fixing TODAY has to be done on the front page.",
+  "_note_expiry": "Nothing here expires by itself, and nothing has to: /menu picks today's entry in the visitor's browser on Central time and shows nothing at all on a day that is not listed — weekends, and every day after the last one. An old week left in place is therefore hidden, never shown.",
+  "days": [
     {
       "date": "2026-10-05",
       "soup": "Chicken Dumpling",
       "special": "BBQ Ribs",
-      "sides": ["Baked Beans", "Mac & Cheese"]
+      "sides": [
+        "Baked Beans",
+        "Mac & Cheese"
+      ]
     },
     {
       "date": "2026-10-06",
       "soup": "Cauliflower Cheese",
       "special": "Chicken Enchilada Casserole",
-      "sides": ["Rice & Beans"]
+      "sides": [
+        "Rice & Beans"
+      ]
     },
     {
       "date": "2026-10-07",
       "soup": "Beef Noodle",
       "special": "Pork Tenderloin on a Bun",
-      "sides": ["Oven Baked Potatoes"]
+      "sides": [
+        "Oven Baked Potatoes"
+      ]
     },
     {
       "date": "2026-10-08",
       "soup": "Ham & Beans",
       "special": "Chicken Parm Sandwich",
-      "sides": ["Cheesy Potatoes"]
+      "sides": [
+        "Cheesy Potatoes"
+      ]
     },
     {
       "date": "2026-10-09",
       "soup": "Baked Potato Soup",
       "special": "Meatloaf",
-      "sides": ["Mashed Potatoes & Gravy", "Green Beans"]
+      "sides": [
+        "Mashed Potatoes & Gravy",
+        "Green Beans"
+      ]
     }
   ]
 }

@@ -13,7 +13,7 @@ tags: studio
 studioTitle: "Weekly lunch specials — Facebook post"
 studioCategory: "Social"
 studioSize: "1080 × 1350 px · portrait feed post"
-studioNote: "The one Facebook post a week, made a week ahead. Every word on it comes from src/_data/specials.json — edit the week there, run npm run build, and this image and its caption (on /studio/downloads/) both follow. No prices: they are in Square. Portrait 4:5 is the tallest a feed post shows uncropped. Cream body with teal bands, so it sits well beside food photos in a multi-image post."
+studioNote: "The one Facebook post a week, made a week ahead. Every word on it comes from src/_data/specials.json — add next week there (it shows the newest week in the file), run npm run build, and this image and its caption (on /studio/downloads/) both follow. No prices: they are in Square. Portrait 4:5 is the tallest a feed post shows uncropped. Cream body with teal bands, so it sits well beside food photos in a multi-image post."
 studioW: 1080
 studioH: 1350
 studioOrder: 22
@@ -33,7 +33,7 @@ studioOrder: 22
 
     Every size is set for the ~540px a portrait post shows at on a phone:
     nothing a customer needs is under 24px. -#}
-{%- set week = specials.week %}
+{%- set week = specials.days | latestWeek %}
 {%- set first = week[0].date | dayDate("monthDay") %}
 {%- set last = week[week.length - 1].date | dayDate("monthDay") %}
 {#- "October 5 – 9", or "September 28 – October 2" across a month end. -#}

@@ -31,4 +31,23 @@ function dayLines(week) {
   });
 }
 
-module.exports = { weekRange, dayLines };
+// The Monday of a YYYY-MM-DD date's week, as YYYY-MM-DD.
+function mondayOf(iso) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+
+// The newest week in specials.json's `days`: the Monday-to-Sunday week of
+// the latest date in the file, in date order. The file holds this week and
+// next side by side (next week goes in while this one is still on /menu),
+// and every printed or posted piece is made for the week ahead, so that is
+// the one they show. /menu picks its own days by the visitor's date.
+function latestWeek(days) {
+  const sorted = [...(days || [])].sort((a, b) => a.date.localeCompare(b.date));
+  if (!sorted.length) return [];
+  const monday = mondayOf(sorted[sorted.length - 1].date);
+  return sorted.filter((d) => mondayOf(d.date) === monday);
+}
+
+module.exports = { weekRange, dayLines, latestWeek };

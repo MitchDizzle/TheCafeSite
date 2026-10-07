@@ -6,14 +6,14 @@
 //
 // One string per paragraph; /studio/downloads/ shows it with a Copy button.
 
-const { weekRange, dayLines } = require("../_includes/specials-caption.js");
+const { weekRange, dayLines, latestWeek } = require("../_includes/specials-caption.js");
 
 module.exports = {
   eleventyComputed: {
     caption: (data) => {
       const { site } = data;
       const o = site.opening;
-      const week = (data.specials && data.specials.week) || [];
+      const week = latestWeek(data.specials && data.specials.days);
       const hours = `${o.opens.time.replace(":00", "")}${o.opens.meridiem} – ${o.closes.time.replace(":00", "")}${o.closes.meridiem}`;
 
       const lines = [

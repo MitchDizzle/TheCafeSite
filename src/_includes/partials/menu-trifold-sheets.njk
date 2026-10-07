@@ -245,7 +245,7 @@
             <div class="panel-codes">
                 <div class="code">
                     <div class="qr code-qr">{% inlineSvg "/assets/qr-facebook.svg" %}</div>
-                    <p class="p-label code-label ink-accent">Follow</p>
+                    <p class="p-label code-label ink-accent">Weekly specials</p>
                     <p class="p-body code-line ink-teal">{{ site.social.facebookHandle }}</p>
                 </div>
                 <div class="code">
@@ -306,8 +306,12 @@
                 <p class="p-display cover-phone ink-teal">{{ site.phone }}</p>
             </div>
 
+            {#- The week's specials aren't on a printed menu (they change
+                weekly), so the cover says where they are: the /menu box
+                and the weekly Facebook post. -#}
             <div class="cover-links">
-                <p class="p-body cover-link ink-teal">{{ site.social.website }}</p>
+                <p class="p-label cover-links-label ink-accent">This week&rsquo;s specials</p>
+                <p class="p-body cover-link ink-teal">{{ site.social.website }}/menu</p>
                 <p class="p-body cover-link ink-teal">{{ site.social.facebookHandle }}</p>
             </div>
         </section>

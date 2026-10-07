@@ -285,6 +285,11 @@
     align-self: stretch;
 }
 
+.cover-links-label {
+    font-size: 0.085in;
+    margin-bottom: 0.03in;
+}
+
 .cover-link {
     font-size: 0.135in;
     font-weight: 700;

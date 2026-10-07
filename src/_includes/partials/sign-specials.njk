@@ -1,12 +1,12 @@
 {#- This week's specials counter sign, shared by sign-specials.njk (colour)
     and sign-specials-bw.njk (`bw: true`). Read from src/_data/specials.json
-    like the /menu box and the Facebook post: replace the week there, build,
-    print. Day names and dates are computed from `date`, never typed.
+    like the /menu box and the Facebook post: add the week there, build,
+    print. It shows the newest week in the file (see latestWeek). Day names and dates are computed from `date`, never typed.
 
     No price on the plate, on purpose: specials.json carries none (they live
     in Square, and a printed price could disagree with the till). The soup's
     Cup / Bowl prices DO print, because they come from menu.json. -#}
-{%- set week = specials.week %}
+{%- set week = specials.days | latestWeek %}
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
 {%- set first = week[0].date | dayDate("monthDay") %}
 {%- set last = week[week.length - 1].date | dayDate("monthDay") %}

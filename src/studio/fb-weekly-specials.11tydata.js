@@ -6,12 +6,12 @@
 // Edit the wording here; edit the food in the JSON. The day lines are shared
 // with fb-open-monday via _includes/specials-caption.js.
 
-const { weekRange, dayLines } = require("../_includes/specials-caption.js");
+const { weekRange, dayLines, latestWeek } = require("../_includes/specials-caption.js");
 
 module.exports = {
   eleventyComputed: {
     caption: (data) => {
-      const week = (data.specials && data.specials.week) || [];
+      const week = latestWeek(data.specials && data.specials.days);
       if (!week.length) return [];
 
       const { site } = data;

@@ -160,7 +160,10 @@ studioOrder: 21
                     <p class="p-display lp-visit-phone ink-teal">{{ site.phone }}</p>
                     <p class="p-body lp-visit-line">{{ site.address.street }}</p>
                     <p class="p-body lp-visit-line">{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
-                    <p class="p-body lp-visit-line">{{ site.social.website }}</p>
+                    {#- The site itself is in every page's header, so its line
+                        here says where the week's specials are instead: the
+                        page has about one line to spare (proofed 2026-10-07). -#}
+                    <p class="p-body lp-visit-line">This week&rsquo;s specials: {{ site.social.website }}/menu &amp; Facebook</p>
                 </div>
 
                 <div class="lp-foot">

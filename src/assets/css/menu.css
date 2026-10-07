@@ -475,6 +475,26 @@
     font-weight: 700;
 }
 
+/* Where else the specials are. Mint on teal, underlined: the accent red is
+   1.3:1 on this ground, so the link can't wear it here. */
+.ts-follow {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    color: var(--cream);
+}
+
+.ts-follow a {
+    color: var(--mint);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.ts-follow a:hover,
+.ts-follow a:focus-visible {
+    color: var(--cream);
+}
+
 /* ── The rest of the week: a real table, three labelled columns ── */
 
 .ts-week {
