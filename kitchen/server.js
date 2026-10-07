@@ -1102,6 +1102,7 @@ async function pollOnce() {
     if (lastError) console.log("Square connection restored");
     lastError = null;
     autoHandoff();
+    recordHistory();
   } catch (err) {
     if (err.message !== lastError) console.error(new Date().toLocaleTimeString(), err.message);
     lastError = err.message; // keep showing the last good tickets
@@ -1126,14 +1127,17 @@ function snapshot() {
 // unpaid open checks don't.
 const BREAKFAST_ENDS = 11; // hour, local time
 
-function statsToday() {
+// One record per order that counts today, the same orders the numbers are
+// made from. These are what the daily history keeps (see recordHistory), so
+// any report can be made later from them, not only the numbers shown now.
+// No customer names: the ticket's label is left out on purpose.
+function dayRecords() {
   // From midnight, or from the last Reset for the day if that was today.
   const today = Math.max(startOfToday().getTime(), statsFloor ? Date.parse(statsFloor) : 0);
   const tomorrow = startOfToday().getTime() + 864e5;
+  const tickets = new Map(all.filter((t) => !t.demo).map((t) => [t.id, t]));
   const seen = new Set();
-  const out = { orders: 0, breakfast: 0, lunch: 0, counter: 0, online: 0, kitchenDone: 0,
-    avgMinutes: null, longestMinutes: null, topItems: [] };
-  const qty = new Map();
+  const out = [];
   for (const o of todaysOrders) {
     if (seen.has(o.id)) continue;
     seen.add(o.id);
@@ -1145,26 +1149,119 @@ function statsToday() {
     if (when < today || when >= tomorrow) continue;
     const food = (o.line_items || []).filter((li) => !NOT_FOOD.has(li.item_type));
     if (!food.length) continue;
-    out.orders++;
-    if (new Date(when).getHours() < BREAKFAST_ENDS) out.breakfast++;
-    else out.lunch++;
-    if (isOnline(o, f)) out.online++;
-    else out.counter++;
-    for (const li of food) qty.set(itemName(li), (qty.get(itemName(li)) || 0) + (Number(li.quantity) || 1));
+    const online = isOnline(o, f);
+    const t = tickets.get(o.id);
+    // Time in the kitchen: rung up to Done, counter orders only. A pickup's
+    // order time can be hours before it's started, so it would skew this.
+    // Time a ticket sat cleared before an Undo doesn't count.
+    let kitchenMinutes = null;
+    if (t && !online && bumped[o.id]) {
+      const m = (Date.parse(bumped[o.id]) - Date.parse(o.created_at) - ((offBoard[o.id] && offBoard[o.id].ms) || 0)) / 6e4;
+      if (m >= 0 && m < 240) kitchenMinutes = Math.round(m * 10) / 10;
+    }
+    out.push({
+      id: o.id,
+      at: new Date(when).toISOString(),
+      meal: new Date(when).getHours() < BREAKFAST_ENDS ? "breakfast" : "lunch",
+      online,
+      toGo: t ? t.toGo : online,
+      paid: !!(o.tenders || []).length,
+      sales: o.total_money && o.total_money.amount != null ? o.total_money.amount / 100 : null,
+      items: food.map((li) => ({
+        name: itemName(li),
+        variation: li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
+        qty: Number(li.quantity) || 1,
+      })),
+      done: !!bumped[o.id],
+      kitchenMinutes,
+    });
   }
-  // Time in the kitchen: rung up to Done, counter orders only. A pickup's
-  // order time can be hours before it's started, so it would skew this.
-  // Time a ticket sat cleared before an Undo doesn't count.
-  const times = all
-    .filter((t) => !t.demo && !t.test && t.kind === "COUNTER" && bumped[t.id] && Date.parse(t.createdAt) >= today)
-    .map((t) => (Date.parse(bumped[t.id]) - Date.parse(t.createdAt) - ((offBoard[t.id] && offBoard[t.id].ms) || 0)) / 6e4)
-    .filter((m) => m >= 0 && m < 240);
-  out.kitchenDone = all.filter((t) => !t.demo && !t.test && bumped[t.id] && Date.parse(t.dueAt || t.createdAt) >= today).length;
+  return out;
+}
+
+// The numbers for a list of records: one day's (the front's Today) or any
+// range's (Reports). Same shape either way.
+function summarize(records) {
+  const out = { orders: records.length, breakfast: 0, lunch: 0, counter: 0, online: 0, toGo: 0, forHere: 0,
+    kitchenDone: 0, avgMinutes: null, longestMinutes: null, sales: 0, items: [], topItems: [], byHour: {} };
+  const qty = new Map();
+  const times = [];
+  for (const r of records) {
+    out[r.meal]++;
+    out[r.online ? "online" : "counter"]++;
+    out[r.toGo ? "toGo" : "forHere"]++;
+    if (r.done) out.kitchenDone++;
+    if (r.kitchenMinutes != null) times.push(r.kitchenMinutes);
+    out.sales += r.sales || 0;
+    const h = new Date(r.at).getHours();
+    out.byHour[h] = (out.byHour[h] || 0) + 1;
+    for (const it of r.items) qty.set(it.name, (qty.get(it.name) || 0) + it.qty);
+  }
+  out.sales = Math.round(out.sales * 100) / 100;
   if (times.length) {
     out.avgMinutes = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
     out.longestMinutes = Math.round(Math.max(...times));
   }
-  out.topItems = [...qty].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, n]) => ({ name, qty: n }));
+  out.items = [...qty].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, n]) => ({ name, qty: n }));
+  out.topItems = out.items.slice(0, 5);
+  return out;
+}
+
+// The full item list stays out: the screens poll this every few seconds
+// and show only the top five.
+function statsToday() {
+  const { items, ...today } = summarize(dayRecords());
+  return today;
+}
+
+// ---------------------------------------------------------------- daily history
+
+// Every day's records, kept for good in stats-history.json (gitignored) so
+// a week, a month or any range can be reported on later: Manage -> Reports
+// on the front page, or the file itself. Today's entry is rewritten as the
+// day goes (at most every HISTORY_SECONDS), so nothing waits on the board
+// being closed properly at night. A day the board never ran is missing.
+// Counts from the same orders as Today, so a Reset for the day restarts
+// that day's history too, and test and demo orders never get in.
+const HISTORY_FILE = path.join(DIR, MOCK ? "stats-history-mock.json" : "stats-history.json");
+const HISTORY_SECONDS = 30;
+let history = { days: {} };
+try {
+  history = JSON.parse(fs.readFileSync(HISTORY_FILE, "utf8"));
+  if (!history.days) history.days = {};
+} catch {}
+let historyWrittenAt = 0;
+let historyLast = "";
+
+function recordHistory() {
+  if (Date.now() - historyWrittenAt < HISTORY_SECONDS * 1000) return;
+  const records = dayRecords();
+  if (!records.length) return;
+  const json = JSON.stringify(records);
+  if (json === historyLast) return;
+  const date = localDate();
+  history.days[date] = { savedAt: new Date().toISOString(), orders: records };
+  try {
+    // Write the copy whole, then swap it in: a power cut mid-write never
+    // leaves a half-written history.
+    fs.writeFileSync(HISTORY_FILE + ".tmp", JSON.stringify(history));
+    fs.renameSync(HISTORY_FILE + ".tmp", HISTORY_FILE);
+    historyLast = json;
+    historyWrittenAt = Date.now();
+  } catch (err) {
+    console.error(`Stats history: ${err.message}`);
+  }
+}
+
+// Manage -> Reports: the days in [from, to], each with its numbers, and the
+// numbers for the whole range. `orders` (every record) only when asked, for
+// the CSV download.
+function historyReport(from, to, withOrders) {
+  const dates = Object.keys(history.days).filter((d) => d >= from && d <= to).sort();
+  const days = dates.map((date) => ({ date, ...summarize(history.days[date].orders) }));
+  const records = dates.flatMap((d) => history.days[d].orders);
+  const out = { from, to, first: Object.keys(history.days).sort()[0] || null, days, total: summarize(records) };
+  if (withOrders) out.orders = dates.flatMap((date) => history.days[date].orders.map((r) => ({ date, ...r })));
   return out;
 }
 
@@ -1635,7 +1732,7 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -1850,6 +1947,20 @@ const server = http.createServer(async (req, res) => {
       console.error(`Plan the week: ${err.message}`);
       return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't work: ${err.message}` });
     }
+  }
+  // Reports, behind the PIN: the saved daily history for a date range.
+  // Today is saved first, so a report that ends today is up to the minute.
+  if (req.method === "POST" && url.pathname === "/api/front-report") {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    const day = /^\d{4}-\d{2}-\d{2}$/;
+    if (!day.test(body.from || "") || !day.test(body.to || "") || body.from > body.to) {
+      return send(res, 200, { ok: false, message: "Pick a start date on or before the end date." });
+    }
+    historyWrittenAt = 0;
+    recordHistory();
+    return send(res, 200, { ok: true, ...historyReport(body.from, body.to, !!body.orders) });
   }
   if (req.method === "POST" && url.pathname === "/api/unhandoff") {
     const { id } = await readBody(req);

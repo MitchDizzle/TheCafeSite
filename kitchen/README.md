@@ -127,7 +127,7 @@ Settings in `config.json`, both optional:
 | `autoHandoffMinutes` | `10` | Ready orders leave the front page by themselves after this long (see above). `0` turns it off. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Plan the week** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Plan the week lists (0 is Sunday, 6 Saturday). |
-| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can **Plan the week** (see below), change the **Desserts** (see below), set **Today's specials** (the prices of the items in `dailyItems`, saved straight into Square; see below), change **What the kitchen skips** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can **Plan the week** (see below), change the **Desserts** (see below), set **Today's specials** (the prices of the items in `dailyItems`, saved straight into Square; see below), change **What the kitchen skips** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
 
 ## When an order doesn't show up
 
@@ -160,6 +160,7 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `front.html` | The front page for the counter (`/front`). |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `state.json` | Which orders have been cleared. Created automatically; gitignored. |
+| `stats-history.json` | Every day's orders and numbers, for Reports. Created automatically; gitignored; never deleted. |
 | `specials-plan.json` | Plan the week: the days ahead and which are in Square already. Created automatically; gitignored. |
 | `icon-*.png` | The front page's home-screen icon. |
 | `start-kitchen.bat` | Pulls updates, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. |
@@ -186,6 +187,17 @@ The specials for today and the next two weeks, set ahead of time. **Each morning
 - **A day with nothing planned** puts the plain names back ("Regular", "Cup", "Bowl") that morning, so yesterday's plate never prints on today's tickets. Prices are left alone. A board that has never had a plan leaves Square alone.
 - **Today's specials** (below) still works for a change during the day. It edits Square directly and isn't undone by the plan; the plan only writes again if today's plan is changed.
 - The plan is kept in `specials-plan.json` on the kitchen PC (gitignored). The program window logs every day it reads from the website and every write to Square.
+
+## Reports and the daily history (Manage on the front page)
+
+**Every day's numbers are kept for good** in `stats-history.json` on the kitchen PC, one entry per day, saved as the day goes (every 30 seconds while orders come in), so nothing depends on the board being closed properly at night. Each day keeps every order that counted: when, breakfast or lunch, counter or online, to go or for here, paid, its total in Square, the items (with the size or "what it is today", so a report can tell which specials sold), and its time in the kitchen. No customer names. Test, demo and canceled orders never get in, and a **Reset for the day** restarts that day's history the same as Today's numbers.
+
+**Manage → Reports** shows any range of days: This week, Last week, This month, Last month, Last 30 days, or any two dates. For the range: orders (and a day's average), sales, breakfast / lunch, counter / online, to go / for here, average and longest time in the kitchen, a line per day, and every item ordered. Two downloads for a report made elsewhere (a spreadsheet opens them):
+
+- **Days (CSV):** one row per day.
+- **Every order (CSV):** one row per order, with its items.
+
+A day the board never ran is missing; Square's own reports still have its sales. Sales are each order's total in Square, tax included. To keep a copy off the PC, copy `stats-history.json` somewhere now and then: it's the only place the kitchen times exist.
 
 ## Desserts (Manage on the front page)
 
