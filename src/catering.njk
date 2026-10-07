@@ -47,6 +47,10 @@ pageCss: "/assets/css/catering.css"
                     <input type="hidden" name="access_key" value="{{ site.web3forms.catering }}">
                     <input type="hidden" name="subject" value="Catering request: website form">
                     <input type="hidden" name="from_name" value="Catering form">
+                    <!-- Without JavaScript the browser leaves the page; this brings it
+                         back to our /thanks instead of Web3Forms' own. Must be on this
+                         domain (the free plan refuses cross-domain redirects). -->
+                    <input type="hidden" name="redirect" value="{{ site.url }}/thanks">
                     <!-- honeypot: humans never see or tick this -->
                     <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off"
                            style="display: none;" aria-hidden="true">
