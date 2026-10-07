@@ -49,6 +49,8 @@
   "_comment_construction": "Set to false to remove the under-construction banner from every page at once.",
   "_comment_survey": "Where /survey sends its answers (Formspree, by email). It shares the newsletter form on /contact until a form of its own is made in Formspree: swap the URL here and every survey link follows. Survey emails carry the subject 'Customer survey'. Mind Formspree's monthly submission limit on the free plan, which is shared across every form on the account.",
   "survey": { "formUrl": "https://formspree.io/f/mdarqnql" },
+  "_comment_web3forms": "Web3Forms (moving off Formspree, 2026-10-06): the catering form's access key. Public by design: it only says which inbox to send to, so it's fine in this repo. Submissions go to form@lvcafetogo.com, which forwards to the cafe's Gmail; Web3Forms keeps them only about 30 days, so the email is the record. Free plan: 250 submissions a month.",
+  "web3forms": { "catering": "07aa526a-9ef8-4833-b6c3-eb737ed28d12" },
   "underConstruction": false,
 
   "_comment_phoneOrders": "false while the kitchen can't take food orders by phone (client, 2026-10-02: not for the first few weeks after opening, for capacity). Every 'call ahead' line on the site and in the generated post captions is conditional on this, so flipping it to true turns them all back on. Catering inquiries by phone are separate and always shown.",
