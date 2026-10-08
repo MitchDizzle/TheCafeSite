@@ -164,9 +164,12 @@
 
   /* The PIN */
   .m-lock { display: grid; gap: 0.5rem; justify-items: center; padding: 0.5rem 0 0.2rem; }
-  .m-lock label { font-weight: 800; font-size: 1.1rem; }
-  .m-lock input { width: 12rem; font: inherit; font-size: 1.8rem; text-align: center; letter-spacing: 0.4em; padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.45rem; }
-  .m-lock input:focus { outline: none; border-color: var(--teal); }
+  .m-lock > label[for="pin"] { font-weight: 800; font-size: 1.1rem; }
+  /* The PIN box only: these would also stretch the Remember checkbox. */
+  .m-lock #pin { width: 12rem; font: inherit; font-size: 1.8rem; text-align: center; letter-spacing: 0.4em; padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.45rem; }
+  .m-lock #pin:focus { outline: none; border-color: var(--teal); }
+  .m-lock .check { align-items: center; margin-top: 0.3rem; color: var(--muted); }
+  .m-lock .check input { width: 1.2rem; height: 1.2rem; margin: 0; }
 
   /* The menu: four big rows, each saying what it does. */
   .m-menu { display: grid; gap: 0.6rem; }
