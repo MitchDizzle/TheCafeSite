@@ -108,6 +108,17 @@ The front page works on a phone on the cafe wifi: the orders stack in one column
 - **Remember on this device**, under the PIN, keeps the PIN on that phone, so Manage opens straight to its menu. Use it on your own phone only. **Forget the PIN here** at the foot of the Manage menu removes it, and a phone forgets it by itself if the PIN is changed in `config.json`.
 - **Only on the cafe wifi.** The kitchen PC isn't on the internet, on purpose, so the page doesn't open from home or on mobile data.
 
+### A fixed address for the front page (for the iPad's bookmark)
+
+The router hands out addresses and can give the kitchen PC a different one after a restart, which breaks a bookmark made by address. The fix is a **DHCP reservation** in the router: it tells the router to always give the kitchen PC the same address.
+
+1. **Find the PC's address and hardware address.** Start the board: its program window prints `or by address: http://192.168.1.117:8090/front (Ethernet, hardware address 70:85:c2:…)`, and **http://localhost:8090/check** shows the same. Use the line for the connection the PC actually uses (Wi-Fi or Ethernet).
+2. **On Wi-Fi only: turn off random hardware addresses**, or the PC shows the router a different one now and then: Settings → Network & internet → Wi-Fi → the cafe network → **Random hardware addresses: Off**. Then restart the board and read the hardware address again. A cable (Ethernet) to the router avoids this and is steadier for the kitchen anyway.
+3. **In the router's admin page** (its address and password are usually on a sticker on the router, often http://192.168.1.1), find **DHCP reservation**, "Address reservation" or "Static lease" (under LAN or DHCP settings). Add the kitchen PC by its hardware address, with the address it has now. Save.
+4. **Bookmark it on the iPad:** `http://<that address>:8090/front` in Safari, then Share → **Add to Home Screen**.
+
+If the router has a **local DNS / hostname** setting, a name like `kitchen` pointing at that address works too (`http://kitchen:8090/front`); many home and ISP routers don't have one, and the reservation is what matters either way. Without router access, the PC can be given a fixed address itself (Settings → Network → the connection → IP assignment → Edit → Manual), but pick one outside the router's DHCP range or two devices can end up with the same address; ask whoever manages the router first.
+
 ### Setting it up (one time, on the kitchen PC)
 
 1. **Allow it through Windows Firewall.** In PowerShell **as administrator**:
@@ -178,7 +189,7 @@ This is the **only thing the board writes to Square**. It changes nothing but th
 
 The specials for today and the next two weeks, set ahead of time. **Each morning the board puts that day's specials into Square by itself**, as soon as it starts (or, if it was left on overnight, within a minute of midnight). Nothing has to be opened on the day. It's the same write as Today's specials below: the "what it is today" name, and a price only if one is planned.
 
-- **One row per day the cafe is open.** Tap a day to open it: the special and the soup (every item in `dailyItems`), each with its price boxes. **A blank price keeps whatever Square has** (shown faintly; "till" means the till asks for one). Type a price only when it changes that day.
+- **One row per day the cafe is open.** Tap a day to open it: the special and the soup (every item in `dailyItems`), each with its price boxes, and **Comes with** under the special: its sides, with commas between ("Mashed potatoes & gravy, green beans"). Days from the website bring their sides with them. The sides don't go into Square (the ticket names the plate); Photo post words the special with them ("Served with mashed potatoes & gravy and green beans"). **A blank price keeps whatever Square has** (shown faintly; "till" means the till asks for one). Type a price only when it changes that day.
 - **Days come in from the website by themselves.** Every half hour the board reads the specials the website publishes (`specialsUrl`, built from the site's `src/_data/specials.json`, the same days as the /menu box and the Facebook post). The plate goes into Lunch Special and the soup into Soup of the Day. They're tagged **From the website**.
 - **The website never overwrites:**
   - **today**, once it's in Square (and no earlier day);

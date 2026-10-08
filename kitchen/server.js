@@ -827,7 +827,10 @@ function savePlanDays(changes) {
       const text = cleanText(it && it.today);
       if (text || Object.keys(prices).length) items[name] = { today: text, prices };
     }
-    next[date] = Object.keys(items).length ? { from: "front", items } : null;
+    // What comes with the plate. Not sent to Square (the ticket says the
+    // plate); Photo post words the special with it.
+    const sides = (Array.isArray(change && change.sides) ? change.sides : []).map(cleanText).filter(Boolean).slice(0, 6);
+    next[date] = Object.keys(items).length || sides.length ? { from: "front", items, ...(sides.length ? { sides } : {}) } : null;
   }
   for (const [date, day] of Object.entries(next)) {
     if (day) plan.days[date] = day;
@@ -1685,6 +1688,7 @@ td,th{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top}t
 <h1>Kitchen board check</h1>
 ${MOCK ? "<p><b>TEST MODE</b> — fake orders, not Square.</p>" : ""}
 <p>Front page for the counter: ${cfg.frontOnNetwork ? `<b>${esc(FRONT_URL)}</b>` : "this PC only (frontOnNetwork is false)"}</p>
+${cfg.frontOnNetwork ? frontAddresses().map((a) => `<p>&nbsp;&nbsp;or by address: <b>${esc(a.url)}</b> (${esc(a.adapter)}, hardware address <code>${esc(a.mac)}</code>)</p>`).join("") : ""}
 <p>Locations: ${esc(locationIds.join(", ") || "not looked up yet")} · Showing counter sales since
 ${esc(startOfToday().toLocaleString())} and pickups due within ${cfg.showAheadMinutes} min.</p>
 ${status}
@@ -2178,9 +2182,28 @@ server.on("error", (err) => {
 // networkAllowed() above keep everything else to this PC.
 const HOST = cfg.frontOnNetwork ? "0.0.0.0" : "127.0.0.1";
 const FRONT_URL = `http://${os.hostname().toLowerCase()}:${cfg.port}/front${cfg.frontKey ? "?key=" + encodeURIComponent(cfg.frontKey) : ""}`;
+// The same page by this PC's address on the wifi, with the adapter it's on
+// and that adapter's hardware (MAC) address: what a router needs to always
+// give this PC the same address (a DHCP reservation), so an iPad bookmark
+// to it keeps working. See "A fixed address for the front page" in README.md.
+function frontAddresses() {
+  const out = [];
+  for (const [adapter, list] of Object.entries(os.networkInterfaces())) {
+    // Virtual adapters (Hyper-V, VirtualBox, VMware) aren't the wifi.
+    if (/vEthernet|VirtualBox|VMware|Loopback/i.test(adapter)) continue;
+    for (const a of list || []) {
+      if (a.family !== "IPv4" || a.internal || a.address.startsWith("169.254.")) continue;
+      out.push({ adapter, mac: a.mac, url: FRONT_URL.replace(`//${os.hostname().toLowerCase()}:`, `//${a.address}:`) });
+    }
+  }
+  return out;
+}
 server.listen(cfg.port, HOST, () => {
   console.log(`Kitchen board on http://localhost:${cfg.port}${MOCK ? "  (MOCK ORDERS)" : ""}`);
   console.log(cfg.frontOnNetwork ? `Front page for the counter: ${FRONT_URL}` : "Front page: this PC only (frontOnNetwork is false).");
+  if (cfg.frontOnNetwork) {
+    for (const a of frontAddresses()) console.log(`  or by address: ${a.url}   (${a.adapter}, hardware address ${a.mac})`);
+  }
   console.log(`Checking Square every ${cfg.pollSeconds} s.`);
   if (!cfg.sound || MUTE) console.log("Sound is OFF.");
   for (const note of cfg.notes) console.log(`config.json: ${note}`);

@@ -935,8 +935,13 @@
     const r = await postJson("/api/front-plan", { pin: pinValue });
     if (!r.ok) return result("Plan the week", r);
     const words = (date, opts) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", opts);
-    // One line for the folded row: "Meatloaf · Baked Potato Soup".
-    const summary = (plan) => plan ? r.items.map((it) => plan.items[it.key] && plan.items[it.key].today).filter(Boolean).join(" · ") : "";
+    // The plate's item (Lunch Special): the one its sides go with.
+    const isPlate = (key) => /special/i.test(key) && !/soup|salad/i.test(key);
+    // One line for the folded row: "Meatloaf with mashed potatoes · Baked Potato Soup".
+    const summary = (plan) => plan ? r.items.map((it) => {
+      const text = plan.items[it.key] && plan.items[it.key].today;
+      return text && isPlate(it.key) && plan.sides && plan.sides.length ? `${text} with ${plan.sides.join(", ")}` : text;
+    }).filter(Boolean).join(" · ") : "";
     const status = (d) => {
       if (d.date !== r.today) return "";
       if (d.applied && d.applied.at && d.applied.sig !== "clear") return `<p class="d-status good">✓ In Square since ${fmtTime(d.applied.at)}</p>`;
@@ -966,6 +971,9 @@
                 <span class="m-money">$<input type="text" inputmode="decimal" data-field="price" value="${esc((p.prices || {})[sz.size] || "")}"
                   placeholder="${esc(sz.price || "till")}" aria-describedby="keep-note"></span>
               </label>`).join("")}</div>
+              ${isPlate(it.key) ? `<label class="m-field">Comes with (commas between)
+                <input type="text" data-field="sides" value="${esc(((plan && plan.sides) || []).join(", "))}" maxlength="160" autocomplete="off"
+                  placeholder="e.g. Mashed potatoes & gravy, green beans"></label>` : ""}
             </div>`;
           }).join("")}
           <button type="button" class="d-clear" data-clear>Clear this day</button>
@@ -986,10 +994,13 @@
     const form = document.getElementById("m-plan");
     // What each day held when opened, so only the days changed are sent: a
     // day from the website that nobody touched stays the website's.
-    const read = (day) => ({ items: Object.fromEntries([...day.querySelectorAll(".d-item")].map((el) => [el.dataset.key, {
-      today: el.querySelector('[data-field="today"]').value.trim(),
-      prices: Object.fromEntries([...el.querySelectorAll("[data-size]")].map((row) => [row.dataset.size, row.querySelector("input").value.trim()])),
-    }])) });
+    const read = (day) => ({
+      items: Object.fromEntries([...day.querySelectorAll(".d-item")].map((el) => [el.dataset.key, {
+        today: el.querySelector('[data-field="today"]').value.trim(),
+        prices: Object.fromEntries([...el.querySelectorAll("[data-size]")].map((row) => [row.dataset.size, row.querySelector("input").value.trim()])),
+      }])),
+      sides: ((day.querySelector('[data-field="sides"]') || {}).value || "").split(",").map((x) => x.trim()).filter(Boolean),
+    });
     const before = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(read(day))]));
     const mark = (day) => day.classList.toggle("edited", JSON.stringify(read(day)) !== before.get(day.dataset.date));
     form.addEventListener("input", (e) => mark(e.target.closest(".m-day")));
