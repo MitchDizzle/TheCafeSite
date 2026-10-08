@@ -1,0 +1,32 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Business card bowl label"
+canvasW: "11in"
+canvasH: "8.5in"
+pageSize: "11in 8.5in"
+pageCss: "/assets/css/sign.css"
+bw: true
+tags: studio
+studioTitle: "Business card bowl label"
+studioCategory: "Signs"
+studioSize: "11 × 8.5 in landscape · two 10 × 3.6 in labels, cut apart"
+studioNote: "For a jar or bowl on the counter collecting customers' business cards. Same cut as the tip jar label: two per sheet (one spare), cut on the dashed lines, tape across the front. Black ink only. Print at 100%."
+studioW: 1056
+studioH: 816
+studioOrder: 38
+---
+{#- The tip jar label's sheet and sizes (see sign-tip-jar.njk), with a
+    two-line headline instead of one word. If a monthly drawing is ever
+    offered for the cards, that line goes in .cardbowl-sub. -#}
+<div class="canvas sign sign--bw tipjar-sheet">
+    {%- for n in [1, 2] %}
+    <div class="tipjar">
+        <div class="wordmark wordmark--ink tipjar-mark cardbowl-mark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-display-italic cardbowl-kicker">Drop your</p>
+        <p class="p-display cardbowl-word">Business Card</p>
+        <p class="p-body cardbowl-sub">We&rsquo;d love to cater your next meeting</p>
+    </div>
+    {%- endfor %}
+</div>

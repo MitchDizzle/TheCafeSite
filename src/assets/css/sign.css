@@ -320,3 +320,29 @@
     line-height: 1.1;
     margin-top: 0.22in;
 }
+
+/* ── Business card bowl label (sign-business-cards.njk) ──
+   The tip jar label with a longer headline: smaller mark, a kicker line,
+   and the headline sized to sit inside the 10in strip with the ends
+   (which curve away on a jar) left clear. */
+.cardbowl-mark {
+    --mark-w: 2in;
+}
+
+.cardbowl-kicker {
+    font-size: 0.42in;
+    line-height: 1.1;
+    margin-top: 0.06in;
+}
+
+.cardbowl-word {
+    font-size: 0.95in;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.cardbowl-sub {
+    font-size: 0.3in;
+    line-height: 1.2;
+    margin-top: 0.16in;
+}
