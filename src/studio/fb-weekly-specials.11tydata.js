@@ -20,7 +20,7 @@ module.exports = {
       return [
         `This week's lunch specials at The Café, ${weekRange(week)}:`,
         ...dayLines(week),
-        ...(data.specials.includesDrink ? ["Every lunch special includes a fountain drink."] : []),
+        ...(data.specials.includesDrink ? ["Every lunch special includes a fountain drink or iced tea."] : []),
         ...[soupLine(week)].filter(Boolean),
         `Lunch specials and soup are served from 11am. We're open ${site.opening.hoursDays}, ${hours}.${site.phoneOrders ? ` Call ${site.phone} and we'll have yours ready.` : ""}`,
         ...(site.ordering.url ? [`Order online for pickup: ${site.ordering.url.replace(/^https?:\/\//, "")}`] : []),

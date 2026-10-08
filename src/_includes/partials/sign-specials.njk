@@ -9,7 +9,7 @@
 
     The soup is a separate item, so it is NOT listed under each plate any
     more: the plates come first, then a ruled Soup of the Day block that
-    says "sold separately". The fountain drink is part of every plate
+    says "sold separately". The drink (fountain or iced tea) is part of every plate
     (specials.includesDrink), so it is said once under the heading. -#}
 {%- set week = specials.days | latestWeek %}
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
@@ -29,7 +29,7 @@
     </div>
 
     {%- if specials.includesDrink %}
-    <p class="sign-drink ink-accent">Every special includes a fountain drink</p>
+    <p class="sign-drink ink-accent">Every special includes a fountain drink or iced tea</p>
     {%- endif %}
 
     <ul class="sign-days">
