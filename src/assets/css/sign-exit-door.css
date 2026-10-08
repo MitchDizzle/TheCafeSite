@@ -1,0 +1,93 @@
+/* ============================================================
+   Exit Only door sign — 11 × 17 in, portrait
+   Piece: src/studio/sign-exit-door.njk
+
+   The front door banner's sheet and rules (front-door-banner.css): absolute
+   inches only, read from the sidewalk, and one filled element — the masthead
+   panel, inset so a desktop printer can print it. Everything else is type on
+   the bare sheet.
+   ============================================================ */
+
+.exit-sign {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    padding: 0.5in 0.7in 0.6in;
+}
+
+/* ── Masthead: the inset banner's panel, a little shorter ── */
+.exit-top {
+    align-self: stretch;
+    display: flex;
+    justify-content: center;
+    padding: 0.45in 0.5in 0.42in;
+    background: var(--teal);
+    border-radius: 0.12in;
+}
+
+/* Smaller than the banner's 8.2in: this sheet's job is EXIT ONLY, and the
+   mark only has to say whose door it is. 7in still clears the panel with
+   room for the stroke that paints outside its box. */
+.exit-wordmark {
+    --mark-w: 7in;
+    --mark-shadow-color: var(--coral);
+}
+
+/* ── Headline ────────────────────────────────────────────── */
+.exit-headline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* The biggest thing on the sheet by far. nowrap as on the banner: an overrun
+   should show, not reflow. */
+.exit-big {
+    font-size: 3.3in;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.exit-only {
+    font-size: 1.05in;
+    letter-spacing: 0.3em;
+    text-indent: 0.3em; /* re-centre the trailing tracking */
+    margin-top: 0.1in;
+}
+
+/* ── Direction to the entrance ───────────────────────────── */
+.exit-direction {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-top: 0.035in solid var(--teal-dark);
+    border-bottom: 0.035in solid var(--teal-dark);
+    padding: 0.35in 0 0.45in;
+}
+
+.exit-label {
+    font-size: 0.5in;
+    letter-spacing: 0.18em;
+    text-indent: 0.18em;
+}
+
+.exit-instruction {
+    font-size: 0.56in;
+    margin-top: 0.08in;
+    white-space: nowrap;
+}
+
+.exit-arrow {
+    width: 7.2in;
+    height: 3in;
+    margin-top: 0.3in;
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+.exit-thanks {
+    font-size: 0.6in;
+}

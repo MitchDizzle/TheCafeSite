@@ -1,0 +1,50 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Exit Only door sign (11 × 17)"
+canvasW: "11in"
+canvasH: "17in"
+pageSize: "11in 17in"
+pageCss: "/assets/css/sign-exit-door.css"
+
+tags: studio
+studioTitle: "Exit Only door sign"
+studioCategory: "Print"
+studioSize: "11 × 17 in · portrait · same sheet as the front door banner"
+studioNote: "For the exit-only door: EXIT ONLY, and an arrow sending people right to the entrance. Masthead is an inset panel like the inset banner, so any desktop printer handles it. Print at 100%, never 'fit to page'."
+studioW: 1056
+studioH: 1632
+studioOrder: 12
+---
+{#- Hangs inside the glass of the exit-only door, facing out. The entrance is
+    the door to its RIGHT as seen from the sidewalk, so the arrow points right.
+    If the sign ever moves to the other door, flip .exit-arrow, not the text. -#}
+<div class="canvas exit-sign">
+
+    {# Same wordmark treatment as the front door banner (see banner-body.njk
+       for why it is inlined); no "Entrance" eyebrow here, for obvious reasons. #}
+    <header class="exit-top">
+        <div class="wordmark wordmark--light exit-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+    </header>
+
+    <section class="exit-headline">
+        <p class="p-display exit-big ink-accent">Exit</p>
+        <p class="p-label exit-only ink-teal">Only</p>
+    </section>
+
+    <section class="exit-direction">
+        <p class="p-label exit-label ink-accent">Entrance</p>
+        <p class="p-display-italic exit-instruction ink-teal">Please use the door to the right</p>
+        {# Drawn, not a glyph: Lato's → is thin and sits on the text baseline.
+           Fill is currentColor, so .ink-accent colours it. #}
+        <svg class="exit-arrow ink-accent" viewBox="0 0 120 50" aria-hidden="true">
+            <path fill="currentColor" d="M0 17h82V0l38 25-38 25V33H0z"/>
+        </svg>
+    </section>
+
+    <footer class="exit-footer">
+        <p class="p-display-italic exit-thanks ink-teal">Thank you!</p>
+    </footer>
+
+</div>
