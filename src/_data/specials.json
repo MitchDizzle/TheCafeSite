@@ -4,6 +4,9 @@
   "_note_weeks": "ADD next week; don't replace this one. Next week goes in a week ahead (for the Facebook post) while this week is still on /menu, so the file holds both side by side. /menu lists one week at a time by the visitor's date; the Facebook post, its caption and the counter sign show the NEWEST week in the file (the latestWeek filter). Delete a week once it's over, or leave it: a past day is never shown.",
   "_note_kitchen": "The kitchen PC reads /specials.json every half hour and never changes today, an earlier day, or a day set on its own front page (Manage > Plan the week) from it. So adding next week, or fixing a later day here, can't disturb today's specials in Square; fixing TODAY has to be done on the front page.",
   "_note_expiry": "Nothing here expires by itself, and nothing has to: /menu picks today's entry in the visitor's browser on Central time and shows nothing at all on a day that is not listed — weekends, and every day after the last one. An old week left in place is therefore hidden, never shown.",
+  "_note_any_side": "`anySide: true` on a day means the plate comes with the customer's choice of any side from the Sides list, included in the price; every piece then says 'with your choice of side' instead of naming sides. Not every special has it: a day with set sides (Chicken Fried Chicken with mashed potatoes and green beans) lists them in `sides` and leaves anySide off. Don't set both. The words are built in one place, the specialSides filter (src/_includes/specials-caption.js).",
+  "_note_drink": "`includesDrink: true` here, at the top of the file, means EVERY lunch special includes a fountain drink. The weekly post, the counter sign, the caption and the /menu box all say so. The soup is NOT part of the special: it is its own item (Cup / Bowl, priced in menu.json), and every piece shows it apart from the plate.",
+  "includesDrink": true,
   "days": [
     {
       "date": "2026-10-05",
@@ -45,6 +48,42 @@
       "sides": [
         "Mashed Potatoes & Gravy",
         "Green Beans"
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "soup": "Chicken Pot Pie",
+      "special": "French Dip on a Hoagie",
+      "anySide": true
+    },
+    {
+      "date": "2026-10-13",
+      "soup": "Broccoli Cheese",
+      "special": "Lasagna",
+      "anySide": true
+    },
+    {
+      "date": "2026-10-14",
+      "soup": "Italian Wedding",
+      "special": "Chicken Fried Chicken",
+      "sides": [
+        "Mashed Potatoes & Gravy",
+        "Green Beans"
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "soup": "Turkey Chili",
+      "special": "Sausage & Kraut",
+      "anySide": true
+    },
+    {
+      "date": "2026-10-16",
+      "soup": "French Onion",
+      "special": "Hawaiian Chicken",
+      "sides": [
+        "Wild Rice",
+        "Vegetables"
       ]
     }
   ]

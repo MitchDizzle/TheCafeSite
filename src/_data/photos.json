@@ -1,9 +1,9 @@
 {
-  "_note": "Food photos, one entry per picture, for Facebook posts and later the site. Images live in src/assets/photos/ as web copies: about 2000px, upright, camera and GPS data stripped. Full-size originals go in photos-originals/ at the repo root, which git ignores; never commit a camera original, because phone photos carry the GPS location. `file` is the path under /assets/. `item` is the dish EXACTLY as named in menu.json, so a post can pull the price and description from the menu instead of retyping them. `variant` is set when the photo shows one version of a two-way item. The hot sandwiches are listed as 'X Burger or Chicken', so a chicken photo has variant 'Chicken' and a beef one 'Burger'; otherwise null. `title` is what the post calls the dish. `alt` describes the picture for screen readers. A daily special, which is not on the menu, sets `special: true` and `item: null` instead; its post is labelled Daily Special, takes its words from `description`, and carries no price anywhere. `description` is otherwise used only when the menu item has none of its own (the burrito, whose options are a note on its category); keep it in step with that note. `date` is when it was taken (YYYY-MM-DD). Use only photos the cafe took or has permission to use. `includesDrink: true` on a daily special means its price includes a drink; the posts say so. Specials only (a menu item's price is the menu's).",
+  "_note": "Food photos, one entry per picture, for Facebook posts and later the site. Images live in src/assets/photos/ as web copies: about 2000px, upright, camera and GPS data stripped. Full-size originals go in photos-originals/ at the repo root, which git ignores; never commit a camera original, because phone photos carry the GPS location. `file` is the path under /assets/. `item` is the dish EXACTLY as named in menu.json, so a post can pull the price and description from the menu instead of retyping them. `variant` is set when the photo shows one version of a two-way item. A burger can be made with chicken instead of beef (menu.json's hot sandwiches note), so a chicken photo of a burger item has variant 'Chicken' and a beef one 'Burger'; otherwise null. `title` is what the post calls the dish. `alt` describes the picture for screen readers. A daily special, which is not on the menu, sets `special: true` and `item: null` instead; its post is labelled Daily Special, takes its words from `description`, and carries no price anywhere. `description` is otherwise used only when the menu item has none of its own (the burrito, whose options are a note on its category); keep it in step with that note. `date` is when it was taken (YYYY-MM-DD). Use only photos the cafe took or has permission to use. `includesDrink: true` on a daily special means its price includes a drink; the posts say so. Specials only (a menu item's price is the menu's).",
   "photos": [
     {
       "file": "/assets/photos/bacon-cheeseburger.jpg",
-      "item": "Bacon Cheese Burger or Chicken",
+      "item": "Bacon Cheese Burger",
       "variant": "Burger",
       "title": "Bacon Cheeseburger",
       "alt": "Bacon cheeseburger served open-faced on a white plate: a beef patty with melted American cheese and crisp bacon, the top bun with lettuce, tomato, red onion and pickles, and a pickle spear.",
@@ -11,7 +11,7 @@
     },
     {
       "file": "/assets/photos/navajo-burger.jpg",
-      "item": "Navajo Burger or Chicken",
+      "item": "Navajo Burger",
       "variant": "Burger",
       "title": "Navajo Burger",
       "alt": "Navajo burger served open-faced: a beef patty topped with green chiles and pepper jack cheese, the top bun with lettuce, tomato, red onion and pickles, and a pickle spear.",
@@ -19,7 +19,7 @@
     },
     {
       "file": "/assets/photos/navajo-chicken-sandwich.jpg",
-      "item": "Navajo Burger or Chicken",
+      "item": "Navajo Burger",
       "variant": "Chicken",
       "title": "Navajo Chicken Sandwich",
       "alt": "Navajo chicken sandwich served open-faced: chicken topped with pepper jack cheese and green chiles, the top bun with lettuce, tomato, red onion and pickles, and a pickle spear.",
@@ -27,7 +27,7 @@
     },
     {
       "file": "/assets/photos/cordon-bleu-chicken-sandwich.jpg",
-      "item": "Cordon Bleu Burger or Chicken",
+      "item": "Cordon Bleu Burger",
       "variant": "Chicken",
       "title": "Cordon Bleu Chicken Sandwich",
       "alt": "Cordon bleu chicken sandwich served open-faced: chicken under folded ham on a bun, the top bun with lettuce, tomato, red onion and pickles, and a pickle spear.",

@@ -6,7 +6,7 @@
 //
 // One string per paragraph; /studio/downloads/ shows it with a Copy button.
 
-const { weekRange, dayLines, latestWeek } = require("../_includes/specials-caption.js");
+const { weekRange, dayLines, soupLine, latestWeek } = require("../_includes/specials-caption.js");
 
 module.exports = {
   eleventyComputed: {
@@ -22,7 +22,8 @@ module.exports = {
       if (week.length) {
         lines.push(
           `Breakfast starts at ${o.opens.time.replace(":00", "")}${o.opens.meridiem}, and lunch specials and soup start at 11am. Our first week of specials, ${weekRange(week)}:`,
-          ...dayLines(week)
+          ...dayLines(week),
+          ...[soupLine(week)].filter(Boolean)
         );
       }
       lines.push(

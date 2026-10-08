@@ -31,7 +31,7 @@ before confirming — Square lists anything it rejects.
 | On the menu | In Square | Why |
 |---|---|---|
 | Full / Half (salads, biscuits & gravy), Cup / Bowl, 2 / 3 egg | **Variations** of one item | One tile on the POS, the size prints on the ticket |
-| "Hamburger or Chicken" etc. | Item "Hamburger", variations **Beef / Chicken** at the same price | The kitchen needs to see which one; the name reads cleanly |
+| The 7 burgers (incl. Patty Melt) | Item "Hamburger", variations **Beef / Chicken** at the same price | The kitchen needs to see which one. The menu says "chicken instead of beef" once in the category note, not in each name |
 | Build Your Own 1 / 2 / 3 meats, half | One item, four **variations** | Price is set by the variation; the picks are modifiers (below) |
 | Toast / biscuit / muffin, chips flavours, iced tea vs fountain | **Variations** at one price | Counts which one sells, for ordering stock |
 | Wraps, kids meals | One price per item | Choices are modifiers (below) |

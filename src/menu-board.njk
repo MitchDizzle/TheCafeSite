@@ -79,6 +79,12 @@ noSiteJs: true
     {%- if c.serving %}
     <p class="bcat-sizing bcat-serving">{{ c.serving }}</p>
     {%- endif %}
+    {#- The one note the board prints: a category's `boardNote`, for a fact
+        a customer needs at the counter that no row carries (chicken instead
+        of beef on the burgers). Ordinary notes stay off the board. -#}
+    {%- if c.boardNote %}
+    <p class="bcat-sizing">{{ c.boardNote }}</p>
+    {%- endif %}
     {%- if c.sizing %}
     <p class="bcat-sizing">
         {%- for s in c.sizing %}<span class="sizing-pair">{{ s.size }} {{ s.price | money }}</span>{% if not loop.last %} &middot; {% endif %}{% endfor -%}
@@ -105,6 +111,12 @@ noSiteJs: true
             </span>
             {%- endif %}
         </li>
+        {#- An item whose description is a short list of choices (Side
+            Salads) sets listOnBoard: the list prints under it, unpriced,
+            since the price on the row covers every one of them. -#}
+        {%- if item.listOnBoard and item.description %}
+        <li class="bitem bitem--list">{{ item.description }}</li>
+        {%- endif %}
         {#- Variants become their own rows, indented under the item. This board
             prints no descriptions, so an upgrade described in prose would be
             invisible here — the variant rows are how somebody standing at the

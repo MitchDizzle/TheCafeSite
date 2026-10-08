@@ -27,13 +27,18 @@ studioOrder: 22
     light body sits better beside real food photos when the post carries
     several images.
 
-    TWO COLUMNS, NOT ONE LINE. The lunch special and the soup are sold
-    separately, so they get separate, labelled columns — a soup set under
-    the plate reads as part of it.
+    THE SOUP IS ITS OWN PANEL. The lunch special and the soup are sold
+    separately, and a soup column beside each plate still read as part of
+    the plate. So the table lists the plates only, and the soups sit below
+    it in their own box that says "sold separately" with the Cup / Bowl
+    prices (from menu.json, like the counter sign). The fountain drink IS
+    part of every plate (specials.includesDrink), so it is said once, above
+    the table, rather than on every row.
 
     Every size is set for the ~540px a portrait post shows at on a phone:
     nothing a customer needs is under 24px. -#}
 {%- set week = specials.days | latestWeek %}
+{%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
 {%- set first = week[0].date | dayDate("monthDay") %}
 {%- set last = week[week.length - 1].date | dayDate("monthDay") %}
 {#- "October 5 – 9", or "September 28 – October 2" across a month end. -#}
@@ -54,27 +59,39 @@ studioOrder: 22
 
     <div class="wk-body">
         <p class="p-label wk-served">Starting at 11am</p>
+        {%- if specials.includesDrink %}
+        <p class="wk-drink">Every special includes a fountain drink</p>
+        {%- endif %}
 
         <div class="wk-table">
-            <div class="wk-row wk-row--head">
-                <span></span>
-                <p class="p-label wk-col">Lunch Special</p>
-                <p class="p-label wk-col wk-col--soup">Soup of the Day</p>
-            </div>
-
             {%- for d in week %}
+            {%- set sides = d | specialSides %}
             <div class="wk-row">
                 <p class="p-display wk-dayname">{{ d.date | dayDate("short") }}</p>
                 <div class="wk-special-cell">
                     <p class="p-display wk-special">{{ d.special }}</p>
-                    {%- if d.sides and d.sides.length %}
-                    <p class="p-body wk-sides">with {{ d.sides | join(" and ") }}</p>
+                    {%- if sides %}
+                    <p class="p-body wk-sides">{{ sides }}</p>
                     {%- endif %}
                 </div>
-                <p class="p-body wk-soup">{{ d.soup }}</p>
             </div>
             {%- endfor %}
         </div>
+
+        <section class="wk-soup">
+            <div class="wk-soup-head">
+                <p class="p-display wk-soup-title">Soup of the Day</p>
+                <p class="p-body wk-soup-note">Sold separately{% if soupCat and soupCat.items %}{% for s in soupCat.items %} <span class="dot">&middot;</span> {{ s.name }} {{ s.price | money }}{% endfor %}{% endif %}</p>
+            </div>
+            <ul class="wk-soups" style="--soup-cols: {{ week.length }}">
+                {%- for d in week %}
+                <li class="wk-soup-day">
+                    <span class="p-label wk-soup-dayname">{{ d.date | dayDate("short") }}</span>
+                    <span class="wk-soup-name">{{ d.soup or "&mdash;" | safe }}</span>
+                </li>
+                {%- endfor %}
+            </ul>
+        </section>
     </div>
 
     <footer class="wk-foot">

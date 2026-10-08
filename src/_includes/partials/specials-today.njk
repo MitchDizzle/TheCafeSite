@@ -46,8 +46,11 @@
             <div class="ts-card">
                 <p class="ts-label">Lunch special <span class="ts-when">from 11am</span></p>
                 <p class="ts-name">{{ d.special }}</p>
-                {%- if d.sides and d.sides.length %}
-                <p class="ts-detail">with {{ d.sides | join(" and ") }}</p>
+                {%- if d | specialSides %}
+                <p class="ts-detail">{{ d | specialSides }}</p>
+                {%- endif %}
+                {%- if specials.includesDrink %}
+                <p class="ts-detail">Includes a fountain drink</p>
                 {%- endif %}
             </div>
             {%- if d.soup %}
@@ -70,7 +73,7 @@
         aria-labelledby at whichever one is showing). -#}
     <div class="ts-ahead" data-specials-ahead hidden>
         <h2 class="ts-heading" id="today-special-heading">This week&rsquo;s lunch specials</h2>
-        <p class="ts-ahead-note">Lunch specials and soup are served from 11am.</p>
+        <p class="ts-ahead-note">Lunch specials and soup are served from 11am.{% if specials.includesDrink %} Every lunch special includes a fountain drink; soup is sold separately.{% endif %}</p>
     </div>
 
     <div class="ts-week" data-specials-upcoming hidden>
@@ -87,7 +90,7 @@
                 {%- for d in specials.days %}
                 <tr data-special-upcoming="{{ d.date }}" hidden>
                     <th scope="row">{{ d.date | dayDate("weekday") }}</th>
-                    <td data-label="Lunch special">{{ d.special }}{% if d.sides and d.sides.length %}<span class="ts-table-sides"> with {{ d.sides | join(" and ") }}</span>{% endif %}</td>
+                    <td data-label="Lunch special">{{ d.special }}{% if d | specialSides %}<span class="ts-table-sides"> {{ d | specialSides }}</span>{% endif %}</td>
                     <td data-label="Soup">{{ d.soup }}</td>
                 </tr>
                 {%- endfor %}

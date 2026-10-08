@@ -72,6 +72,8 @@ module.exports = function (eleventyConfig) {
   // The newest week of specials.json's `days`, for the printed and posted
   // pieces: `specials.days | latestWeek`. See _includes/specials-caption.js.
   eleventyConfig.addFilter("latestWeek", require("./src/_includes/specials-caption.js").latestWeek);
+  // "with your choice of side" / "with A and B": see specialSides there.
+  eleventyConfig.addFilter("specialSides", require("./src/_includes/specials-caption.js").specialSides);
 
   // Narrow a list to the items whose `key` equals `value`.
   //

@@ -19,16 +19,36 @@ function weekRange(week) {
     : `${first} – ${last}`;
 }
 
-// One paragraph per day. The plate and the soup are sold separately, so they
-// are two sentences, never "X with Y and Z soup" run together.
+// What comes with a day's plate, as words: "with your choice of side" when
+// the day sets anySide, "with A and B" / "with A, B and C" for set sides,
+// "" for none. The ONE place this is worded: every piece that lists the
+// specials uses it (registered as the specialSides filter), so a day can't
+// say "choice of side" on the sign and name sides in the caption. A plain
+// " and " join turned "Mashed Potatoes & Gravy" plus a second side into a
+// chain of ampersands, which is why this never joins with "&".
+function specialSides(d) {
+  if (!d) return "";
+  if (d.anySide) return "with your choice of side";
+  const s = d.sides || [];
+  if (!s.length) return "";
+  if (s.length === 1) return `with ${s[0]}`;
+  return `with ${s.slice(0, -1).join(", ")} and ${s[s.length - 1]}`;
+}
+
+// One paragraph per day: the plate only. The soup is a separate item, so it
+// gets its own paragraph (soupLine), never "X with Y and Z soup" run together.
 function dayLines(week) {
   return week.map((d) => {
-    let line = `${words(d.date, { weekday: "long" })}: ${d.special}`;
-    if (d.sides && d.sides.length) line += ` with ${d.sides.join(" and ")}`;
-    line += ".";
-    if (d.soup) line += ` Soup of the day: ${d.soup}.`;
-    return line;
+    const sides = specialSides(d);
+    return `${words(d.date, { weekday: "long" })}: ${d.special}${sides ? ` ${sides}` : ""}.`;
   });
+}
+
+// The week's soups in one paragraph, apart from the plates.
+function soupLine(week) {
+  const soups = week.filter((d) => d.soup)
+    .map((d) => `${words(d.date, { weekday: "long" })} ${d.soup}`);
+  return soups.length ? `Soup of the day, on its own by the cup or bowl: ${soups.join("; ")}.` : "";
 }
 
 // The Monday of a YYYY-MM-DD date's week, as YYYY-MM-DD.
@@ -50,4 +70,4 @@ function latestWeek(days) {
   return sorted.filter((d) => mondayOf(d.date) === monday);
 }
 
-module.exports = { weekRange, dayLines, latestWeek };
+module.exports = { weekRange, dayLines, soupLine, specialSides, latestWeek };
