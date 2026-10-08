@@ -1,0 +1,50 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Daily Special Story (1080 × 1920)"
+canvasW: "1080px"
+canvasH: "1920px"
+pageCss: "/assets/css/fb-story-special.css"
+
+# One Story per daily-special photo in src/_data/photos.json (special: true),
+# through src/_data/specialPhotos.js. Same words as that photo's feed post.
+pagination:
+  data: specialPhotos
+  size: 1
+  alias: photo
+  addAllPagesToCollections: true
+permalink: "/studio/fb-story-{{ photo.file | replace('/assets/photos/', '') | replace('.jpg', '') }}.html"
+
+tags: studio
+studioCategory: "Social"
+studioSize: "1080 × 1920 px · Facebook Story"
+studioNote: "The day's special as a Facebook Story, from its photo in src/_data/photos.json. Facebook lays its profile bar over the top of a Story and the reply box over the bottom, so nothing that matters sits in the top 230px or the bottom 220px. No price, like every special post; 'Drink included' shows when the photo sets includesDrink. Post it on the day it's served: it says Today's Special."
+studioW: 1080
+studioH: 1920
+studioOrder: 31
+---
+{#- Top to bottom: the wordmark under Facebook's profile bar, the dish
+    name, the photo full width, then what comes with it. The photo is
+    square; it is cropped to 1080 × 820 from the centre, which loses
+    counter above and below the plate, not food. -#}
+<div class="canvas story">
+
+    <div class="wordmark wordmark--light wordmark--hero story-wordmark">
+        {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+    </div>
+
+    <header class="story-head">
+        <p class="p-label story-kicker">Today&rsquo;s Special</p>
+        <h1 class="story-title">{{ photo.title }}</h1>
+    </header>
+
+    <img class="story-photo" src="{{ photo.file }}" alt="{{ photo.alt }}">
+
+    <footer class="story-band">
+        <p class="p-body story-desc">{{ photo.description }}</p>
+        {%- if photo.includesDrink %}
+        <p class="story-drink">Drink included</p>
+        {%- endif %}
+        <p class="p-body story-call">From 11am &middot; {{ site.social.website }}/menu</p>
+    </footer>
+
+</div>

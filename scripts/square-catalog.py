@@ -119,23 +119,18 @@ add("Build Your Own Sandwich", C, [(i["name"], i["price"]) for i in BYO["items"]
 # ── Hot sandwiches ─────────────────────────────────────────
 H = "Hot Sandwiches"
 kaiser = "On a Kaiser roll with lettuce, tomato, pickle & onion."
-burger_names = {
-    "Hamburger or Chicken": "Hamburger",
-    "Cheeseburger or Chicken": "Cheeseburger",
-    "Navajo Burger or Chicken": "Navajo Burger",
-    "Bacon Cheese Burger or Chicken": "Bacon Cheese Burger",
-    "Mushroom Swiss Burger or Chicken": "Mushroom Swiss Burger",
-    "Cordon Bleu Burger or Chicken": "Cordon Bleu Burger",
-    "Patty Melt or Chicken": "Patty Melt",
-}
+# Made with beef or chicken at the same price (the category note says so):
+# one Square item each, with Beef / Chicken variations.
+beef_or_chicken = {"Hamburger", "Cheeseburger", "Navajo Burger", "Bacon Cheese Burger",
+                   "Mushroom Swiss Burger", "Cordon Bleu Burger", "Patty Melt"}
 for i in cats["hot_sandwiches"]["items"]:
-    if i["name"] in burger_names:
+    if i["name"] in beef_or_chicken:
         d = i.get("description", "")
         if i["name"].startswith("Patty Melt"):
             d = d + "."  # already says "on rye"
         else:
             d = (d + ". " if d else "") + kaiser
-        add(burger_names[i["name"]], H, [("Beef", i["price"]), ("Chicken", i["price"])], d)
+        add(i["name"], H, [("Beef", i["price"]), ("Chicken", i["price"])], d)
     else:
         d = i.get("description", "")
         bread = i.get("defaultBread")
@@ -167,6 +162,12 @@ SD = "Sides"
 for i in cats["sides"]["items"]:
     if i["name"] == "Chips":
         add("Chips", SD, [(v.strip(), i["price"]) for v in i["description"].split(",")])
+    elif i["name"] == "Side Salads":
+        # One row on the menu, but still five items in Square, as they were
+        # before the menu folded them together (2026-10-08): the till and the
+        # kitchen board already know them by these names.
+        for v in (v.strip() for v in i["description"].split(",")):
+            one(v if "Salad" in v else f"{v} Salad", SD, i["price"])
     else:
         one(i["name"], SD, i["price"])
 

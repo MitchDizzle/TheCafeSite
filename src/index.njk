@@ -162,7 +162,9 @@ headExtra: |
             {%- else %}
             <a href="menu"    class="btn btn-primary">See the Menu</a>
             {%- endif %}
-            <a href="contact" class="btn btn-ghost">Contact &amp; Catering</a>
+            {#- Catering, not contact: the phone, email and address are right
+                below, so the button goes where they can't get to from here. #}
+            <a href="catering" class="btn btn-ghost">Catering</a>
         </nav>
         <div class="hero-subspace">
             <p class="hero-subtitle">

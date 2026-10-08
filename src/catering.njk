@@ -37,8 +37,9 @@ pageCss: "/assets/css/catering.css"
                 <!-- Sent by Web3Forms to form@lvcafetogo.com (forwarded to the cafe's
                      Gmail). Field names are what the email shows, so they're written
                      for the reader. With JavaScript, main.js rewrites the subject to
-                     carry the date, head count, pickup/drop-off and name, and folds the
-                     date and time into one readable "When" line. Every subject starts
+                     carry the name, date, head count and pickup/drop-off, and folds the
+                     date and time into one readable "When" line. Every subject contains
+                     "Catering request", which the Gmail filter matches: keep it. -->
                      "Catering request", which the Gmail filter matches: keep it. -->
                 <form action="https://api.web3forms.com/submit" method="POST" novalidate
                       data-catering
@@ -47,6 +48,13 @@ pageCss: "/assets/css/catering.css"
                     <input type="hidden" name="access_key" value="{{ site.web3forms.catering }}">
                     <input type="hidden" name="subject" value="Catering request: website form">
                     <input type="hidden" name="from_name" value="Catering form">
+                    <input type="hidden" name="access_key" value="{{ site.web3forms.catering }}">
+                    <input type="hidden" name="subject" value="Catering request: website form">
+                    <input type="hidden" name="from_name" value="Catering form">
+                    <!-- Without JavaScript the browser leaves the page; this brings it
+                         back to our /thanks instead of Web3Forms' own. Must be on this
+                         domain (the free plan refuses cross-domain redirects). -->
+                    <input type="hidden" name="redirect" value="{{ site.url }}/thanks">
                     <!-- honeypot: humans never see or tick this -->
                     <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off"
                            style="display: none;" aria-hidden="true">

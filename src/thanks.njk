@@ -1,0 +1,27 @@
+---
+layout: layouts/page.njk
+noindex: true
+title: "Thank You | The Café"
+description: "Thanks for getting in touch with The Café, Leavenworth, KS."
+---
+{#- Where a form lands when the browser runs no JavaScript: Web3Forms
+    redirects here (the form's hidden "redirect" field). With JavaScript the
+    thank-you shows in place on the form's own page and nobody sees this.
+    Unlisted: noindex and off the sitemap, since it means nothing on its own.
+    Worded for any form, so the contact and survey forms can point here too. -#}
+<section class="section" aria-labelledby="thanks-heading" style="text-align: center;">
+            <div class="container">
+                <h1 id="thanks-heading">Thank you! We got it.</h1>
+                <p style="margin-top: 1rem; max-width: 55ch; margin-inline: auto;">
+                    Your message is on its way to us. If you sent a catering request,
+                    we&rsquo;ll reach out soon to go over the details.
+                </p>
+                <p style="margin-top: 0.75rem; max-width: 55ch; margin-inline: auto;">
+                    Need us sooner? Call <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a>.
+                </p>
+                <div style="margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: center;">
+                    <a href="/" class="btn btn-primary">Home</a>
+                    <a href="/menu" class="btn btn-primary">See the Menu</a>
+                </div>
+            </div>
+        </section>

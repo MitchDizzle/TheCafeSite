@@ -1,6 +1,6 @@
 {#- Today's lunch special and soup — the box at the top of /menu.
 
-    Built from src/_data/specials.json. EVERY day of the week is in the
+    Built from src/_data/specials.json. EVERY day in the file is in the
     HTML, all hidden; the script below picks the one for today on Central
     time (America/Chicago, so a visitor's phone clock or zone can't matter)
     and un-hides it. That is what lets a static page uploaded once a week
@@ -19,6 +19,13 @@
         before opening) → the week's table only
       nothing today or later → nothing at all
 
+    THE FILE HOLDS MORE THAN ONE WEEK. Next week goes in a week ahead (for
+    the Facebook post and the kitchen PC) while this week is still being
+    served, so the table only ever lists ONE week: the Monday-to-Sunday week
+    of the next listed day (today's week on a weekday, next week at the
+    weekend). Its rows say only "Tuesday", so next week's Tuesday must never
+    sit under this week's.
+
     THE LUNCH SPECIAL AND THE SOUP ARE SOLD SEPARATELY, so they are two
     cards side by side and two columns in the table — never one line, which
     read as the soup coming with the plate. Both are served from 11am.
@@ -26,21 +33,24 @@
     Each day's date is printed in words in the HTML itself ("Monday,
     October 5"), so even a copy cached somewhere can't pass an old special
     off as today's. -#}
-{%- if specials and specials.week and specials.week.length %}
+{%- if specials and specials.days and specials.days.length %}
 {#- Cup / Bowl prices come from the menu's own soup category, so the box
     can never quote a soup price the menu below it disagrees with. -#}
 {%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
 <section class="today-special" data-specials hidden aria-labelledby="today-special-heading">
 
-    {%- for d in specials.week %}
+    {%- for d in specials.days %}
     <div class="ts-today" data-special-today="{{ d.date }}" hidden>
         <h2 class="ts-heading" id="today-special-heading-{{ d.date }}">Today &middot; {{ d.date | dayDate("long") }}</h2>
         <div class="ts-cards">
             <div class="ts-card">
                 <p class="ts-label">Lunch special <span class="ts-when">from 11am</span></p>
                 <p class="ts-name">{{ d.special }}</p>
-                {%- if d.sides and d.sides.length %}
-                <p class="ts-detail">with {{ d.sides | join(" and ") }}</p>
+                {%- if d | specialSides %}
+                <p class="ts-detail">{{ d | specialSides }}</p>
+                {%- endif %}
+                {%- if specials.includesDrink %}
+                <p class="ts-detail">Includes a fountain drink or iced tea</p>
                 {%- endif %}
             </div>
             {%- if d.soup %}
@@ -63,7 +73,7 @@
         aria-labelledby at whichever one is showing). -#}
     <div class="ts-ahead" data-specials-ahead hidden>
         <h2 class="ts-heading" id="today-special-heading">This week&rsquo;s lunch specials</h2>
-        <p class="ts-ahead-note">Lunch specials and soup are served from 11am.</p>
+        <p class="ts-ahead-note">Lunch specials and soup are served from 11am.{% if specials.includesDrink %} Every lunch special includes a fountain drink or iced tea; soup is sold separately.{% endif %}</p>
     </div>
 
     <div class="ts-week" data-specials-upcoming hidden>
@@ -77,16 +87,18 @@
                 </tr>
             </thead>
             <tbody>
-                {%- for d in specials.week %}
+                {%- for d in specials.days %}
                 <tr data-special-upcoming="{{ d.date }}" hidden>
                     <th scope="row">{{ d.date | dayDate("weekday") }}</th>
-                    <td data-label="Lunch special">{{ d.special }}{% if d.sides and d.sides.length %}<span class="ts-table-sides"> with {{ d.sides | join(" and ") }}</span>{% endif %}</td>
+                    <td data-label="Lunch special">{{ d.special }}{% if d | specialSides %}<span class="ts-table-sides"> {{ d | specialSides }}</span>{% endif %}</td>
                     <td data-label="Soup">{{ d.soup }}</td>
                 </tr>
                 {%- endfor %}
             </tbody>
         </table>
     </div>
+
+    <p class="ts-follow">New specials every week, here and on <a href="{{ site.social.facebook }}" rel="noopener">Facebook</a>.</p>
 </section>
 
 <script>
@@ -105,11 +117,23 @@
         return; // no Intl time zones: leave the box hidden rather than guess
     }
 
+    // The Monday of a YYYY-MM-DD date's week, as YYYY-MM-DD (read in UTC,
+    // like the dates themselves, so no zone can shift it a day).
+    function mondayOf(iso) {
+        var d = new Date(iso + 'T00:00:00Z');
+        d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+        return d.toISOString().slice(0, 10);
+    }
+
     var todayEl = box.querySelector('[data-special-today="' + today + '"]');
-    var upcoming = Array.prototype.filter.call(
-        box.querySelectorAll('[data-special-upcoming]'),
-        function (row) { return row.getAttribute('data-special-upcoming') > today; }
-    );
+    var rows = Array.prototype.slice.call(box.querySelectorAll('[data-special-upcoming]'));
+    var dateOf = function (row) { return row.getAttribute('data-special-upcoming'); };
+    // The week to list: the one holding today, or else the next listed day.
+    var next = rows.map(dateOf).filter(function (d) { return d >= today; }).sort()[0];
+    var week = next && mondayOf(next);
+    var upcoming = rows.filter(function (row) {
+        return dateOf(row) > today && mondayOf(dateOf(row)) === week;
+    });
 
     if (!todayEl && !upcoming.length) return; // stale or empty: show nothing
 
@@ -121,6 +145,11 @@
         box.querySelector('[data-specials-upcoming-label]').hidden = true;
     }
 
+    // Rows for other weeks go entirely, so the last row shown is the
+    // table's :last-child and its divider styles end where the rows do.
+    rows.forEach(function (row) {
+        if (upcoming.indexOf(row) < 0) row.parentNode.removeChild(row);
+    });
     if (upcoming.length) {
         upcoming.forEach(function (row) { row.hidden = false; });
         box.querySelector('[data-specials-upcoming]').hidden = false;
