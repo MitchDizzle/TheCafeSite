@@ -350,6 +350,19 @@
     border-bottom: 1px solid #E3DDD3;
   }
   .items > li:last-child { border-bottom: 0; }
+  /* Items to go on a For Here ticket: last, under their own line. */
+  .items > li.togo-split {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0 0.15rem;
+    border-top: 0.15rem dashed var(--teal-dark);
+    border-bottom: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--teal-dark);
+  }
+  .items > li.togo-split .dining { background: var(--teal-dark); color: var(--cream); margin: 0; }
   .qty { font-size: 1.4rem; font-weight: 800; }
   .qty.many { color: var(--red-dark); }
   .item { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
@@ -618,7 +631,7 @@
             <span class="timer"></span>
           </header>
           <ul class="items">
-            ${t.items.map((it) => `
+            ${t.items.map((it, i) => `${it.toGo && !(t.items[i - 1] || {}).toGo ? '<li class="togo-split"><span class="dining">TO GO</span> make these to go</li>' : ""}
               <li>
                 <span class="qty${it.qty > 1 ? " many" : ""}">${it.qty}</span>
                 <div>

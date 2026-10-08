@@ -371,6 +371,7 @@
   .items { list-style: none; margin: 0; padding: 0; }
   .items li { display: grid; grid-template-columns: 1.8rem 1fr; padding: 0.15rem 0; }
   .qty { font-weight: 800; }
+  .items li.togo-split { display: block; margin-top: 0.3rem; padding-top: 0.35rem; border-top: 1.5px dashed var(--teal-dark); }
   .qty.many { color: var(--red-dark); }
   .item-name { font-weight: 700; }
   .sub { color: var(--muted); font-size: 0.92rem; }
@@ -543,7 +544,11 @@
 
   // ---- rendering
   // To go or for here, as a tag after the order type. Online is always to go.
-  const diningHtml = (o) => o.toGo ? ` · <span class="dining">To go</span>` : ` · <span class="dining here">For here</span>`;
+  const diningHtml = (o) => {
+    if (o.toGo) return ` · <span class="dining">To go</span>`;
+    const n = [...o.items, ...o.front].filter((it) => it.toGo).reduce((sum, it) => sum + it.qty, 0);
+    return ` · <span class="dining here">For here</span>${n ? ` <span class="dining">+${n} to go</span>` : ""}`;
+  };
 
   function kindLabel(o) {
     if (o.kind === "COUNTER") return "Counter";
@@ -553,11 +558,12 @@
 
   function itemsHtml(list, isFront, orderId) {
     return `<ul class="items">${list.map((it, i) => {
+      const split = it.toGo && !(list[i - 1] || {}).toGo ? `<li class="togo-split"><span class="dining">To go</span></li>` : "";
       const subs = [it.variation, ...it.mods].filter(Boolean)
         .map((m) => `<div class="sub${ALLERGY.test(m) ? " allergy" : ""}">${esc(m)}</div>`).join("");
       const note = it.note ? `<div class="note${ALLERGY.test(it.note) ? " allergy" : ""}">${esc(it.note)}</div>` : "";
       const got = isFront && ticks[orderId] && ticks[orderId][i];
-      return `<li${isFront ? ` data-tick="${i}"${got ? ' class="got"' : ""}` : ""}>
+      return `${split}<li${isFront ? ` data-tick="${i}"${got ? ' class="got"' : ""}` : ""}>
         ${isFront ? '<span class="box" aria-hidden="true"></span>' : ""}<span class="qty${it.qty > 1 ? " many" : ""}">${it.qty}</span>
         <div><div class="item-name">${esc(it.name)}</div>${subs}${note}</div>
       </li>`;

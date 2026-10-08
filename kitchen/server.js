@@ -970,6 +970,7 @@ const GONE_FULFILLMENT = new Set(["COMPLETED", "CANCELED", "FAILED"]);
 const NOT_FOOD = new Set(["GIFT_CARD"]);
 
 const itemName = (li) => li.name || li.note || "Custom amount";
+const TO_GO_TYPES = /^(PICKUP|DELIVERY|SHIPMENT)$/;
 
 // Online vs. front counter. The Restaurants POS attaches a fulfillment to a
 // counter sale and marks it COMPLETED the instant it's paid, so a completed
@@ -997,15 +998,29 @@ function toTicket(order) {
   // but go in the bag, not on the food: they come off the kitchen ticket
   // and onto the front's list. See the Packets list in square/README.md.
   const isPacket = (m) => /\bpackets?\b/i.test(m.name || "");
+  // Items to go on a For Here ticket: "we're eating here, and a plate to
+  // take home". The POS sets the dining option per item; the Restaurants
+  // POS records dining options as fulfillments, so such an order is
+  // expected to carry one per option, each listing its own items
+  // (line_item_application ENTRY_LIST, entries[].line_item_uid). A "To Go"
+  // modifier on an item is read the same way, in case it arrives as one.
+  // Check a real split order on /check (its "raw" link) if they don't show.
+  const lineToGo = new Map(); // line item uid -> true (to go) | false (here)
+  for (const ff of order.fulfillments || []) {
+    if (ff.line_item_application !== "ENTRY_LIST") continue;
+    for (const e of ff.entries || []) lineToGo.set(e.line_item_uid, TO_GO_TYPES.test(ff.type));
+  }
+  const isToGoMod = (m) => /^\s*to[\s-]?go\s*$/i.test(m.name || "");
   const toItem = (li) => ({
     qty: Number(li.quantity) || 1,
     name: itemName(li),
     variation:
       li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
-    mods: (li.modifiers || []).filter((m) => !isPacket(m)).map((m) =>
+    mods: (li.modifiers || []).filter((m) => !isPacket(m) && !isToGoMod(m)).map((m) =>
       Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name
     ),
     note: li.name && li.note ? li.note : null,
+    toGo: (li.modifiers || []).some(isToGoMod) || lineToGo.get(li.uid) === true,
   });
   const food = lines.filter((li) => !NOT_FOOD.has(li.item_type));
   const isSkip = isSkipped;
@@ -1049,7 +1064,17 @@ function toTicket(order) {
   // fulfillment: "To Go" is PICKUP, "For Here" is IN_STORE. To Go is the
   // POS default, so a table number wins: someone sitting down with a number
   // is eating here even if nobody changed the dining option.
-  const toGo = online || (!table && !!(f && /^(PICKUP|DELIVERY|SHIPMENT)$/.test(f.type)));
+  // An order split between for here and to go carries an IN_STORE
+  // fulfillment as well: it's a For Here ticket with some items to go.
+  const anyHere = (order.fulfillments || []).some((x) => x.type === "IN_STORE");
+  const toGo = online || (!table && !anyHere && !!(f && TO_GO_TYPES.test(f.type)));
+  // On a For Here ticket, the to-go items go last, under their own TO GO
+  // line on both screens, so they're made (and bagged) after the plates.
+  // On a To Go ticket everything goes, so nothing is singled out.
+  for (const list of [items, front]) {
+    for (const it of list) if (toGo || !it.toGo) delete it.toGo;
+    list.sort((a, b) => !!a.toGo - !!b.toGo);
+  }
   // What to call it. Square's own order id means nothing at the counter;
   // the receipt number (the start of the payment's id, as printed on the
   // receipt) does, so an order with no name goes by that once it's paid.
@@ -1148,6 +1173,7 @@ let polling = null; // the in-flight poll, so "check now" never runs two at once
 let all = []; // every ticket from the last good poll, bumped or not
 let todaysOrders = []; // every order from the last good poll, for the day's stats
 let rejected = []; // orders Square returned that never became tickets, for /check
+let rawOrders = new Map(); // id -> the order exactly as Square sent it, last poll (for /check)
 const logged = new Set(); // order ids already announced in the console
 let lastOkAt = null;
 let lastError = null;
@@ -1169,6 +1195,7 @@ async function pollOnce() {
     todaysOrders = real; // the stats never see demo orders
     if (demo && Date.now() > Date.parse(demo.until)) endDemo();
     const orders = demo ? [...real, ...demoOrders(Date.parse(demo.startedAt))] : real;
+    rawOrders = new Map(real.map((o) => [o.id, o]));
     const seen = new Set();
     all = [];
     rejected = [];
@@ -1404,6 +1431,28 @@ function frontSnapshot() {
 // ---------------------------------------------------------------- mock data
 
 const mockStart = Date.now();
+// A For Here order with one item to go, split the way the Restaurants POS
+// is expected to record it (see lineToGo in toTicket).
+function mockSplitOrder(created) {
+  return {
+    id: "MOCKSPLIT0010",
+    state: "COMPLETED",
+    created_at: created,
+    ticket_name: "7",
+    source: { name: "Square Point of Sale" },
+    tenders: [{ id: "SPLT1234", type: "CARD" }],
+    line_items: [
+      { uid: "L1", quantity: "1", name: "Cheeseburger", variation_name: "Regular", modifiers: [{ name: "No onion" }] },
+      { uid: "L2", quantity: "1", name: "Soup of the Day", variation_name: "Bowl" },
+      { uid: "L3", quantity: "2", name: "Lunch Special", variation_name: "Meatloaf" },
+    ],
+    fulfillments: [
+      { uid: "F1", type: "IN_STORE", state: "COMPLETED", line_item_application: "ENTRY_LIST", entries: [{ line_item_uid: "L1" }, { line_item_uid: "L2" }] },
+      { uid: "F2", type: "PICKUP", state: "COMPLETED", line_item_application: "ENTRY_LIST", entries: [{ line_item_uid: "L3" }] },
+    ],
+  };
+}
+
 function mockOrders() {
   const ago = (min) => new Date(Date.now() - min * 6e4).toISOString();
   const at = (min) => new Date(mockStart + min * 6e4).toISOString();
@@ -1526,6 +1575,7 @@ function mockOrders() {
       line_items: [li(1, ["Reuben", "BLT", "Patty Melt"][i % 3], { variation_name: "Rye" })],
     });
   }
+  orders.push(mockSplitOrder(ago(3)));
   return orders;
 }
 
@@ -1663,7 +1713,7 @@ function checkPage() {
       created: t.createdAt,
       kind: `${t.kind} · ${t.toGo ? "to go" : "for here"}${t.table ? ` · table ${t.table}` : ""}${t.unpaid ? " · NOT PAID" : ""}${t.test ? " · TEST" : ""}`,
       detail: t.detail,
-      items: t.items.map((i) => `${i.qty}× ${i.name}`).join(", "),
+      items: t.items.map((i) => `${i.qty}× ${i.name}${i.toGo ? " (TO GO)" : ""}`).join(", "),
       status: hiddenReason(t, now) || "ON THE BOARD",
     })),
     ...rejected.map(({ order: o, reason }) => ({
@@ -1699,7 +1749,7 @@ ${cfg.notes.length ? `<h2>config.json</h2><ul>${cfg.notes.map((n) => `<li>${esc(
 <table><tr><th>Created</th><th>Order</th><th>Board type</th><th>From Square</th><th>Items</th><th>Board</th></tr>
 ${rows
   .map(
-    (r) => `<tr><td>${esc(new Date(r.created).toLocaleTimeString())}</td><td>...${esc(r.id.slice(-6))}</td>
+    (r) => `<tr><td>${esc(new Date(r.created).toLocaleTimeString())}</td><td>...${esc(r.id.slice(-6))}${rawOrders.has(r.id) ? ` <a href="/check/raw?id=${encodeURIComponent(r.id)}">raw</a>` : ""}</td>
 <td>${esc(r.kind)}</td><td>${esc(r.detail)}</td><td>${esc(r.items)}</td><td>${esc(r.status)}</td></tr>`
   )
   .join("")}
@@ -2135,6 +2185,12 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "GET" && url.pathname === "/") {
     return send(res, 200, fs.readFileSync(BOARD_FILE, "utf8"), "text/html; charset=utf-8");
+  }
+  // One order exactly as Square sent it, for checking how the POS recorded
+  // something (a split to-go order, say). This PC only, like /check.
+  if (req.method === "GET" && url.pathname === "/check/raw") {
+    const o = rawOrders.get(url.searchParams.get("id") || "");
+    return o ? send(res, 200, JSON.stringify(o, null, 2)) : send(res, 404, { error: "not in the last check; refresh /check" });
   }
   if (req.method === "GET" && url.pathname === "/check") {
     return send(res, 200, checkPage(), "text/html; charset=utf-8");
