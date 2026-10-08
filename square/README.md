@@ -83,9 +83,8 @@ default in the description". (`defaultBread` in `menu.json`.)
 | **Salad Protein** | Chicken salad, Tuna salad | Pick 1, required | Salad Plate |
 | **Plate Protein** | Grilled chicken, Hamburger patty | Pick 1, required | Healthy Plate |
 | **Dressing** | Ranch, Italian, Caesar, Honey Dijon | Pick 1, required | Strawberry Chicken, Buffalo Chicken, Chef and Dinner Salads. **Not** the Taco Salad — it comes with salsa & sour cream. |
-
-| **Add (on the food)** | Ketchup, Mustard, Mayo | Pick any, optional | Every Hot and Cold Sandwich, the burgers, Build Your Own, wraps, Breakfast Sandwich. A cooking instruction: prints on the kitchen ticket. |
-| **Packets (in the bag)** | Ketchup packet, Mustard packet, Mayo packet | Pick any, optional | The same items, plus Kids Meal and Fried Potatoes. **Keep the word "packet" in each name**: the kitchen board moves any modifier named "… packet" off the kitchen ticket and onto the front page's "Add from the front" list. |
+| **Add (on the food)** | Ketchup, Mustard, Mayo | Pick any, optional | Every Hot and Cold Sandwich, the burgers, Build Your Own, Breakfast Sandwich. **Not the wraps** — each comes with its own dressing (ranch, sesame, caesar, dijon), so ketchup, mustard and mayo don't belong on them. A cooking instruction: prints on the kitchen ticket. |
+| **Packets (in the bag)** | Ketchup packet, Mustard packet, Mayo packet | Pick any, optional | The same items (so not the wraps either), plus Kids Meal and Fried Potatoes. **Keep the word "packet" in each name**: the kitchen board moves any modifier named "… packet" off the kitchen ticket and onto the front page's "Add from the front" list. |
 
 Juice is one item, **Bottle Juice**, with a variation per flavour (Orange,
 Apple, Cranberry today; they're left over from the old contract and change
