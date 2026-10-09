@@ -106,12 +106,24 @@ studioOrder: 22
             <div class="lp-band-cell">
                 <p class="p-label lp-band-label ink-accent">Daily specials</p>
                 <p class="p-display lp-band-big ink-teal">A lunch special &amp; a soup every weekday</p>
-                <p class="p-body lp-band-text">From 11am. This week&rsquo;s are on our online menu at {{ site.social.website }}/menu, and on the specials sign.</p>
+                <p class="p-body lp-band-text">From 11am. This week&rsquo;s are on the specials sign, {{ site.social.website }}/menu and {{ site.social.facebookHandle }}.</p>
             </div>
-            <div class="lp-band-cell">
-                <p class="p-label lp-band-label ink-accent">Follow us</p>
-                <p class="p-display lp-band-big ink-teal">{{ site.social.facebookHandle }}</p>
-                <p class="p-body lp-band-text">We post the week&rsquo;s specials there every weekend.</p>
+            {#- The sheet is two-sided and isn't folded, so nothing about the
+                front says there is a back (client 2026-10-09). This cell
+                does, in the bottom corner a hand turns it by. It took the
+                place of a "Follow us" cell, whose Facebook address is now
+                in the specials cell beside it: the front has no height to
+                spare for a row of its own. Front only: everyone starts on
+                this side. -#}
+            <div class="lp-band-cell lp-band-turn">
+                <div class="lp-turn-head">
+                    <p class="p-label lp-turn-label ink-accent">Turn over</p>
+                    <svg class="lp-turn-arrow ink-accent" viewBox="0 0 60 36" aria-hidden="true" focusable="false">
+                        <path d="M6 30 C 10 10, 40 6, 52 22" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                        <path d="M51.6 10 L 52 22 L 40.6 18.3" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <p class="p-body lp-band-text">for burgers, salads, kids meals, sides &amp; desserts</p>
             </div>
         </footer>
     </div>

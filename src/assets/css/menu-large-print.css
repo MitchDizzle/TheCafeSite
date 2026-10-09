@@ -604,3 +604,32 @@
     margin-top: 0.06in;
     color: var(--text-dark);
 }
+
+/* ── Counter copy: "turn over", the last cell of the front's band ──
+   A red arrow in the bottom corner, where a hand turns the sheet, saying
+   there is a back. Bigger than the other band labels on purpose: it is the
+   one thing in the band a customer has to act on. */
+.lp-band-turn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.lp-turn-head {
+    display: flex;
+    align-items: center;
+    gap: 0.14in;
+}
+
+.lp-turn-label {
+    font-size: 0.3in;
+    line-height: 1;
+}
+
+.lp-turn-arrow {
+    flex: none;
+    width: 0.85in;
+    height: auto;
+}
