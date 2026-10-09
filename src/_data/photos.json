@@ -1,5 +1,5 @@
 {
-  "_note": "Food photos, one entry per picture, for Facebook posts and later the site. Images live in src/assets/photos/ as web copies: about 2000px, upright, camera and GPS data stripped. Full-size originals go in photos-originals/ at the repo root, which git ignores; never commit a camera original, because phone photos carry the GPS location. `file` is the path under /assets/. `item` is the dish EXACTLY as named in menu.json, so a post can pull the price and description from the menu instead of retyping them. `variant` is set when the photo shows one version of a two-way item. A burger can be made with chicken instead of beef (menu.json's hot sandwiches note), so a chicken photo of a burger item has variant 'Chicken' and a beef one 'Burger'; otherwise null. `title` is what the post calls the dish. `alt` describes the picture for screen readers. A daily special, which is not on the menu, sets `special: true` and `item: null` instead; its post is labelled Daily Special, takes its words from `description`, and carries no price anywhere. `description` is otherwise used only when the menu item has none of its own (the burrito, whose options are a note on its category); keep it in step with that note. `date` is when it was taken (YYYY-MM-DD). Use only photos the cafe took or has permission to use. `includesDrink: true` on a daily special means its price includes a drink; the posts say so. Specials only (a menu item's price is the menu's).",
+  "_note": "Food photos, one entry per picture: the /gallery page's 'On the menu' and 'Daily specials' sections, newest first. Images live in src/assets/photos/ as web copies: about 2000px, upright, camera and GPS data stripped. After adding one, run `npm run thumbs` for the gallery's small copy (without it the gallery shows the full photo). Full-size originals go in photos-originals/ at the repo root, which git ignores; never commit a camera original, because phone photos carry the GPS location. Photo post on the kitchen front page keeps the photos it takes in kitchen/photos/ on that PC, already re-drawn without GPS: copy one into src/assets/photos/ and give it an entry here. `item` is the dish EXACTLY as named in menu.json. `title` is what the gallery calls it. `alt` describes the picture for screen readers and is required. A daily special, which is not on the menu, sets `special: true` and `item: null` and is listed under Daily specials. `date` is when it was taken (YYYY-MM-DD) and sets the order. `variant`, `description` and `includesDrink` were for the Facebook dish posts (archived 2026-10-09 in archive/site-src/studio/fb-dish.njk) and stay so those can come back: `variant` is 'Chicken' or 'Burger' when the photo shows one version of a burger (menu.json's hot sandwiches note), else null; `description` is the post's words for a special, or for an item the menu gives none; `includesDrink: true` on a special made its post say a drink was included. Use only photos the cafe took or has permission to use, and no people: the staff do not want photos of themselves online.",
   "photos": [
     {
       "file": "/assets/photos/bacon-cheeseburger.jpg",
@@ -103,6 +103,14 @@
       "title": "Pork Tenderloin on a Bun",
       "description": "Breaded and fried, with lettuce, tomato, pickles & onion, served with oven baked potatoes",
       "alt": "A breaded pork tenderloin on an open bun, with lettuce, tomato slices, pickles and diced red onion, and oven baked potato wedges on a white plate.",
+      "date": "2026-10-07"
+    },
+    {
+      "file": "/assets/photos/strawberry-chicken-salad.jpg",
+      "item": "Strawberry Chicken Salad",
+      "variant": null,
+      "title": "Strawberry Chicken Salad",
+      "alt": "Strawberry chicken salad in a clear to-go container: greens topped with diced chicken, sliced strawberries, tomato and shredded parmesan, with two cups of dressing on the side.",
       "date": "2026-10-07"
     }
   ]

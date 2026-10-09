@@ -1,0 +1,55 @@
+{
+  "_note": "The photos on /gallery that aren't food from the menu: catering spreads and the cafe itself. Food photos are in src/_data/photos.json. Images live in src/assets/gallery/ (the storefront-at-sunset photo is src/assets/photos/storefront.jpg, shared with the newspaper piece) as web copies: at most about 2000px, camera and GPS data stripped. After adding one, run `npm run thumbs` for the gallery's small copy. `caption` is the short name shown under the tile; `alt` says what is in the picture, for screen readers. The tiles are cropped to 4:3, and `position` (a CSS object-position) keeps the subject in the crop; a tap opens the whole photo. No people: the staff do not want photos of themselves online.",
+  "catering": [
+    {
+      "file": "/assets/gallery/catering2-8-1-26.webp",
+      "caption": "Shrimp cocktail platter",
+      "alt": "A catering platter of shrimp cocktail on a bed of lettuce, with lemon wedges and a cup of cocktail sauce in the middle.",
+      "position": "center 45%"
+    },
+    {
+      "file": "/assets/gallery/catering1-8-1-26.webp",
+      "caption": "Sliders, chips and fruit",
+      "alt": "A catering table: a big platter of ham and Swiss slider sandwiches, a tray of sandwich rolls, tortilla chips, sliced strawberries, cherry tomatoes and dips.",
+      "position": "center"
+    },
+    {
+      "file": "/assets/gallery/catering3-8-1-26.webp",
+      "caption": "Deviled eggs, cheese and a veggie tray",
+      "alt": "A catering spread: deviled eggs, cubed cheddar and pepper jack, a vegetable tray of broccoli, cauliflower, carrots, peppers, cucumber, tomatoes and olives around a ranch dip, and a baked casserole in a foil pan.",
+      "position": "center"
+    }
+  ],
+  "cafe": [
+    {
+      "file": "/assets/photos/storefront.jpg",
+      "caption": "Find us at 417 S 6th St",
+      "alt": "The Café's brick storefront at 417 S 6th St at sunset: the front door between two windows, one with the cafe's name, address and phone number, behind a black railing.",
+      "position": "center 80%"
+    },
+    {
+      "file": "/assets/gallery/20260710_060333-1.webp",
+      "caption": "Before dawn, after a storm",
+      "alt": "The Café's brick storefront before dawn after a storm, lights on in the windows under a pink sky, the parking lot wet with rain.",
+      "position": "center 30%"
+    },
+    {
+      "file": "/assets/gallery/20260807_061930.webp",
+      "caption": "Sunrise over the cafe",
+      "alt": "The Café's storefront at sunrise under orange and purple clouds.",
+      "position": "center 52%"
+    },
+    {
+      "file": "/assets/gallery/a5876693-1304-4463-a148-e54501471e58_20260526_194950_0000.webp",
+      "caption": "The kitchen",
+      "alt": "The kitchen: stainless steel prep tables and refrigerators under bright lights.",
+      "position": "center 45%"
+    },
+    {
+      "file": "/assets/gallery/fe565db0-4936-4fdd-8303-38a93f53415d_20260526_195046_0000.webp",
+      "caption": "Down the kitchen line",
+      "alt": "A long view down the kitchen past the prep tables, with daylight from the windows.",
+      "position": "center 30%"
+    }
+  ]
+}

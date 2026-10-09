@@ -98,6 +98,15 @@ module.exports = function (eleventyConfig) {
   // an SVG with no fill of its own renders black. Inlining puts the paths in
   // the document, where `fill` inherits normally — one wordmark file can then
   // be cream on the dark hero and dark anywhere else, driven purely by CSS.
+  // The /gallery grid's small copy of a photo: /assets/photos/x.jpg becomes
+  // /assets/photos/thumbs/x.jpg, made by `npm run thumbs`. A photo with no
+  // thumbnail yet gets the full photo, so a new one still shows.
+  eleventyConfig.addFilter("thumb", (url) => {
+    if (!url || typeof url !== "string") return url;
+    const small = url.replace(/\/([^/]+)$/, "/thumbs/$1");
+    return fs.existsSync(path.join(__dirname, "src", small.replace(/^\//, ""))) ? small : url;
+  });
+
   eleventyConfig.addShortcode("inlineSvg", (url, className, label) => {
     const file = path.join(__dirname, "src", String(url).replace(/^\//, ""));
     let svg;

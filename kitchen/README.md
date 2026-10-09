@@ -232,7 +232,7 @@ Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo
 4. **Frame it:** drag the picture to move it, and zoom with the slider. The post shows a square of it.
 5. **Make the picture.** Press and hold it to save it to the phone's photos (or Download), and **Copy caption**: with the order link, hours and menu link.
 
-**Keep the photo on the kitchen PC for the website** (ticked by default) saves the photo (2000px, re-drawn on the phone so its GPS location is gone) and the finished post in `photos\` on the kitchen PC, listed in `photos\photos.json` in the same shape as the website's `src/_data/photos.json`. To put them on the website, copy that folder off the PC and move the entries over (or ask Claude to); each needs its `alt` text written then.
+**Keep the photo on the kitchen PC for the website** (ticked by default) saves the photo (2000px, re-drawn on the phone so its GPS location is gone) and the finished post in `photos\` on the kitchen PC, listed in `photos\photos.json` in the same shape as the website's `src/_data/photos.json`. To put one on the website's `/gallery`, copy the photo into `src/assets/photos/`, move its entry over (a dish on the menu takes its menu name as `item`, not `special`), write its `alt` text, and run `npm run thumbs` (or ask Claude to).
 
 - The post's fonts load from Google Fonts on the phone, like the website's. Without internet the picture uses plain fonts and the screen says so.
 - The phone number, web address, hours and order link in the picture and caption are set near the top of the Photo post code in `front.html` (`SITE`). Change them there along with the website's `site.json`.
