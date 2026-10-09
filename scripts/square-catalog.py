@@ -83,8 +83,11 @@ one("Breakfast Sandwich", B, i.get("squareBase", i["price"]), i["description"] +
 
 # ── Breakfast sides ────────────────────────────────────────
 BS = "Breakfast Sides"
-add("Toast, Biscuit or English Muffin", BS,
-    [(v, item("breakfast_sides", "Toast, Biscuit or English Muffin")["price"]) for v in ("Toast", "Biscuit", "English Muffin")])
+# One item; WHICH bread is the Breakfast Base modifier (square/README.md),
+# the same list as the Breakfast Sandwich, so "toast" always says white,
+# wheat or 12 grain. It used to be Toast / Biscuit / English Muffin
+# variations, which left the toast's bread unsaid (client 2026-10-08).
+one("Toast, Biscuit or English Muffin", BS, item("breakfast_sides", "Toast, Biscuit or English Muffin")["price"])
 for n, label in [("Bacon (4 slices)", "Bacon (4 slices)"), ("Sausage Patty", "Sausage Patty"),
                  ("Fried Potatoes", "Fried Potatoes"), ("Side of Gravy", "Side of Gravy")]:
     one(label, BS, item("breakfast_sides", n)["price"])

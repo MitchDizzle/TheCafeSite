@@ -17,14 +17,16 @@ module.exports = {
       const { site } = data;
       const hours = `${site.opening.opens.time}${site.opening.opens.meridiem}–${site.opening.closes.time}${site.opening.closes.meridiem}`;
 
+      // Kept short on purpose (client 2026-10-08): Facebook text is read on a
+      // phone, and the details (which drinks, which sides) are explained at
+      // the counter.
       return [
-        `This week's lunch specials at The Café, ${weekRange(week)}:`,
+        `Lunch specials at The Café, ${weekRange(week)}. Served from 11am${data.specials.includesDrink ? ", and each one comes with a drink" : ""}.`,
         ...dayLines(week),
-        ...(data.specials.includesDrink ? ["Every lunch special includes a fountain drink or iced tea."] : []),
         ...[soupLine(week)].filter(Boolean),
-        `Lunch specials and soup are served from 11am. We're open ${site.opening.hoursDays}, ${hours}.${site.phoneOrders ? ` Call ${site.phone} and we'll have yours ready.` : ""}`,
-        ...(site.ordering.url ? [`Order online for pickup: ${site.ordering.url.replace(/^https?:\/\//, "")}`] : []),
-        `Full menu: ${site.social.website}/menu`,
+        `Open ${site.opening.hoursDays}, ${hours}.${site.phoneOrders ? ` Call ${site.phone} to order ahead.` : ""}`,
+        ...(site.ordering.url ? [`Order online: ${site.ordering.url.replace(/^https?:\/\//, "")}`] : []),
+        `Menu: ${site.social.website}/menu`,
       ];
     },
   },
