@@ -161,18 +161,11 @@
     opacity: 1;
 }
 
-.price-review {
-    color: var(--accent);
-    font-weight: 900;
-    margin-left: 0.03in;
-}
-
 @media print {
     .lp-canvas:not(:last-child) {
         break-after: page;
     }
-    .fold-legend,
-    .price-review {
+    .fold-legend {
         display: none;
     }
     /* Unconfirmed marks come off the paper, exactly as on the tri-fold: the
@@ -533,8 +526,7 @@
     --text-dark:    #000;
     color: #000;
 }
-.lp-stack--bw .fold-legend--warn,
-.lp-stack--bw .price-review {
+.lp-stack--bw .fold-legend--warn {
     --accent:       #C0392F;
     --accent-dark:  #A02F26;
     --accent-rgb:   192, 57, 47;

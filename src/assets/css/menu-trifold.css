@@ -63,23 +63,11 @@
     opacity: 1;
 }
 
-/* Proofing marker on a price that has not been re-costed since the old menu.
-   Same contract as .fold-legend: visible while proofing in the browser and in
-   the PNG, gone from the print. A stale price must be impossible to miss on a
-   proof and impossible to ship on a sheet — printing the dot would do the
-   opposite of both. */
-.price-review {
-    color: var(--accent);
-    font-weight: 900;
-    margin-left: 0.03in;
-}
-
 @media print {
     .trifold-canvas:not(:last-child) {
         break-after: page;
     }
-    .fold-legend,
-    .price-review {
+    .fold-legend {
         display: none;
     }
 
@@ -648,11 +636,10 @@
     color: #000;
 }
 
-/* The proof furniture keeps its red: it never prints (see @media print
-   above), and a stale-price bullet that looks like every other dot on the
-   sheet is a proof that hides the thing it exists to show. */
-.trifold--bw .fold-legend--warn,
-.trifold--bw .price-review {
+/* The proof warning keeps its red: it never prints (see @media print
+   above), and a warning that looks like every other line on the sheet is a
+   proof that hides the thing it exists to show. */
+.trifold--bw .fold-legend--warn {
     --accent:       #C0392F;
     --accent-dark:  #A02F26;
     --accent-rgb:   192, 57, 47;

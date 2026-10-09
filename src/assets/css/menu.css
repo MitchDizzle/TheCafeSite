@@ -250,30 +250,6 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* Variant rows — one priced line per option, indented under the item.
-   Reuses .menu-item-fill and .menu-item-price so the leader and the tabular
-   figures line up with every other row in the column. */
-.menu-variants {
-    list-style: none;
-    margin-top: 0.3rem;
-    padding-left: 1rem;
-}
-
-.menu-variant {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-}
-
-.menu-variant + .menu-variant {
-    margin-top: 0.2rem;
-}
-
-.menu-variant-name {
-    font-style: italic;
-    opacity: 0.92;
-}
-
 /* Descriptions are set at full body size, not shrunk.
    They used to be 0.875rem at 0.8 opacity, which is where a menu loses an
    older reader: "Green chile, pepper jack cheese, jalapeno mayo" is the part

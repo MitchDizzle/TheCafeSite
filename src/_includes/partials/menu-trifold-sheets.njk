@@ -82,12 +82,7 @@
         <li class="menu-item">
             <div class="menu-item-head">
                 <span class="menu-item-name p-body">{{ item.name }}
-                    {{- dietMarks(item) }}
-                    {#- Screen and PNG only, never printed — see .price-review in
-                        the stylesheet and the _note_price_review in menu.json.
-                        Marks a price carried over from the old menu that has not
-                        been re-costed. -#}
-                    {%- if item.priceReview %}<span class="price-review" title="Price not re-costed yet">&bull;</span>{% endif -%}
+                    {{- dietMarks(item) -}}
                 </span>
                 {#- No leader and no price on the head row of an item priced by
                     variant — its prices are on the rows below, and dots running
@@ -161,8 +156,8 @@
     piece as a printable menu, and the PDF is the PRINT rendering — so
     while menu.json's `dietsConfirmed` is false the marks come off the
     printed sheet the same way they are off the website, and only the PNG
-    proof still shows them for the client to check. Exactly the contract
-    .price-review already has: loud on the proof, absent from the paper. -#}
+    proof still shows them for the client to check: loud on the proof,
+    absent from the paper. -#}
 {#- `bw` is set by menu-trifold-bw.njk: the same sheets for a black-only
     printer or a copier. It swaps the palette for ink (see .trifold--bw in
     menu-trifold.css) and sets the cover title in type instead of the teal
@@ -172,8 +167,6 @@
     {%- if not menu.dietsConfirmed %}
     <p class="fold-legend fold-legend--review fold-legend--warn">Dietary marks are drafted from the ingredient lists and are <strong>not kitchen-confirmed</strong> &mdash; do not send this to a printer until they are. Set <code>dietsConfirmed</code> in menu.json to clear this. Screen and PNG proof only.</p>
     {%- endif %}
-
-    <p class="fold-legend fold-legend--review">A red <span class="price-review">&bull;</span> marks a price still to be re-costed. Screen and PNG proof only &mdash; it never prints.</p>
 
     <p class="fold-legend">Sheet 1 &mdash; outside &middot; <strong>tuck flap &mdash; BREAKFAST &amp; DRINKS</strong> (first thing seen on opening) &middot; <strong>back cover</strong> &middot; <strong>front cover / flyer</strong></p>
 

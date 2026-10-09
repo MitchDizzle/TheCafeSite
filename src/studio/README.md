@@ -120,8 +120,8 @@ it is somewhere unusual. CI runs headless with `--no-sandbox`.
 
 The PDF is not the PNG with another extension. The PNG rasterises the screen
 rendering; the PDF goes through `@media print`, so the proofing furniture
-drops out — the tri-fold's panel-role captions and its red "not re-costed"
-bullets — and the type and wordmark stay vector. **Send the PDF to a printer,
+drops out — the tri-fold's panel-role captions and the red proof warnings —
+and the type and wordmark stay vector. **Send the PDF to a printer,
 never the PNG.**
 
 One piece at a time:

@@ -68,8 +68,7 @@
         <li class="menu-item">
             <div class="menu-item-head">
                 <span class="menu-item-name p-body">{{ item.name }}
-                    {{- dietMarks(item, menu) }}
-                    {%- if item.priceReview %}<span class="price-review" title="Price not re-costed yet">&bull;</span>{% endif -%}
+                    {{- dietMarks(item, menu) -}}
                 </span>
                 {%- if not item.variants %}
                 <span class="menu-item-fill" aria-hidden="true"></span>
