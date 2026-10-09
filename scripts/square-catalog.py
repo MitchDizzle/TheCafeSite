@@ -59,7 +59,7 @@ B = "Breakfast"
 fillings = cats["breakfast"]["note"]  # build-your-own filling list
 bg = item("breakfast", "Full / Half Biscuit & Gravy")
 add("Biscuit & Gravy", B, [("Full", bg["prices"][0]), ("Half", bg["prices"][1])],
-    "Served until 11am.")
+    "Served until 12pm.")
 i = item("breakfast", "Big Breakfast")
 # Spelled out for Square rather than taken from menu.json's short line: eggs
 # are cooked any style but poached (the Eggs modifier, client 2026-09-30), the
@@ -69,17 +69,17 @@ i = item("breakfast", "Big Breakfast")
 # `squareBase` ($8), the Meat list adds $2 for bacon, sausage or ham and
 # nothing for No Meat. The menus still say $10, the price with meat.
 one("Big Breakfast", B, i.get("squareBase", i["price"]),
-    "2 eggs your way, potatoes, choice of bacon, sausage or ham, and white toast. Served until 11am.",
+    "2 eggs your way, potatoes, choice of bacon, sausage or ham, and white toast. Served until 12pm.",
     skip_detail=False)
 one("Burrito", B, item("breakfast", "Burrito")["price"],
-    "Build your own: bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 11am.",
+    "Build your own: bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 12pm.",
     skip_detail=False)
 om = item("breakfast", "2 / 3 Egg Omelet")
 add("Omelet", B, [("2 Egg", om["prices"][0]), ("3 Egg", om["prices"][1])],
-    "Build your own: bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 11am.")
+    "Build your own: bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 12pm.")
 i = item("breakfast", "Breakfast Sandwich")
 # Meat is a +$1 add-on in Square (client 2026-10-06), as on the Big Breakfast.
-one("Breakfast Sandwich", B, i.get("squareBase", i["price"]), i["description"] + " Served until 11am.", skip_detail=False)
+one("Breakfast Sandwich", B, i.get("squareBase", i["price"]), i["description"] + " Served until 12pm.", skip_detail=False)
 
 # ── Breakfast sides ────────────────────────────────────────
 BS = "Breakfast Sides"

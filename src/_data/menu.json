@@ -1,7 +1,7 @@
 {
   "_updated": "2026-10-09",
   "_note_no_fryer": "There is no fryer. The kitchen is deli-style and nothing on this menu is deep-fried: the Fried Potatoes are pan-fried on the flat-top, the kids' tater tots and chicken strips come off the flat-top or out of the oven, and the chips come out of a bag. Do not add a deep-fried item without settling that first.",
-  "_note_serving": "`serving` is an optional per-category time window ('Serving until 11am'). Breakfast stops at 11 and soup starts at 11 so the kitchen has time to change over; every menu template prints it next to the category name.",
+  "_note_serving": "`serving` is an optional per-category time window ('Serving until 12pm'). Breakfast runs until 12pm (client 2026-10-09; it stopped at 11 before) and soup still starts at 11, so the two overlap for an hour; every menu template prints it next to the category name.",
   "_note_flat_price": "A category whose items all cost the same carries ONE `sizing` line (wraps, kids meals) instead of repeating the number on every row — the same mechanism the salads use for Full/Half. Changing that price is then a one-line edit and there is no way for two rows to disagree. An item inside such a category may still carry its own `price`, which wins and prints on its row: that is how the two plates sit under the salads' Full/Half line. Trade-off, accepted: an item with no price of its own emits no schema.org Offer.",
   "_note_square_only": "Sold in Square but on no menu, on purpose: the Special Side, a side dish from the day's special ordered on its own (client 2026-10-09: off the printed and website menus and the TV, kept in Square). Like the specials, its price lives only in Square, so it isn't here and the import file (npm run square) doesn't list it; importing never deletes anything, so the till keeps it. Don't add it back as a row.",
   "_note_callout": "`callout` on a category is a line that has to be seen: printed on its own line under the note, in bold, on /menu and the printed menus. The TV board prints `boardNote` instead.",
@@ -23,7 +23,7 @@
     {
       "id": "breakfast",
       "name": "Breakfast",
-      "serving": "Serving until 11am",
+      "serving": "Serving until 12pm",
       "_note_build": "The build-your-own filling list used to be repeated verbatim on the burrito and on both omelets. It is one note on the category now — same options, stated once, which is also how the sandwiches categories read.",
       "note": "Burritos and omelets are build-your-own. Choose from bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
       "items": [

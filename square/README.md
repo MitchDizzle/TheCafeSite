@@ -104,7 +104,8 @@ Fountain drinks are **self-serve Pepsi products** — no flavour list; the
 variation only records that a fountain cup was sold.
 
 Also worth setting in Square Online: an **availability schedule** so the
-Breakfast category only shows until 11am and Soup only from 11am.
+Breakfast category only shows until 12pm and Soup only from 11am (breakfast
+runs an hour into lunch since 2026-10-09).
 
 Modifier lists are NOT generated from `menu.json`: if a pick list changes on
 the menu (a new bread, a new kids side), update this table and the list in

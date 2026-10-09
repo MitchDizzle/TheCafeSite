@@ -83,7 +83,7 @@ studioOrder: 22
 
         <div class="wk-table">
             {%- for d in week %}
-            {%- set sides = d | specialSides %}
+            {%- set sides = d | specialSides(true) %}
             <div class="wk-row">
                 <p class="p-display wk-dayname">{{ d.date | dayDate("short") }}</p>
                 <div class="wk-special-cell">

@@ -27,13 +27,21 @@ function weekRange(week) {
 // say "choice of side" on the sign and name sides in the caption. A plain
 // " and " join turned "Mashed Potatoes & Gravy" plus a second side into a
 // chain of ampersands, which is why this never joins with "&".
-function specialSides(d) {
+// `bare` drops the leading "with" ("Choice of side", "A, B") for a piece
+// that sets the sides on their own line under the plate, where the word
+// only costs width: the weekly post (client 2026-10-09: keep each day's
+// sides to one line).
+function specialSides(d, bare) {
   if (!d) return "";
-  if (d.anySide) return "with choice of side";
   const s = d.sides || [];
-  if (!s.length) return "";
-  if (s.length === 1) return `with ${s[0]}`;
-  return `with ${s.slice(0, -1).join(", ")} and ${s[s.length - 1]}`;
+  let words;
+  if (d.anySide) words = "choice of side";
+  else if (!s.length) return "";
+  else if (s.length === 1) words = s[0];
+  // Bare, the sides are a list on a line of their own, so commas do.
+  else if (bare) words = s.join(", ");
+  else words = `${s.slice(0, -1).join(", ")} and ${s[s.length - 1]}`;
+  return bare ? words.charAt(0).toUpperCase() + words.slice(1) : `with ${words}`;
 }
 
 // One line per day: the plate only, read as a list (no full stops). The soup
