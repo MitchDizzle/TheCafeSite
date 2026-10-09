@@ -115,16 +115,19 @@ studioOrder: 22
                 place of a "Follow us" cell, whose Facebook address is now
                 in the specials cell beside it: the front has no height to
                 spare for a row of its own. Front only: everyone starts on
-                this side. -#}
+                this side. Made a solid red block on 2026-10-09: as red
+                type it was still being missed (client), so now it is the
+                one filled thing on the page. The back answers it in its
+                running head. -#}
             <div class="lp-band-cell lp-band-turn">
-                <div class="lp-turn-head">
-                    <p class="p-label lp-turn-label ink-accent">Turn over</p>
-                    <svg class="lp-turn-arrow ink-accent" viewBox="0 0 60 36" aria-hidden="true" focusable="false">
+                <div class="lp-turn-box">
+                    <p class="p-display lp-turn-label">More on the back</p>
+                    <svg class="lp-turn-arrow" viewBox="0 0 60 36" aria-hidden="true" focusable="false">
                         <path d="M6 30 C 10 10, 40 6, 52 22" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
                         <path d="M51.6 10 L 52 22 L 40.6 18.3" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <p class="p-body lp-band-text">for burgers, salads, kids meals &amp; sides</p>
+                <p class="p-body lp-band-text lp-turn-text">Burgers, salads, kids meals &amp; sides</p>
             </div>
         </footer>
     </div>
@@ -134,6 +137,14 @@ studioOrder: 22
     <div class="canvas lp-canvas">
         <header class="lp-head lp-head--run">
             <p class="p-display lp-runhead ink-teal">{{ site.name }} &middot; Menu</p>
+            {#- The answer to the front's "More on the back" (2026-10-09). -#}
+            <p class="p-body lp-back-note ink-accent">
+                <svg class="lp-back-arrow" viewBox="0 0 60 36" aria-hidden="true" focusable="false">
+                    <path d="M6 30 C 10 10, 40 6, 52 22" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M51.6 10 L 52 22 L 40.6 18.3" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Breakfast, wraps &amp; sandwiches on the front
+            </p>
             <p class="p-body lp-head-line lp-head-phone ink-teal">{{ site.phone }} &middot; {{ site.social.website }}</p>
         </header>
 

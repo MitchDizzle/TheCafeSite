@@ -295,14 +295,11 @@
 }
 
 /* The kinds under a row priced once for all of them (Deli Salads): one per
-   line in two columns, each with a dot, so they read as a list of choices
-   rather than a sentence. Font and colour come from .menu-item-desc. */
+   line, each with a dot, so they read as a list of choices rather than a
+   sentence. Font and colour come from .menu-item-desc. */
 .menu-item-choices {
     list-style: none;
     padding: 0;
-    display: grid;
-    grid-template-columns: repeat(2, max-content);
-    column-gap: 1.5em;
 }
 .menu-item-choices li::before {
     content: "\2022";
@@ -632,31 +629,58 @@
     color: var(--text-dark);
 }
 
-/* ── Counter copy: "turn over", the last cell of the front's band ──
-   A red arrow in the bottom corner, where a hand turns the sheet, saying
-   there is a back. Bigger than the other band labels on purpose: it is the
-   one thing in the band a customer has to act on. */
-.lp-band-turn {
+/* ── Counter copy: "more on the back", the last cell of the front's band ──
+   A solid red block in the bottom corner, where a hand turns the sheet, with
+   a big arrow curling over the edge. Filled, not red type (client
+   2026-10-09: customers still missed the back): it is the only filled block
+   on the page and the one thing in the band a customer has to act on.
+   Cream on --accent is 5.08:1; on the bw copy --accent is black. */
+.lp-band-cell.lp-band-turn {
+    border-left: none;
+    padding-left: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: flex-end;
-    text-align: right;
 }
 
-.lp-turn-head {
+.lp-turn-box {
     display: flex;
     align-items: center;
-    gap: 0.14in;
+    justify-content: space-between;
+    gap: 0.12in;
+    background: var(--accent);
+    color: var(--cream);
+    border-radius: 0.12in;
+    padding: 0.18in 0.2in 0.18in 0.24in;
 }
 
 .lp-turn-label {
-    font-size: 0.3in;
-    line-height: 1;
+    font-size: 0.36in;
+    line-height: 1.05;
 }
 
 .lp-turn-arrow {
     flex: none;
-    width: 0.85in;
+    width: 0.95in;
     height: auto;
+}
+
+.lp-turn-text {
+    text-align: center;
+}
+
+/* The back's running head points the other way: the same arrow, flipped. */
+.lp-back-note {
+    display: flex;
+    align-items: center;
+    gap: 0.1in;
+    font-size: 0.19in;
+    font-weight: 700;
+}
+
+.lp-back-arrow {
+    flex: none;
+    width: 0.5in;
+    height: auto;
+    transform: scaleX(-1);
 }

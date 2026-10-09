@@ -30,18 +30,28 @@ studioOrder: 22
     light body sits better beside real food photos when the post carries
     several images.
 
-    THE SOUP IS ITS OWN PANEL. The lunch special and the soup are sold
-    separately, and a soup column beside each plate still read as part of
-    the plate. So the table lists the plates only, and the soups sit below
-    it in their own box that says "sold separately" with the Cup / Bowl
-    prices (from menu.json, like the counter sign). The fountain drink IS
-    part of every plate (specials.includesDrink), so it is said once, above
-    the table, rather than on every row.
+    WHAT IS SAID ONCE, AT THE TOP. The drink is part of every plate
+    (specials.includesDrink) and the soup is sold separately at one Cup /
+    Bowl price (from menu.json), so both are said once, as two tags above
+    the table, rather than on every row (client 2026-10-09: soup prices at
+    the top, like the drink).
+
+    THE SOUP SITS IN ITS DAY'S ROW, in its own right-hand cell under a
+    "Soup" label, so a day reads across: plate, then soup. Until 2026-10-09
+    the soups had a box of their own under the table; that box now lists
+    the choice of side instead.
+
+    THE CHOICE OF SIDE is the Deli Salads row's `choices` in menu.json,
+    listed once under the week whenever a day says "with choice of side"
+    (anySide), so a customer can see what that means.
 
     Every size is set for the ~540px a portrait post shows at on a phone:
     nothing a customer needs is under 24px. -#}
 {%- set week = specials.days | latestWeek %}
 {%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
+{%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
+{%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
+{%- set anyChoice = week | selectattr("anySide") | length %}
 {%- set first = week[0].date | dayDate("monthDay") %}
 {%- set last = week[week.length - 1].date | dayDate("monthDay") %}
 {#- "October 5 – 9", or "September 28 – October 2" across a month end. -#}
@@ -62,9 +72,14 @@ studioOrder: 22
 
     <div class="wk-body">
         <p class="p-label wk-served">Starting at 11am</p>
-        {%- if specials.includesDrink %}
-        <p class="wk-drink">Every special includes a drink</p>
-        {%- endif %}
+        <div class="wk-tags">
+            {%- if specials.includesDrink %}
+            <p class="wk-tag wk-tag--drink">Every special includes a drink</p>
+            {%- endif %}
+            {%- if soupCat and soupCat.items %}
+            <p class="wk-tag wk-tag--soup">Soup {% for s in soupCat.items %}{% if not loop.first %} <span class="dot">&middot;</span> {% endif %}{{ s.name }} {{ s.price | money }}{% endfor %}</p>
+            {%- endif %}
+        </div>
 
         <div class="wk-table">
             {%- for d in week %}
@@ -77,24 +92,26 @@ studioOrder: 22
                     <p class="p-body wk-sides">{{ sides }}</p>
                     {%- endif %}
                 </div>
+                {%- if d.soup %}
+                <div class="wk-soup-cell">
+                    <p class="p-label wk-soup-label">Soup</p>
+                    <p class="wk-soup-name">{{ d.soup }}</p>
+                </div>
+                {%- endif %}
             </div>
             {%- endfor %}
         </div>
 
-        <section class="wk-soup">
-            <div class="wk-soup-head">
-                <p class="p-display wk-soup-title">Soup of the Day</p>
-                <p class="p-body wk-soup-note">Sold separately{% if soupCat and soupCat.items %}{% for s in soupCat.items %} <span class="dot">&middot;</span> {{ s.name }} {{ s.price | money }}{% endfor %}{% endif %}</p>
-            </div>
-            <ul class="wk-soups" style="--soup-cols: {{ week.length }}">
-                {%- for d in week %}
-                <li class="wk-soup-day">
-                    <span class="p-label wk-soup-dayname">{{ d.date | dayDate("short") }}</span>
-                    <span class="wk-soup-name">{{ d.soup or "&mdash;" | safe }}</span>
-                </li>
+        {%- if anyChoice and deli %}
+        <section class="wk-choice">
+            <p class="p-display wk-choice-title">Choice of side</p>
+            <ul class="wk-choices">
+                {%- for c in deli.choices %}
+                <li>{{ c }}</li>
                 {%- endfor %}
             </ul>
         </section>
+        {%- endif %}
     </div>
 
     <footer class="wk-foot">

@@ -67,21 +67,34 @@
     text-indent: 0.18em;
 }
 
-/* Said once, above the plates, because it is true of every one of them
-   (specials.includesDrink). Red on cream, ruled rather than filled. */
-.wk-drink {
-    align-self: center;
+/* Said once, above the plates, because each is true of every day: the
+   drink comes with every special, the soup is one price all week. Ruled
+   rather than filled; the drink red, the soup teal, so they read as two
+   different things. */
+.wk-tags {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
     margin-top: 14px;
-    padding: 8px 26px;
+}
+
+.wk-tag {
+    padding: 8px 24px;
     border: 3px solid var(--accent);
     border-radius: 999px;
     font-family: 'Lato', sans-serif;
     font-weight: 900;
     font-size: 26px;
     color: var(--accent);
+    white-space: nowrap;
 }
 
-/* One full-width row per day — day | lunch special — so a row's rule runs
+.wk-tag--soup {
+    border-color: var(--teal);
+    color: var(--teal-dark);
+}
+
+/* One full-width row per day — day | lunch special | soup — so a row's rule runs
    edge to edge. Rows share the remaining height, so a short week spreads
    out instead of leaving a hole above the soup panel. */
 .wk-table {
@@ -95,8 +108,8 @@
 
 .wk-row {
     display: grid;
-    grid-template-columns: 120px 1fr;
-    column-gap: 26px;
+    grid-template-columns: 120px 1fr 220px;
+    column-gap: 20px;
     align-items: baseline;
     padding: 12px 0;
     border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.14);
@@ -128,66 +141,60 @@
     margin-top: 4px;
 }
 
-/* ── Soup panel ───────────────────────────────────────────
-   Its own ruled box, below and apart from the plates: the soup is a
-   separate item, and the box says "sold separately" in words as well. */
-.wk-soup {
-    margin-top: 16px;
-    border: 3px solid var(--teal);
-    border-radius: 14px;
-    padding: 14px 20px 16px;
-}
-
-.wk-soup-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.14);
-    padding-bottom: 8px;
-}
-
-.wk-soup-title {
-    font-size: 34px;
-    color: var(--teal-dark);
-    white-space: nowrap;
-}
-
-.wk-soup-note {
-    font-size: 24px;
-    white-space: nowrap;
-}
-
-.wk-soups {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(var(--soup-cols, 5), 1fr);
-    margin-top: 10px;
-}
-
-.wk-soup-day {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 0 8px;
-}
-
-.wk-soup-day + .wk-soup-day {
+/* The day's soup, in its row's right-hand cell: a small "Soup" label so
+   it never reads as part of the plate (it is sold separately; the tag up
+   top says so with the price). */
+.wk-soup-cell {
+    align-self: center;
     border-left: 1px solid rgba(var(--text-dark-rgb), 0.14);
+    padding-left: 20px;
 }
 
-.wk-soup-dayname {
-    font-size: 20px;
+.wk-soup-label {
+    font-size: 18px;
     color: var(--accent);
 }
 
 .wk-soup-name {
-    font-size: 25px;
+    font-size: 26px;
     font-weight: 700;
     line-height: 1.2;
     color: var(--teal-dark);
-    margin-top: 4px;
+    margin-top: 2px;
+}
+
+/* ── Choice of side ───────────────────────────────────────
+   What "with choice of side" means, in a ruled box under the week. */
+.wk-choice {
+    margin-top: 16px;
+    border: 3px solid var(--teal);
+    border-radius: 14px;
+    padding: 12px 22px 14px;
+    text-align: center;
+}
+
+.wk-choice-title {
+    font-size: 32px;
+    color: var(--teal-dark);
+}
+
+.wk-choices {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 26px;
+    row-gap: 2px;
+    margin-top: 6px;
+    font-size: 25px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.wk-choices li::before {
+    content: "\00b7";
+    color: var(--accent);
+    margin-right: 10px;
 }
 
 /* ── Footer band ──────────────────────────────────────────── */

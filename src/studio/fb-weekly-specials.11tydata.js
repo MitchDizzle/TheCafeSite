@@ -23,10 +23,16 @@ module.exports = {
       // forwards to the ordering page, like the printed QR codes: it reads
       // better than the ordering page's own address and survives a change
       // of it.
+      // What "with choice of side" means, once, when any day has it.
+      const sides = (data.menu.categories.find((c) => c.id === "sides") || { items: [] })
+        .items.find((i) => i.choices);
+      const choiceLine = sides && week.some((d) => d.anySide)
+        ? `Choice of side: ${sides.choices.join(", ")}` : null;
+
       return [
         `Lunch specials, ${weekRange(week)}. From 11am${data.specials.includesDrink ? ", each with a drink" : ""}.`,
         ...dayLines(week),
-        ...[soupLine(week)].filter(Boolean),
+        ...[choiceLine, soupLine(week)].filter(Boolean),
         [
           `Open ${o.hoursDays}, ${hours}`,
           site.phoneOrders ? `Call ${site.phone} to order ahead` : null,
