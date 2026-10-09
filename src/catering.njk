@@ -40,14 +40,10 @@ pageCss: "/assets/css/catering.css"
                      carry the name, date, head count and pickup/drop-off, and folds the
                      date and time into one readable "When" line. Every subject contains
                      "Catering request", which the Gmail filter matches: keep it. -->
-                     "Catering request", which the Gmail filter matches: keep it. -->
                 <form action="https://api.web3forms.com/submit" method="POST" novalidate
                       data-catering
                       data-success="Thank you! Your catering request is on its way. We'll reach out soon to go over the details.">
 
-                    <input type="hidden" name="access_key" value="{{ site.web3forms.catering }}">
-                    <input type="hidden" name="subject" value="Catering request: website form">
-                    <input type="hidden" name="from_name" value="Catering form">
                     <input type="hidden" name="access_key" value="{{ site.web3forms.catering }}">
                     <input type="hidden" name="subject" value="Catering request: website form">
                     <input type="hidden" name="from_name" value="Catering form">

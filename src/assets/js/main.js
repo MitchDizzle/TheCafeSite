@@ -33,7 +33,10 @@
 
     /* ── Catering: a subject and "When" line readable at a glance ─
        The request lands in Gmail, so the subject carries what decides
-       whether it can be done, name first so a request is easy to spot: who, the day, how many, pickup or drop-off. It must keep starting "Catering request", which the Gmail filter matches (anywhere in the subject). "When" replaces the raw date and time fields in the email. */
+       whether it can be done, name first so a request is easy to spot:
+       who, the day, how many, pickup or drop-off. It must keep the words
+       "Catering request", which the Gmail filter matches (anywhere in the
+       subject). "When" replaces the raw date and time fields in the email. */
 
     function cateringEmail(form) {
         var data = new FormData(form);
@@ -55,7 +58,6 @@
         var people = get('People');
         var subject = [get('Name'), 'Catering request', (day || 'date not given') + (clock ? ' at ' + clock : ''),
             people ? people + ' people' : '', get('Pickup or drop-off')]
-
             .filter(Boolean).join(' · ');
 
         // Key order is the order the email lists them: what to act on first.
