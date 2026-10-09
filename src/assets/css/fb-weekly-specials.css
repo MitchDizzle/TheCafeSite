@@ -111,7 +111,7 @@
     grid-template-columns: 120px 1fr 220px;
     column-gap: 20px;
     align-items: baseline;
-    padding: 12px 0;
+    padding: 9px 0;
     border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.14);
 }
 
@@ -164,7 +164,8 @@
 }
 
 /* ── Choice of side ───────────────────────────────────────
-   What "with choice of side" means, in a ruled box under the week. */
+   What "with choice of side" means, and what can be swapped in on any
+   other special, in a ruled box under the week. */
 .wk-choice {
     margin-top: 16px;
     border: 3px solid var(--teal);
@@ -176,6 +177,12 @@
 .wk-choice-title {
     font-size: 32px;
     color: var(--teal-dark);
+}
+
+.wk-choice-note {
+    font-size: 23px;
+    font-style: italic;
+    line-height: 1.25;
 }
 
 .wk-choices {

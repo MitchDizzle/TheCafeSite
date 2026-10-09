@@ -41,9 +41,10 @@ studioOrder: 22
     the soups had a box of their own under the table; that box now lists
     the choice of side instead.
 
-    THE CHOICE OF SIDE is the Deli Salads row's `choices` in menu.json,
-    listed once under the week whenever a day says "with choice of side"
-    (anySide), so a customer can see what that means.
+    THE SIDES are the Deli Salads row's `choices` in menu.json, listed
+    once under the week, every week: they are what "with choice of side"
+    (anySide) means, and they can be swapped in for the set sides on any
+    other special (client 2026-10-09), so the box says both.
 
     Every size is set for the ~540px a portrait post shows at on a phone:
     nothing a customer needs is under 24px. -#}
@@ -51,7 +52,6 @@ studioOrder: 22
 {%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
 {%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
 {%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
-{%- set anyChoice = week | selectattr("anySide") | length %}
 {%- set first = week[0].date | dayDate("monthDay") %}
 {%- set last = week[week.length - 1].date | dayDate("monthDay") %}
 {#- "October 5 – 9", or "September 28 – October 2" across a month end. -#}
@@ -102,9 +102,10 @@ studioOrder: 22
             {%- endfor %}
         </div>
 
-        {%- if anyChoice and deli %}
+        {%- if deli %}
         <section class="wk-choice">
-            <p class="p-display wk-choice-title">Choice of side</p>
+            <p class="p-display wk-choice-title">Sides</p>
+            <p class="p-body wk-choice-note">Pick one on a &ldquo;choice of side&rdquo; day, or swap them for the sides on any special</p>
             <ul class="wk-choices">
                 {%- for c in deli.choices %}
                 <li>{{ c }}</li>
