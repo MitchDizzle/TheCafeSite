@@ -1,7 +1,7 @@
 ---
 layout: layouts/page.njk
 title: "About | The Café"
-description: "Learn about The Café. Our story, what we offer, and how our pickup and drop-off catering works."
+description: "Learn about The Café. Our story, what we offer, and how our catering works."
 ogDescription: "Breakfast, lunch and catering from a Leavenworth, KS kitchen since 2005."
 ---
 <!-- ── Section 1: Our Story ─────────────────────────── -->
@@ -41,16 +41,16 @@ ogDescription: "Breakfast, lunch and catering from a Leavenworth, KS kitchen sin
         <section class="section" id="what-we-offer" aria-labelledby="offer-heading">
             <div class="container">
                 <h2 id="offer-heading">What We Offer</h2>
-                {#- Catering as the client describes it (2026-10-02): pickup and
-                    drop-off. Anything beyond that is worked out with them in
-                    person, so it is offered as a conversation, not a list of
-                    services. Hours, notice and payment come from site.json and
+                {#- Catering as the client describes it (2026-10-09): pickup, and
+                    drop-off in some cases with a call ahead. A large order is
+                    talked through with them first, so it is offered as a
+                    conversation, not a list of services. No meal prep. Hours, notice and payment come from site.json and
                     CafeWork DECISIONS.md §8. -#}
                 <p><strong>Breakfast and lunch</strong>, {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}. {% if site.ordering.url %}<a href="{{ site.ordering.url }}">Order online</a> for pickup, or order at the counter.{% elif site.phoneOrders %}Order at the counter or call ahead and we&rsquo;ll have it ready.{% else %}Order at the counter; online ordering is coming soon.{% endif %}</p>
                 <ul style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; padding-left: 1.25rem;">
                     <li><strong>Pickup catering:</strong> lunch for the office, the crew or the whole family, packed and ready at the counter</li>
-                    <li><strong>Drop-off catering:</strong> we bring the food to you</li>
-                    <li><strong>Something special?</strong> Larger or custom catering is something we work out with you personally. Give us a call and give us a few weeks for bigger events.</li>
+                    <li><strong>Drop-off:</strong> in some cases we can bring it to you; call ahead</li>
+                    <li><strong>A large order?</strong> Talk with us first: give us a call or stop by.</li>
                 </ul>
                 <p style="margin-top: 1.25rem;">For more than 10 people, please give us at least 12 hours&rsquo; notice. Let us know about any allergies or dietary needs when you order. We take cash, check or card.</p>
             </div>

@@ -66,7 +66,7 @@ pageCss: "/assets/css/gallery.css"
         {%- if gallery.catering.length %}
         <section class="gallery-section" aria-labelledby="gallery-catering">
             <h2 id="gallery-catering">Catering</h2>
-            <p class="gallery-note">Lunch for a group, ready for pickup or dropped off. <a href="/catering">Request catering</a>.</p>
+            <p class="gallery-note">Lunch for a group, ready for pickup. <a href="/catering">Request catering</a>.</p>
             <ul class="gallery-grid gallery-grid--wide" role="list">
                 {%- for g in gallery.catering %}{{ tile(g.file, g.alt, g.caption, g.position) }}{% endfor %}
             </ul>

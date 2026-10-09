@@ -1,6 +1,6 @@
 # TheCafeSite — Claude instructions
 
-Static site for The Cafe (catering & meal prep, Leavenworth KS), built with **Eleventy 3 + Nunjucks**. Mirrors the setup of the `mtch.tech` project at `E:\ScriptsGit\mtch.tech` — check there first when a convention is unclear.
+Static site for The Cafe (breakfast, lunch & catering, Leavenworth KS), built with **Eleventy 3 + Nunjucks**. Mirrors the setup of the `mtch.tech` project at `E:\ScriptsGit\mtch.tech` — check there first when a convention is unclear.
 
 ## Planning & tasks
 Project planning, decisions, and the task backlog live OUTSIDE this public repo at `E:\GitHub\CafeWork\` (private repo) — read `PLAN.md` there first, take tasks from `TASKS.md`. Never commit business/planning details, pricing strategy, or outreach scripts to this repo.

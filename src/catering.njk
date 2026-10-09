@@ -1,17 +1,18 @@
 ---
 layout: layouts/page.njk
 title: "Catering | The Café"
-description: "Catering from The Café in Leavenworth, KS: lunch for the office, the crew or the family, ready for pickup or dropped off. Call, email or send a request online."
-ogDescription: "Group lunches ready for pickup or dropped off in Leavenworth, KS. Call, email or send a request online."
+description: "Catering from The Café in Leavenworth, KS: lunch for the office, the crew or the family, ready for pickup, and dropped off in some cases. Call, email or send a request online."
+ogDescription: "Group lunches ready for pickup in Leavenworth, KS. Call, email or send a request online."
 pageCss: "/assets/css/catering.css"
 ---
 <!-- The menu now has its own page at /menu, built from src/_data/menu.json
              and linked from the nav — the old packages/bundle markup that used to
              sit here is in git history. -->
 
-<!-- Catering is PICKUP OR DROP-OFF (client, 2026-09-29; drop-off added
-     2026-10-02): a group lunch ordered ahead, collected at the counter or
-     brought to the customer. Anything bigger is worked out in person. This form only collects enough to call
+<!-- Catering is PICKUP, and DROP-OFF in some cases with a call ahead
+     (client 2026-09-29, 2026-10-02, 2026-10-09): a group lunch ordered ahead
+     and collected at the counter. A large order talks with the cafe first.
+     No meal prep. This form only collects enough to call
      or email the customer back — the details are settled in that conversation,
      not here. The old full-service fields (event location, service style,
      budget, linen / china / servers checkboxes, a 15-guest minimum) were
@@ -22,13 +23,13 @@ pageCss: "/assets/css/catering.css"
             <div class="container">
                 <h1 id="inquiry-heading">Feeding a crowd?</h1>
                 <p style="margin-top: 0.75rem; max-width: 55ch;">
-                    Lunch for the office, the crew or the whole family, packed and ready for you to pick up, or dropped off.
+                    Lunch for the office, the crew or the whole family, packed and ready for you to pick up. In some cases we can drop it off; just call ahead.
                     Send us the basics below and we&rsquo;ll reach out to go over the details.
                 </p>
 
                 <div class="call-strip">
                     <p><strong>More than 10 people?</strong> Please give us at least 12 hours&rsquo; notice.
-                    Larger custom catering needs a few weeks.</p>
+                    For a large order, please talk with us first.</p>
                     <p style="margin-top: 0.5rem;">We take cash, check or card. Rather talk it through? Call
                     <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a> or email
                     <a href="mailto:{{ site.email }}">{{ site.email }}</a>.</p>
@@ -91,7 +92,7 @@ pageCss: "/assets/css/catering.css"
                             <label for="handoff">Pickup or Drop-off</label>
                             <select id="handoff" name="Pickup or drop-off">
                                 <option value="Pickup">Pickup at the cafe</option>
-                                <option value="Drop-off">Drop-off (we&rsquo;ll confirm the address)</option>
+                                <option value="Drop-off">Drop-off, in some cases (we&rsquo;ll call to confirm)</option>
                             </select>
                         </div>
 

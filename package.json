@@ -1,7 +1,7 @@
 {
   "name": "thecafe-site",
   "version": "1.0.0",
-  "description": "Static site for The Cafe — catering & meal prep, Leavenworth KS",
+  "description": "Static site for The Cafe — breakfast, lunch & catering, Leavenworth KS",
   "private": true,
   "scripts": {
     "start": "eleventy --serve",
