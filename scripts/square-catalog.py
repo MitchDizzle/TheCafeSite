@@ -185,7 +185,9 @@ for i in cats["drinks"]["items"]:
     elif i["name"] == "Bottle Juice":
         # One item; the flavour is the Juice modifier list in Square (made by
         # hand, see square/README.md), as the till was set up on 2026-10-05.
-        one("Bottle Juice", D, i["price"], i.get("description", "") + ".")
+        # No description: the flavours change, and the modifier list is
+        # what online ordering shows anyway.
+        one("Bottle Juice", D, i["price"])
     else:
         one(i["name"], D, i["price"])
 

@@ -89,10 +89,11 @@ default in the description". (`defaultBread` in `menu.json`.)
 | **Add (on the food)** | Ketchup, Mustard, Mayo | Pick any, optional | Every Hot and Cold Sandwich, the burgers, Build Your Own, Breakfast Sandwich. **Not the wraps** — each comes with its own dressing (ranch, sesame, caesar, dijon), so ketchup, mustard and mayo don't belong on them. A cooking instruction: prints on the kitchen ticket. |
 | **Packets (in the bag)** | Ketchup packet, Mustard packet, Mayo packet | Pick any, optional | The same items (so not the wraps either), plus Kids Meal and Fried Potatoes. **Keep the word "packet" in each name**: the kitchen board moves any modifier named "… packet" off the kitchen ticket and onto the front page's "Add from the front" list. |
 
-Juice is one item, **Bottle Juice**, with a variation per flavour (Orange,
-Apple, Cranberry today; they're left over from the old contract and change
-as they run out). Edit the list in `menu.json` and rebuild, or just
-deactivate a variation in the Dashboard when a flavour runs out.
+Juice is one item, **Bottle Juice**, with no description. The flavour is the
+**Juice** modifier list on it, kept by hand in the Dashboard: the flavours are
+left over from the old contract and change as they run out, so add or remove
+an option there when they do. The menus deliberately don't list flavours
+(2026-10-09); customers ask at the counter.
 
 Fountain drinks are **self-serve Pepsi products** — no flavour list; the
 variation only records that a fountain cup was sold.

@@ -1,5 +1,5 @@
 {
-  "_updated": "2026-10-05",
+  "_updated": "2026-10-09",
   "_note": "Items with 'verify: true' had handwriting that was difficult to read precisely — confirm before publishing.",
   "_note_no_fryer": "There is no fryer. The kitchen is deli-style and nothing on this menu is deep-fried: the Fried Potatoes are pan-fried on the flat-top, the kids' tater tots and chicken strips come off the flat-top or out of the oven, and the chips come out of a bag. Do not add a deep-fried item without settling that first.",
   "_note_serving": "`serving` is an optional per-category time window ('Serving until 11am'). Breakfast stops at 11 and soup starts at 11 so the kitchen has time to change over; every menu template prints it next to the category name.",
@@ -311,7 +311,7 @@
         { "name": "Iced Tea / Fountain Drink", "price": 2.00 },
         { "name": "Coffee", "price": 1.00 },
         { "name": "Bottle Water", "price": 1.50 },
-        { "name": "Bottle Juice", "description": "Orange, Apple, Cranberry, V8, Tomato", "_note_flavours": "The flavours are left over from the old contract and change as they run out: edit this list rather than adding rows. In Square the flavour is a modifier list (Juice) on one Regular item, not a variation per flavour, so a changed flavour here must also be changed there by hand.", "price": 3.00 }
+        { "name": "Bottle Juice", "_note_flavours": "No flavour list on purpose (client 2026-10-09). The flavours are left over from the old contract and change as they run out, so a printed list goes wrong as soon as one is gone; customers ask at the counter. They live only in Square, as the Juice modifier list on this one item, kept up to date there by hand. Don't add a description or a row per flavour.", "price": 3.00 }
       ]
     }
   ]
