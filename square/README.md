@@ -95,6 +95,11 @@ left over from the old contract and change as they run out, so add or remove
 an option there when they do. The menus deliberately don't list flavours
 (2026-10-09); customers ask at the counter.
 
+**Special Side** (a side from the day's special, ordered on its own) is sold
+in Square only: it's on no printed or website menu (client 2026-10-09), so
+`menu.json` doesn't have it and neither does `catalog-import.csv`. Keep it in
+the Dashboard; its price lives there, like the specials'.
+
 Fountain drinks are **self-serve Pepsi products** — no flavour list; the
 variation only records that a fountain cup was sold.
 

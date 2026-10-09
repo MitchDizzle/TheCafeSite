@@ -74,7 +74,6 @@ Token,Item Name,Customer-facing Name,Variation Name,SKU,Description,Categories,R
 ,Chips,Chips,Cheetos,,,Sides,Sides,,Prepared food and beverage,,,,1.75,,N,Y,N,N,N,,,,,,
 ,Chips,Chips,Doritos,,,Sides,Sides,,Prepared food and beverage,,,,1.75,,N,Y,N,N,N,,,,,,
 ,Fruit Side,Fruit Side,Regular,,,Sides,Sides,,Prepared food and beverage,,,,1.00,,N,Y,N,N,Y,,,,,,
-,Special Side,Special Side,Regular,,,Sides,Sides,,Prepared food and beverage,,,,2.00,,N,Y,N,N,Y,,,,,,
 ,Iced Tea / Fountain Drink,Iced Tea / Fountain Drink,Iced Tea,,Fountain drinks are self-serve Pepsi products.,Drinks,Drinks,,Prepared food and beverage,,,,2.00,,N,Y,N,N,N,,,,,,
 ,Iced Tea / Fountain Drink,Iced Tea / Fountain Drink,Fountain Drink,,Fountain drinks are self-serve Pepsi products.,Drinks,Drinks,,Prepared food and beverage,,,,2.00,,N,Y,N,N,N,,,,,,
 ,Coffee,Coffee,Regular,,,Drinks,Drinks,,Prepared food and beverage,,,,1.00,,N,Y,N,N,Y,,,,,,
