@@ -9,7 +9,7 @@ Not part of the website. Nothing in this folder is built or uploaded.
 - **Counter orders** rung up on Square POS today. Square marks these finished as soon as they're paid; the Restaurants app also marks their pickup step complete. Because of that, the board ignores Square's "completed" on counter orders, and they stay up until a cook presses **Done**. They appear once paid: a check that was sent but not charged yet can't be seen by the board, only by the kitchen printer.
 - **Unpaid counter orders** (pay-later phone orders) go to the kitchen straight away like any other, tagged **NOT PAID**: cook it and keep it in the warmer. The tag goes away by itself once it's paid in Square. If it was a sale that fell through (a declined card, a payment canceled on the terminal), the front presses **Canceled** and it leaves both screens.
 - **Online / pickup orders** due today, starting an hour before pickup time. They leave the board when a cook presses **Done** *or* when the front marks them ready or picked up in Square Order Manager.
-- **What the kitchen skips** (drinks, chips) is left off: single items, or whole Square categories. Skipped items go on the front page's "Add from the front" list instead. An order made up only of those items doesn't show at all. The list is changed live from the front page: **Manage → What the kitchen skips**. A ticked category also covers items added to it in Square later.
+- **What the kitchen skips** (drinks, chips) is left off: single items, or whole Square categories. Skipped items go on the front page's "Add from the front" list instead. An order made up only of those items doesn't show at all. The list is changed live from the front page: **Manage → Leave off kitchen tickets**. A ticked category also covers items added to it in Square later.
 - Every ticket says **TO GO** (solid tag) or **FOR HERE** (outlined), as rung on the POS ("To Go" is the POS default). Online orders are always to go.
 - **Some items to go on a For Here ticket** (eating here, and a plate to take home): items set to To Go on the POS go **last** on the ticket, under a dashed line with a **TO GO** tag, so the plates come first and the to-go ones get boxed. The front page shows the same, and "+2 to go" next to For Here. This is read from how the POS records a split order (a For Here and a To Go fulfillment, each listing its items), or a modifier named "To Go" on the item. **Not yet checked against a real split order:** ring one up, and if the items don't move, open `/check` and send the order's **raw** link (Square's own copy of the order) to whoever looks after the board.
 - **What a ticket is called:** the customer's name if one was typed. A ticket name that is just a number is a **table number**: it shows as **Table 5** and counts as **FOR HERE**, even if the dining option was left on To Go. With no name, a paid order shows its receipt number (`#` and four letters, the start of the payment's id); compare one against a printed receipt before relying on it.
@@ -64,7 +64,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
    3. Switch to **Production**, open **Credentials**, and copy the **Production Access token**.
 
    Treat the token like a password. It never goes in git, an email, or a text message.
-4. **Copy `config.example.json` to `config.json`** and paste in the token. `config.json` is gitignored, so updates never touch it. `skipItems` is only the starting skip list; once it's changed from the front page (Manage → What the kitchen skips), that list is kept on the PC and `skipItems` no longer matters. Keep only those two settings: every other setting has a built-in default, and a line in `config.json` pins that setting so updates can't improve it. The board lists any such line when it starts and on `/check`.
+4. **Copy `config.example.json` to `config.json`** and paste in the token. `config.json` is gitignored, so updates never touch it. `skipItems` is only the starting skip list; once it's changed from the front page (Manage → Leave off kitchen tickets), that list is kept on the PC and `skipItems` no longer matters. Keep only those two settings: every other setting has a built-in default, and a line in `config.json` pins that setting so updates can't improve it. The board lists any such line when it starts and on `/check`.
 5. **Double-click `start-kitchen.bat`.** It first pulls the latest board code with git (if the internet is down, it starts the version already on the PC). Then a minimized window runs the board program, and Chrome opens full-screen on the board. Press **Alt+F4** to leave full-screen. A desktop shortcut to it is fine. Running it again replaces the board program and the board window, never stacks a second one, and leaves everything else on the PC alone.
 6. **Start it automatically.** Press Win+R and type `shell:startup`, then put a shortcut to `start-kitchen.bat` in that folder. Also set:
    - Settings → System → Power: **screen and sleep to Never**.
@@ -82,7 +82,7 @@ The kitchen PC runs the **`main`** branch, the same one that deploys the website
 Run **`start-dev.bat`**, not `start-kitchen.bat`. It sets `KITCHEN_DEV=1`, which means:
 - **No git:** your branch and uncommitted work are left as they are. Check for updates says so instead of updating.
 - **An ordinary Chrome window** on its own profile, not locked full screen. Close it like any window.
-- **Demo orders** (`KITCHEN_MOCK=1`) unless `KITCHEN_MOCK` is already set. To try it against the real account in `config.json`, run `set KITCHEN_MOCK=0` first. Remember that Plan the week and Today's specials **write to Square**.
+- **Demo orders** (`KITCHEN_MOCK=1`) unless `KITCHEN_MOCK` is already set. To try it against the real account in `config.json`, run `set KITCHEN_MOCK=0` first. Remember that Specials **writes to Square**.
 - **The power menu and the watchdog are off**, so the board can't shut your computer down or keep reopening a window.
 
 To make every run on your computer a development run, set it once for good: `setx KITCHEN_DEV 1`. Never set it on the kitchen PC.
@@ -154,9 +154,9 @@ Settings in `config.json`, both optional:
 | `frontOnNetwork` | `true` | `false` keeps everything on the kitchen PC; `/front` then works only there. |
 | `frontKey` | none | If set, other devices must open `/front?key=<the key>`. Bookmark the full address. Worth setting if customers ever share the staff wifi. |
 | `autoHandoffMinutes` | `10` | Ready orders leave the front page by themselves after this long (see above). `0` turns it off. |
-| `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Plan the week** reads the website's specials from. `""` turns that off. |
-| `openDays` | `[1, 2, 3, 4, 5]` | The days Plan the week lists (0 is Sunday, 6 Saturday). |
-| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can **Plan the week** (see below), change the **Desserts** (see below), set **Today's specials** (the prices of the items in `dailyItems`, saved straight into Square; see below), change **What the kitchen skips** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+| `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
+| `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
+| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
 
 ## When an order doesn't show up
 
@@ -193,33 +193,32 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `photos\` | Photo post: the photos and finished posts kept for the website, with `photos.json`. Gitignored. |
 | `wordmark.svg` | The Café wordmark drawn into Photo post's pictures. |
 | `stats-history.json` | Every day's orders and numbers, for Reports. Created automatically; gitignored; never deleted. |
-| `specials-plan.json` | Plan the week: the days ahead and which are in Square already. Created automatically; gitignored. |
+| `specials-plan.json` | Specials: the days ahead, the words for each day's photo, and which days are in Square already. Created automatically; gitignored. |
 | `icon-*.png` | The front page's home-screen icon. |
 | `start-kitchen.bat` | Pulls updates from `main`, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. `start-kitchen.bat window` only reopens the board window (what the watchdog runs). |
 | `start-dev.bat` | `start-kitchen.bat` for a development computer: no git, a normal window, demo orders. See "Updating the board". |
 | `keyboard-lock.reg`, `keyboard-unlock.reg` | Turn the keyboard's internet and app keys off / back on. Kitchen PC only, then restart. |
 | `focus-board.ps1` | Run by `start-kitchen.bat` after Chrome opens: brings the board window to the front so the number pad types into it, not into a console window. Tries for 20 seconds; if it can't, click the board once. |
 
-## Today's specials (Manage on the front page)
+## Specials (Manage on the front page)
 
-Sets the day's prices in Square from the front page, with the PIN: the items named in `dailyItems` in `config.json` (default: Lunch Special, Soup of the Day, Salad of the Day; names exactly as in Square). Each item has **What it is today** and a price box per size; leave a price blank to have the till ask for it. What it is today is added to the item's size names in Square, so it prints on the kitchen ticket and the receipt after the item name: Lunch Special's one size becomes "BBQ Ribs", and the soup's sizes become "Cup · Chicken Dumpling" and "Bowl · Chicken Dumpling". Clearing the box puts the plain names back. The item's own name never changes. On a day nothing changes, nobody needs to open it.
+Today's specials and the days ahead on one screen (until 2026-10-09 they were two: Today's specials and Plan the week). **Each morning the board puts that day's specials into Square by itself**, as soon as it starts (or, if it was left on overnight, within a minute of midnight). Nothing has to be opened on the day. The items are the ones named in `dailyItems` in `config.json` (default: Lunch Special, Soup of the Day, Salad of the Day; names exactly as in Square).
 
-This is the **only thing the board writes to Square**. It changes nothing but those items' prices and size names, reads each item fresh before saving, and if someone changed the item in the Dashboard a moment before, Square refuses the save and the front is asked to open it again, so nothing is overwritten. A mistyped price saves nothing at all.
-
-## Plan the week (Manage on the front page)
-
-The specials for today and the next two weeks, set ahead of time. **Each morning the board puts that day's specials into Square by itself**, as soon as it starts (or, if it was left on overnight, within a minute of midnight). Nothing has to be opened on the day. It's the same write as Today's specials below: the "what it is today" name, and a price only if one is planned.
-
-- **One row per day the cafe is open.** Tap a day to open it: the special and the soup (every item in `dailyItems`), each with its price boxes, and **Comes with** under the special: its sides, with commas between ("Mashed potatoes & gravy, green beans"). Days from the website bring their sides with them. The sides don't go into Square (the ticket names the plate); Photo post words the special with them ("Served with mashed potatoes & gravy and green beans"). **A blank price keeps whatever Square has** (shown faintly; "till" means the till asks for one). Type a price only when it changes that day.
+- **One row per day the cafe is open**, today first and open. Tap a day to open it:
+  - **The special and the soup**, by name. **Salad of the Day** shows on today only (it's decided on the day), or on a later day that already has one.
+  - **Comes with**, under the special: **Choice of side**, or **These sides** with commas between ("Mashed potatoes & gravy, green beans"). Days from the website bring this with them. It doesn't go into Square (the ticket names the plate). **Choice of side changes the words only: the Choice of Side list on Lunch Special in Square is still switched there by hand** (CafeWork SP-2 is the board doing it).
+  - **Words under the photo, for Photo post**: what Photo post writes under the picture of that day's special. Left empty, Photo post words it from Comes with ("Served with mashed potatoes & gravy and green beans", or "With choice of side"). These words are kept apart from the day, so writing them doesn't stop the website updating it, and they never go to Square or the website.
+  - **Prices**, folded away: a box per size. **A blank price keeps whatever Square has** (shown faintly, or "at the till" when the till asks for one). Type a price only when it changes that day. To make an item ask for its price at the till, change it in the Square Dashboard.
+- **What it is today goes into Square** as part of the item's size names, so it prints on the kitchen ticket and the receipt after the item name: Lunch Special's one size becomes "BBQ Ribs", and the soup's sizes become "Cup · Chicken Dumpling" and "Bowl · Chicken Dumpling". The item's own name never changes.
+- **Today** shows the names Square has right now, so a change made in the Dashboard isn't saved over, and whether today's specials are in Square yet. Saving today puts them in straight away. If Square refuses (no internet, say), it says so and the board tries again every 5 minutes.
 - **Days come in from the website by themselves.** Every half hour the board reads the specials the website publishes (`specialsUrl`, built from the site's `src/_data/specials.json`, the same days as the /menu box and the Facebook post). The plate goes into Lunch Special and the soup into Soup of the Day. They're tagged **From the website**.
 - **The website never overwrites:**
   - **today**, once it's in Square (and no earlier day);
   - **a day changed here**, tagged **Set here**. From then on the website's copy of that day is ignored.
-  
+
   So putting next week on the website mid-week changes nothing for this week. A day the website still lists can't be blanked here (clearing it lets the website's copy back in on the next read); change it on the website instead, or type something else here.
-- **Today** shows whether it's in Square yet. Saving today puts it in straight away. If Square refuses (no internet, say), it says so and the board tries again every 5 minutes.
 - **A day with nothing planned** puts the plain names back ("Regular", "Cup", "Bowl") that morning, so yesterday's plate never prints on today's tickets. Prices are left alone. A board that has never had a plan leaves Square alone.
-- **Today's specials** (below) still works for a change during the day. It edits Square directly and isn't undone by the plan; the plan only writes again if today's plan is changed.
+- **What it writes to Square** is narrow: nothing but those items' prices and size names. It reads each item fresh before saving, and if someone changed the item in the Dashboard a moment before, Square refuses the save and the front is asked to open it again, so nothing is overwritten. A mistyped price saves nothing at all.
 - The plan is kept in `specials-plan.json` on the kitchen PC (gitignored). The program window logs every day it reads from the website and every write to Square.
 
 ## Photo post (Manage on the front page)
@@ -227,7 +226,7 @@ The specials for today and the next two weeks, set ahead of time. **Each morning
 Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo taken there and then. It's the only way dish posts are made: the website's `/studio/` dish posts were archived on 2026-10-09. Nothing is generated anywhere else and nothing costs anything: the phone draws it.
 
 1. **Take or choose a photo.** The phone's camera or photo library.
-2. **What's in the photo:** today's special or soup (from Plan the week, with the website's sides), "A special" to type one in, or any item in Square (its category, name and description come from Square).
+2. **What's in the photo:** today's special or soup (from Specials, with the words written there or its sides), "A special" to type one in, or any item in Square (its category, name and description come from Square).
 3. **Change any of the words:** the name, the line above it, the words under the photo, and **Drink included** for a special. The picture redraws as you type.
 4. **Frame it:** drag the picture to move it, and zoom with the slider. The post shows a square of it.
 5. **Make the picture.** Press and hold it to save it to the phone's photos (or Download), and **Copy caption**: with the order link, hours and menu link.
@@ -256,4 +255,4 @@ For the items in `dessertItems` in `config.json` (default: Cheesecake, Dessert B
 - **Add** puts a new option on the list, at no extra charge; it's created in Square when you press Save.
 - **Change photo** opens the phone's camera or photo library. The phone shrinks the picture and re-draws it before uploading, which also strips the GPS location phones save in photos. It becomes the item's main picture in Square, the one online ordering shows.
 
-Like Today's specials, every save reads fresh from Square first, so a change made in the Dashboard meanwhile is never overwritten.
+Like Specials, every save reads fresh from Square first, so a change made in the Dashboard meanwhile is never overwritten.

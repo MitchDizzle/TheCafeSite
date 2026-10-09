@@ -193,7 +193,7 @@
   .m-row.warn b { color: var(--red-dark); }
   .m-chev { margin-left: auto; font-size: 1.6rem; color: var(--muted); }
 
-  /* Today's specials: one card per item. */
+  /* Cards (Desserts), fields and price boxes. */
   .m-card { border: 1px solid var(--line); border-radius: 0.55rem; padding: 0.8rem 1rem; margin: 0 0 0.7rem; }
   .m-card h3 { margin: 0 0 0.6rem; font-size: 1.12rem; }
   .m-field { display: grid; gap: 0.25rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); }
@@ -204,7 +204,7 @@
   .m-money input { width: 7rem; font: inherit; padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
   .m-field input:focus, .m-money input:focus { outline: none; border-color: var(--teal); }
 
-  /* Plan the week: one fold-out row per day, today's open. */
+  /* Specials: one fold-out row per day, today's open. */
   .m-day { border: 1px solid var(--line); border-radius: 0.55rem; margin: 0 0 0.55rem; }
   .m-day > summary { display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 0.6rem; padding: 0.65rem 0.9rem; cursor: pointer; list-style: none; }
   .m-day > summary::-webkit-details-marker { display: none; }
@@ -227,6 +227,22 @@
   .d-status.bad { color: var(--red-dark); }
   .d-clear { justify-self: start; font: inherit; font-size: 0.92rem; font-weight: 700; padding: 0.3rem 0.6rem; border: 1.5px solid var(--line); border-radius: 0.35rem; background: transparent; color: var(--muted); cursor: pointer; }
   .m-site { font-size: 0.9rem; }
+  .m-field small { font-weight: 400; }
+  .m-field textarea { width: 100%; box-sizing: border-box; }
+  .d-sides { display: grid; gap: 0.3rem; margin: 0.2rem 0 0; padding: 0.55rem 0.7rem 0.7rem; border: 1px solid var(--line); border-radius: 0.45rem; }
+  .d-sides legend { padding: 0 0.3rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); }
+  .d-sides .check { margin: 0; font-size: 1.05rem; }
+  .d-sides .check input { width: 1.2rem; height: 1.2rem; }
+  .d-sides input[type="text"] { font: inherit; font-size: 1.05rem; color: var(--text); padding: 0.4rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
+  .d-sides input[type="text"]:disabled { background: #F1ECE3; color: var(--muted); }
+  .d-prices > summary { cursor: pointer; font-weight: 700; color: var(--teal-dark); padding: 0.25rem 0; }
+  .d-prices > summary small { font-weight: 400; color: var(--muted); margin-left: 0.4rem; }
+  .d-price-item { margin-top: 0.6rem; }
+  .d-price-name { margin: 0 0 0.3rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); }
+  .d-price-item .m-prices { margin-top: 0; }
+  /* The menu's group headings. */
+  .m-group { margin: 0.5rem 0 -0.2rem; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .m-group:first-child { margin-top: 0; }
 
   /* Photo post: the picture being made, then the form under it. */
   .pp { display: grid; gap: 0.8rem; }
@@ -286,7 +302,7 @@
     .m-body { padding: 0.9rem; }
   }
 
-  /* What the kitchen skips: Square's categories, each with its items. */
+  /* Leave off kitchen tickets: Square's categories, each with its items. */
   .skip-cat { border: 1px solid var(--line); border-radius: 0.45rem; margin: 0 0 0.5rem; }
   .skip-cat > summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; cursor: pointer; font-weight: 800; }
   .skip-cat > summary .count { margin-left: auto; font-weight: 400; color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
@@ -447,7 +463,7 @@
       <button type="button" id="undo" aria-haspopup="menu" aria-expanded="false">↶ Undo</button>
       <div class="undo-menu" id="undo-menu" role="menu" hidden></div>
     </div>
-    <button type="button" id="manage" title="Check for updates or reset for the day (needs the PIN)">Manage</button>
+    <button type="button" id="manage" title="Specials, photos, reports and more (needs the PIN)">Manage</button>
     <button type="button" id="sound">Sound on</button>
     <span class="clock" id="clock"></span>
   </div>
@@ -833,7 +849,6 @@
     const to = act.dataset.go || act.dataset.act;
     if (to === "close") closeManage();
     else if (to === "menu") showMenu();
-    else if (to === "daily") openDaily();
     else if (to === "plan") openPlan();
     else if (to === "report") openReport();
     else if (to === "photo") openPhoto();
@@ -883,73 +898,54 @@
     showLock(r.message);
   });
 
-  // ---- 2. The menu
+  // ---- 2. The menu, grouped by how often each job comes up (2026-10-09):
+  // the daily ones first, the rest under them.
   function showMenu() {
     const row = (act, title, sub, warn) => `<button type="button" class="m-row${warn ? " warn" : ""}" data-act="${act}">
       <span><b>${title}</b><small>${sub}</small></span><span class="m-chev" aria-hidden="true">›</span></button>`;
     screen({ title: "Manage", back: false,
       body: `<div class="m-menu">
+        <h3 class="m-group">Every day</h3>
+        ${row("plan", "Specials", "Today's and the days ahead. Each day goes into Square by itself that morning.")}
         ${row("photo", "Photo post", "Take a photo of the special or any item and make its Facebook picture here.")}
-        ${row("plan", "Plan the week", "The specials for the days ahead. Each goes into Square by itself on its morning.")}
-        ${row("daily", "Today's specials", "Today's special and soup, and their prices, as Square has them now.")}
+        <h3 class="m-group">Now and then</h3>
         ${row("desserts", "Desserts", "Flavors on or off, and the photo online ordering shows.")}
-        ${row("skip", "What the kitchen skips", "Items and categories that go on the front's list instead.")}
         ${row("report", "Reports", "Orders, sales, kitchen times and items for any range of days.")}
-        ${row("reset", "Reset for the day", "Start today's numbers and the Undo lists fresh.", true)}
+        ${row("skip", "Leave off kitchen tickets", "Items and categories that go on the front's list instead.")}
         ${row("update", "Check for updates", "Install a new version of the board, if there is one.")}
+        ${row("reset", "Reset for the day", "After testing: start today's numbers and the Undo lists fresh.", true)}
       </div>`,
-      buttons: [savedPin.get() ? { label: "Forget the PIN here", act: "forget" } : null, { label: "Lock", act: "close" }].filter(Boolean) });
+      buttons: [savedPin.get() ? { label: "Forget the PIN here", act: "forget" } : null, { label: "Close", act: "close" }].filter(Boolean) });
   }
 
-  // ---- Today's specials: saved straight into Square. Only the items in the
-  // kitchen PC's config (dailyItems). Blank price: the till asks for one.
-  async function openDaily() {
-    busy("Today's specials", "Reading from Square…");
-    const r = await postJson("/api/front-daily", { pin: pinValue });
-    if (!r.ok) return result("Today's specials", r);
-    const itemHtml = (it) => it.missing
-      ? `<section class="m-card"><h3>${esc(it.name)}</h3><p class="m-error">Not found in Square under this name.</p></section>`
-      : `<section class="m-card" data-id="${esc(it.id)}">
-        <h3>${esc(it.name)}</h3>
-        <label class="m-field">What it is today
-          <input type="text" data-field="today" value="${esc(it.today)}" placeholder="${/soup/i.test(it.name) ? "e.g. Chicken Dumpling" : "e.g. BBQ Ribs"}" maxlength="60"></label>
-        <div class="m-prices">${it.variations.map((v) => `<label class="m-price" data-var="${esc(v.id)}">
-          <span>${esc(v.size || "Price")}</span>
-          <span class="m-money">$<input type="text" inputmode="decimal" data-field="price" value="${esc(v.price)}" placeholder="at the till"></span>
-        </label>`).join("")}</div>
-      </section>`;
-    screen({ title: "Today's specials", back: true,
-      body: `<p class="m-note">"What it is today" prints on the kitchen ticket and the receipt. Leave a price blank and the till asks for it.
-        The POS and online ordering pick up a change within a minute or so.</p>
-        <form id="m-daily">${r.items.map(itemHtml).join("")}</form>`,
-      buttons: [{ label: "Save to Square", submit: "m-daily", kind: "primary" }] });
-    document.getElementById("m-daily").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const items = [...e.target.querySelectorAll(".m-card[data-id]")].map((el) => ({
-        id: el.dataset.id,
-        today: el.querySelector('[data-field="today"]').value,
-        variations: [...el.querySelectorAll("[data-var]")].map((row) => ({ id: row.dataset.var, price: row.querySelector('[data-field="price"]').value })),
-      }));
-      busy("Today's specials", "Saving to Square…");
-      result("Today's specials", await postJson("/api/front-daily-save", { pin: pinValue, items }));
-    });
-  }
-
-  // ---- Plan the week: the specials for today and the days ahead. The
-  // kitchen PC puts each day's into Square by itself on that morning. Days
-  // the website lists fill in by themselves; a day changed here is kept as
-  // typed, and the website no longer changes it.
+  // ---- Specials: today and the days ahead, on one screen (it was two,
+  // Today's specials and Plan the week, until 2026-10-09). Each morning the
+  // kitchen PC puts that day's into Square by itself; saving today puts it in
+  // straight away. Days the website lists fill in by themselves, and a day
+  // changed here is kept as typed: the website no longer changes it. Today's
+  // names are read from Square as it is now, so a change made in the
+  // Dashboard isn't saved over by an old plan. The words for the photo are
+  // kept apart from the day, so writing them doesn't stop the website
+  // updating it.
   async function openPlan() {
-    busy("Plan the week", "Reading the plan and Square…");
+    busy("Specials", "Reading the specials and Square…");
     const r = await postJson("/api/front-plan", { pin: pinValue });
-    if (!r.ok) return result("Plan the week", r);
+    if (!r.ok) return result("Specials", r);
     const words = (date, opts) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", opts);
     // The plate's item (Lunch Special): the one its sides go with.
     const isPlate = (key) => /special/i.test(key) && !/soup|salad/i.test(key);
+    // Salad of the Day is decided on the day, so it's only on today (and on
+    // any later day that already has one).
+    const isSalad = (key) => /salad/i.test(key);
+    // What Photo post says under the photo when nothing's been written.
+    const photoWords = (plan) => plan && plan.anySide ? "With choice of side"
+      : plan && plan.sides && plan.sides.length ? `Served with ${listWords(plan.sides.map((x) => x.toLowerCase()))}` : "";
     // One line for the folded row: "Meatloaf with mashed potatoes · Baked Potato Soup".
     const summary = (plan) => plan ? r.items.map((it) => {
       const text = plan.items[it.key] && plan.items[it.key].today;
-      return text && isPlate(it.key) && plan.sides && plan.sides.length ? `${text} with ${plan.sides.join(", ")}` : text;
+      if (!text || !isPlate(it.key)) return text;
+      if (plan.anySide) return `${text} with choice of side`;
+      return plan.sides && plan.sides.length ? `${text} with ${plan.sides.join(", ")}` : text;
     }).filter(Boolean).join(" · ") : "";
     const status = (d) => {
       if (d.date !== r.today) return "";
@@ -957,11 +953,23 @@
       if (d.applied && d.applied.error) return `<p class="d-status bad">Not in Square yet: ${esc(d.applied.error)}. The board tries again every few minutes.</p>`;
       return d.plan ? `<p class="d-status">Going into Square now.</p>` : "";
     };
+    const sidesHtml = (plan, date) => {
+      const any = !!(plan && plan.anySide);
+      return `<fieldset class="d-sides">
+        <legend>Comes with</legend>
+        <label class="check"><input type="radio" name="sides-${date}" value="any"${any ? " checked" : ""}><span>Choice of side</span></label>
+        <label class="check"><input type="radio" name="sides-${date}" value="set"${any ? "" : " checked"}><span>These sides (commas between)</span></label>
+        <input type="text" data-field="sides" aria-label="The sides" value="${esc(((plan && plan.sides) || []).join(", "))}" maxlength="160" autocomplete="off"
+          placeholder="e.g. Mashed potatoes & gravy, green beans"${any ? " disabled" : ""}>
+      </fieldset>`;
+    };
     const dayHtml = (d) => {
       const plan = d.plan;
       const isToday = d.date === r.today;
       const tag = plan ? (plan.from === "site" ? `<span class="d-tag site">From the website</span>` : `<span class="d-tag front">Set here</span>`) : "";
       const what = summary(plan);
+      const shown = r.items.filter((it) => !isSalad(it.key) || isToday || (plan && plan.items[it.key]));
+      const planned = (it) => (plan && plan.items[it.key]) || { today: "", prices: {} };
       return `<details class="m-day${isToday ? " today" : ""}" data-date="${d.date}"${isToday ? " open" : ""}>
         <summary>
           <span class="d-date">${isToday ? '<span class="d-tag now">Today</span> ' : ""}${esc(words(d.date, { weekday: "short", month: "short", day: "numeric" }))}${tag}</span>
@@ -969,22 +977,29 @@
         </summary>
         <div class="d-body">
           ${status(d)}
-          ${r.items.map((it) => {
-            const p = (plan && plan.items[it.key]) || { today: "", prices: {} };
+          ${shown.map((it) => {
+            // Today: what Square has now, when it has a name in it.
+            const name = isToday && r.live && r.live[it.key] ? r.live[it.key] : planned(it).today || "";
             return `<div class="d-item" data-key="${esc(it.key)}">
               <label class="m-field">${esc(it.name)}
-                <input type="text" data-field="today" value="${esc(p.today || "")}" maxlength="60" autocomplete="off"
-                  placeholder="${/soup/i.test(it.key) ? "e.g. Chicken Dumpling" : /salad/i.test(it.key) ? "e.g. Cobb" : "e.g. Meatloaf"}"></label>
-              <div class="m-prices">${it.sizes.map((sz) => `<label class="m-price" data-size="${esc(sz.size)}">
-                <span>${esc(sz.size ? `${sz.size} price` : "Price")}</span>
-                <span class="m-money">$<input type="text" inputmode="decimal" data-field="price" value="${esc((p.prices || {})[sz.size] || "")}"
-                  placeholder="${esc(sz.price || "till")}" aria-describedby="keep-note"></span>
-              </label>`).join("")}</div>
-              ${isPlate(it.key) ? `<label class="m-field">Comes with (commas between)
-                <input type="text" data-field="sides" value="${esc(((plan && plan.sides) || []).join(", "))}" maxlength="160" autocomplete="off"
-                  placeholder="e.g. Mashed potatoes & gravy, green beans"></label>` : ""}
+                <input type="text" data-field="today" value="${esc(name)}" maxlength="60" autocomplete="off"
+                  placeholder="${/soup/i.test(it.key) ? "e.g. Chicken Dumpling" : isSalad(it.key) ? "e.g. Cobb" : "e.g. Meatloaf"}"></label>
+              ${isPlate(it.key) ? sidesHtml(plan, d.date) : ""}
             </div>`;
           }).join("")}
+          <label class="m-field">Words under the photo, for Photo post
+            <textarea data-field="desc" rows="2" maxlength="200" placeholder="${esc(photoWords(plan) || "e.g. Served with mashed potatoes & gravy")}">${esc((d.note && d.note.description) || "")}</textarea></label>
+          <details class="d-prices">
+            <summary>Prices <small>blank keeps the price Square has</small></summary>
+            ${shown.map((it) => `<div class="d-price-item" data-key="${esc(it.key)}">
+              <p class="d-price-name">${esc(it.name)}</p>
+              <div class="m-prices">${it.sizes.map((sz) => `<label class="m-price" data-size="${esc(sz.size)}">
+                <span>${esc(sz.size || "Price")}</span>
+                <span class="m-money">$<input type="text" inputmode="decimal" data-field="price" value="${esc((planned(it).prices || {})[sz.size] || "")}"
+                  placeholder="${esc(sz.price || "at the till")}" aria-label="${esc(`${it.name} ${sz.size || ""} price`)}"></span>
+              </label>`).join("")}</div>
+            </div>`).join("")}
+          </details>
           <button type="button" class="d-clear" data-clear>Clear this day</button>
         </div>
       </details>`;
@@ -992,42 +1007,64 @@
     const site = r.site.url ? (r.site.error
       ? `<p class="m-site m-error">Couldn't read the website's specials (${esc(r.site.error)}). Days already here are kept.</p>`
       : `<p class="m-site m-note">The website's specials were read at ${fmtTime(r.site.checkedAt)}.</p>`) : "";
-    screen({ title: "Plan the week", back: true,
-      body: `<p class="m-note">Each morning the kitchen PC puts that day's specials into Square by itself.
+    screen({ title: "Specials", back: true,
+      body: `<p class="m-note">Each morning the kitchen PC puts that day's specials into Square by itself. Saving today puts it in now.
         Days the website lists fill in on their own; a day changed here stays as you typed it.</p>
-        <p class="m-note" id="keep-note">A blank price keeps what Square has now, shown faintly ("till": the till asks for one).</p>
+        <p class="m-note">Choice of side changes the words only: the Choice of Side list in Square is still switched there by hand.</p>
         ${site}
         ${r.missing.length ? `<p class="m-error">Not found in Square under these names: ${esc(r.missing.join(", "))}.</p>` : ""}
         <form id="m-plan">${r.days.map(dayHtml).join("")}</form>`,
       buttons: [{ label: "Save", submit: "m-plan", kind: "primary" }] });
     const form = document.getElementById("m-plan");
     // What each day held when opened, so only the days changed are sent: a
-    // day from the website that nobody touched stays the website's.
-    const read = (day) => ({
-      items: Object.fromEntries([...day.querySelectorAll(".d-item")].map((el) => [el.dataset.key, {
-        today: el.querySelector('[data-field="today"]').value.trim(),
-        prices: Object.fromEntries([...el.querySelectorAll("[data-size]")].map((row) => [row.dataset.size, row.querySelector("input").value.trim()])),
-      }])),
-      sides: ((day.querySelector('[data-field="sides"]') || {}).value || "").split(",").map((x) => x.trim()).filter(Boolean),
-    });
+    // day from the website that nobody touched stays the website's. The
+    // photo's words are compared on their own, and saved on their own.
+    const read = (day) => {
+      const items = {};
+      for (const el of day.querySelectorAll(".d-item")) {
+        items[el.dataset.key] = { today: el.querySelector('[data-field="today"]').value.trim(), prices: {} };
+      }
+      for (const el of day.querySelectorAll(".d-price-item")) {
+        const it = items[el.dataset.key] || (items[el.dataset.key] = { today: "", prices: {} });
+        for (const row of el.querySelectorAll("[data-size]")) it.prices[row.dataset.size] = row.querySelector("input").value.trim();
+      }
+      const any = !!(day.querySelector('input[type="radio"][value="any"]:checked'));
+      const sidesBox = day.querySelector('[data-field="sides"]');
+      const sides = any || !sidesBox ? [] : sidesBox.value.split(",").map((x) => x.trim()).filter(Boolean);
+      return { items, sides, anySide: any };
+    };
+    const readWords = (day) => (day.querySelector('[data-field="desc"]').value || "").trim();
     const before = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(read(day))]));
-    const mark = (day) => day.classList.toggle("edited", JSON.stringify(read(day)) !== before.get(day.dataset.date));
+    const beforeWords = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, readWords(day)]));
+    const mark = (day) => day.classList.toggle("edited",
+      JSON.stringify(read(day)) !== before.get(day.dataset.date) || readWords(day) !== beforeWords.get(day.dataset.date));
     form.addEventListener("input", (e) => mark(e.target.closest(".m-day")));
+    form.addEventListener("change", (e) => {
+      if (e.target.type !== "radio") return;
+      const day = e.target.closest(".m-day");
+      day.querySelector('[data-field="sides"]').disabled = e.target.value === "any";
+      mark(day);
+    });
     form.addEventListener("click", (e) => {
       if (!e.target.closest("[data-clear]")) return;
       const day = e.target.closest(".m-day");
-      for (const input of day.querySelectorAll("input")) input.value = "";
+      for (const input of day.querySelectorAll('input[type="text"], textarea')) input.value = "";
+      const set = day.querySelector('input[type="radio"][value="set"]');
+      if (set) { set.checked = true; day.querySelector('[data-field="sides"]').disabled = false; }
       mark(day);
     });
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const days = {};
+      const notes = {};
       for (const day of form.querySelectorAll(".m-day")) {
         const now = read(day);
         if (JSON.stringify(now) !== before.get(day.dataset.date)) days[day.dataset.date] = now;
+        const text = readWords(day);
+        if (text !== beforeWords.get(day.dataset.date)) notes[day.dataset.date] = { description: text };
       }
-      busy("Plan the week", "Saving…");
-      result("Plan the week", await postJson("/api/front-plan-save", { pin: pinValue, days }));
+      busy("Specials", "Saving…");
+      result("Specials", await postJson("/api/front-plan-save", { pin: pinValue, days, notes }));
     });
   }
 
@@ -1268,8 +1305,11 @@
     const t = pp.setup.today;
     Object.assign(pp, { choice, special: false, drink: false, price: null, sizes: false, item: null });
     if (choice === "special") {
+      // The day's words for the photo from Specials, if written; otherwise
+      // what the plate comes with.
       Object.assign(pp, { special: true, drink: true, kicker: "Daily Special", title: t.special,
-        desc: t.sides && t.sides.length ? `Served with ${listWords(t.sides.map((x) => x.toLowerCase()))}` : "" });
+        desc: t.description || (t.anySide ? "With choice of side"
+          : t.sides && t.sides.length ? `Served with ${listWords(t.sides.map((x) => x.toLowerCase()))}` : "") });
     } else if (choice === "soup") {
       Object.assign(pp, { special: true, kicker: "Soup of the Day", title: t.soup, desc: "A cup or a bowl, from 11am" });
     } else if (choice === "other") {
@@ -1626,11 +1666,11 @@
     input.value = "";
   }
 
-  // ---- What the kitchen skips
+  // ---- Leave off kitchen tickets (it was "What the kitchen skips")
   async function openSkip() {
-    busy("What the kitchen skips", "Reading Square's items…");
+    busy("Leave off kitchen tickets", "Reading Square's items…");
     const r = await postJson("/api/front-skip", { pin: pinValue });
-    if (!r.ok) return result("What the kitchen skips", r);
+    if (!r.ok) return result("Leave off kitchen tickets", r);
     const lc = (x) => x.trim().toLowerCase();
     const cats = new Set(r.skip.categories.map(lc));
     const items = new Set(r.skip.items.map(lc));
@@ -1649,7 +1689,7 @@
         <div class="skip-items">${c.items.map((n) => box("data-item", n, whole || items.has(lc(n)), n, whole)).join("")}</div>
       </details>`;
     };
-    screen({ title: "What the kitchen skips", back: true,
+    screen({ title: "Leave off kitchen tickets", back: true,
       body: `<p class="m-note">Ticked items stay off the kitchen board and go on the front's "Add from the front" list.
         A ticked category also covers items added to it in Square later.</p>
         ${r.catalogError ? `<p class="m-error">Couldn't read Square's items (${esc(r.catalogError)}). Only the names already on the list are shown.</p>` : ""}
@@ -1683,10 +1723,10 @@
         // Items inside a skipped category are covered by it; only the rest are listed.
         items: [...form.querySelectorAll("[data-item]:checked:not(:disabled)")].map((x) => x.dataset.item),
       };
-      busy("What the kitchen skips", "Saving…");
+      busy("Leave off kitchen tickets", "Saving…");
       const res = await postJson("/api/front-skip-save", { pin: pinValue, skip });
       lastJson = "";
-      result("What the kitchen skips", res);
+      result("Leave off kitchen tickets", res);
     });
   }
 

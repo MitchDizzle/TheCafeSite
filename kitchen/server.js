@@ -74,7 +74,7 @@ const DEFAULTS = {
   frontKey: "", // if set, other devices must open /front?key=<this>
   updatePin: "", // if set, /front can run Check for updates with this PIN
   // Items whose price (and, for a one-size item, what it is today) the front
-  // can set each morning: Manage -> Today's specials. Names as in Square.
+  // can set each morning: Manage -> Specials. Names as in Square.
   dailyItems: ["Lunch Special", "Soup of the Day", "Salad of the Day"],
   // Items whose photo and options (flavors) the front can change: Manage ->
   // Desserts. Names as in Square.
@@ -188,7 +188,7 @@ let keepOnFront = {};
 const autoOff = new Set(); // ids cleared by autoHandoff, so Undo can say so
 const readySince = {}; // orderId -> ms first seen ready, for autoHandoff (not saved)
 // What the kitchen never makes: item names and whole Square categories.
-// Edited live from /front (Manage -> What the kitchen skips) and kept in
+// Edited live from /front (Manage -> Leave off kitchen tickets) and kept in
 // state.json. config.json's skipItems is only the starting list, used until
 // the first edit.
 let skip = { items: [], categories: [] };
@@ -320,7 +320,7 @@ function buildCatalog(objects) {
     .map((o) => [o.id, (o.category_data || {}).name || ""]));
   const byVariation = new Map();
   const byName = new Map();
-  const itemIds = new Map(); // item name (lower case) -> catalog id, for Today's specials
+  const itemIds = new Map(); // item name (lower case) -> catalog id, for Specials
   const members = new Map(); // category name -> item names
   const menuItems = []; // for Photo post: what each item is called, says and costs in Square
   for (const o of objects) {
@@ -377,11 +377,12 @@ async function loadCatalog() {
   return catalog;
 }
 
-// ---------------------------------------------------------------- today's specials
+// ---------------------------------------------------------------- specials into Square
 
-// The front sets the day's prices from Manage -> Today's specials. This is
-// the one place the board WRITES to Square, so it is narrow on purpose: only
-// the items in cfg.dailyItems, only their variations' prices and names.
+// The front sets the day's specials from Manage -> Specials. With Desserts,
+// this is the one place the board WRITES to Square, so it is narrow on
+// purpose: only the items in cfg.dailyItems, only their variations' prices
+// and names.
 // "What it is today" goes in the variation name, because that is what
 // prints on the kitchen ticket after the item name: a one-size item's only
 // size becomes "BBQ Ribs"; an item in sizes keeps them, as "Cup · Chicken
@@ -458,14 +459,14 @@ async function saveDaily(changes, who = "the front page") {
   }
   for (const ch of changes || []) {
     if (!cfg.dailyItems.some((n) => catalog.itemIds.get(n.trim().toLowerCase()) === ch.id)) {
-      throw Object.assign(new Error("That item isn't on the Today's specials list."), { plain: true });
+      throw Object.assign(new Error("That item isn't on the specials list."), { plain: true });
     }
     const item = await readItem(ch.id);
     const vars = item.item_data.variations || [];
     let changed = false;
     for (const vc of ch.variations || []) {
       const v = vars.find((x) => x.id === vc.id);
-      if (!v) throw Object.assign(new Error(`${item.item_data.name} changed in Square; open Today's specials again.`), { plain: true });
+      if (!v) throw Object.assign(new Error(`${item.item_data.name} changed in Square; open Specials again.`), { plain: true });
       const d = v.item_variation_data;
       const text = String(vc.price ?? "").replace(/[$\s]/g, "");
       if (text === "") {
@@ -493,7 +494,7 @@ async function saveDaily(changes, who = "the front page") {
     }
   }
   if (done.length) {
-    console.log(`Today's specials changed from ${who} (${new Date().toLocaleTimeString()}): ${done.join(", ")}.`);
+    console.log(`Specials changed in Square from ${who} (${new Date().toLocaleTimeString()}): ${done.join(", ")}.`);
     await loadCatalog();
   }
   return done;
@@ -509,7 +510,7 @@ async function saveDaily(changes, who = "the front page") {
 //   - add an option (no price: the flavors cost the same).
 //   - replace the item's photo (what online ordering shows).
 // Each save reads the list fresh and writes it back with Square's version,
-// like Today's specials.
+// like Specials.
 const mockImages = new Map(); // test mode: item id -> data URL
 
 async function readObject(id) {
@@ -630,7 +631,7 @@ async function saveDessertPhoto(itemId, dataUrl) {
 
 // ---------------------------------------------------------------- the week's specials, planned ahead
 
-// Manage -> Plan the week: what each daily item is, and its price if that
+// Manage -> Specials: what each daily item is, and its price if that
 // changes, for the days to come. Each morning the board puts that day's into
 // Square by itself, through saveDaily (the same narrow write as Today's
 // specials), as soon as it starts or the date turns over. Nobody has to open
@@ -648,12 +649,15 @@ async function saveDessertPhoto(itemId, dataUrl) {
 const PLAN_FILE = path.join(DIR, MOCK ? "specials-plan-mock.json" : "specials-plan.json");
 const SITE_MINUTES = 30;
 const RETRY_MINUTES = 5; // after Square refuses the morning's write
-const PLAN_DAYS = 14; // how far ahead Plan the week reaches
+const PLAN_DAYS = 14; // how far ahead Specials reaches
 
-// days:    { "YYYY-MM-DD": { from: "site" | "front", items: { "<dailyItems name>": { today, prices: { "<size>" | "": "10.50" } } } } }
+// days:    { "YYYY-MM-DD": { from: "site" | "front", items: { "<dailyItems name>": { today, prices: { "<size>" | "": "10.50" } } },
+//            sides?: [...], anySide?: true } }  (anySide: the plate comes with a choice of side)
+// notes:   { "YYYY-MM-DD": { description } }, the words Photo post puts under the photo. Kept
+//            apart from `days`, so writing them doesn't make a website day the front's.
 // applied: { "YYYY-MM-DD": { sig, at } after a good write, { sig, failedAt, error } after a bad one }
 // site:    the last read of the website, for the front to show
-let plan = { days: {}, applied: {}, site: { checkedAt: null, error: null } };
+let plan = { days: {}, notes: {}, applied: {}, site: { checkedAt: null, error: null } };
 try {
   plan = { ...plan, ...JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")) };
 } catch {}
@@ -661,7 +665,7 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.applied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.applied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
 }
 
@@ -713,10 +717,13 @@ async function pullSite() {
         if (text) items[name] = { today: text, prices: {} };
       }
       if (!Object.keys(items).length) continue;
-      // The sides go nowhere in Square; Photo post words the special with them.
+      // The sides go nowhere in Square; Photo post words the special with
+      // them. anySide: the plate comes with the customer's choice of side.
       const sides = Array.isArray(d.sides) ? d.sides.map(cleanText).filter(Boolean) : [];
-      if (have && JSON.stringify(have.items) === JSON.stringify(items) && JSON.stringify(have.sides || []) === JSON.stringify(sides)) continue;
-      plan.days[d.date] = { from: "site", items, sides };
+      const anySide = d.anySide === true;
+      if (have && JSON.stringify(have.items) === JSON.stringify(items) && JSON.stringify(have.sides || []) === JSON.stringify(sides)
+        && !!have.anySide === anySide) continue;
+      plan.days[d.date] = { from: "site", items, sides, ...(anySide ? { anySide: true } : {}) };
       changed.push(d.date);
     }
     // A day still to come that the website has since taken off.
@@ -786,9 +793,10 @@ async function applyTodayOnce() {
   return plan.applied[today];
 }
 
-// What Plan the week shows: today and the next PLAN_DAYS days the cafe is
-// open (plus any other day something is planned for), with Square's own
-// sizes and prices for the price boxes.
+// What Specials shows: today and the next PLAN_DAYS days the cafe is open
+// (plus any other day something is planned for), with Square's own sizes and
+// prices for the price boxes, and today's names as Square has them now
+// (`live`), so the front shows what's really on the till.
 async function planView() {
   const items = await dailyItems();
   const dates = [];
@@ -802,23 +810,29 @@ async function planView() {
   return {
     today: localDate(),
     items: items.filter((it) => !it.missing).map(({ key, name, variations }) => ({ key, name, sizes: variations.map((v) => ({ size: v.size, price: v.price })) })),
+    live: Object.fromEntries(items.filter((it) => !it.missing).map((it) => [it.key, it.today])),
     missing: items.filter((it) => it.missing).map((it) => it.name),
-    days: dates.map((date) => ({ date, plan: plan.days[date] || null, applied: plan.applied[date] || null })),
+    days: dates.map((date) => ({ date, plan: plan.days[date] || null, note: plan.notes[date] || null, applied: plan.applied[date] || null })),
     site: { url: cfg.specialsUrl, ...plan.site },
   };
 }
 
-// changes: { "YYYY-MM-DD": { items: { "<dailyItems name>": { today, prices: { "<size>": "10.50" } } } } }
+const checkDate = (date, today) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today) {
+    throw Object.assign(new Error("That day has already gone. Open Specials again."), { plain: true });
+  }
+};
+
+// changes: { "YYYY-MM-DD": { items: { "<dailyItems name>": { today, prices: { "<size>": "10.50" } } }, sides, anySide } }
+// notes:   { "YYYY-MM-DD": { description } }
 // Only the days the front changed. A day left with nothing in it is taken off
 // the plan (if the website lists it, its copy comes back on the next read).
-// Everything is checked before anything is kept.
-function savePlanDays(changes) {
+// Everything is checked before anything is kept. Returns the dates of each.
+function savePlanDays(changes, notes) {
   const today = localDate();
   const next = {};
   for (const [date, change] of Object.entries(changes || {})) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today) {
-      throw Object.assign(new Error("That day has already gone. Open Plan the week again."), { plain: true });
-    }
+    checkDate(date, today);
     const items = {};
     for (const [name, it] of Object.entries((change && change.items) || {})) {
       if (!cfg.dailyItems.includes(name)) throw Object.assign(new Error(`"${name}" isn't on the specials list.`), { plain: true });
@@ -832,19 +846,34 @@ function savePlanDays(changes) {
       const text = cleanText(it && it.today);
       if (text || Object.keys(prices).length) items[name] = { today: text, prices };
     }
-    // What comes with the plate. Not sent to Square (the ticket says the
-    // plate); Photo post words the special with it.
-    const sides = (Array.isArray(change && change.sides) ? change.sides : []).map(cleanText).filter(Boolean).slice(0, 6);
-    next[date] = Object.keys(items).length || sides.length ? { from: "front", items, ...(sides.length ? { sides } : {}) } : null;
+    // What comes with the plate: a choice of side, or these sides. Not sent
+    // to Square (the ticket says the plate); Photo post words the special
+    // with it.
+    const anySide = !!(change && change.anySide === true);
+    const sides = anySide ? [] : (Array.isArray(change && change.sides) ? change.sides : []).map(cleanText).filter(Boolean).slice(0, 6);
+    next[date] = Object.keys(items).length || sides.length || anySide
+      ? { from: "front", items, ...(sides.length ? { sides } : {}), ...(anySide ? { anySide: true } : {}) } : null;
+  }
+  // The words Photo post puts under the photo. They don't touch the day
+  // itself, so a day from the website stays the website's.
+  const words = {};
+  for (const [date, note] of Object.entries(notes || {})) {
+    checkDate(date, today);
+    words[date] = String((note && note.description) ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
   }
   for (const [date, day] of Object.entries(next)) {
     if (day) plan.days[date] = day;
     else delete plan.days[date];
   }
+  for (const [date, description] of Object.entries(words)) {
+    if (description) plan.notes[date] = { description };
+    else delete plan.notes[date];
+  }
   savePlan();
-  const dates = Object.keys(next).sort();
-  if (dates.length) console.log(`Plan the week changed from the front page (${new Date().toLocaleTimeString()}): ${dates.join(", ")}.`);
-  return dates;
+  const days = Object.keys(next).sort();
+  const noted = Object.keys(words).sort();
+  if (days.length || noted.length) console.log(`Specials changed from the front page (${new Date().toLocaleTimeString()}): ${[...new Set([...days, ...noted])].sort().join(", ")}.`);
+  return { days, notes: noted };
 }
 
 // The categories a line item's item is in: by its catalog id, or by name
@@ -914,7 +943,11 @@ async function photoSetup() {
       if (field && it.today) today[field] = it.today;
     }
     if (day.sides && day.sides.length) today.sides = day.sides;
+    if (day.anySide) today.anySide = true;
   }
+  // The words for the photo written in Specials, if any.
+  const note = plan.notes[date];
+  if (note && note.description) today.description = note.description;
   return { date, today, items: catalog.menuItems, catalogError: catalog.error };
 }
 
@@ -1914,7 +1947,7 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-daily", "/api/front-daily-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -2064,7 +2097,7 @@ const server = http.createServer(async (req, res) => {
     const refused = pinRefusal((await readBody(req)).pin);
     return send(res, 200, refused ? { ok: false, message: refused } : { ok: true });
   }
-  // What the kitchen skips, behind the PIN: read it (with a fresh read of
+  // Leave off kitchen tickets, behind the PIN: read it (with a fresh read of
   // the Square catalog to choose from) and save it. A save applies at once,
   // to the tickets already up too.
   if (req.method === "POST" && (url.pathname === "/api/front-skip" || url.pathname === "/api/front-skip-save")) {
@@ -2082,31 +2115,11 @@ const server = http.createServer(async (req, res) => {
     await loadCatalog();
     return send(res, 200, { ok: true, skip, categories: catalog.categories, catalogError: catalog.error });
   }
-  // Today's specials, behind the PIN: read the items fresh from Square, and
-  // save the prices (see saveDaily). The save is the board's only write to
-  // Square.
-  if (req.method === "POST" && (url.pathname === "/api/front-daily" || url.pathname === "/api/front-daily-save")) {
-    const body = await readBody(req);
-    const refused = pinRefusal(body.pin);
-    if (refused) return send(res, 200, { ok: false, message: refused });
-    try {
-      if (url.pathname === "/api/front-daily") return send(res, 200, { ok: true, items: await dailyItems() });
-      const saved = await saveDaily(body.items);
-      return send(res, 200, { ok: true, message: saved.length
-        ? `Saved in Square: ${saved.join(", ")}. The POS picks it up within a minute or so.`
-        : "Nothing changed." });
-    } catch (err) {
-      console.error(`Today's specials: ${err.message}`);
-      const conflict = /409|VERSION_MISMATCH|version/i.test(err.message);
-      if (err.plain) return send(res, 200, { ok: false, message: err.message });
-      return send(res, 200, { ok: false, message: conflict
-        ? "Someone changed that item in Square a moment ago. Open Today's specials again and re-enter it."
-        : `Square didn't take it: ${err.message}` });
-    }
-  }
-  // Plan the week, behind the PIN: read the plan (with Square's sizes and
-  // prices for the boxes) and save the days the front changed. Saving today
-  // puts it into Square straight away; other days go in on their morning.
+  // Specials, behind the PIN: read the plan (with Square's sizes and prices
+  // for the boxes, and today's names as Square has them) and save the days
+  // the front changed. Saving today puts it into Square straight away; other
+  // days go in on their morning. Through saveDaily, this is the board's only
+  // write to Square besides Desserts.
   if (req.method === "POST" && (url.pathname === "/api/front-plan" || url.pathname === "/api/front-plan-save")) {
     const body = await readBody(req);
     const refused = pinRefusal(body.pin);
@@ -2116,18 +2129,19 @@ const server = http.createServer(async (req, res) => {
         await pullSite(); // so the website's latest is what's shown
         return send(res, 200, { ok: true, ...(await planView()) });
       }
-      const dates = savePlanDays(body.days);
+      const saved = savePlanDays(body.days, body.notes);
+      const dates = [...new Set([...saved.days, ...saved.notes])].sort();
       if (!dates.length) return send(res, 200, { ok: true, message: "Nothing changed." });
       let message = `Saved: ${dates.map(dayWords).join(", ")}.`;
-      if (dates.includes(localDate())) {
+      if (saved.days.includes(localDate())) {
         const r = await applyToday();
         message += r && r.error ? ` Today's didn't go into Square yet (${r.error}); the board tries again in ${RETRY_MINUTES} minutes.`
           : " Today's is in Square now.";
       }
-      if (dates.some((d) => d > localDate())) message += " The rest go into Square by themselves on the morning of each day.";
+      if (saved.days.some((d) => d > localDate())) message += " The rest go into Square by themselves on the morning of each day.";
       return send(res, 200, { ok: true, message });
     } catch (err) {
-      console.error(`Plan the week: ${err.message}`);
+      console.error(`Specials: ${err.message}`);
       return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't work: ${err.message}` });
     }
   }
