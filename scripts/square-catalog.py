@@ -57,8 +57,8 @@ def one(name, category, price, description="", skip_detail=None):
 # ── Breakfast ──────────────────────────────────────────────
 B = "Breakfast"
 fillings = cats["breakfast"]["note"]  # build-your-own filling list
-add("Biscuit & Gravy", B, [("Full", item("breakfast", "Full Biscuit & Gravy")["price"]),
-                           ("Half", item("breakfast", "Half Biscuit & Gravy")["price"])],
+bg = item("breakfast", "Full / Half Biscuit & Gravy")
+add("Biscuit & Gravy", B, [("Full", bg["prices"][0]), ("Half", bg["prices"][1])],
     "Served until 11am.")
 i = item("breakfast", "Big Breakfast")
 # Spelled out for Square rather than taken from menu.json's short line: eggs

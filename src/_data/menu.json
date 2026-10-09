@@ -29,12 +29,9 @@
       "note": "Burritos and omelets are build-your-own. Choose from bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
       "items": [
         {
-          "name": "Full Biscuit & Gravy",
-          "price": 8.00
-        },
-        {
-          "name": "Half Biscuit & Gravy",
-          "price": 4.50
+          "_note": "One row since 2026-10-09 (client), as it is one item in Square: Biscuit & Gravy, in Full and Half sizes (scripts/square-catalog.py). `prices` follows the sizes in the name, Full first, like the omelet.",
+          "name": "Full / Half Biscuit & Gravy",
+          "prices": [8.00, 4.50]
         },
         {
           "name": "Big Breakfast",
