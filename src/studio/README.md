@@ -99,8 +99,8 @@ Files land in **two** places:
 
 | Where | Filename | For |
 |---|---|---|
-| `_site/studio/downloads/` | `menu-trifold.png` | Published — served at `/studio/downloads/` |
-| `exports/` | `menu-trifold_20260904.png` | Local history, gitignored |
+| `_site/studio/downloads/` | `menu-trifold-bw.png` | Published — served at `/studio/downloads/` |
+| `exports/` | `menu-trifold-bw_20260904.png` | Local history, gitignored |
 
 The published copy is undated because it is a URL: a link that works today has
 to keep working after the next build, so each build overwrites it. It lives

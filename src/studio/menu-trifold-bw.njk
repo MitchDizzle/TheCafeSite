@@ -11,12 +11,13 @@ tags: studio
 studioTitle: "Menu — tri-fold, black & white"
 studioCategory: "Menus"
 studioSize: "11 × 8.5 in landscape · duplex, 2 pages · letter-fold · one ink"
-studioNote: "The tri-fold for a black-only printer or the copier. Same data and same fold as the colour tri-fold — print duplex, flip on SHORT edge, letter-fold — so the two can never disagree. Differences: every colour is ink, and the cover title is set in type instead of the teal wordmark box (the colour tri-fold keeps the logo). Everything else, the catering back panel included, is identical. Same dietary-marks caution as the colour piece."
+studioNote: "The printed tri-fold: the cafe prints this black & white one (the colour version was archived 2026-10-09). Print duplex, flip on SHORT edge, then letter-fold: right third in first, left third over it. Sheet 1 left-to-right is tuck flap / back cover / front cover; the cover doubles as a flyer (hours, address, phone, both links). Breakfast and the drinks are on the tuck flap, so they are what a customer reads the instant the cover lifts; the inside sheet is lunch. Every colour is ink and the cover title is set in type. The GF/V marks are drafted from ingredient lists, not confirmed by the kitchen, and the proof says so in red until `dietsConfirmed` is set."
 studioW: 1056
 studioH: 1940
-studioOrder: 22
+studioOrder: 20
 ---
 
-{#- Same sheets as menu-trifold.njk; `bw: true` above is the only switch.
-    See partials/menu-trifold-sheets.njk for what it changes. -#}
+{#- The sheets live in partials/menu-trifold-sheets.njk; `bw: true` above
+    swaps the palette for ink. Without it the same partial draws the colour
+    tri-fold (archive/site-src/studio/menu-trifold.njk). -#}
 {% include "partials/menu-trifold-sheets.njk" %}

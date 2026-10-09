@@ -161,7 +161,10 @@ pageCss: "/assets/css/menu.css"
             {%- endfor %}
         </div>
 
-        {#- The tri-fold's own PDF, the same file /studio/downloads/ serves.
+        {#- The tri-fold's own PDF, the same file /studio/downloads/ serves:
+            the black & white one, which is what the cafe prints (the colour
+            tri-fold was archived 2026-10-09; its old address redirects here
+            in .htaccess).
             It is built by `npm run build` (the export half), NOT by
             `npm start` — so this link 404s on a dev server until a full
             build has run once. Production always has it, because _site/ is
@@ -171,7 +174,7 @@ pageCss: "/assets/css/menu.css"
             instead of opening the viewer, and most people tapping this want
             to look at it, not file it. -#}
         <p class="menu-print">
-            <a href="/studio/downloads/menu-trifold.pdf" class="btn btn-outline">Print this menu (PDF)</a>
+            <a href="/studio/downloads/menu-trifold-bw.pdf" class="btn btn-outline">Print this menu (PDF)</a>
             <span class="menu-print-hint">Two sides. Print double-sided, then fold in thirds.</span>
         </p>
 

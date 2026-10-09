@@ -1,6 +1,7 @@
 /* ============================================================
    Menu — tri-fold, 11 × 8.5 in landscape, duplex
-   Piece: src/studio/menu-trifold.njk
+   Piece: src/studio/menu-trifold-bw.njk (the colour menu-trifold.njk is
+   archived, but these rules still carry its colours, so it can come back)
 
    Two artboards, one per printed side. Fold guides are drawn as dashed
    lines so the sheet can be hand-folded without a straightedge; piece.css's

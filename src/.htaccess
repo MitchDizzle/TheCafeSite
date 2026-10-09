@@ -23,6 +23,11 @@ Options -Indexes
     RewriteCond %{THE_REQUEST} \s/index\.html[\s?] [NC]
     RewriteRule ^index\.html$ / [R=301,L]
 
+    # The colour tri-fold was archived 2026-10-09; the black & white one is
+    # the printed menu. A saved link to the old PDF or PNG gets that instead
+    # of a 404. 302, not 301: an archived piece can come back.
+    RewriteRule ^studio/downloads/menu-trifold\.(pdf|png)$ /studio/downloads/menu-trifold-bw.$1 [R=302,L]
+
     # /page.html → /page (drop the extension from visible URLs)
     RewriteCond %{THE_REQUEST} \s/([^\s?]+)\.html[\s?] [NC]
     RewriteRule ^ /%1 [R=301,L]
@@ -59,7 +64,7 @@ ErrorDocument 404 /404.html
 
 # ── Exported studio artwork ─────────────────────────────
 # /studio/downloads/ is written by scripts/export-studio.js under STABLE
-# filenames: menu-trifold.pdf is the same URL after every build, with
+# filenames: menu-trifold-bw.pdf is the same URL after every build, with
 # different bytes inside it. The stable name is deliberate — these are links
 # now, and one that works today has to work after the next build — but it
 # means a long cache life here is exactly wrong. The generic image rule above
