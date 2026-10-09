@@ -1,5 +1,6 @@
-// The week's specials as caption text, shared by every post that lists them
-// (fb-weekly-specials, fb-open-monday) so the wording can't drift between
+// The week's specials as caption text, for the weekly post
+// (fb-weekly-specials), and the specialSides / latestWeek filters every
+// piece that lists the specials uses, so the wording can't drift between
 // them. Built from src/_data/specials.json, the same file as the images.
 //
 // Plain words and no emoji: the audience skews older, and a caption is read

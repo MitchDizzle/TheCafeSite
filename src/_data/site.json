@@ -21,7 +21,7 @@
     "website": "lvcafetogo.com"
   },
 
-  "_comment_owners": "The two names on the door. On the opening post because a small-town reopening is shared for the people, not the premises — friends and family scrolling past recognise a name long before they read an address. There is no team page: the staff do not want photos online, so src/team.njk is not published.",
+  "_comment_owners": "The two names on the door. Only the opening post used them (archived 2026-10-09, archive/site-src/studio/fb-opening-day.njk), because a small-town reopening is shared for the people, not the premises. Nothing live reads this now; it stays so that post can come back as it was. There is no team page: the staff do not want photos online.",
   "owners": [
     { "name": "Terry Booker" },
     { "name": "Dalton Watkins" }
@@ -33,7 +33,7 @@
     "label": "Order Online"
   },
 
-  "_comment_opening": "Opening day. Read by the front door banner and the Facebook pieces in /studio/ so the date is stated once. Not billed as a grand opening — the kitchen is still transitioning off the old contract, so the doors open first and a grand opening comes later.",
+  "_comment_opening": "Opening day (2026-10-05) and the hours. The hours fields (hoursDays, opens, closes, hoursLabel) are read all over the site, the menus and the posts, so they are stated once here. dayName and monthDay are read by /about. date, kicker and ordinal were only for the opening-week posts, archived 2026-10-09 in archive/site-src/studio/; they stay so those posts can come back as they were. Not billed as a grand opening: that is a separate, later piece.",
   "opening": {
     "date": "2026-10-05",
     "kicker": "Opening Day",

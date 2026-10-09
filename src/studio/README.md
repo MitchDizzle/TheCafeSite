@@ -79,52 +79,14 @@ helpers — live in `src/assets/css/piece.css`. Read it before writing a new
 piece; the wordmark's stroke-and-single-shadow construction is fussy and the
 reasoning is documented there.
 
-## The opening-day pieces
+## Retired pieces
 
-Four artboards carry the October 5th announcement, and none of them states
-the date itself:
-
-| Piece | For |
-|---|---|
-| `front-door-banner` | 11 x 17 taped inside the door glass |
-| `fb-who-we-are` | 1080 square introduce-ourselves post |
-| `fb-opening-day` | 1080 square Facebook feed post |
-| `fb-event-cover` | 1920 x 1005 cover image on a Facebook Event |
-
-It is an **opening, not a grand opening** — the kitchen is coming off years of
-one kind of cooking and a new menu needs time to settle. `fb-who-we-are` says
-that out loud in its `modestLine`, and `site.opening.kicker` reads "Opening
-Day" rather than "Grand Opening" for the same reason. Do not quietly upgrade
-the wording; the grand opening is a separate, later piece.
-
-The date, the hours and the address all come from the `opening` block in
-`src/_data/site.json`. Change it there once and all three follow; there is no
-second copy to catch. If the date moves, that is the only edit.
-
-### Where the specials go
-
-`fb-opening-day.njk` opens with a `specials:` list. Fill it in and the card
-sets the lines in the display italic:
-
-```yaml
-specials:
-  - "Biscuits & sausage gravy"
-  - "Chicken fried steak & eggs"
-  - "Cinnamon roll, still warm"
-```
-
-Three lines read best, four fit, five crowd the date above them. Write `&` as
-a literal, never `&amp;` — Nunjucks escapes these on output.
-
-Leave the list **empty** and the card exports with `specialSlots` blank ruled
-lines instead, so the specials can be written on by hand or typed over the PNG
-later. A blank card also carries a red reminder line, which is there so an
-unfinished post cannot quietly become a published one — set
-`showSpecialsHint: false` when a blank export is what you actually want.
-
-The event cover has no specials card on purpose. An Event already has a
-description field for them, and the cover is cropped differently on every
-surface Facebook shows it on — only the centre of it is safe to put words in.
+A piece that is no longer used moves to `archive/site-src/`, at the same path
+it had under `src/` (its CSS too), rather than being deleted: git keeps it,
+and restoring it is a move back. `archive/README.md` lists what is there and
+why. A board with only live pieces on it is the point: the downloads page is
+used from a phone, and every dead card is something to scroll past or post by
+mistake.
 
 ## Exporting
 

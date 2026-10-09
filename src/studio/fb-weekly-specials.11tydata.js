@@ -1,10 +1,9 @@
 // The weekly specials post's caption, built from src/_data/specials.json so
 // it can never disagree with the image. /studio/downloads/ renders `caption`
-// (one string per paragraph) with a Copy button, the same as the opening-day
-// post's hand-written one.
+// (one string per paragraph) with a Copy button.
 //
-// Edit the wording here; edit the food in the JSON. The day lines are shared
-// with fb-open-monday via _includes/specials-caption.js.
+// Edit the wording here; edit the food in the JSON. The day lines come from
+// _includes/specials-caption.js.
 
 const { weekRange, dayLines, soupLine, latestWeek } = require("../_includes/specials-caption.js");
 
