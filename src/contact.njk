@@ -35,7 +35,8 @@ pageCss: "/assets/css/contact.css"
                         from the kitchen, straight to your inbox.
                     </p>
 
-                    <!-- Formspree for now; swaps to our own backend in Phase 1 (see CafeWork TASKS P1-7) -->
+                    <!-- Formspree, which emails each sign-up. Email only since
+                         2026-10-09: no phone number or texting, which aren't planned. -->
                     <form action="https://formspree.io/f/mdarqnql" method="POST"
                           data-success="You're on the list! Watch your inbox for weekly menus and news from the kitchen.">
                         <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"
@@ -48,20 +49,6 @@ pageCss: "/assets/css/contact.css"
                                 <input type="email" id="nl-email" name="email" autocomplete="email" required placeholder="you@example.com">
                             </div>
 
-                            <div class="form-group">
-                                <label for="nl-phone">Phone (optional)</label>
-                                <input type="tel" id="nl-phone" name="phone" autocomplete="tel" placeholder="(555) 000-0000">
-                                <span class="form-hint">Used to reach you about orders. We won't text news unless you say so below</span>
-                            </div>
-
-                            <div class="form-group form-group--full">
-                                <div class="checkbox-group">
-                                    <label>
-                                        <input type="checkbox" name="sms_consent" value="yes">
-                                        It's OK to text me menus and specials at the number above
-                                    </label>
-                                </div>
-                            </div>
 
                             <div class="form-group form-group--full">
                                 <button type="submit" class="btn btn-primary">Sign Me Up</button>
