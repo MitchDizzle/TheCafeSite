@@ -15,6 +15,7 @@ come back. Nothing in here is built or uploaded: Eleventy reads only `src/`.
 | Files | What they were | Why archived |
 |---|---|---|
 | `studio/fb-open-monday.*`, `studio/fb-opening-day.njk`, `studio/fb-event-cover.njk`, `studio/fb-who-we-are.njk`, and their `assets/css/` files | The opening-week Facebook posts and event cover (opening day was 2026-10-05) | Opening week is over. `fb-open-monday`'s caption reads the newest week in `specials.json`, so left on the board it announced "our first week of specials" for every later week |
+| `studio/fb-dish.*`, `studio/fb-story-special.*`, `_data/specialPhotos.js`, and their `assets/css/` files | A Facebook post per food photo in `photos.json` (with its caption), and a Story per daily-special photo | 2026-10-09. Dish posts are made on the phone now, with Photo post on the kitchen front page (`kitchen/front.html` draws the same design), and daily Stories were dropped when specials went weekly. The photos stay in `src/_data/photos.json` |
 
 ## Restoring something
 
@@ -26,3 +27,6 @@ Move each of its files back to the same path under `src/`
   `src/_data/site.json`, which are still there. They were written as an
   **opening, not a grand opening**; a grand opening is a new piece, not these
   with the word changed.
+- `fb-story-special` needs `_data/specialPhotos.js` back with it. `fb-dish`
+  looks each photo's `item` up in `menu.json` by its exact name and fails the
+  build if it isn't there (a daily special sets `special: true` instead).

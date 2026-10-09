@@ -1031,15 +1031,17 @@
     });
   }
 
-  // ---- Photo post: the dish post (the website's studio/fb-dish.njk, 1080 x
-  // 1250) drawn on this phone from a photo it just took. Nothing is sent
+  // ---- Photo post: the Facebook dish post (1080 x 1250) drawn on this phone
+  // from a photo it just took. Nothing is sent
   // anywhere to make it: the words come from today's plan or Square's menu,
   // anything can be typed over, and the picture is drawn here. The kitchen PC
   // only keeps the photo and the post afterwards, for the website.
   //
-  // The look copies fb-dish.css: photo in the top 1080 square, the name over
-  // a teal fade at the top, and a band under the photo with the words, the
-  // wordmark, the phone and the web address. Change one, change both.
+  // This is the only dish post now. The website's /studio/ version (fb-dish,
+  // the same design in HTML and CSS) was archived on 2026-10-09 and is in
+  // archive/site-src/ as a reference. The look: photo in the top 1080 square,
+  // the name over a teal fade at the top, and a band under the photo with the
+  // words, the wordmark, the phone and the web address.
   const SITE = { // from the website's src/_data/site.json; change together
     phone: "(913) 547-9994",
     website: "lvcafetogo.com",
@@ -1142,7 +1144,7 @@
       ctx.fillText("Take or choose a photo", W / 2, 600);
     }
 
-    // The name on one line, sized by fb-dish.11tydata.js's own rule (Playfair
+    // The name on one line, sized by the archived fb-dish's rule (Playfair
     // Black Italic runs about 0.56em a letter across the 960px measure), then
     // made smaller only if this phone's fonts still run wider than that.
     const title = pp.title || "Name";
@@ -1227,7 +1229,8 @@
     }
   }
 
-  // The caption, worded as the website's dish posts (fb-dish.11tydata.js).
+  // The caption, worded as the website's dish posts were (fb-dish.11tydata.js,
+  // archived).
   function photoCaption(pp) {
     const desc = (pp.desc || "").trim().replace(/\.$/, "");
     const lines = [];

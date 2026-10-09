@@ -224,13 +224,13 @@ The specials for today and the next two weeks, set ahead of time. **Each morning
 
 ## Photo post (Manage on the front page)
 
-Makes the Facebook dish post (the same 1080 × 1250 picture as the website's `/studio/` dish posts) on the phone, from a photo taken there and then. Nothing is generated anywhere else and nothing costs anything: the phone draws it.
+Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo taken there and then. It's the only way dish posts are made: the website's `/studio/` dish posts were archived on 2026-10-09. Nothing is generated anywhere else and nothing costs anything: the phone draws it.
 
 1. **Take or choose a photo.** The phone's camera or photo library.
 2. **What's in the photo:** today's special or soup (from Plan the week, with the website's sides), "A special" to type one in, or any item in Square (its category, name and description come from Square).
 3. **Change any of the words:** the name, the line above it, the words under the photo, and **Drink included** for a special. The picture redraws as you type.
 4. **Frame it:** drag the picture to move it, and zoom with the slider. The post shows a square of it.
-5. **Make the picture.** Press and hold it to save it to the phone's photos (or Download), and **Copy caption**: worded like the website's dish posts, with the order link, hours and menu link.
+5. **Make the picture.** Press and hold it to save it to the phone's photos (or Download), and **Copy caption**: with the order link, hours and menu link.
 
 **Keep the photo on the kitchen PC for the website** (ticked by default) saves the photo (2000px, re-drawn on the phone so its GPS location is gone) and the finished post in `photos\` on the kitchen PC, listed in `photos\photos.json` in the same shape as the website's `src/_data/photos.json`. To put them on the website, copy that folder off the PC and move the entries over (or ask Claude to); each needs its `alt` text written then.
 
