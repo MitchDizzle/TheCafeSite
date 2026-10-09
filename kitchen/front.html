@@ -1045,10 +1045,11 @@
   const SITE = { // from the website's src/_data/site.json; change together
     phone: "(913) 547-9994",
     website: "lvcafetogo.com",
-    menu: "https://lvcafetogo.com/menu",
-    order: "cash.app/$lvcafetogo",
+    menu: "lvcafetogo.com/menu",
+    // Our own address for ordering, which forwards to the ordering page
+    // (the website's src/order.njk), as on the printed QR codes.
+    order: "lvcafetogo.com/order",
     hours: "Monday – Friday, 6am – 2pm",
-    street: "417 S 6th St",
   };
   const INK = { cream: "#FAF7F2", teal: "#2C5E70", tealDark: "#1F4552", mint: "#8ED9D4", accent: "#C0392F", coral: "#EB5E64" };
   const SERIF = '"Playfair Display", Georgia, serif';
@@ -1229,22 +1230,20 @@
     }
   }
 
-  // The caption, worded as the website's dish posts were (fb-dish.11tydata.js,
-  // archived).
+  // The caption: the dish, then one line for when and where. Kept short on
+  // purpose (client 2026-10-08): it's read on a phone, and the details are
+  // explained at the counter.
   function photoCaption(pp) {
     const desc = (pp.desc || "").trim().replace(/\.$/, "");
     const lines = [];
     if (pp.special) {
       const what = desc ? `${pp.title}, ${desc.charAt(0).toLowerCase()}${desc.slice(1)}` : pp.title;
-      lines.push(`Today's special: ${what}.${pp.drink ? " A drink is included." : ""} While it lasts!`);
+      lines.push(`Today's special: ${what}.${pp.drink ? " A drink is included." : ""}`);
     } else {
-      const price = pp.price != null ? ` ${pp.sizes ? "From " : ""}$${pp.price.toFixed(2)}.` : "";
+      const price = pp.price != null ? ` ${pp.sizes ? "From " : ""}$${pp.price.toFixed(2)}` : "";
       lines.push(`${pp.title}${desc ? `: ${desc}` : ""}.${price}`);
     }
-    lines.push(
-      `Order online for pickup at ${SITE.order}, or at the counter. Open ${SITE.hours}, ${SITE.street}.`,
-      pp.special ? `Today's special and the full menu: ${SITE.menu}` : `Full menu: ${SITE.menu}`
-    );
+    lines.push(`Open ${SITE.hours} · Order online at ${SITE.order} · Menu: ${SITE.menu}`);
     return lines.join("\n\n");
   }
 

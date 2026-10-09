@@ -14,18 +14,24 @@ module.exports = {
       if (!week.length) return [];
 
       const { site } = data;
-      const hours = `${site.opening.opens.time}${site.opening.opens.meridiem}–${site.opening.closes.time}${site.opening.closes.meridiem}`;
+      const o = site.opening;
+      const hours = `${o.opens.time.replace(":00", "")}${o.opens.meridiem} – ${o.closes.time.replace(":00", "")}${o.closes.meridiem}`;
 
       // Kept short on purpose (client 2026-10-08): Facebook text is read on a
       // phone, and the details (which drinks, which sides) are explained at
-      // the counter.
+      // the counter. The order link is our own /order (src/order.njk), which
+      // forwards to the ordering page, like the printed QR codes: it reads
+      // better than the ordering page's own address and survives a change
+      // of it.
       return [
-        `Lunch specials at The Café, ${weekRange(week)}. Served from 11am${data.specials.includesDrink ? ", and each one comes with a drink" : ""}.`,
+        `Lunch specials, ${weekRange(week)}. From 11am${data.specials.includesDrink ? ", each with a drink" : ""}.`,
         ...dayLines(week),
         ...[soupLine(week)].filter(Boolean),
-        `Open ${site.opening.hoursDays}, ${hours}.${site.phoneOrders ? ` Call ${site.phone} to order ahead.` : ""}`,
-        ...(site.ordering.url ? [`Order online: ${site.ordering.url.replace(/^https?:\/\//, "")}`] : []),
-        `Menu: ${site.social.website}/menu`,
+        [
+          `Open ${o.hoursDays}, ${hours}`,
+          site.phoneOrders ? `Call ${site.phone} to order ahead` : null,
+          site.ordering.url ? `Order online at ${site.social.website}/order` : null,
+        ].filter(Boolean).join(" · "),
       ];
     },
   },

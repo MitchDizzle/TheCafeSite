@@ -36,20 +36,21 @@ function specialSides(d) {
   return `with ${s.slice(0, -1).join(", ")} and ${s[s.length - 1]}`;
 }
 
-// One paragraph per day: the plate only. The soup is a separate item, so it
-// gets its own paragraph (soupLine), never "X with Y and Z soup" run together.
+// One line per day: the plate only, read as a list (no full stops). The soup
+// is a separate item, so it gets its own line (soupLine), never "X with Y
+// and Z soup" run together.
 function dayLines(week) {
   return week.map((d) => {
     const sides = specialSides(d);
-    return `${words(d.date, { weekday: "long" })}: ${d.special}${sides ? ` ${sides}` : ""}.`;
+    return `${words(d.date, { weekday: "long" })}: ${d.special}${sides ? ` ${sides}` : ""}`;
   });
 }
 
-// The week's soups in one paragraph, apart from the plates.
+// The week's soups on one line, apart from the plates, with short day names.
 function soupLine(week) {
   const soups = week.filter((d) => d.soup)
-    .map((d) => `${words(d.date, { weekday: "long" })} ${d.soup}`);
-  return soups.length ? `Soups (sold separately): ${soups.join(", ")}.` : "";
+    .map((d) => `${words(d.date, { weekday: "short" })} ${d.soup}`);
+  return soups.length ? `Soups (sold separately): ${soups.join(", ")}` : "";
 }
 
 // The Monday of a YYYY-MM-DD date's week, as YYYY-MM-DD.
