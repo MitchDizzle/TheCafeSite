@@ -118,6 +118,13 @@ pageCss: "/assets/css/menu.css"
                         {%- if item.description %}
                         <p class="menu-item-desc">{{ item.description }}</p>
                         {%- endif %}
+                        {#- A row priced once for several kinds (Deli Salads):
+                            each kind on its own, so they're easy to pick out. -#}
+                        {%- if item.choices %}
+                        <ul class="menu-item-desc menu-item-choices">
+                            {%- for ch in item.choices %}<li>{{ ch }}</li>{% endfor -%}
+                        </ul>
+                        {%- endif %}
                     </li>
                     {%- endfor %}
                 </ul>
@@ -402,8 +409,8 @@ pageCss: "/assets/css/menu.css"
         {
           "@type": "MenuItem",
           "name": {{ item.name | dump | safe }}
-          {%- if item.description %},
-          "description": {{ item.description | dump | safe }}
+          {%- if item.description or item.choices %},
+          "description": {{ (item.description or (item.choices | join(", "))) | dump | safe }}
           {%- endif %}
           {%- if item.price %},
           "offers": { "@type": "Offer", "price": "{{ item.price | money | replace("$", "") }}", "priceCurrency": "USD" }

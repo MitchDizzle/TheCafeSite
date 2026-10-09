@@ -233,7 +233,7 @@ html.meal-lunch {
     opacity: 0.88;
 }
 
-/* The choices under a listOnBoard item (Side Salads): stepped in like a
+/* The choices under an item that has them (Deli Salads): stepped in like a
    variant, but one wrapped line with no leader or price, since the row
    above prices all of them. */
 .bitem--list {

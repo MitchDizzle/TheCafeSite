@@ -87,6 +87,11 @@
             {%- if item.description %}
             <p class="menu-item-desc p-body">{{ item.description }}</p>
             {%- endif %}
+            {%- if item.choices %}
+            <ul class="menu-item-desc menu-item-choices p-body">
+                {%- for ch in item.choices %}<li>{{ ch }}</li>{% endfor -%}
+            </ul>
+            {%- endif %}
             {#- One indented priced row per variant — see the note in
                 partials/menu-trifold-sheets.njk for why this is not a string in the price
                 column. -#}

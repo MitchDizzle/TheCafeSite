@@ -165,11 +165,11 @@ SD = "Sides"
 for i in cats["sides"]["items"]:
     if i["name"] == "Chips":
         add("Chips", SD, [(v.strip(), i["price"]) for v in i["description"].split(",")])
-    elif i["name"] == "Side Salads":
-        # One row on the menu, but still five items in Square, as they were
-        # before the menu folded them together (2026-10-08): the till and the
-        # kitchen board already know them by these names.
-        for v in (v.strip() for v in i["description"].split(",")):
+    elif i.get("choices"):
+        # Deli Salads: one row on the menu, but an item per kind in Square, as
+        # they were before the menu folded them together (2026-10-08): the
+        # till and the kitchen board already know them by these names.
+        for v in i["choices"]:
             one(v if "Salad" in v else f"{v} Salad", SD, i["price"])
     else:
         one(i["name"], SD, i["price"])

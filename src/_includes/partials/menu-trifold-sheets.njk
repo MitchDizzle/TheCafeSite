@@ -108,6 +108,11 @@
             {%- if item.description %}
             <p class="menu-item-desc p-body">{{ item.description }}</p>
             {%- endif %}
+            {%- if item.choices %}
+            <ul class="menu-item-desc menu-item-choices p-body">
+                {%- for ch in item.choices %}<li>{{ ch }}</li>{% endfor -%}
+            </ul>
+            {%- endif %}
             {#- Variants get one indented row each, not a run-on string in the
                 price column. "Biscuit or muffin $6.50 / Croissant, 2 eggs $8.00"
                 is 48 characters of nowrap text in a column about an inch wide:

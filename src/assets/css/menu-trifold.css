@@ -582,6 +582,22 @@
     margin-top: 0.02in;
 }
 
+/* The kinds under a row priced once for all of them (Deli Salads): one per
+   line in two columns, each with a dot, so they read as a list of choices
+   rather than a sentence. Font and colour come from .menu-item-desc. */
+.menu-item-choices {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    column-gap: 1.5em;
+}
+.menu-item-choices li::before {
+    content: "\2022";
+    color: var(--accent);
+    margin-right: 0.4em;
+}
+
 /* ── Build-your-own columns ───────────────────────────────────
    The kids meals. See _note_picks in src/_data/menu.json: three mains and
    three sides as priced rows would be six rows all reading $6.00, which on a

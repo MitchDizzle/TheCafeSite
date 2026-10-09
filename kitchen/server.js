@@ -75,7 +75,7 @@ const DEFAULTS = {
   updatePin: "", // if set, /front can run Check for updates with this PIN
   // Items whose price (and, for a one-size item, what it is today) the front
   // can set each morning: Manage -> Specials. Names as in Square.
-  dailyItems: ["Lunch Special", "Soup of the Day", "Salad of the Day"],
+  dailyItems: ["Lunch Special", "Soup of the Day"],
   // Items whose photo and options (flavors) the front can change: Manage ->
   // Desserts. Names as in Square.
   dessertItems: ["Cheesecake", "Dessert Bar"],

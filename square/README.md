@@ -79,7 +79,7 @@ default in the description". (`defaultBread` in `menu.json`.)
 | **Breakfast Meat** | Bacon, Sausage, Ham | Pick 1, required | Breakfast Sandwich, Big Breakfast |
 | **Eggs** | Scrambled, Sunny side up, Over easy, Over medium, Over hard | Pick 1, required. Every style **except poached**, which the kitchen does not do. Add basted or boiled only if the kitchen offers them. | Big Breakfast |
 | **Breakfast Base** | **Biscuit, Croissant, English Muffin** (the three the menu names — list them first), then White, Wheat, 12 Grain, Rye | Pick 1, required | Breakfast Sandwich, and the **Toast, Biscuit or English Muffin** side (toast = White, Wheat, 12 Grain or Rye) |
-| **Choice of Side** | Potato Salad, Pasta Salad, Cucumber Salad, Tortellini Salad, Salad of the Day, Cottage Cheese (every $3 side) | Pick 1, required, $0 | **Lunch Special, on choice-of-side days only** (`anySide` in specials.json). Off on days whose sides are built in. Switched by hand in the Dashboard until the kitchen board does it each morning |
+| **Choice of Side** | Potato Salad, Pasta Salad, Cucumber Salad, Tortellini Salad, Cottage Cheese (every $3 side) | Pick 1, required, $0 | **Lunch Special, on choice-of-side days only** (`anySide` in specials.json). Off on days whose sides are built in. Switched by hand in the Dashboard until the kitchen board does it each morning |
 | **Reuben Dressing** | No dressing | Pick any, optional, $0 | Reuben Sandwich. Holds the thousand island; prints on the kitchen ticket |
 | **Kids Main** | Corn Dog, Chicken Strips, Hamburger, Grilled Cheese | Pick 1, required | Kids Meal |
 | **Kids Side** | Cinnamon Apples, Mac & Cheese, Tater Tots, Fresh Fruit | Pick 1, required | Kids Meal |

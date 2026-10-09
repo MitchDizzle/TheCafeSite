@@ -110,11 +110,10 @@ noSiteJs: true
             </span>
             {%- endif %}
         </li>
-        {#- An item whose description is a short list of choices (Side
-            Salads) sets listOnBoard: the list prints under it, unpriced,
-            since the price on the row covers every one of them. -#}
-        {%- if item.listOnBoard and item.description %}
-        <li class="bitem bitem--list">{{ item.description }}</li>
+        {#- An item priced once for several kinds (Deli Salads) lists them
+            under it, unpriced, since the price on the row covers every one. -#}
+        {%- if item.choices %}
+        <li class="bitem bitem--list">{{ item.choices | join("  ·  ") }}</li>
         {%- endif %}
         {#- Variants become their own rows, indented under the item. This board
             prints no descriptions, so an upgrade described in prose would be
