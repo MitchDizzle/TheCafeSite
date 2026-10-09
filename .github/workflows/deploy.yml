@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    # The kitchen board ships from main too, but is not part of the site:
+    # a push that only changes kitchen/ needs no deploy.
+    paths-ignore:
+      - 'kitchen/**'
 
 jobs:
   build-and-deploy:
