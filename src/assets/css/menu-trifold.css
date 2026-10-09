@@ -411,6 +411,15 @@
     font-size: 0.19in;
 }
 
+/* A line that has to be seen (menu.json's `callout`): its own line, upright
+   and bold, full ink. */
+.menu-cat-callout {
+    font-size: 0.105in;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-top: 0.03in;
+}
+
 .menu-cat-note {
     font-size: 0.105in;
     font-style: italic;

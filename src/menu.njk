@@ -83,6 +83,9 @@ pageCss: "/assets/css/menu.css"
                 {%- if c.note %}
                 <p class="menu-cat-note">{{ c.note }}</p>
                 {%- endif %}
+                {%- if c.callout %}
+                <p class="menu-cat-callout">{{ c.callout }}</p>
+                {%- endif %}
                 {%- if c.sizing %}
                 <p class="menu-cat-sizing">
                     {%- for s in c.sizing %}<span class="sizing-pair">{{ s.size }} {{ s.price | money }}</span>{% if not loop.last %} &middot; {% endif %}{% endfor -%}
@@ -383,8 +386,8 @@ pageCss: "/assets/css/menu.css"
     {
       "@type": "MenuSection",
       "name": {{ c.name | dump | safe }},
-      {%- if c.note %}
-      "description": {{ c.note | dump | safe }},
+      {%- if c.note or c.callout %}
+      "description": {{ ([c.note, c.callout] | select | join(" ")) | dump | safe }},
       {%- endif %}
       {#- A `picks` category has no priced rows of its own, so its options are
           flattened into MenuItems here — a MenuSection published with an empty

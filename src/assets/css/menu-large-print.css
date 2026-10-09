@@ -193,6 +193,16 @@
     line-height: 1.1;
 }
 
+/* A line that has to be seen (menu.json's `callout`): its own line, upright
+   and bold, full ink. */
+.menu-cat-callout {
+    font-size: 0.13in;
+    line-height: 1.4;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-top: 0.05in;
+}
+
 .menu-cat-note {
     font-size: 0.13in;
     line-height: 1.4;
@@ -468,6 +478,7 @@
 .lp-stack--counter .menu-cat + .menu-cat { margin-top: 0.36in; }
 .lp-stack--counter .menu-cat-name   { font-size: 0.36in; }
 .lp-stack--counter .menu-cat-note   { font-size: 0.18in; }
+.lp-stack--counter .menu-cat-callout { font-size: 0.18in; }
 .lp-stack--counter .menu-cat-sizing { font-size: 0.2in; }
 .lp-stack--counter .menu-items      { margin-top: 0.15in; }
 .lp-stack--counter .menu-item + .menu-item { margin-top: 0.15in; }

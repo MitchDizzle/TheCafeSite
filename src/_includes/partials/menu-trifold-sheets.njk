@@ -71,6 +71,9 @@
     {%- if c.note %}
     <p class="menu-cat-note p-body">{{ c.note }}</p>
     {%- endif %}
+    {%- if c.callout %}
+    <p class="menu-cat-callout p-body">{{ c.callout }}</p>
+    {%- endif %}
     {%- if c.sizing %}
     <p class="menu-cat-sizing p-label ink-accent">
         {%- for s in c.sizing %}<span class="sizing-pair">{{ s.size }} {{ s.price | money }}</span>{% if not loop.last %} &middot; {% endif %}{% endfor -%}

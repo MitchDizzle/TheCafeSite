@@ -208,6 +208,14 @@
     opacity: 0.92;
 }
 
+/* A line that has to be seen (menu.json's `callout`): its own line, upright
+   and bold, under the italic note. */
+.menu-cat-callout {
+    margin-top: 0.35rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
 .menu-cat-sizing {
     font-weight: 700;
     color: var(--accent-dark);
