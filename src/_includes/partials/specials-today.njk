@@ -50,7 +50,7 @@
                 <p class="ts-detail">{{ d | specialSides }}</p>
                 {%- endif %}
                 {%- if specials.includesDrink %}
-                <p class="ts-detail">Includes a fountain drink or iced tea</p>
+                <p class="ts-detail">Includes a drink</p>
                 {%- endif %}
             </div>
             {%- if d.soup %}
@@ -73,7 +73,7 @@
         aria-labelledby at whichever one is showing). -#}
     <div class="ts-ahead" data-specials-ahead hidden>
         <h2 class="ts-heading" id="today-special-heading">This week&rsquo;s lunch specials</h2>
-        <p class="ts-ahead-note">Lunch specials and soup are served from 11am.{% if specials.includesDrink %} Every lunch special includes a fountain drink or iced tea; soup is sold separately.{% endif %}</p>
+        <p class="ts-ahead-note">Lunch specials and soup are served from 11am.{% if specials.includesDrink %} Every lunch special includes a drink; soup is sold separately.{% endif %}</p>
     </div>
 
     <div class="ts-week" data-specials-upcoming hidden>

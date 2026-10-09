@@ -19,7 +19,7 @@ function weekRange(week) {
     : `${first} – ${last}`;
 }
 
-// What comes with a day's plate, as words: "with your choice of side" when
+// What comes with a day's plate, as words: "with choice of side" when
 // the day sets anySide, "with A and B" / "with A, B and C" for set sides,
 // "" for none. The ONE place this is worded: every piece that lists the
 // specials uses it (registered as the specialSides filter), so a day can't
@@ -28,7 +28,7 @@ function weekRange(week) {
 // chain of ampersands, which is why this never joins with "&".
 function specialSides(d) {
   if (!d) return "";
-  if (d.anySide) return "with your choice of side";
+  if (d.anySide) return "with choice of side";
   const s = d.sides || [];
   if (!s.length) return "";
   if (s.length === 1) return `with ${s[0]}`;
@@ -48,7 +48,7 @@ function dayLines(week) {
 function soupLine(week) {
   const soups = week.filter((d) => d.soup)
     .map((d) => `${words(d.date, { weekday: "long" })} ${d.soup}`);
-  return soups.length ? `Soup of the day, on its own by the cup or bowl: ${soups.join("; ")}.` : "";
+  return soups.length ? `Soups (sold separately): ${soups.join(", ")}.` : "";
 }
 
 // The Monday of a YYYY-MM-DD date's week, as YYYY-MM-DD.

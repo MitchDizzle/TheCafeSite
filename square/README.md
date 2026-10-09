@@ -33,7 +33,8 @@ before confirming — Square lists anything it rejects.
 | Full / Half (salads, biscuits & gravy), Cup / Bowl, 2 / 3 egg | **Variations** of one item | One tile on the POS, the size prints on the ticket |
 | The 7 burgers (incl. Patty Melt) | Item "Hamburger", variations **Beef / Chicken** at the same price | The kitchen needs to see which one. The menu says "chicken instead of beef" once in the category note, not in each name |
 | Build Your Own 1 / 2 / 3 meats, half | One item, four **variations** | Price is set by the variation; the picks are modifiers (below) |
-| Toast / biscuit / muffin, chips flavours, iced tea vs fountain | **Variations** at one price | Counts which one sells, for ordering stock |
+| Chips flavours, iced tea vs fountain | **Variations** at one price | Counts which one sells, for ordering stock |
+| Toast, Biscuit or English Muffin | One item + the **Breakfast Base** modifier (below) | Was Toast / Biscuit / English Muffin variations until 2026-10-08, which never said which bread the toast was. Delete those three old variations in the Dashboard after importing |
 | Wraps, kids meals | One price per item | Choices are modifiers (below) |
 | Everything | Item type *Prepared food and beverage*, not stockable, category = reporting category | No inventory tracking yet |
 
@@ -77,7 +78,9 @@ default in the description". (`defaultBread` in `menu.json`.)
 | **Sour Cream or Salsa** | Sour cream, Salsa | Pick 1 | Burrito, Omelet |
 | **Breakfast Meat** | Bacon, Sausage, Ham | Pick 1, required | Breakfast Sandwich, Big Breakfast |
 | **Eggs** | Scrambled, Sunny side up, Over easy, Over medium, Over hard | Pick 1, required. Every style **except poached**, which the kitchen does not do. Add basted or boiled only if the kitchen offers them. | Big Breakfast |
-| **Breakfast Base** | **Biscuit, Croissant, English Muffin** (the three the menu names — list them first), then White, Wheat, 12 Grain, Rye | Pick 1, required | Breakfast Sandwich |
+| **Breakfast Base** | **Biscuit, Croissant, English Muffin** (the three the menu names — list them first), then White, Wheat, 12 Grain, Rye | Pick 1, required | Breakfast Sandwich, and the **Toast, Biscuit or English Muffin** side (toast = White, Wheat, 12 Grain or Rye) |
+| **Choice of Side** | Potato Salad, Pasta Salad, Cucumber Salad, Tortellini Salad, Salad of the Day, Cottage Cheese (every $3 side) | Pick 1, required, $0 | **Lunch Special, on choice-of-side days only** (`anySide` in specials.json). Off on days whose sides are built in. Switched by hand in the Dashboard until the kitchen board does it each morning |
+| **Reuben Dressing** | No dressing | Pick any, optional, $0 | Reuben Sandwich. Holds the thousand island; prints on the kitchen ticket |
 | **Kids Main** | Corn Dog, Chicken Strips, Hamburger, Grilled Cheese | Pick 1, required | Kids Meal |
 | **Kids Side** | Cinnamon Apples, Mac & Cheese, Tater Tots, Fresh Fruit | Pick 1, required | Kids Meal |
 | **Salad Protein** | Chicken salad, Tuna salad | Pick 1, required | Salad Plate |
