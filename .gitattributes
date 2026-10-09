@@ -15,3 +15,4 @@
 *.eot binary
 # Batch files need CRLF or cmd mis-parses labels/goto
 *.bat text eol=crlf
+*.reg text eol=crlf

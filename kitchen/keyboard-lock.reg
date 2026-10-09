@@ -1,0 +1,11 @@
+Windows Registry Editor Version 5.00
+
+; Kitchen PC only. Turns OFF the keyboard's internet and app keys (Browser
+; Home, Back, Forward, Refresh, Stop, Search, Favorites, Mail, Media,
+; My Computer, Calculator), so a stray press can't take the board's Chrome
+; window to another page. Every other key works as before. Double-click,
+; accept, then RESTART the PC. keyboard-unlock.reg undoes it.
+; The board's watchdog reopens the board within about 30 seconds anyway;
+; this stops it happening at all. Replaces any key remap already set this way.
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout]
+"Scancode Map"=hex:00,00,00,00,00,00,00,00,0c,00,00,00,00,00,32,e0,00,00,6a,e0,00,00,69,e0,00,00,67,e0,00,00,68,e0,00,00,65,e0,00,00,66,e0,00,00,6c,e0,00,00,6d,e0,00,00,6b,e0,00,00,21,e0,00,00,00,00

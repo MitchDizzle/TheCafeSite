@@ -49,9 +49,9 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 - **The power button** in the top right opens the board menu. It works with the mouse only, so nothing on the number pad can open it or confirm anything in it.
   - **Settings & help:** the key guide, today's numbers (orders, breakfast / lunch, average time in the kitchen, most ordered), whether sound is on, and a link to the order check page. **Demo orders** adds practice tickets for training the staff (see below). **Reset for the day** clears the Undo list on both screens (so test or yesterday's tickets can't come back with a stray Backspace) and restarts today's stats from that moment. Tick **Also clear every order on the board** to empty both screens too: the morning after testing, before the doors open. The key guide also shows on the board when there are no orders.
   - **Check for updates:** looks for new board code. If there is any, it runs `start-kitchen.bat`, which installs it and restarts the board in about 10 seconds. If not, it says the board is up to date.
-  - **Close the board:** back to Windows. Run `start-kitchen.bat` to bring it back.
+  - **Close the board:** back to Windows. Run `start-kitchen.bat` to bring it back. The watchdog leaves a closed board closed.
   - **Restart the PC** and **Shut down the PC:** each asks first, then counts down from 5 with a big Cancel. Prefer Restart when working remotely: once the PC is off, someone has to press its power button.
-  - In test mode (`KITCHEN_MOCK=1`) the power items only say what they would have done, so a laptop running the test board can't be shut down from it.
+  - In test mode (`KITCHEN_MOCK=1`) or on a development copy (`KITCHEN_DEV=1`) the power items only say what they would have done, so a laptop running the test board can't be shut down from it.
 - **Sound needs speakers.** Make sure they're plugged in, set as the default output in Windows, and not muted.
 
 ## Setting up the mini PC (one time)
@@ -73,7 +73,24 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 
 ## Updating the board
 
-Push the change to the `kitchen-board` branch from any computer, then restart the board on the kitchen PC: run `start-kitchen.bat` or restart the PC. Before starting, it fetches that branch, switches to it (so a copy cloned on `main` still ends up on the board's code), and fast-forwards. The branch is set at the top of `start-kitchen.bat` (`BOARD_BRANCH`); change it to `main` once the board is merged. If git isn't installed or the update fails, it says so on screen and starts the version already there. `config.json` and `state.json` (cleared tickets) are never changed by an update.
+The kitchen PC runs the **`main`** branch, the same one that deploys the website. Work happens on **`dev`** and is merged into `main` to ship it (see "Branches" in the repo's CLAUDE.md). After a merge, restart the board on the kitchen PC: run `start-kitchen.bat`, restart the PC, or use **Check for updates**. Before starting, it fetches `main` and fast-forwards. The branch is set at the top of `start-kitchen.bat` (`BOARD_BRANCH`). If git isn't installed or the update fails, it says so on screen and starts the version already there. `config.json` and `state.json` (cleared tickets) are never changed by an update.
+
+**It only updates a copy that is on `main`** (or on `kitchen-board`, the branch the PC ran before 2026-10-08, which it moves to `main` once). A copy on any other branch is someone's work in progress, so it starts it as it stands and leaves git alone.
+
+### On a development computer: `start-dev.bat`
+
+Run **`start-dev.bat`**, not `start-kitchen.bat`. It sets `KITCHEN_DEV=1`, which means:
+- **No git:** your branch and uncommitted work are left as they are. Check for updates says so instead of updating.
+- **An ordinary Chrome window** on its own profile, not locked full screen. Close it like any window.
+- **Demo orders** (`KITCHEN_MOCK=1`) unless `KITCHEN_MOCK` is already set. To try it against the real account in `config.json`, run `set KITCHEN_MOCK=0` first. Remember that Plan the week and Today's specials **write to Square**.
+- **The power menu and the watchdog are off**, so the board can't shut your computer down or keep reopening a window.
+
+To make every run on your computer a development run, set it once for good: `setx KITCHEN_DEV 1`. Never set it on the kitchen PC.
+
+### Keeping the board on screen
+
+- **Watchdog:** the board checks in with its program every second. If it stops for 30 seconds while the program is running, the program reopens the board full screen. This covers a keyboard's Home or Back key taking Chrome to another page, a closed tab, or a crashed tab. It doesn't run after **Close the board** on the power menu (until the board is opened again), in test mode, or on a development copy. It waits 2 minutes between tries. Each reopen is logged in the program's window.
+- **Turn the internet keys off (optional, kitchen PC only):** double-click `keyboard-lock.reg`, accept, and restart the PC. It disables the Browser Home / Back / Forward / Refresh / Search / Mail and app keys that many keyboards have, so a stray press does nothing at all. `keyboard-unlock.reg` turns them back on. Not needed once the kitchen has only a number pad.
 
 ## Training: demo orders
 
@@ -178,7 +195,9 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `stats-history.json` | Every day's orders and numbers, for Reports. Created automatically; gitignored; never deleted. |
 | `specials-plan.json` | Plan the week: the days ahead and which are in Square already. Created automatically; gitignored. |
 | `icon-*.png` | The front page's home-screen icon. |
-| `start-kitchen.bat` | Pulls updates, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. |
+| `start-kitchen.bat` | Pulls updates from `main`, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. `start-kitchen.bat window` only reopens the board window (what the watchdog runs). |
+| `start-dev.bat` | `start-kitchen.bat` for a development computer: no git, a normal window, demo orders. See "Updating the board". |
+| `keyboard-lock.reg`, `keyboard-unlock.reg` | Turn the keyboard's internet and app keys off / back on. Kitchen PC only, then restart. |
 | `focus-board.ps1` | Run by `start-kitchen.bat` after Chrome opens: brings the board window to the front so the number pad types into it, not into a console window. Tries for 20 seconds; if it can't, click the board once. |
 
 ## Today's specials (Manage on the front page)

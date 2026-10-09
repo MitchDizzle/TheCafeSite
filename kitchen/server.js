@@ -50,6 +50,11 @@ const MOCK = process.env.KITCHEN_MOCK === "1";
 // KITCHEN_MUTE=1 silences the board for testing on another computer. On the
 // kitchen PC, leave sound on: the chime is how a new order gets noticed.
 const MUTE = process.env.KITCHEN_MUTE === "1";
+// KITCHEN_DEV=1 marks a development copy (start-dev.bat sets it): it never
+// updates itself from git, never powers the computer off, and never runs
+// the watchdog that reopens the board window. Only the kitchen PC runs
+// without it.
+const DEV = process.env.KITCHEN_DEV === "1";
 const STATE_FILE = path.join(DIR, MOCK ? "state-mock.json" : "state.json");
 const BOARD_FILE = path.join(DIR, "board.html");
 const FRONT_FILE = path.join(DIR, "front.html");
@@ -1810,9 +1815,11 @@ function power(action) {
   if (!what) return { ok: false, message: "Unknown action." };
   // Test mode is how the board gets tried on other computers. Shutting one
   // of those down from a test board would be a nasty surprise.
-  if (MOCK) return { ok: false, message: `Test mode: this would have ${what}.` };
+  if (MOCK || DEV) return { ok: false, message: `${MOCK ? "Test mode" : "Development copy"}: this would have ${what}.` };
   if (process.platform !== "win32") return { ok: false, message: "The power menu only works on the Windows kitchen PC." };
   console.log(`Power menu: ${what} (${new Date().toLocaleTimeString()}).`);
+  // Closed on purpose: the watchdog must not reopen it.
+  if (action === "close") boardClosed = true;
   // Run after the reply has gone out, so the board hears back first.
   setTimeout(() => {
     const run = (cmd, args) => execFile(cmd, args, { windowsHide: true }, (err) => err && console.error(`Power menu: ${err.message}`));
@@ -1836,6 +1843,9 @@ function git(args) {
 }
 
 async function checkUpdates() {
+  // A development copy is updated with git by hand. Updating it from here
+  // would pull over work in progress.
+  if (DEV) return { ok: true, message: "Development copy: it doesn't update itself. Use git." };
   let branch, behind;
   try {
     branch = await git(["rev-parse", "--abbrev-ref", "HEAD"]);
@@ -1865,6 +1875,35 @@ async function checkUpdates() {
   }, 300);
   return { ok: true, restarting: true, message: `Installing ${n}. The board will be back in about 10 seconds.` };
 }
+
+// Board watchdog. The board page asks for /api/tickets every second, and
+// only the board on this PC can (it isn't open to the wifi). If it goes
+// quiet, the board window has been navigated away or closed: a keyboard's
+// Home or Back key took Chrome to another page, a tab crashed. So the
+// program reopens it, through start-kitchen.bat's "window" step, the same
+// launch the batch file does. Not before a board has been seen at all, not
+// after Close on the power menu, and never in test mode or on a development
+// copy. After a reopen it waits a while before trying again, so a PC that
+// can't show the board (Chrome missing) isn't reopened in a loop.
+const WATCHDOG_QUIET_MS = 30000;
+const WATCHDOG_RETRY_MS = 120000;
+let boardSeen = 0;
+let boardClosed = false;
+let boardReopened = 0;
+setInterval(() => {
+  if (MOCK || DEV || process.platform !== "win32" || !boardSeen || boardClosed) return;
+  const now = Date.now();
+  if (now - boardSeen < WATCHDOG_QUIET_MS || now - boardReopened < WATCHDOG_RETRY_MS) return;
+  boardReopened = now;
+  console.log(`Watchdog: the board hasn't checked in for ${Math.round((now - boardSeen) / 1000)} s. Reopening it (${new Date().toLocaleTimeString()}).`);
+  spawn("cmd.exe", ["/c", `start "" /min "${path.join(DIR, "start-kitchen.bat")}" window`], {
+    cwd: DIR,
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+    windowsVerbatimArguments: true,
+  }).unref();
+}, 5000).unref();
 
 // A request from this PC itself (the kitchen board), as opposed to another
 // device on the wifi (the front page).
@@ -2196,6 +2235,8 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, checkPage(), "text/html; charset=utf-8");
   }
   if (req.method === "GET" && url.pathname === "/api/tickets") {
+    boardSeen = Date.now();
+    boardClosed = false;
     return send(res, 200, snapshot());
   }
   if (req.method === "POST" && url.pathname === "/api/refresh") {

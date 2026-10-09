@@ -1,0 +1,5 @@
+Windows Registry Editor Version 5.00
+
+; Undoes keyboard-lock.reg: the internet and app keys work again after a restart.
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layout]
+"Scancode Map"=-
