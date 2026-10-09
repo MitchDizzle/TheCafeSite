@@ -669,7 +669,8 @@
     text-align: center;
 }
 
-/* The back's running head points the other way: the same arrow, flipped. */
+/* The back's running head points back to the front: a plain left arrow
+   with a solid head. Not the front's curl flipped, which read as "undo". */
 .lp-back-note {
     display: flex;
     align-items: center;
@@ -680,7 +681,6 @@
 
 .lp-back-arrow {
     flex: none;
-    width: 0.5in;
+    width: 0.42in;
     height: auto;
-    transform: scaleX(-1);
 }
