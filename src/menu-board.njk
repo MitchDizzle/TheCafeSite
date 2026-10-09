@@ -28,8 +28,8 @@ noSiteJs: true
     same switch the POS menus make. A small script at the bottom picks one and
     looks again every 30 seconds; nothing else on the page is scripted. Each
     board sets its own type size (html.meal-* in menu-board.css), so
-    breakfast, with a quarter of the items, is set much larger. Drinks and
-    desserts are on both. Proof either one with ?meal=breakfast or
+    breakfast, with a quarter of the items, is set much larger. Drinks are on
+    both. Proof either one with ?meal=breakfast or
     ?meal=lunch. Without the script the lunch board shows, at the base size.
 
     HOW IT SCALES. There is no fixed 1920px canvas. The
@@ -71,7 +71,6 @@ noSiteJs: true
 {%- set kids = (menu.categories | where("id", "kids"))[0] %}
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
-{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
 
 {%- macro category(c) %}
 <section class="bcat bcat--{{ c.id }}">
@@ -160,8 +159,8 @@ noSiteJs: true
         <p class="board-hours">{{ site.opening.hoursDays }} &nbsp;&middot;&nbsp; {{ site.opening.opens.time }} {{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }} {{ site.opening.closes.meridiem }}</p>
     </header>
 
-    {#- Breakfast: three columns at the large size. Drinks and desserts share
-        the last one; both are sold all day. -#}
+    {#- Breakfast: three columns at the large size. Drinks, sold all day,
+        take the last one. -#}
     <div class="board-grid board-grid--breakfast" data-meal="breakfast" hidden>
         <div class="board-col">
             {{ category(breakfast) }}
@@ -171,13 +170,12 @@ noSiteJs: true
         </div>
         <div class="board-col">
             {{ category(drinks) }}
-            {{ category(desserts) }}
         </div>
     </div>
 
     {#- Lunch: four columns. The griddle gets the widest column so the long
         burger names stay on one line; Build Your Own's three pick lists need
-        the next widest. Soup and desserts sit under the griddle, drinks under
+        the next widest. Soup sits under the griddle, drinks under
         Build Your Own, for fit. -#}
     <div class="board-grid board-grid--lunch" data-meal="lunch">
         <div class="board-col">
@@ -188,7 +186,6 @@ noSiteJs: true
         <div class="board-col">
             {{ category(hotSandwiches) }}
             {{ category(soup) }}
-            {{ category(desserts) }}
         </div>
         <div class="board-col">
             {{ category(buildSandwich) }}

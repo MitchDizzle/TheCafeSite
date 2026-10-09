@@ -53,13 +53,13 @@
     {
       "date": "2026-10-12",
       "soup": "Chicken Pot Pie",
-      "special": "French Dip on a Hoagie",
+      "special": "Lasagna",
       "anySide": true
     },
     {
       "date": "2026-10-13",
       "soup": "Broccoli Cheese",
-      "special": "Lasagna",
+      "special": "French Dip on a Hoagie",
       "anySide": true
     },
     {
@@ -80,10 +80,10 @@
     {
       "date": "2026-10-16",
       "soup": "French Onion",
-      "special": "Hawaiian Chicken",
+      "special": "Meatloaf",
       "sides": [
-        "Wild Rice",
-        "Vegetables"
+        "Mashed Potatoes & Gravy",
+        "Green Beans"
       ]
     }
   ]

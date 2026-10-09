@@ -74,7 +74,7 @@ pageCss: "/assets/css/menu.css"
         <p class="menu-result" data-menu-result role="status" aria-live="polite" hidden></p>
 
         <div class="menu-grid">
-            {%- for c in menu.categories %}
+            {%- for c in menu.categories | rejectattr("squareOnly") %}
             <section class="menu-cat" data-menu-cat aria-labelledby="cat-{{ c.id }}">
                 <h3 class="menu-cat-name" id="cat-{{ c.id }}">{{ c.name }}</h3>
                 {%- if c.serving %}
@@ -382,7 +382,7 @@ pageCss: "/assets/css/menu.css"
   "inLanguage": "en-US",
   "provider": { "@id": "{{ site.url }}/#business" },
   "hasMenuSection": [
-    {%- for c in menu.categories %}
+    {%- for c in menu.categories | rejectattr("squareOnly") %}
     {
       "@type": "MenuSection",
       "name": {{ c.name | dump | safe }},

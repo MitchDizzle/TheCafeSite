@@ -11,7 +11,6 @@
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
 {%- set kids = (menu.categories | where("id", "kids"))[0] %}
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
-{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
 
 {#- Dietary marks. Rendered in the order the codes are declared in
@@ -226,12 +225,6 @@
                 <p class="p-display panel-note-call ink-teal">Call {{ site.phone }}</p>
                 <p class="p-body panel-note-book">or email {{ site.email }}</p>
             </div>
-
-            {#- Desserts (added 2026-10-05) live here, not with the sides: the
-                inside sheet is full, and this panel had a good two inches of
-                air between the catering note and the codes. They are sold all
-                day, so they belong to no one meal anyway. -#}
-            <div class="panel-back-desserts">{{ category(desserts) }}</div>
 
             <div class="panel-spacer"></div>
 

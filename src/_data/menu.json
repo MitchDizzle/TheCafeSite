@@ -295,6 +295,8 @@
     {
       "id": "desserts",
       "name": "Desserts",
+      "squareOnly": true,
+      "_note_square_only": "Off every menu since 2026-10-09 (client: desserts change with each batch, so they live only in Square and are changed there). `squareOnly` keeps the category here for scripts/square-catalog.py, which still imports it, while /menu, /menu-board and the printed menus skip it. Delete the flag to put desserts back on the menus; the board, tri-fold and counter menu also need their category(desserts) call back (see git history).",
       "_note": "Added 2026-10-05 to match Square, where both are sold all day (on the Breakfast and Lunch menus). Cheesecake flavours and the two dessert bars are modifier lists in Square at no extra charge; the list there can be switched on and off from the kitchen board's front page (Manage -> Desserts), so a flavour on this list may be off on a given day.",
       "items": [
         { "name": "Cheesecake", "description": "Plain, Caramel or Pumpkin", "price": 3.50 },

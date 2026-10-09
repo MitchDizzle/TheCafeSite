@@ -46,7 +46,6 @@ studioOrder: 22
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
 {%- set kids = (menu.categories | where("id", "kids"))[0] %}
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
-{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
 
 {%- from "partials/menu-large-print-parts.njk" import category, dietLegend %}
@@ -125,12 +124,12 @@ studioOrder: 22
                         <path d="M51.6 10 L 52 22 L 40.6 18.3" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
-                <p class="p-body lp-band-text">for burgers, salads, kids meals, sides &amp; desserts</p>
+                <p class="p-body lp-band-text">for burgers, salads, kids meals &amp; sides</p>
             </div>
         </footer>
     </div>
 
-    <p class="fold-legend">Back &mdash; the griddle, salads &amp; desserts, kids, sides &amp; where to find us</p>
+    <p class="fold-legend">Back &mdash; the griddle, salads, kids, sides &amp; where to find us</p>
 
     <div class="canvas lp-canvas">
         <header class="lp-head lp-head--run">
@@ -144,9 +143,6 @@ studioOrder: 22
             </div>
             <div class="lp-col">
                 {{ category(salads, menu) }}
-                {#- Desserts (2026-10-05) under the salads, not after the
-                    sides: the third column is full, this one had room. -#}
-                {{ category(desserts, menu) }}
 
                 <div class="panel-spacer"></div>
                 {{ dietLegend(menu) }}
