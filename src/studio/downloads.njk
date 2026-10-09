@@ -150,9 +150,7 @@ permalink: "/studio/downloads/index.html"
 
         var text = Array.prototype.map
             .call(body.querySelectorAll('p'), function (p) { return p.textContent.trim(); })
-            .join('
-
-');
+            .join('\n\n');
 
         var done = function (label) {
             var original = btn.dataset.label || btn.textContent;
