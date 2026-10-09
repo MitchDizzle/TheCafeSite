@@ -1,6 +1,8 @@
 /* ============================================================
    Menu — large print, 8.5 × 11 in portrait, 3 pages
-   Piece: src/studio/menu-large-print.njk
+   Piece: src/studio/menu-counter.njk, the 11 × 17 (`.lp-stack--counter`
+   below scales these sizes up). The letter-size large print these base
+   sizes were made for, menu-large-print.njk, is archived (2026-10-09).
 
    The same menu as menu-trifold.css at a size that can be read without
    glasses. Two columns on a portrait sheet instead of three panels on a

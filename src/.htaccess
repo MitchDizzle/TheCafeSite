@@ -27,6 +27,9 @@ Options -Indexes
     # the printed menu. A saved link to the old PDF or PNG gets that instead
     # of a 404. 302, not 301: an archived piece can come back.
     RewriteRule ^studio/downloads/menu-trifold\.(pdf|png)$ /studio/downloads/menu-trifold-bw.$1 [R=302,L]
+    # The 3-page large print was archived the same day (/menu linked it); its
+    # address gets the 11 x 17 menu, the big-type one the cafe uses.
+    RewriteRule ^studio/downloads/menu-large-print\.(pdf|png)$ /studio/downloads/menu-counter.$1 [R=302,L]
 
     # /page.html → /page (drop the extension from visible URLs)
     RewriteCond %{THE_REQUEST} \s/([^\s?]+)\.html[\s?] [NC]

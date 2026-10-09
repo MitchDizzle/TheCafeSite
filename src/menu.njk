@@ -178,18 +178,6 @@ pageCss: "/assets/css/menu.css"
             <span class="menu-print-hint">Two sides. Print double-sided, then fold in thirds.</span>
         </p>
 
-        {#- The same menu, set large. Offered as its own link rather than
-            hidden behind the tri-fold, because somebody who needs it is
-            exactly the person least likely to go hunting: it says what it is
-            and what it costs (three sheets) on the face of the link. Built
-            by the same `npm run build` export half as the tri-fold above, so
-            it has the same dev-server caveat — it 404s until a full build
-            has run once. -#}
-        <p class="menu-print">
-            <a href="/studio/downloads/menu-large-print.pdf" class="btn btn-outline">Print this menu in large type (PDF)</a>
-            <span class="menu-print-hint">Three pages, plain paper. Nothing to fold.</span>
-        </p>
-
         <p class="menu-updated">Menu last updated {{ menu._updated }}.</p>
     </div>
 </section>
