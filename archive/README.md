@@ -3,6 +3,11 @@
 Things that are no longer used, kept so git still has them and any of them can
 come back. Nothing in here is built or uploaded: Eleventy reads only `src/`.
 
+This folder is for things retired **by hand**. Studio pieces also archive
+**themselves** after 14 days without a change, without moving: they stay in
+`src/studio/` and simply aren't built (see "Newest first, and the archive" in
+`src/studio/README.md`). The studio board lists both kinds under Archive.
+
 | Folder | What | Archived |
 |---|---|---|
 | `site-src/` | Retired site files, each at the **same path it had under `src/`**: `site-src/studio/fb-dish.njk` was `src/studio/fb-dish.njk` | see below |

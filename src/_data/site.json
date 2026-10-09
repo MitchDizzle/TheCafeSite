@@ -21,6 +21,9 @@
     "website": "lvcafetogo.com"
   },
 
+  "_comment_repo": "The site's public source on GitHub. The /studio/ board's Archive links point into it: an archived piece isn't built, so its source is where it lives.",
+  "repo": "https://github.com/MitchDizzle/TheCafeSite",
+
   "_comment_owners": "The two names on the door. Only the opening post used them (archived 2026-10-09, archive/site-src/studio/fb-opening-day.njk), because a small-town reopening is shared for the people, not the premises. Nothing live reads this now; it stays so that post can come back as it was. There is no team page: the staff do not want photos online.",
   "owners": [
     { "name": "Terry Booker" },

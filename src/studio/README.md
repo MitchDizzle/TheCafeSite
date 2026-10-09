@@ -79,14 +79,38 @@ helpers — live in `src/assets/css/piece.css`. Read it before writing a new
 piece; the wordmark's stroke-and-single-shadow construction is fussy and the
 reasoning is documented there.
 
-## Retired pieces
+## Newest first, and the archive
 
-A piece that is no longer used moves to `archive/site-src/`, at the same path
-it had under `src/` (its CSS too), rather than being deleted: git keeps it,
-and restoring it is a move back. `archive/README.md` lists what is there and
-why. A board with only live pieces on it is the point: the downloads page is
-used from a phone, and every dead card is something to scroll past or post by
-mistake.
+The board and the downloads page list pieces **newest first**, each dated by
+the last commit that touched it: its `.njk`, its `.11tydata.js`, its
+stylesheet, the partials it includes, and the data files named in its
+`studioData` (a menu names `menu.json`, so a menu change brings it back to the
+top). Uncommitted changes count as today.
+
+**A piece that hasn't changed for 14 days archives itself** (client
+2026-10-09). It isn't built, exported or uploaded, which keeps every deploy
+small and the board short, and both pages list it under **Archive**, linked
+to its source on GitHub. Change it and it's back on the next build.
+
+| Front matter | Does |
+|---|---|
+| `studioPinned: true` | Built at any age. Pinned now: the two printed menus, the weekly post and the specials signs |
+| `studioWeekly: true` | In **This week** at the top of the downloads page, caption open: the Friday routine |
+| `studioData: ["menu.json"]` | The data files the piece is built from (under `src/_data/`), for its date |
+
+- **To get an archived piece's PNG or PDF**, build everything on your own
+  computer: `STUDIO_ALL=1 npm run build` (PowerShell:
+  `$env:STUDIO_ALL=1; npm run build`). Don't upload that build. Earlier
+  exports are also in `exports/`, dated.
+- The rule is `src/_includes/studio-archive.js` (`ARCHIVE_DAYS`). It's worked
+  out when a build starts, so restart `npm start` to see a change in it.
+- It needs the git history, which is why the deploy checks out with
+  `fetch-depth: 0`. Without git, every piece counts as new and nothing archives.
+
+A piece retired for good moves to `archive/site-src/` instead, at the same
+path it had under `src/` (its CSS too), rather than being deleted: git keeps
+it, and restoring it is a move back. `archive/README.md` lists those; they
+appear under Archive too, marked retired.
 
 ## Exporting
 

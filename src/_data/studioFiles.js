@@ -116,6 +116,7 @@ module.exports = () => {
         size: formatBytes(stat.size),
         // ISO so the template can format it; epoch so it can sort by it.
         added: stat.mtime.toISOString().slice(0, 10),
+        addedIso: stat.mtime.toISOString(),
         addedAt: stat.mtimeMs,
         order: typeof override.order === "number" ? override.order : 500,
       };

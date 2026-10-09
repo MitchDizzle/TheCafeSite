@@ -19,42 +19,45 @@ permalink: "/studio/downloads/index.html"
     src/studio/ is downloadable the moment it is on the board — there is no
     second list to update.
 
+    Three parts (client 2026-10-09):
+      This week    pieces with `studioWeekly: true` (the weekly post and the
+                   specials signs), the post's caption open, so the Friday
+                   routine is the top of the page
+      Newest first everything else, dated like the board
+      Archive      what isn't built any more, folded, with links to GitHub
+
     The links are written unconditionally rather than probed: Eleventy runs
     BEFORE the exporter, so at build time none of these files exist yet. That
     is why `npm run build` runs the exporter too and why the exporter fails the
     build if a piece will not render — a link here must never dangle. -#}
-{%- set groups = [] %}
+{%- set weekly = [] %}
+{%- set rest = [] %}
 {%- for piece in collections.studio %}
-                {%- set pslug = piece.data.studioSlug or piece.fileSlug %}
-  {%- if piece.data.studioCategory not in groups %}
-    {%- set _ = groups.push(piece.data.studioCategory or "Pages") %}
-  {%- endif %}
+  {%- set when = studioPieces[piece.fileSlug] or {} %}
+  {%- set entry = { piece: piece, order: piece.data.studioOrder or 500, date: when.date or "", day: when.day } %}
+  {%- if piece.data.studioWeekly %}{% set _ = weekly.push(entry) %}{% else %}{% set _ = rest.push(entry) %}{% endif %}
 {%- endfor %}
+{%- set weekly = weekly | sort(false, false, "order") %}
+{%- set rest = rest | sort(true, false, "date") %}
 
-<header class="dl-head">
-    <p class="dl-kicker">Internal &middot; not linked, not indexed</p>
-    <h1 class="dl-title">Downloads</h1>
-    <p class="dl-lede">
-        Every studio piece, exported at full size. Made for a phone &mdash; tap a
-        PNG to save it to your camera roll and post it straight from there.
-    </p>
-    <p class="dl-note">
-        <strong>PNG</strong> for posting. <strong>PDF</strong> for printing &mdash;
-        it stays vector at the real sheet size, and it leaves out the proofing
-        marks the PNG shows.
-    </p>
-    <p class="dl-back"><a href="/studio/">&larr; Back to the board</a></p>
-</header>
+{#- "October 12 – 16", or "September 28 – October 2" across a month end: the
+    week the weekly pieces show, the newest in specials.json. -#}
+{%- set week = specials.days | latestWeek %}
+{%- set range = "" %}
+{%- if week.length %}
+{%- set first = week[0].date | dayDate("monthDay") %}
+{%- set last = week[week.length - 1].date | dayDate("monthDay") %}
+{%- if first.split(" ")[0] == last.split(" ")[0] %}
+{%- set range = first + " – " + last.split(" ")[1] %}
+{%- else %}
+{%- set range = first + " – " + last %}
+{%- endif %}
+{%- endif %}
 
-<main class="dl-main">
-    {%- for name in groups %}
-    <section class="dl-section">
-        <h2 class="dl-section-title">{{ name }}</h2>
-
-        <ul class="dl-list">
-            {%- for piece in collections.studio %}
-                {%- set pslug = piece.data.studioSlug or piece.fileSlug %}
-            {%- if (piece.data.studioCategory or "Pages") == name %}
+{#- One piece's row. Macros don't see the page's variables, so everything
+    comes in as an argument. -#}
+{%- macro dlItem(piece, day, captionOpen) %}
+            {%- set pslug = piece.data.studioSlug or piece.fileSlug %}
             {%- set fmt = piece.data.studioFormat or "png" %}
             <li class="dl-item">
                 {#- The thumbnail is the exported PNG itself, not a live iframe
@@ -69,6 +72,9 @@ permalink: "/studio/downloads/index.html"
                 </a>
 
                 <div class="dl-body">
+                    {%- if day %}
+                    <p class="dl-when">{{ day | dayDate("monthDay") }} &middot; {{ piece.data.studioCategory or "Pages" }}</p>
+                    {%- endif %}
                     <h3 class="dl-name">{{ piece.data.studioTitle or piece.data.title }}</h3>
                     {%- if piece.data.studioSize %}
                     <p class="dl-meta">{{ piece.data.studioSize }}</p>
@@ -100,7 +106,7 @@ permalink: "/studio/downloads/index.html"
                             {%- for fact in block.items %}
                             {#- Nunjucks has no startswith; `in` on a string is a
                                 substring test, which is all this needs. -#}
-                            <li{% if "ASK:" in fact or "NEEDED:" in fact %} class="dl-fact--gap"{% elif "Do NOT" in fact or "Nothing about" in fact or "not 'grand opening'" in fact | lower %} class="dl-fact--warn"{% endif %}>{{ fact }}</li>
+                            <li{% if "ASK:" in fact or "NEEDED:" in fact %} class="dl-fact--gap"{% elif "Do NOT" in fact or "Nothing about" in fact %} class="dl-fact--warn"{% endif %}>{{ fact }}</li>
                             {%- endfor %}
                         </ul>
                         {%- endfor %}
@@ -111,9 +117,9 @@ permalink: "/studio/downloads/index.html"
                     {#- The caption ships with the piece. A post is the image
                         AND the words, and splitting them across a repo file
                         and a phone is how a post goes out with the wrong date
-                        in the text. Collapsed by default so the list stays
-                        scannable. -#}
-                    <details class="dl-caption">
+                        in the text. Folded away, except in This week, where
+                        posting it is the job. -#}
+                    <details class="dl-caption"{% if captionOpen %} open{% endif %}>
                         <summary>Draft caption</summary>
                         <div class="dl-caption-body" id="cap-{{ pslug }}">
                             {%- for para in piece.data.caption %}
@@ -125,11 +131,60 @@ permalink: "/studio/downloads/index.html"
                     {%- endif %}
                 </div>
             </li>
-            {%- endif %}
-            {%- endfor %}
+{%- endmacro %}
+
+<header class="dl-head">
+    <p class="dl-kicker">Internal &middot; not linked, not indexed</p>
+    <h1 class="dl-title">Downloads</h1>
+    <p class="dl-lede">
+        Every studio piece, exported at full size. Made for a phone &mdash; tap a
+        PNG to save it to your camera roll and post it straight from there.
+    </p>
+    <p class="dl-note">
+        <strong>PNG</strong> for posting. <strong>PDF</strong> for printing &mdash;
+        it stays vector at the real sheet size, and it leaves out the proofing
+        marks the PNG shows.
+    </p>
+    <p class="dl-back"><a href="/studio/">&larr; Back to the board</a></p>
+</header>
+
+<main class="dl-main">
+    {%- if weekly.length %}
+    <section class="dl-section dl-section--week">
+        <h2 class="dl-section-title">This week{% if range %} <span class="dl-section-range">{{ range }}</span>{% endif %}</h2>
+        <ul class="dl-list">
+            {%- for e in weekly %}{{ dlItem(e.piece, null, true) }}{% endfor %}
         </ul>
     </section>
-    {%- endfor %}
+    {%- endif %}
+
+    {%- if rest.length %}
+    <section class="dl-section">
+        <h2 class="dl-section-title">Newest first</h2>
+        <ul class="dl-list">
+            {%- for e in rest %}{{ dlItem(e.piece, e.day, false) }}{% endfor %}
+        </ul>
+    </section>
+    {%- endif %}
+
+    {#- Not built, so there is nothing to download: each links to its source
+        on GitHub. The board says how one comes back. -#}
+    {%- if studioArchive.length %}
+    <section class="dl-section">
+        <details class="dl-archive">
+            <summary class="dl-section-title">Archive ({{ studioArchive.length }})</summary>
+            <p class="dl-archive-note">Not built or uploaded any more: unchanged for {{ studioArchiveDays }} days, or retired by hand. The board says how one comes back.</p>
+            <ul class="dl-archive-list">
+                {%- for a in studioArchive %}
+                <li>
+                    <a href="{{ site.repo }}/blob/main/{{ a.source }}" rel="noopener">{{ a.title }}</a>
+                    <span class="dl-archive-meta">{% if a.retired %}retired{% else %}last changed{% endif %} {{ a.day | dayDate("monthDay") }}</span>
+                </li>
+                {%- endfor %}
+            </ul>
+        </details>
+    </section>
+    {%- endif %}
 </main>
 
 <script>

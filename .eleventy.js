@@ -4,6 +4,16 @@ const crypto = require("crypto");
 
 module.exports = function (eleventyConfig) {
   // Passthrough copies. Everything under assets/ ships as-is.
+  // The /studio/ board's auto-archive (src/_includes/studio-archive.js): a
+  // piece that hasn't changed for two weeks, and isn't pinned, is not built,
+  // exported or uploaded; the board lists it under Archive instead. Worked
+  // out once, when the build (or `npm start`) begins.
+  const studio = require("./src/_includes/studio-archive.js")(__dirname);
+  for (const file of studio.ignore) eleventyConfig.ignores.add(file);
+  eleventyConfig.addGlobalData("studioPieces", studio.pieces);
+  eleventyConfig.addGlobalData("studioArchive", studio.archive);
+  eleventyConfig.addGlobalData("studioArchiveDays", studio.days);
+
   eleventyConfig.addPassthroughCopy("src/assets");
 
   // Dotfiles and root-level statics need explicit mappings — Eleventy will
