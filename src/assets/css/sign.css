@@ -384,12 +384,11 @@
 }
 
 /* ── Daily specials, one per page (sign-day-specials(-bw).njk) ──
-   Letter landscape, 11 × 8.5 in, for the board on the wall, read from 6
-   to 14 feet: about an inch of letter height per ten feet, so the plate is
-   1.2in and nothing is under 0.3in. Each day is its own .canvas; on paper
-   each one is a page (break-after below), on screen they stack with a gap.
-   The sheet is the .sign white ground with no flood of colour; the soup
-   box at the foot is ruled, not filled. */
+   11 × 17 portrait, for the board on the wall, read from 6 to 14 feet:
+   about an inch of letter height per ten feet, so the plate is 1.5in and
+   nothing is under 0.4in. Each day is its own .canvas; on paper each one
+   is a page (break-after below), on screen they stack with a gap. White
+   ground, no flood of colour; the two boxes are ruled, not filled. */
 .ds-stack {
     display: flex;
     flex-direction: column;
@@ -397,33 +396,24 @@
 }
 
 .sign.ds {
-    padding: 0.45in 0.6in 0.5in;
+    padding: 0.6in 0.65in 0.65in;
 }
 
 .ds-top {
-    display: flex;
-    align-items: baseline;
-    gap: 0.24in;
-    white-space: nowrap;
-    border-bottom: 0.05in solid var(--accent);
-    padding-bottom: 0.12in;
+    text-align: center;
+    border-bottom: 0.06in solid var(--accent);
+    padding-bottom: 0.2in;
 }
 
 .ds-day {
-    font-size: 1in;
+    font-size: 1.6in;
     line-height: 1;
 }
 
 .ds-date {
-    font-size: 0.45in;
+    font-size: 0.5in;
     font-weight: 700;
-}
-
-/* "Wednesday" is the widest day; this is what has to give way to it. */
-.ds-when {
-    margin-left: auto;
-    font-size: 0.26in;
-    letter-spacing: 0.12em;
+    margin-top: 0.1in;
 }
 
 .ds-main {
@@ -433,59 +423,100 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 0.15in 0;
+    padding: 0.3in 0;
 }
 
 .ds-special {
-    font-size: 1.2in;
+    font-size: 1.4in;
     line-height: 1.05;
 }
 
+/* Over 24 characters ("Chicken Fried Chicken" is 21) the name steps down,
+   so it still breaks into two lines rather than three. */
 .ds-special--long {
-    font-size: 0.95in;
+    font-size: 1.1in;
 }
 
 .ds-sides {
-    font-size: 0.48in;
+    font-size: 0.62in;
     line-height: 1.2;
     font-weight: 700;
-    margin-top: 0.18in;
+    margin-top: 0.25in;
 }
 
 .ds-drink {
-    margin-top: 0.26in;
-    padding: 0.06in 0.3in;
-    border: 0.04in solid var(--accent);
+    margin-top: 0.35in;
+    padding: 0.08in 0.4in;
+    border: 0.05in solid var(--accent);
     border-radius: 999px;
-    font-size: 0.36in;
+    font-size: 0.48in;
     font-weight: 900;
 }
 
-.ds-soup {
-    border: 0.04in solid var(--teal);
-    border-radius: 0.14in;
-    padding: 0.14in 0.3in 0.18in;
+.ds-box-label {
+    font-size: 0.4in;
+    white-space: nowrap;
 }
 
-.ds-soup-head {
+/* The sides a customer can pick or swap in: centred, each name kept whole
+   with a dot before it, wrapping as the names need. */
+.ds-swap {
+    border: 0.05in solid var(--teal);
+    border-radius: 0.16in;
+    padding: 0.22in 0.4in 0.28in;
+    margin-bottom: 0.3in;
+    text-align: center;
+}
+
+.ds-swap-list {
+    list-style: none;
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 0.45in;
+    row-gap: 0.04in;
+    margin-top: 0.1in;
+    font-size: 0.48in;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.ds-swap-list li {
+    white-space: nowrap;
+}
+
+.ds-swap-list li::before {
+    content: "\2022";
+    color: var(--accent);
+    margin-right: 0.15in;
+}
+
+.ds-soup {
+    border: 0.05in solid var(--teal);
+    border-radius: 0.16in;
+    padding: 0.22in 0.4in 0.26in;
+}
+
+/* The soup's name and its price share a line when they fit, and the price
+   drops under the name when they don't. */
+.ds-soup-row {
+    display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: 0.3in;
-}
-
-.ds-soup-label {
-    font-size: 0.3in;
+    column-gap: 0.4in;
 }
 
 .ds-soup-name {
-    font-size: 0.62in;
+    font-size: 0.85in;
     line-height: 1.1;
+    margin-top: 0.06in;
 }
 
 .ds-soup-price {
-    font-size: 0.36in;
+    font-size: 0.46in;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 @media print {

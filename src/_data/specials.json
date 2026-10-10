@@ -54,7 +54,9 @@
       "date": "2026-10-12",
       "soup": "Chicken Pot Pie",
       "special": "Lasagna",
-      "anySide": true
+      "sides": [
+        "Tossed Salad"
+      ]
     },
     {
       "date": "2026-10-13",
@@ -83,7 +85,7 @@
       "special": "Meatloaf",
       "sides": [
         "Mashed Potatoes & Brown Gravy",
-        "Corn"
+        "Green Beans"
       ]
     }
   ]
