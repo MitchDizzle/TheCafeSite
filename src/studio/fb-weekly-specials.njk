@@ -67,7 +67,10 @@ studioOrder: 22
             {% inlineSvg "/assets/thecafe.svg", "", site.name %}
         </div>
         <p class="p-display-italic wk-kicker">This Week&rsquo;s Lunch Specials</p>
-        <p class="p-label wk-range">{{ range }}</p>
+        {#- The town on the range line (client 2026-10-10): Facebook shows the
+            post to people well outside Leavenworth, and nothing else near the
+            top said where the cafe is. -#}
+        <p class="p-label wk-range">{{ range }} &middot; {{ site.address.locality }}, {{ site.address.region }}</p>
     </header>
 
     <div class="wk-body">
@@ -117,7 +120,7 @@ studioOrder: 22
 
     <footer class="wk-foot">
         <p class="p-display wk-foot-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
-        <p class="p-body wk-foot-line">{{ site.opening.hoursDays }}, {{ site.opening.opens.time }}{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}{{ site.opening.closes.meridiem }} &middot; {{ site.address.street }}</p>
+        <p class="p-body wk-foot-line">{{ site.opening.hoursDays }}, {{ site.opening.opens.time }}{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}{{ site.opening.closes.meridiem }} &middot; {{ site.address.street }}, {{ site.address.locality }}, {{ site.address.region }}</p>
     </footer>
 
 </div>

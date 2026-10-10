@@ -31,10 +31,12 @@ module.exports = {
         ? `Sides (pick one on a choice-of-side day, or swap for the sides on any special): ${sides.choices.join(", ")}` : null;
 
       return [
-        `Lunch specials, ${weekRange(week)}. From 11am${data.specials.includesDrink ? ", each with a drink" : ""}.`,
+        // The town up front: Facebook shows the post well beyond Leavenworth.
+        `Lunch specials at The Café in ${site.address.locality}, ${site.address.region}, ${weekRange(week)}. From 11am${data.specials.includesDrink ? ", each with a drink" : ""}.`,
         ...dayLines(week),
         ...[choiceLine, soupLine(week)].filter(Boolean),
         [
+          `${site.address.street}, ${site.address.locality}, ${site.address.region}`,
           `Open ${o.hoursDays}, ${hours}`,
           site.phoneOrders ? `Call ${site.phone} to order ahead` : null,
           site.ordering.url ? `Order online at ${site.social.website}/order` : null,
