@@ -573,8 +573,9 @@
 /* ── Counter copy: the band across the foot of the front ──────
    Three cells under the columns: order-ahead QR, daily specials, Facebook.
    .lp-cols is flex: 1, so the band sits on the bottom margin however long
-   the columns run. The QR's padding is its quiet zone, as on the door
-   sign (front-door-banner.css): content-box so the width is the CODE. */
+   the columns run. The QR's padding is its quiet zone, as on the old door
+   sign (archive/site-src/assets/css/front-door-banner.css): content-box so
+   the width is the CODE. */
 .lp-band {
     display: grid;
     grid-template-columns: 1.45fr 1fr 1fr;

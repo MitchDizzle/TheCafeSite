@@ -1,0 +1,54 @@
+{#- One sign per day of the week's lunch specials, for the board on the
+    wall (client 2026-10-10: read from 6 to 14 feet). Shared by
+    sign-day-specials.njk (colour) and sign-day-specials-bw.njk (`bw: true`).
+
+    Each day is its own letter-landscape page, so the PDF prints the week
+    as a stack and any one day can be printed again on its own (print page
+    3 for Wednesday). The week is the newest one in specials.json, like the
+    weekly post and the counter sign.
+
+    SIZED FOR DISTANCE. About an inch of letter height reads at ten feet,
+    so the plate is set at 1.2in (letters about 0.85in tall) and nothing on
+    the sheet is under 0.3in. That is why the sign says "Choice of
+    side" and doesn't list the salads: at a size that fits, nobody past the
+    counter could read them. The soup is a separate item, so it has its own
+    box at the foot of the sheet, with its price. -#}
+{%- set week = specials.days | latestWeek %}
+{%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
+<div class="ds-stack">
+    {%- for d in week %}
+    {#- Bare ("Choice of side", "A, B"): "with" costs a line at this size. -#}
+    {%- set sides = d | specialSides(true) %}
+    <div class="canvas sign ds{% if bw %} sign--bw{% endif %}">
+        <header class="ds-top">
+            <p class="p-display ds-day ink-accent">{{ d.date | dayDate("weekday") }}</p>
+            <p class="ds-date ink-teal">{{ d.date | dayDate("monthDay") }}</p>
+            <p class="p-label ds-when ink-teal">From 11am</p>
+        </header>
+
+        <div class="ds-main">
+            {#- A name longer than any so far steps down a size, so it still
+                fits in two lines. -#}
+            <p class="p-display ds-special{% if d.special.length > 24 %} ds-special--long{% endif %} ink-teal">{{ d.special }}</p>
+            {%- if sides %}
+            <p class="ds-sides">{{ sides }}</p>
+            {%- endif %}
+            {%- if specials.includesDrink %}
+            <p class="ds-drink ink-accent">Includes a drink</p>
+            {%- endif %}
+        </div>
+
+        {%- if d.soup %}
+        <footer class="ds-soup">
+            <div class="ds-soup-head">
+                <p class="p-label ds-soup-label ink-accent">Soup of the day</p>
+                {%- if soupCat and soupCat.items %}
+                <p class="ds-soup-price">{% for s in soupCat.items %}{% if not loop.first %} &middot; {% endif %}{{ s.name }} {{ s.price | money }}{% endfor %}</p>
+                {%- endif %}
+            </div>
+            <p class="p-display ds-soup-name ink-teal">{{ d.soup }}</p>
+        </footer>
+        {%- endif %}
+    </div>
+    {%- endfor %}
+</div>

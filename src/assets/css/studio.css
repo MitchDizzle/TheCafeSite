@@ -267,6 +267,26 @@
     margin-top: 0.3rem;
 }
 
+.card-details {
+    margin-top: 0.7rem;
+}
+
+.card-details summary {
+    cursor: pointer;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--cream);
+    opacity: 0.85;
+    /* Stays display: list-item, which is what draws the open/closed
+       triangle; the padding makes it a 44px-tall target. */
+    padding: 0.7rem 0;
+}
+
+.card-details summary:focus-visible {
+    outline: 3px solid var(--mint);
+    outline-offset: 2px;
+}
+
 .card-note {
     font-size: 0.86rem;
     color: var(--cream);

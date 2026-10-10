@@ -147,7 +147,6 @@ eleventyExcludeFromCollections: true
                 </p>
                 <h3 class="card-title">{{ item.title }}</h3>
                 {%- if item.meta %}<p class="card-meta">{{ item.meta }}</p>{% endif %}
-                {%- if item.note %}<p class="card-note">{{ item.note }}</p>{% endif %}
 
                 <div class="card-actions">
                     <a class="card-btn" href="{{ item.url }}" target="_blank" rel="noopener">Open</a>
@@ -156,14 +155,22 @@ eleventyExcludeFromCollections: true
                     {%- endif %}
                 </div>
 
-                {%- if item.slug %}
-                {#- Headless-Chrome export. See scripts/export-studio.js for why
-                    this is a command rather than a button on the page. -#}
-                <p class="card-export"><code>npm run export -- {{ item.slug }}</code></p>
-                {%- endif %}
-
-                {%- if item.source %}
-                <p class="card-source"><code>{{ item.source }}</code></p>
+                {#- The handling note, the export command and the source file,
+                    folded away (client 2026-10-10: the long notes buried the
+                    board). Open the card's Details to read them. -#}
+                {%- if item.note or item.slug or item.source %}
+                <details class="card-details">
+                    <summary>Details</summary>
+                    {%- if item.note %}<p class="card-note">{{ item.note }}</p>{% endif %}
+                    {%- if item.slug %}
+                    {#- Headless-Chrome export. See scripts/export-studio.js for why
+                        this is a command rather than a button on the page. -#}
+                    <p class="card-export"><code>npm run export -- {{ item.slug }}</code></p>
+                    {%- endif %}
+                    {%- if item.source %}
+                    <p class="card-source"><code>{{ item.source }}</code></p>
+                    {%- endif %}
+                </details>
                 {%- endif %}
             </div>
 
