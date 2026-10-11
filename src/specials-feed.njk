@@ -3,7 +3,12 @@
 # into Manage > Specials, and from there into Square each morning).
 # Every day in src/_data/specials.json, nothing added: it's what /menu shows
 # anyway, so nothing here is private. No prices, same as the file.
+# `swapSides` is the Deli Salads row's `choices` in menu.json: the sides
+# that can be picked on a choice-of-side day or swapped in on any special.
+# The kitchen PC lists them under Side 1 / Side 2 on Lunch Special in Square.
 permalink: /specials.json
 eleventyExcludeFromCollections: true
 ---
-{{ { days: specials.days } | dump(2) | safe }}
+{%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
+{%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
+{{ { days: specials.days, swapSides: deli.choices if deli else [] } | dump(2) | safe }}

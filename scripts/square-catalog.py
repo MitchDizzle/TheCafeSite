@@ -88,9 +88,11 @@ BS = "Breakfast Sides"
 # wheat or 12 grain. It used to be Toast / Biscuit / English Muffin
 # variations, which left the toast's bread unsaid (client 2026-10-08).
 one("Toast, Biscuit or English Muffin", BS, item("breakfast_sides", "Toast, Biscuit or English Muffin")["price"])
+# Fried Potatoes opens its detail screen: it carries the Add Cheese list
+# (client 2026-10-11), like the Side of Eggs below.
 for n, label in [("Bacon (4 slices)", "Bacon (4 slices)"), ("Sausage Patty", "Sausage Patty"),
                  ("Fried Potatoes", "Fried Potatoes"), ("Side of Gravy", "Side of Gravy")]:
-    one(label, BS, item("breakfast_sides", n)["price"])
+    one(label, BS, item("breakfast_sides", n)["price"], skip_detail=False if n == "Fried Potatoes" else None)
 eg = item("breakfast_sides", "1 / 2 / 3 Eggs")
 add("Side of Eggs", BS, [(f"{n} Egg{'s' if n > 1 else ''}", p) for n, p in zip((1, 2, 3), eg["prices"])],
     "Cooked your way.", skip_detail=False)
@@ -168,9 +170,10 @@ for i in cats["sides"]["items"]:
     elif i.get("choices"):
         # Deli Salads: one row on the menu, but an item per kind in Square, as
         # they were before the menu folded them together (2026-10-08), named
-        # exactly as listed.
+        # exactly as listed. The Tossed Salad carries the Dressing list, so
+        # it opens its detail screen for the dressing buttons.
         for v in i["choices"]:
-            one(v, SD, i["price"])
+            one(v, SD, i["price"], skip_detail=False if v == "Tossed Salad" else None)
     else:
         one(i["name"], SD, i["price"])
 

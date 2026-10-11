@@ -79,6 +79,12 @@ const DEFAULTS = {
   // Items whose photo and options (flavors) the front can change: Manage ->
   // Desserts. Names as in Square.
   dessertItems: ["Cheesecake", "Dessert Bar"],
+  // The item whose sides are set each morning, and its side lists, one per
+  // side the plate comes with: each pre-picks the day's side (or Chef's
+  // Choice) and lists the sides it can be swapped for. Names as in Square;
+  // a list that isn't there yet is made the first time it's needed.
+  sideItem: "Lunch Special",
+  sideLists: ["Side 1", "Side 2", "Side 3"],
   // The week's specials as the website publishes them (built from the site's
   // src/_data/specials.json). Read every half hour into Manage -> Plan the
   // week; "" turns that off and the plan is only what the front types in.
@@ -656,8 +662,10 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // notes:   { "YYYY-MM-DD": { description } }, the words Photo post puts under the photo. Kept
 //            apart from `days`, so writing them doesn't make a website day the front's.
 // applied: { "YYYY-MM-DD": { sig, at } after a good write, { sig, failedAt, error } after a bad one }
+// sidesApplied: the same, for the day's side lists on cfg.sideItem (applySides)
+// swapSides: the sides any side can be swapped for, as the website last listed them
 // site:    the last read of the website, for the front to show
-let plan = { days: {}, notes: {}, applied: {}, site: { checkedAt: null, error: null } };
+let plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, swapSides: [], site: { checkedAt: null, error: null } };
 try {
   plan = { ...plan, ...JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")) };
 } catch {}
@@ -665,7 +673,7 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.notes, plan.applied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.applied, plan.sidesApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
 }
 
@@ -726,6 +734,16 @@ async function pullSite() {
       plan.days[d.date] = { from: "site", items, sides, ...(anySide ? { anySide: true } : {}) };
       changed.push(d.date);
     }
+    // The sides any side can be swapped for (menu.json's Deli Salads).
+    // Kept from the last read that had them, so a website without the field
+    // never empties the lists in Square.
+    if (Array.isArray(json.swapSides)) {
+      const swaps = [...new Set(json.swapSides.map(cleanText).filter(Boolean))].slice(0, 12);
+      if (swaps.length && JSON.stringify(swaps) !== JSON.stringify(plan.swapSides)) {
+        plan.swapSides = swaps;
+        console.log(`Sides to swap from the website: ${swaps.join(", ")}.`);
+      }
+    }
     // A day still to come that the website has since taken off.
     const onSite = new Set(listed.map((d) => d.date));
     for (const [date, day] of Object.entries(plan.days)) {
@@ -761,6 +779,13 @@ function applyToday() {
 async function applyTodayOnce() {
   const today = localDate();
   const day = plan.days[today];
+  const result = await applySpecials(today, day);
+  const sides = await applySides(today, day);
+  // What the front is told after saving today: the specials, or else the sides.
+  return result && result.error ? result : sides && sides.error ? sides : result;
+}
+
+async function applySpecials(today, day) {
   const sig = day ? JSON.stringify(day.items) : "clear";
   const last = plan.applied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
@@ -791,6 +816,172 @@ async function applyTodayOnce() {
   }
   savePlan();
   return plan.applied[today];
+}
+
+// ---------------------------------------------------------------- the day's sides
+
+// Each side the plate comes with is a modifier list on cfg.sideItem (Lunch
+// Special): Side 1, Side 2, Side 3. Each morning, with the specials, the board
+// rewrites them from the plan, so the counter, online ordering and DoorDash
+// all offer the same thing:
+//   - a set side ("Corn"): its list has Corn, pre-picked, then the swap
+//     sides. Left alone, the plate comes as planned; tapping a swap side
+//     swaps that one side.
+//   - a side written "Tossed Salad or Cooked Broccoli": Chef's Choice,
+//     pre-picked, then both, then the swap sides.
+//   - choice of side (anySide): one list, Chef's Choice pre-picked, then the
+//     swap sides.
+// The swap sides are the website's swapSides (menu.json's Deli Salads). Every
+// option is $0, and a list is never required: nobody has to tap anything for
+// the plate to come as planned. A list the day doesn't need is switched off
+// on the item, not deleted, and a list is only made the first time a day
+// needs it. A side past the last list can't be swapped, and the log says so.
+// Written "or", the same words become a choice on the website, the posts and
+// the signs too ("with Tossed Salad or Cooked Broccoli"). The words on the front
+// page, the website and the posts stay as the plan has them; this is only
+// what Square offers.
+const CHEFS_CHOICE = "Chef's Choice";
+
+function sideSlots(day) {
+  if (!day) return [];
+  if (day.anySide) return [{ pick: CHEFS_CHOICE, also: [] }];
+  return (day.sides || []).map((s) => {
+    const parts = String(s).split(/\s+or\s+/i).map(cleanText).filter(Boolean);
+    return parts.length > 1 ? { pick: CHEFS_CHOICE, also: parts } : { pick: cleanText(s), also: [] };
+  }).filter((slot) => slot.pick);
+}
+
+// Every modifier list in Square by its name (lower case), read fresh.
+async function modifierListsByName() {
+  let lists = [];
+  if (MOCK) lists = [...mockItems.values()].filter((o) => o.type === "MODIFIER_LIST").map((o) => structuredClone(o));
+  else {
+    let cursor;
+    do {
+      const json = await square("GET", `/catalog/list?types=MODIFIER_LIST${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
+      lists = lists.concat((json.objects || []).filter((o) => !o.is_deleted));
+      cursor = json.cursor;
+    } while (cursor);
+  }
+  return new Map(lists.map((l) => [String(l.modifier_list_data.name || "").trim().toLowerCase(), l]));
+}
+
+// Upsert one object and get Square's copy back, with real ids for the "#"
+// ones (a new list, a new option).
+let mockNextId = 1;
+async function upsertObject(object) {
+  if (MOCK) {
+    const copy = structuredClone(object);
+    const real = (id) => (String(id).startsWith("#") ? `MOCK-${mockNextId++}` : id);
+    if (String(copy.id).startsWith("#")) { copy.id = real(copy.id); copy.version = 0; }
+    else if (copy.version !== mockItems.get(copy.id).version) throw new Error("Square 409: version mismatch");
+    for (const m of (copy.modifier_list_data && copy.modifier_list_data.modifiers) || []) {
+      m.id = real(m.id);
+      m.modifier_data.modifier_list_id = copy.id;
+    }
+    copy.version += 1;
+    mockItems.set(copy.id, copy);
+    return structuredClone(copy);
+  }
+  const json = await square("POST", "/catalog/object", { idempotency_key: `kitchen-${object.id}-${Date.now()}`, object });
+  return json.catalog_object;
+}
+
+// slots: from sideSlots. swaps: the swap sides. Returns words for the log.
+async function saveSides(slots, swaps) {
+  await loadCatalog();
+  const itemId = catalog.itemIds.get(cfg.sideItem.trim().toLowerCase());
+  if (!itemId) throw Object.assign(new Error(`${cfg.sideItem} isn't in Square.`), { plain: true });
+  const lists = await modifierListsByName();
+  const item = await readObject(itemId);
+  const where = { present_at_all_locations: item.present_at_all_locations, present_at_location_ids: item.present_at_location_ids };
+  const zero = { amount: 0, currency: "USD" };
+  const optionsOf = (d) => JSON.stringify([d.selection_type, (d.modifiers || []).map((m) => [m.id, m.modifier_data.name, m.modifier_data.ordinal, m.modifier_data.price_money])]);
+  const set = []; // per side list: { list, pickId }; list is null when there's none and none is needed
+  for (const [i, name] of cfg.sideLists.entries()) {
+    const slot = slots[i];
+    let list = lists.get(name.trim().toLowerCase()) || null;
+    if (!slot) { set.push({ list, pickId: null }); continue; }
+    // A side typed on the front page in its own case ("tossed salad") takes
+    // the swap list's spelling, so it doesn't rename that option.
+    const canon = (w) => swaps.find((x) => x.toLowerCase() === w.toLowerCase()) || w;
+    const wanted = [];
+    for (const w of [slot.pick, ...slot.also, ...swaps].map(canon)) {
+      if (w && !wanted.some((x) => x.toLowerCase() === w.toLowerCase())) wanted.push(w);
+    }
+    if (!list) list = { type: "MODIFIER_LIST", id: `#side-${i + 1}`, ...where, modifier_list_data: { name, modifiers: [] } };
+    const d = list.modifier_list_data;
+    const before = optionsOf(d);
+    const have = new Map((d.modifiers || []).map((m) => [String(m.modifier_data.name).trim().toLowerCase(), m]));
+    const removed = (d.modifiers || [])
+      .filter((m) => !wanted.some((w) => w.toLowerCase() === String(m.modifier_data.name).trim().toLowerCase()))
+      .map((m) => m.id);
+    d.selection_type = "SINGLE";
+    d.modifiers = wanted.map((w, ordinal) => {
+      const m = have.get(w.toLowerCase());
+      if (m) {
+        m.modifier_data = { ...m.modifier_data, name: w, ordinal, price_money: zero };
+        return m;
+      }
+      return { type: "MODIFIER", id: `#side-${i + 1}-${ordinal}`, ...where,
+        modifier_data: { name: w, ordinal, price_money: zero, ...(list.id.startsWith("#") ? {} : { modifier_list_id: list.id }) } };
+    });
+    if (optionsOf(d) !== before) {
+      list = await upsertObject(list);
+      // An option left out of the list may still be kept by Square: delete
+      // it outright, so yesterday's side doesn't stay on the till.
+      const left = (list.modifier_list_data.modifiers || []).filter((m) => removed.includes(m.id)).map((m) => m.id);
+      if (left.length && !MOCK) await square("POST", "/catalog/batch-delete", { object_ids: left });
+    }
+    const pick = (list.modifier_list_data.modifiers || []).find((m) => m.modifier_data.name.toLowerCase() === slot.pick.toLowerCase());
+    set.push({ list, pickId: pick ? pick.id : null });
+  }
+  // Then the item: each list on it, on or off, never required, one pick at
+  // most, with the day's side pre-picked. Read fresh: saveDaily may have
+  // just written it.
+  const fresh = await readObject(itemId);
+  const infos = (fresh.item_data.modifier_list_info ||= []);
+  const before = JSON.stringify(infos);
+  for (const { list, pickId } of set) {
+    if (!list) continue;
+    let info = infos.find((x) => x.modifier_list_id === list.id);
+    if (!info) { info = { modifier_list_id: list.id }; infos.push(info); }
+    info.enabled = !!pickId;
+    info.min_selected_modifiers = 0;
+    info.max_selected_modifiers = 1;
+    info.modifier_overrides = pickId ? [{ modifier_id: pickId, on_by_default: true }] : [];
+  }
+  if (JSON.stringify(infos) !== before) await upsertObject(fresh);
+  if (slots.length > cfg.sideLists.length) {
+    console.log(`${slots.length} sides today but ${cfg.sideLists.length} side lists: ${slots.slice(cfg.sideLists.length).map((x) => x.pick).join(", ")} can't be swapped.`);
+  }
+  return slots.slice(0, cfg.sideLists.length)
+    .map((slot, i) => `${cfg.sideLists[i]}: ${slot.pick}${slot.also.length ? ` (${slot.also.join(" or ")})` : ""}`);
+}
+
+// Put today's sides into Square, the way applySpecials does the names:
+// once, retried after a failure, redone when the day's sides or the swap
+// sides change. A board that has never set sides leaves Square alone on a
+// day without any.
+async function applySides(today, day) {
+  if (!cfg.sideItem || !cfg.sideLists.length) return null;
+  const slots = sideSlots(day);
+  const sig = JSON.stringify({ slots, swaps: plan.swapSides });
+  const last = plan.sidesApplied[today];
+  if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
+  if (!slots.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;
+  try {
+    const done = await saveSides(slots, plan.swapSides);
+    plan.sidesApplied[today] = { sig, at: new Date().toISOString() };
+    console.log(done.length
+      ? `Today's sides put on ${cfg.sideItem} in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}.`
+      : `No sides today: ${cfg.sideItem}'s side lists are off (${new Date().toLocaleTimeString()}).`);
+  } catch (err) {
+    if (!last || last.error !== err.message) console.error(`Today's sides: ${err.message}`);
+    plan.sidesApplied[today] = { sig, failedAt: new Date().toISOString(), error: err.message };
+  }
+  savePlan();
+  return plan.sidesApplied[today];
 }
 
 // What Specials shows: today and the next PLAN_DAYS days the cafe is open

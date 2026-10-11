@@ -55,7 +55,7 @@ pre-packaged items later.
 
 Square's import template has no columns for modifiers, so these have to be
 built under **Items → Modifiers** and then attached to the items listed.
-**Every choice is $0 except Extras** — bread swaps never cost extra; extras
+**Every choice is $0 except Extras and Add Cheese** — bread swaps never cost extra; extras
 like extra cheese are $0.50.
 
 **Default bread is White** unless the item names its own (Kaiser on the
@@ -69,6 +69,7 @@ default in the description". (`defaultBread` in `menu.json`.)
 | **Bread** | White, Wheat, 12 Grain, Rye, Croissant, Hoagie, Kaiser | Pick 1, optional | Every Cold and Hot Sandwich except the burgers |
 | **Toasting** | Toasted, Not toasted | Pick 1, optional (blank = as described) | Every Cold Sandwich incl. Build Your Own |
 | **Extras** | Extra cheese **+$0.50** (add further extras here at $0.50) | Pick any, optional | All sandwiches, burgers, wraps, Breakfast Sandwich, Burrito, Omelet |
+| **Add Cheese** | Cheese **+$0.50** | Pick 1, optional | **Fried Potatoes** and **Side of Eggs** (client 2026-10-11). Its own list, not Extras, so the ticket says "Cheese", not "Extra cheese". Fried Potatoes opens its detail screen for it |
 | **Bun** | Kaiser (default), plus the Bread list | Pick 1, optional | The 7 burgers |
 | **Wrap** | Flour (white) tortilla, Spinach, Tomato | Pick 1, required | All 7 wraps |
 | **BYO Meats & Salads** | Turkey, Ham, Bacon, Curry Chicken Salad, Walnut Tuna Salad, Egg Salad | Pick 1–3, required | Build Your Own Sandwich (staff match the count to the 1/2/3-meat variation; Square can't tie them together) |
@@ -79,7 +80,7 @@ default in the description". (`defaultBread` in `menu.json`.)
 | **Breakfast Meat** | Bacon, Sausage, Ham | Pick 1, required | Breakfast Sandwich, Big Breakfast |
 | **Eggs** | Scrambled, Sunny side up, Over easy, Over medium, Over hard | Pick 1, required. Every style **except poached**, which the kitchen does not do. Add basted or boiled only if the kitchen offers them. | Big Breakfast |
 | **Breakfast Base** | **Biscuit, Croissant, English Muffin** (the three the menu names — list them first), then White, Wheat, 12 Grain, Rye | Pick 1, required | Breakfast Sandwich, and the **Toast, Biscuit or English Muffin** side (toast = White, Wheat, 12 Grain or Rye) |
-| **Choice of Side** | Tossed Salad, Cucumber Salad, Tortellini Salad, Deviled Egg Potato Salad, Cottage Cheese (the Deli Salads, every $2.75 side) | Pick 1, required, $0 | **Lunch Special, on choice-of-side days only** (`anySide` in specials.json). Off on days whose sides are built in. Switched by hand in the Dashboard until the kitchen board does it each morning |
+| **Side 1, Side 2, Side 3** | **Not made by hand.** The kitchen board writes them every morning from the day's sides: the day's side (or Chef's Choice) picked already, then the Deli Salads to swap in, all $0. See `kitchen/README.md`, "Sides in Square" | Pick 1 at most, optional | Lunch Special. Replaced the "Choice of Side" list switched by hand (client 2026-10-11) |
 | **Reuben Dressing** | No dressing | Pick any, optional, $0 | Reuben Sandwich. Holds the thousand island; prints on the kitchen ticket |
 | **Kids Main** | Corn Dog, Chicken Strips, Hamburger, Grilled Cheese | Pick 1, required | Kids Meal |
 | **Kids Side** | Cinnamon Apples, Mac & Cheese, Tater Tots, Fresh Fruit | Pick 1, required | Kids Meal |

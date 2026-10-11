@@ -206,7 +206,7 @@ Today's specials and the days ahead on one screen (until 2026-10-09 they were tw
 
 - **One row per day the cafe is open**, today first and open. Tap a day to open it:
   - **The special and the soup**, by name. (An item added to `dailyItems` with "Salad" in its name shows on today only, as it is decided on the day.)
-  - **Comes with**, under the special: **Choice of side**, or **These sides** with commas between ("Mashed potatoes & gravy, green beans"). Days from the website bring this with them. It doesn't go into Square (the ticket names the plate). **Choice of side changes the words only: the Choice of Side list on Lunch Special in Square is still switched there by hand** (CafeWork SP-2 is the board doing it).
+  - **Comes with**, under the special: **Choice of side**, or **These sides** with commas between ("Mashed potatoes & gravy, green beans"). Two sides with **"or"** between ("Tossed salad or cooked broccoli") are one side the customer picks. Days from the website bring this with them. **It sets the side lists on Lunch Special in Square each morning** (below, "Sides in Square").
   - **Words under the photo, for Photo post**: what Photo post writes under the picture of that day's special. Left empty, Photo post words it from Comes with ("Served with mashed potatoes & gravy and green beans", or "With choice of side"). These words are kept apart from the day, so writing them doesn't stop the website updating it, and they never go to Square or the website.
   - **Prices**, folded away: a box per size. **A blank price keeps whatever Square has** (shown faintly, or "at the till" when the till asks for one). Type a price only when it changes that day. To make an item ask for its price at the till, change it in the Square Dashboard.
 - **What it is today goes into Square** as part of the item's size names, so it prints on the kitchen ticket and the receipt after the item name: Lunch Special's one size becomes "BBQ Ribs", and the soup's sizes become "Cup · Chicken Dumpling" and "Bowl · Chicken Dumpling". The item's own name never changes.
@@ -218,8 +218,24 @@ Today's specials and the days ahead on one screen (until 2026-10-09 they were tw
 
   So putting next week on the website mid-week changes nothing for this week. A day the website still lists can't be blanked here (clearing it lets the website's copy back in on the next read); change it on the website instead, or type something else here.
 - **A day with nothing planned** puts the plain names back ("Regular", "Cup", "Bowl") that morning, so yesterday's plate never prints on today's tickets. Prices are left alone. A board that has never had a plan leaves Square alone.
-- **What it writes to Square** is narrow: nothing but those items' prices and size names. It reads each item fresh before saving, and if someone changed the item in the Dashboard a moment before, Square refuses the save and the front is asked to open it again, so nothing is overwritten. A mistyped price saves nothing at all.
+- **What it writes to Square** is narrow: nothing but those items' prices and size names, and the side lists below. It reads each item fresh before saving, and if someone changed the item in the Dashboard a moment before, Square refuses the save and the front is asked to open it again, so nothing is overwritten. A mistyped price saves nothing at all.
 - The plan is kept in `specials-plan.json` on the kitchen PC (gitignored). The program window logs every day it reads from the website and every write to Square.
+
+### Sides in Square
+
+Each side the special comes with is its own modifier list on **Lunch Special** (`sideItem`): **Side 1**, **Side 2**, **Side 3** (`sideLists`). Every morning, with the special and the soup, the board rewrites them from that day's **Comes with**, so the counter, Square Online and DoorDash all offer the same thing (client 2026-10-11):
+
+| Comes with | On Lunch Special |
+|---|---|
+| Set sides: "Mashed potatoes & white gravy, corn" | Side 1 = **Mashed Potatoes & White Gravy** (picked already), Side 2 = **Corn** (picked already), each then lists the deli salads |
+| A side with "or": "Tossed salad or cooked broccoli" | Side 1 = **Chef's Choice** (picked already), Tossed Salad, Cooked Broccoli, then the deli salads |
+| Choice of side | Side 1 = **Chef's Choice** (picked already), then the deli salads |
+| Nothing | the side lists switched off |
+
+- **Nobody has to tap anything.** The lists are never required and the day's side is picked already, so a plain Lunch Special comes as planned, and its sides print on the ticket. Tap a deli salad in Side 1 or Side 2 to swap that one side. Chef's Choice means the kitchen picks.
+- **The deli salads** are the website's `swapSides` in `/specials.json`, which is menu.json's Deli Salads row. Change them there; the board reads them with the specials.
+- Every option is $0 (the price covers the sides). A list the day doesn't need is switched off on the item, not deleted, and a list is made the first time a day needs it. A day with more sides than lists logs which one can't be swapped.
+- The deli salads sold on their own are separate items in Square (Sides), one button each; these lists are only the swap on the special.
 
 ## Photo post (Manage on the front page)
 
