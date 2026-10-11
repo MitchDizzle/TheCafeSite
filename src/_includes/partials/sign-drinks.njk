@@ -1,15 +1,21 @@
-{#- Drinks & chips counter sign, shared by sign-drinks.njk (colour) and
-    sign-drinks-bw.njk (`bw: true`). Every name and price is read from
+{#- Drinks, chips & desserts sign, shared by sign-drinks.njk (colour) and
+    sign-drinks-bw.njk (`bw: true`). It's taped to the fridge with the
+    juices and the cheesecake. Every name and price is read from
     src/_data/menu.json, so a price change there reaches this sign on the
-    next build. If you find yourself typing a price here, stop. -#}
+    next build. If you find yourself typing a price here, stop.
+    The desserts are menu.json's `desserts` category: off the menus
+    (squareOnly), but on this sign, next to where they're kept. Their
+    flavours aren't printed: they change with each batch (client
+    2026-10-11), like the juice flavours, so the sign says to ask. -#}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
 {%- set chips = (sides.items | where("name", "Chips"))[0] %}
-<div class="canvas sign{% if bw %} sign--bw{% endif %}">
+{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
+<div class="canvas sign sign--drinks{% if bw %} sign--bw{% endif %}">
     {% include "partials/sign-mast.njk" %}
 
     <div class="sign-heading">
-        <h2 class="p-display sign-heading-title ink-teal">Drinks &amp; Chips</h2>
+        <h2 class="p-display sign-heading-title ink-teal">Drinks, Chips &amp; Desserts</h2>
     </div>
 
     <section class="sign-group">
@@ -43,6 +49,24 @@
                 <p class="sign-row-sub">{{ chips.description }}</p>
             </li>
         </ul>
+    </section>
+    {%- endif %}
+
+    {%- if desserts and desserts.items.length %}
+    <section class="sign-group">
+        <p class="p-label sign-group-label ink-accent">Desserts</p>
+        <ul class="sign-rows">
+            {%- for i in desserts.items %}
+            <li class="sign-row">
+                <div class="sign-row-head">
+                    <span class="sign-row-name">{{ i.name }}</span>
+                    <span class="sign-row-fill" aria-hidden="true"></span>
+                    <span class="sign-row-price">{{ i.price | money }}</span>
+                </div>
+            </li>
+            {%- endfor %}
+        </ul>
+        <p class="sign-row-sub sign-group-note">Flavors change week to week. Ask what's in today.</p>
     </section>
     {%- endif %}
 

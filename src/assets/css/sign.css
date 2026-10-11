@@ -127,6 +127,27 @@
     color: #000;
 }
 
+/* A line under a whole group, not one row (the desserts' flavors). */
+.sign-group-note {
+    margin-top: 0.12in;
+}
+
+/* The drinks sign carries three groups since the desserts joined it
+   (2026-10-11): a one-line heading and closer groups keep the foot on
+   the page. Proof sign-drinks.png after adding a row: it clips silently. */
+.sign--drinks .sign-heading-title {
+    font-size: 0.5in;
+    white-space: nowrap;
+}
+
+.sign--drinks .sign-heading + .sign-group {
+    margin-top: 0.28in;
+}
+
+.sign--drinks .sign-group + .sign-group {
+    margin-top: 0.3in;
+}
+
 .sign-spacer {
     flex: 1;
     min-height: 0.2in;
