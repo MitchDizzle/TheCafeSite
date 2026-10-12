@@ -118,14 +118,8 @@ for i in cats["sandwiches"]["items"]:
 
 # ── Build your own ─────────────────────────────────────────
 BYO = cats["build_sandwich"]
-# The half is its own item (client 2026-10-12): it can't be made on a
-# croissant, and Square can't take one bread off one size of an item, so it
-# carries the Half Sandwich Bread list instead of BYO Bread (README).
-byo_desc = "Pick your meats (the curry chicken, walnut tuna and egg salads count as a meat), a cheese and a bread. Served with lettuce, tomato, pickle & onion."
-add("Build Your Own Sandwich", C, [(i["name"], i["price"]) for i in BYO["items"] if i["name"] != "Half Sandwich"], byo_desc)
-half = next(i for i in BYO["items"] if i["name"] == "Half Sandwich")
-one("Build Your Own Half Sandwich", C, half["price"],
-    "Pick a meat or salad, a cheese and a bread (not croissant). Served with lettuce, tomato, pickle & onion.", skip_detail=False)
+add("Build Your Own Sandwich", C, [(i["name"], i["price"]) for i in BYO["items"]],
+    "Pick your meats (the curry chicken, walnut tuna and egg salads count as a meat), a cheese and a bread. " + BYO["note"])
 
 # ── Hot sandwiches ─────────────────────────────────────────
 H = "Hot Sandwiches"
