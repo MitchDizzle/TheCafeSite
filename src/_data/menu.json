@@ -267,7 +267,6 @@
       "id": "soup",
       "name": "Soup of the Day",
       "serving": "Starting at 11am",
-      "note": "Served with crackers.",
       "items": [
         { "name": "Cup", "price": 5.00 },
         { "name": "Bowl", "price": 7.00 }

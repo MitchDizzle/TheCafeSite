@@ -153,7 +153,7 @@ for i in cats["salads"]["items"]:
         add(i["name"], S, [("Full", full), ("Half", half)], i.get("description", "") + ".")
 
 # ── Soup ───────────────────────────────────────────────────
-add("Soup of the Day", "Soup", [(i["name"], i["price"]) for i in cats["soup"]["items"]], "Starting at 11am. Served with crackers.")
+add("Soup of the Day", "Soup", [(i["name"], i["price"]) for i in cats["soup"]["items"]], "Starting at 11am.")
 
 # ── Kids ───────────────────────────────────────────────────
 k = cats["kids"]
