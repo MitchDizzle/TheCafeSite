@@ -599,7 +599,10 @@
     // Square Online is where nearly every pickup comes from, so it is just
     // "Online"; "Pickup · Square Online" wrapped to three lines on a ticket.
     // Any other source (a delivery app, say) is still named.
-    if (t.kind === "PICKUP" && (!t.source || /square online/i.test(t.source))) return "Online";
+    // Square Online's orders are named "Ordering Profile - Web" by Square
+    // (2026-10-12); a delivery app is called by its own name ("DoorDash").
+    if (t.kind === "PICKUP" && (!t.source || /square online|ordering profile/i.test(t.source))) return "Online";
+    if (/doordash|uber ?eats|grubhub/i.test(t.source || "")) return t.source;
     const k = t.kind === "PICKUP" ? "Pickup" : t.kind.charAt(0) + t.kind.slice(1).toLowerCase();
     return t.source ? `${k} · ${t.source}` : k;
   }

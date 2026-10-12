@@ -8,7 +8,8 @@ Not part of the website. Nothing in this folder is built or uploaded.
 
 - **Counter orders** rung up on Square POS today. Square marks these finished as soon as they're paid; the Restaurants app also marks their pickup step complete. Because of that, the board ignores Square's "completed" on counter orders, and they stay up until a cook presses **Done**. They appear once paid: a check that was sent but not charged yet can't be seen by the board, only by the kitchen printer.
 - **Unpaid counter orders** (pay-later phone orders) go to the kitchen straight away like any other, tagged **NOT PAID**: cook it and keep it in the warmer. The tag goes away by itself once it's paid in Square. If it was a sale that fell through (a declined card, a payment canceled on the terminal), the front presses **Canceled** and it leaves both screens.
-- **Online / pickup orders** due today, starting an hour before pickup time. They leave the board when a cook presses **Done** *or* when the front marks them ready or picked up in Square Order Manager.
+- **Online / pickup orders** due today, starting an hour before pickup time. They leave the board when a cook presses **Done** *or* when the front marks them ready or picked up in Square Order Manager. Square Online orders come from Square named "Ordering Profile - Web" and show as **Online**.
+- **DoorDash orders** show as **DoorDash**, timed to when the Dasher comes for them (seen 2026-10-12: Square sends them as a DoorDash-managed delivery, paid). Uber Eats and Grubhub would be treated the same way.
 - **What the kitchen skips** (drinks, chips) is left off: single items, or whole Square categories. Skipped items go on the front page's "Add from the front" list instead. An order made up only of those items doesn't show at all. The list is changed live from the front page: **Manage → Leave off kitchen tickets**. A ticked category also covers items added to it in Square later.
 - Every ticket says **TO GO** (solid tag) or **FOR HERE** (outlined), as rung on the POS ("To Go" is the POS default). Online orders are always to go.
 - **Some items to go on a For Here ticket** (eating here, and a plate to take home): items set to To Go on the POS go **last** on the ticket, under a dashed line with a **TO GO** tag, so the plates come first and the to-go ones get boxed. The front page shows the same, and "+2 to go" next to For Here. This is read from how the POS records a split order (a For Here and a To Go fulfillment, each listing its items), or a modifier named "To Go" on the item. **Not yet checked against a real split order:** ring one up, and if the items don't move, open `/check` and send the order's **raw** link (Square's own copy of the order) to whoever looks after the board.
@@ -25,7 +26,15 @@ Header colors:
 | Amber | 8–15 min | due within 10 min |
 | Red | over 15 min | past due |
 
-**Done does not text the customer.** The front still marks online orders ready in Order Manager, which is what sends the text.
+### Square is told (online and DoorDash orders)
+
+With `squareStatus` on (the default since 2026-10-12), nobody has to open these orders on the POS:
+
+- **Done**, then **10 seconds without Undo** (`readyDelaySeconds`): the board marks the order **Ready** in Square. For a Square Online order that texts the customer; for DoorDash it tells DoorDash the food is waiting. **Undo within the 10 seconds and Square never hears of it.** Undo after that still brings the ticket back on the board, but Square stays Ready (the text has gone).
+- **Handed off** on the front page (pressed by a person): 10 seconds later the board marks it **picked up** (Completed) in Square. Undo on the front page within those 10 seconds stops it. These orders never clear themselves off the front page, because clearing is what tells Square they were picked up.
+- **Counter orders** are left alone: Square finishes them when they're paid.
+- The program window logs each one ("order ...4F2A (Pat): ready in Square."). If Square refuses, it says why and tries again a minute later, five times at most; then do it on the POS. The tickets on both screens never wait for Square.
+- **Still to see on a real order:** that the customer's text goes out when the board (not Order Manager) marks it ready. Watch the first online order after this update.
 
 ## Using it
 
@@ -109,10 +118,10 @@ The same orders for the counter, on any laptop, tablet or phone on the cafe wifi
 - **Ready** (green, on top): the kitchen pressed Done, so the food is coming out. It chimes once the laptop's **Sound** button is on.
 - **Cooking:** still on the kitchen board. A pickup counts down to its pickup time; a counter order counts up from when it was rung.
 - **Add from the front:** the order's skip-list items (drinks, chips) and any condiment packets: what the counter puts in the bag. A Square modifier with **"packet"** in its name ("Ketchup packet") is moved off the kitchen ticket and onto this list, totalled across the order. Tap a line to tick it off while bagging. Ticks are kept on that device only.
-- **Online orders** say whether they've been marked ready in Square Order Manager. That step is still what texts the customer, and an order marked ready there stays on the front page until it's handed off.
+- **Online orders** say whether they've been marked ready in Square ("Marking it ready in Square…" for the few seconds after Done). With `squareStatus` on, **Handed off** is what marks them picked up in Square; an order stays on the front page until someone presses it.
 - **An online order of only drinks or chips** shows on the front page only, as Ready: there's nothing for the kitchen to make. A counter sale of only those doesn't show anywhere, because it's handed over as it's rung up.
 - **Handed off** clears an order from the front page only; it never touches the kitchen board. **Undo** in the top bar lists today's hand-offs; click one to bring it back.
-- **Ready orders clear themselves** after 10 minutes if nobody presses Handed off (`autoHandoffMinutes`; the Ready heading says so). They go on Undo, marked "cleared by itself", and one brought back stays until it's handed off by hand. Two kinds never clear themselves: a **not paid** order, and an **online order not yet marked ready in Square** (that step texts the customer).
+- **Ready orders clear themselves** after 10 minutes if nobody presses Handed off (`autoHandoffMinutes`; the Ready heading says so). They go on Undo, marked "cleared by itself", and one brought back stays until it's handed off by hand. Two kinds never clear themselves: a **not paid** order, and an **online or DoorDash order** (its Handed off tells Square it was picked up; with `squareStatus` off, only one not yet marked ready in Square).
 - **Today**, under the orders: how many orders so far, breakfast vs lunch (before or after 11am, by when it was rung up or due), counter vs online, average and longest time in the kitchen (counter orders, rung up to Done; if a ticket is undone and Done again, the time it sat cleared doesn't count), and the most ordered items. Canceled orders and unpaid open checks aren't counted.
 
 Only the front page, its Handed off and Undo, and the PIN-protected Manage actions answer other devices. The kitchen board, `/check`, Done, the power menu and updates answer the kitchen PC alone.
@@ -154,6 +163,8 @@ Settings in `config.json`, both optional:
 | `frontOnNetwork` | `true` | `false` keeps everything on the kitchen PC; `/front` then works only there. |
 | `frontKey` | none | If set, other devices must open `/front?key=<the key>`. Bookmark the full address. Worth setting if customers ever share the staff wifi. |
 | `autoHandoffMinutes` | `10` | Ready orders leave the front page by themselves after this long (see above). `0` turns it off. |
+| `squareStatus` | `true` | The board marks online and DoorDash orders Ready in Square after Done, and picked up after Handed off (see "Square is told"). `false`: the board only reads from Square. |
+| `readyDelaySeconds` | `10` | How long after Done (or Handed off) Square is told: the time to Undo. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
 | `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |

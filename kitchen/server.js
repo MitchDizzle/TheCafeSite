@@ -83,6 +83,14 @@ const DEFAULTS = {
   // side the plate comes with: each pre-picks the day's side (or Chef's
   // Choice) and lists the sides it can be swapped for. Names as in Square;
   // a list that isn't there yet is made the first time it's needed.
+  // Tell Square what the kitchen and the front did, for online and delivery
+  // orders (counter sales are finished in Square when they're paid): Done
+  // on the board marks the order Ready in Square readyDelaySeconds later
+  // (Undo before then and Square never hears of it), which texts a Square
+  // Online customer and tells DoorDash; Handed off on the front page marks
+  // it picked up (Completed). false = the board only reads from Square.
+  squareStatus: true,
+  readyDelaySeconds: 10,
   sideItem: "Lunch Special",
   sideLists: ["Side 1", "Side 2", "Side 3"],
   // The week's specials as the website publishes them (built from the site's
@@ -191,6 +199,13 @@ let canceled = {}; // orderId -> ISO time the front took an unpaid order off bot
 // orderId -> ISO time the front brought it back with Undo after it cleared
 // itself (autoHandoffMinutes): it stays until someone hands it off by hand.
 let keepOnFront = {};
+// Square status written by the board (squareStatus): orderId -> ISO time.
+// markedReady: Done turned into Ready in Square. byHand: Handed off pressed
+// by a person (not the auto-clear), so Square may be told it was picked up.
+// markedDone: Square told it was picked up.
+let markedReady = {};
+let byHand = {};
+let markedDone = {};
 const autoOff = new Set(); // ids cleared by autoHandoff, so Undo can say so
 const readySince = {}; // orderId -> ms first seen ready, for autoHandoff (not saved)
 // What the kitchen never makes: item names and whole Square categories.
@@ -214,6 +229,9 @@ function loadState() {
     handedOff = state.handedOff || {};
     canceled = state.canceled || {};
     keepOnFront = state.keepOnFront || {};
+    markedReady = state.markedReady || {};
+    byHand = state.byHand || {};
+    markedDone = state.markedDone || {};
     skipEdited = !!state.skip;
     skip = state.skip || { items: cfg.skipItems, categories: [] };
     undoFloor = state.undoFloor || null;
@@ -224,6 +242,9 @@ function loadState() {
     handedOff = {};
     canceled = {};
     keepOnFront = {};
+    markedReady = {};
+    byHand = {};
+    markedDone = {};
     skip = { items: cfg.skipItems, categories: [] };
     undoFloor = null;
     statsFloor = null;
@@ -233,7 +254,7 @@ function loadState() {
 function saveState() {
   // Three days is plenty; nothing older can reappear on either screen anyway.
   const cutoff = Date.now() - 3 * 864e5;
-  for (const map of [bumped, handedOff, canceled, keepOnFront]) {
+  for (const map of [bumped, handedOff, canceled, keepOnFront, markedReady, byHand, markedDone]) {
     for (const [id, at] of Object.entries(map)) {
       if (Date.parse(at) < cutoff) delete map[id];
     }
@@ -241,7 +262,7 @@ function saveState() {
   for (const [id, o] of Object.entries(offBoard)) if (Date.parse(o.at) < cutoff) delete offBoard[id];
   // Demo tickets are practice: never written down, gone when the demo ends.
   const real = (map) => Object.fromEntries(Object.entries(map).filter(([id]) => !isDemo(id)));
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), handedOff: real(handedOff), canceled: real(canceled), keepOnFront: real(keepOnFront), skip: skipEdited ? skip : undefined, undoFloor, statsFloor }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), handedOff: real(handedOff), canceled: real(canceled), keepOnFront: real(keepOnFront), markedReady: real(markedReady), byHand: real(byHand), markedDone: real(markedDone), skip: skipEdited ? skip : undefined, undoFloor, statsFloor }, null, 2));
 }
 
 loadState();
@@ -1110,6 +1131,105 @@ async function fetchOrders() {
   return [...open, ...completed];
 }
 
+// ---------------------------------------------------------------- telling Square
+
+// squareStatus (client 2026-10-12): the board writes what the kitchen and
+// the front did back to Square, for online and delivery orders, so nobody
+// has to open them on the POS. Counter sales are left alone: Square
+// finishes them when they're paid.
+//   - Done on the board, and readyDelaySeconds pass without Undo: Ready
+//     (PREPARED). Square texts a Square Online customer; DoorDash hears the
+//     food is waiting. Undo inside the delay and Square never hears of it.
+//     Undo after it: the ticket still comes back on the board, but Square
+//     stays Ready (the text has gone).
+//   - Handed off pressed on the front page (by a person, not the 10-minute
+//     auto-clear, which skips these orders): picked up (COMPLETED), after
+//     the same delay, so the front's Undo can catch a wrong tap.
+// A fulfillment only moves forward one state at a time, PROPOSED ->
+// RESERVED -> PREPARED -> COMPLETED, each step read fresh from Square for
+// its version. A failure is logged and tried again a minute later, five
+// times at most; it never touches the tickets on either screen.
+const FLOW = ["PROPOSED", "RESERVED", "PREPARED", "COMPLETED"];
+const markTries = {}; // orderId -> { n, at, error } (not saved)
+const mockStates = new Map(); // test mode: orderId -> the state the board set
+let syncing = false;
+
+function withMockStates(orders) {
+  for (const o of orders) {
+    const state = mockStates.get(o.id);
+    if (state && o.fulfillments && o.fulfillments[0]) {
+      o.fulfillments[0].state = state;
+      if (state === "COMPLETED") o.state = "COMPLETED";
+    }
+  }
+  return orders;
+}
+
+async function readOrder(id) {
+  if (MOCK) {
+    const o = rawOrders.get(id);
+    return o && { ...o, version: 1 };
+  }
+  return (await square("GET", `/orders/${encodeURIComponent(id)}`)).order;
+}
+
+// Moves the order's first fulfillment forward to `target`. Returns the
+// state it ends in.
+async function moveFulfillment(id, target) {
+  const want = FLOW.indexOf(target);
+  for (let step = 0; step < FLOW.length; step++) {
+    const order = await readOrder(id);
+    const f = order && (order.fulfillments || [])[0];
+    if (!f) throw new Error("it has no pickup or delivery step in Square");
+    const at = FLOW.indexOf(f.state);
+    if (at < 0) throw new Error(`Square has it as ${f.state.toLowerCase()}`);
+    if (at >= want) return f.state;
+    const next = FLOW[at + 1];
+    if (MOCK) { mockStates.set(id, next); rawOrders.get(id).fulfillments[0].state = next; continue; }
+    await square("PUT", `/orders/${encodeURIComponent(id)}`, {
+      idempotency_key: `kitchen-${id}-${next}`,
+      order: { location_id: order.location_id, version: order.version, fulfillments: [{ uid: f.uid, state: next }] },
+    });
+  }
+  return target;
+}
+
+async function mark(t, target, map, words) {
+  const tries = markTries[`${t.id}:${target}`];
+  if (tries && (tries.n >= 5 || Date.now() - tries.at < 6e4)) return;
+  try {
+    await moveFulfillment(t.id, target);
+    map[t.id] = new Date().toISOString();
+    delete markTries[`${t.id}:${target}`];
+    saveState();
+    console.log(`${new Date().toLocaleTimeString()}  order ...${t.id.slice(-4)} (${t.label}): ${words} in Square.`);
+  } catch (err) {
+    const n = ((tries && tries.n) || 0) + 1;
+    markTries[`${t.id}:${target}`] = { n, at: Date.now(), error: err.message };
+    if (!tries || tries.error !== err.message) console.error(`${new Date().toLocaleTimeString()}  order ...${t.id.slice(-4)} (${t.label}): couldn't mark it ${words} in Square (${err.message})${n >= 5 ? "; giving up, do it on the POS" : "; trying again in a minute"}.`);
+    else if (n >= 5) console.error(`${new Date().toLocaleTimeString()}  order ...${t.id.slice(-4)}: giving up marking it ${words}; do it on the POS.`);
+  }
+}
+
+async function syncSquare() {
+  if (!cfg.squareStatus || syncing) return;
+  syncing = true;
+  try {
+    const due = Date.now() - cfg.readyDelaySeconds * 1000;
+    for (const t of all) {
+      if (t.demo || t.kind === "COUNTER") continue;
+      if (bumped[t.id] && !markedReady[t.id] && !t.squareReady && Date.parse(bumped[t.id]) <= due) {
+        await mark(t, "PREPARED", markedReady, "ready");
+      }
+      if (byHand[t.id] && !markedDone[t.id] && Date.parse(byHand[t.id]) <= due) {
+        await mark(t, "COMPLETED", markedDone, "picked up");
+      }
+    }
+  } finally {
+    syncing = false;
+  }
+}
+
 // ---------------------------------------------------------------- photo posts
 
 // Manage -> Photo post: the phone draws the post itself (canvas), from a
@@ -1207,9 +1327,16 @@ const TO_GO_TYPES = /^(PICKUP|DELIVERY|SHIPMENT)$/;
 // order is online if Square names it so or it carries a scheduled pickup
 // time; anything else is treated as a counter sale and waits for Done. When
 // in doubt it stays on the board — an extra ticket beats a missed one.
+// Square Online orders arrive as "Ordering Profile - Web" (seen 2026-10-12)
+// and DoorDash ones as "DoorDash" with a DELIVERY fulfillment that DoorDash
+// manages (a courier, a courier pickup time); both count as online. A
+// delivery rung on the POS (no courier) stays a counter sale.
+const OFFSITE_SOURCE = /online|ordering profile|doordash|uber ?eats|grubhub/i;
 function isOnline(order, f) {
   const source = (order.source && order.source.name) || "";
-  return /online/i.test(source) || !!(f && f.pickup_details && f.pickup_details.pickup_at);
+  const d = f && f.delivery_details;
+  return OFFSITE_SOURCE.test(source) || !!(f && f.pickup_details && f.pickup_details.pickup_at)
+    || !!(f && f.type === "DELIVERY" && d && (d.managed_delivery || d.courier_provider_name));
 }
 
 // Returns { ticket } or { reason } — the reason is what /check shows for an
@@ -1218,7 +1345,7 @@ function toTicket(order) {
   const f = (order.fulfillments || [])[0];
   const online = isOnline(order, f);
   if (f && f.state === "CANCELED") return { reason: "canceled" };
-  if (online && GONE_FULFILLMENT.has(f.state)) {
+  if (online && f && GONE_FULFILLMENT.has(f.state)) {
     return { reason: `front already marked it ${f.state.toLowerCase()}` };
   }
 
@@ -1277,7 +1404,9 @@ function toTicket(order) {
 
   const details = f && (f.pickup_details || f.delivery_details || f.shipment_details);
   const recipient = details && details.recipient;
-  const dueAt = (f && f.pickup_details && f.pickup_details.pickup_at) || null;
+  // When it's wanted: a pickup's time, or when the delivery courier comes for it.
+  const dueAt = (f && f.pickup_details && f.pickup_details.pickup_at)
+    || (f && f.delivery_details && (f.delivery_details.courier_pickup_at || f.delivery_details.pickup_at)) || null;
   // A counter sale still OPEN with nothing paid: usually a pay-later phone
   // order (cooked now, kept warm), sometimes a sale that fell through (card
   // declined, payment canceled on the terminal). Shown and cooked either
@@ -1312,7 +1441,7 @@ function toTicket(order) {
 
   return { ticket: {
     id: order.id,
-    kind: online ? f.type : "COUNTER", // PICKUP, DELIVERY, SHIPMENT, or COUNTER
+    kind: online ? (f && f.type) || "PICKUP" : "COUNTER", // PICKUP, DELIVERY, SHIPMENT, or COUNTER
     name: (recipient && recipient.display_name) || order.ticket_name || null,
     shortId: order.id.slice(-4).toUpperCase(),
     label: table ? `Table ${table}` : (recipient && recipient.display_name) || ticketName || `#${receipt || order.id.slice(-4).toUpperCase()}`,
@@ -1324,7 +1453,7 @@ function toTicket(order) {
     items,
     front,
     // Marked ready in Order Manager: the customer has been texted.
-    squareReady: !!(online && f.state === "PREPARED"),
+    squareReady: !!(online && f && f.state === "PREPARED"),
     unpaid,
     toGo,
     due: unpaid && due ? due / 100 : null,
@@ -1346,7 +1475,9 @@ function outOfWindow(t, now) {
 function hiddenReason(t, now) {
   if (bumped[t.id]) return "cleared with Done";
   if (canceled[t.id]) return "not paid; canceled at the front";
-  if (t.squareReady) return "front already marked it prepared";
+  // A Ready the board wrote itself follows Done/Undo, so Undo still
+  // brings the ticket back after Square has been told.
+  if (t.squareReady && !markedReady[t.id]) return "front already marked it prepared";
   if (!t.items.length) return "every item is on the skip list (front only)";
   return outOfWindow(t, now);
 }
@@ -1362,7 +1493,7 @@ function frontHiddenReason(t, now) {
 // ready in Square, or there was nothing for the kitchen to make.
 function readyAt(t) {
   if (bumped[t.id]) return bumped[t.id];
-  if (t.squareReady || !t.items.length) return t.createdAt;
+  if ((t.squareReady && !markedReady[t.id]) || !t.items.length) return t.createdAt;
   return null;
 }
 
@@ -1420,7 +1551,7 @@ function poll() {
 
 async function pollOnce() {
   try {
-    const real = MOCK ? mockOrders() : await fetchOrders();
+    const real = MOCK ? withMockStates(mockOrders()) : await fetchOrders();
     todaysOrders = real; // the stats never see demo orders
     if (demo && Date.now() > Date.parse(demo.until)) endDemo();
     const orders = demo ? [...real, ...demoOrders(Date.parse(demo.startedAt))] : real;
@@ -1628,7 +1759,9 @@ function autoHandoff() {
     if (!ready) { delete readySince[t.id]; continue; }
     if (!readySince[t.id]) readySince[t.id] = bumped[t.id] ? Date.parse(bumped[t.id]) : now;
     if (handedOff[t.id] || canceled[t.id] || keepOnFront[t.id]) continue;
-    if (t.unpaid || (t.kind !== "COUNTER" && !t.squareReady)) continue;
+    // Online orders wait for a person while the board tells Square: their
+    // Handed off is what marks them picked up there.
+    if (t.unpaid || (t.kind !== "COUNTER" && (cfg.squareStatus || !t.squareReady))) continue;
     if (now - readySince[t.id] < cfg.autoHandoffMinutes * 6e4) continue;
     handedOff[t.id] = new Date(now).toISOString();
     autoOff.add(t.id);
@@ -1646,7 +1779,7 @@ function frontSnapshot() {
   const now = Date.now();
   const orders = all
     .filter((t) => !frontHiddenReason(t, now))
-    .map((t) => ({ ...t, readyAt: readyAt(t) }))
+    .map((t) => ({ ...t, readyAt: readyAt(t), autoSquare: !!cfg.squareStatus && !t.demo }))
     .sort((a, b) => {
       if (!!a.readyAt !== !!b.readyAt) return a.readyAt ? -1 : 1;
       if (a.readyAt) return Date.parse(a.readyAt) - Date.parse(b.readyAt);
@@ -1805,6 +1938,26 @@ function mockOrders() {
     });
   }
   orders.push(mockSplitOrder(ago(3)));
+  // As Square sends them since 2026-10-12: a Square Online pickup named
+  // "Ordering Profile - Web", and a DoorDash delivery with its courier time.
+  orders.push({
+    id: "MOCKWEBORDER010",
+    state: "OPEN",
+    created_at: ago(6),
+    source: { name: "Ordering Profile - Web" },
+    fulfillments: [{ uid: "f1", type: "PICKUP", state: "PROPOSED", pickup_details: { pickup_at: at(10), schedule_type: "SCHEDULED", recipient: { display_name: "Pat" } } }],
+    line_items: [li(1, "Breakfast Sandwich", { modifiers: [{ name: "Biscuit" }, { name: "Bacon" }] })],
+  });
+  orders.push({
+    id: "MOCKDOORDASH011",
+    state: "OPEN",
+    created_at: ago(5),
+    source: { name: "DoorDash" },
+    ticket_name: "DoorDash",
+    tenders: [{ id: "DDTENDER", type: "OTHER" }],
+    fulfillments: [{ uid: "f1", type: "DELIVERY", state: "PROPOSED", delivery_details: { schedule_type: "ASAP", courier_pickup_at: at(8), courier_provider_name: "DoorDash", managed_delivery: true } }],
+    line_items: [li(1, "Fried Potatoes"), li(1, "Biscuit & Gravy", { variation_name: "Full" })],
+  });
   return orders;
 }
 
@@ -2239,6 +2392,7 @@ const server = http.createServer(async (req, res) => {
     const { id } = await readBody(req);
     if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
     handedOff[id] = new Date().toISOString();
+    byHand[id] = handedOff[id];
     saveState();
     return send(res, 200, frontSnapshot());
   }
@@ -2370,6 +2524,7 @@ const server = http.createServer(async (req, res) => {
     if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
     delete handedOff[id];
     delete canceled[id];
+    delete byHand[id];
     // Back on the front page to stay: it won't clear itself again.
     keepOnFront[id] = new Date().toISOString();
     autoOff.delete(id);
@@ -2387,6 +2542,7 @@ const server = http.createServer(async (req, res) => {
     if (last) {
       delete handedOff[last.id];
       delete canceled[last.id];
+      delete byHand[last.id];
       keepOnFront[last.id] = new Date().toISOString();
       autoOff.delete(last.id);
       saveState();
@@ -2518,4 +2674,5 @@ server.listen(cfg.port, HOST, () => {
   setInterval(loadCatalog, CATALOG_MINUTES * 6e4);
   setInterval(pullSite, SITE_MINUTES * 6e4);
   setInterval(applyToday, 6e4);
+  setInterval(syncSquare, 2000);
 });

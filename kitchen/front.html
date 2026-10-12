@@ -568,7 +568,7 @@
 
   function kindLabel(o) {
     if (o.kind === "COUNTER") return "Counter";
-    const k = o.kind === "PICKUP" && (!o.source || /square online/i.test(o.source)) ? "Online" : (o.source || o.kind);
+    const k = o.kind === "PICKUP" && (!o.source || /square online|ordering profile/i.test(o.source)) ? "Online" : (o.source || o.kind);
     return o.dueAt ? `${k} · due ${fmtTime(o.dueAt)}` : k;
   }
 
@@ -589,9 +589,13 @@
   function orderHtml(o) {
     const ready = !!o.readyAt;
     const online = o.kind !== "COUNTER";
+    // With squareStatus on, the board marks it ready in Square itself a few
+    // seconds after Done, and picked up when it's handed off here.
     const square = !online ? "" : o.squareReady
-      ? `<div class="square done">✓ Marked ready in Square. Customer texted.</div>`
-      : ready ? `<div class="square todo">Mark it ready in Square Order Manager to text the customer.</div>` : "";
+      ? `<div class="square done">✓ Marked ready in Square.${o.kind === "PICKUP" ? " Customer texted." : ""}${o.autoSquare ? " Handed off marks it picked up." : ""}</div>`
+      : ready ? (o.autoSquare
+        ? `<div class="square todo">Marking it ready in Square…</div>`
+        : `<div class="square todo">Mark it ready in Square Order Manager to text the customer.</div>`) : "";
     return `
       <article class="order ${ready ? "ready" : "cooking"}${o.unpaid ? " unpaid" : ""}${o.demo ? " demo" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
         <header>
