@@ -336,6 +336,26 @@
     margin-top: 0.04in;
 }
 
+/* The daily specials shout-out, between the catering pitch and the codes
+   it points to (2026-10-12). A rule above it keeps it apart from catering. */
+.panel-specials {
+    border-top: 0.015in solid var(--teal);
+    padding-top: 0.16in;
+    margin-bottom: 0.24in;
+}
+
+.panel-specials-head {
+    font-size: 0.22in;
+    line-height: 1.15;
+    margin-top: 0.06in;
+}
+
+.panel-specials-body {
+    font-size: 0.15in;
+    line-height: 1.45;
+    margin-top: 0.08in;
+}
+
 /* Two codes across a 3.667in panel with 0.35in padding a side: 2.967in of
    live width less a 0.2in gap, so about 1.38in a column. qr-*.svg carry no
    quiet zone of their own — .code-qr's padding IS the quiet zone, four

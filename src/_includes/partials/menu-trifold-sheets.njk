@@ -233,6 +233,17 @@
 
             <div class="panel-spacer"></div>
 
+            {#- The daily specials, said once on the tri-fold, right above
+                the codes that lead to them (client 2026-10-12: the 11x17
+                counter menu had this shout-out and the tri-fold didn't).
+                Same words as the counter menu's band. The specials
+                themselves stay off the printed menus: they change weekly. -#}
+            <div class="panel-specials">
+                <p class="p-label panel-note-label ink-accent">Daily specials</p>
+                <p class="p-display panel-specials-head ink-teal">A lunch special &amp; a soup every weekday</p>
+                <p class="p-body panel-specials-body">From 11am. Today&rsquo;s is always at {{ site.social.website }}/menu, and the whole week is on Facebook: scan below.</p>
+            </div>
+
             {# Both codes, side by side, on the panel that ends up face-up on
                a table. assets/qr-*.svg carry no quiet zone of their own —
                .qr's padding IS the quiet zone, so do not trim it. #}
