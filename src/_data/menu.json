@@ -137,7 +137,8 @@
     {
       "id": "build_sandwich",
       "name": "Build Your Own Sandwich",
-      "note": "Served with lettuce, tomato, pickle & onion.",
+      "note": "With lettuce, tomato, pickle & onion. No croissant on a half.",
+      "_note_half": "A half sandwich can't be made on a croissant: there is no way to cut one down (client 2026-10-12). In Square the half is its own item, Build Your Own Half Sandwich, with a bread list without the croissant (Square can't limit a list to one size of an item; scripts/square-catalog.py).",
       "items": [
         { "name": "1 Meat", "price": 8.00 },
         { "name": "2 Meats", "price": 9.50 },

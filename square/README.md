@@ -32,7 +32,7 @@ before confirming — Square lists anything it rejects.
 |---|---|---|
 | Full / Half (salads, biscuits & gravy), Cup / Bowl, 2 / 3 egg | **Variations** of one item | One tile on the POS, the size prints on the ticket |
 | The 7 burgers (incl. Patty Melt) | Item "Hamburger", variations **Beef / Chicken** at the same price | The kitchen needs to see which one. The menu says "chicken instead of beef" once in the category note, not in each name |
-| Build Your Own 1 / 2 / 3 meats, half | One item, four **variations** | Price is set by the variation; the picks are modifiers (below) |
+| Build Your Own 1 / 2 / 3 meats | One item, three **variations**; the **half** is its own item, Build Your Own Half Sandwich | Price is set by the variation; the picks are modifiers (below). The half has its own bread list without the croissant (2026-10-12) |
 | Chips flavours, iced tea vs fountain | **Variations** at one price | Counts which one sells, for ordering stock |
 | Toast, Biscuit or English Muffin | One item + the **Breakfast Base** modifier (below) | Was Toast / Biscuit / English Muffin variations until 2026-10-08, which never said which bread the toast was. Delete those three old variations in the Dashboard after importing |
 | Wraps, kids meals | One price per item | Choices are modifiers (below) |
@@ -72,9 +72,10 @@ default in the description". (`defaultBread` in `menu.json`.)
 | **Add Cheese** | Cheese **+$0.50** | Pick 1, optional | **Fried Potatoes** and **Side of Eggs** (client 2026-10-11). Its own list, not Extras, so the ticket says "Cheese", not "Extra cheese". Fried Potatoes opens its detail screen for it |
 | **Bun** | Kaiser (default), plus the Bread list | Pick 1, optional | The 7 burgers |
 | **Wrap** | White Tortilla, Spinach Tortilla, Tomato Tortilla | Pick 1, required | All 7 wraps. "White", not "Flour (white)" (client 2026-10-12) |
-| **BYO Meats & Salads** | Turkey, Ham, Bacon, Curry Chicken Salad, Walnut Tuna Salad, Egg Salad | Pick 1–3, required | Build Your Own Sandwich (staff match the count to the 1/2/3-meat variation; Square can't tie them together) |
-| **BYO Cheese** | American, Pepper Jack, Colby Jack, Provolone, Swiss | Pick 1, required | Build Your Own Sandwich |
-| **BYO Bread** | same as Bread | Pick 1, required | Build Your Own Sandwich |
+| **BYO Meats & Salads** | Turkey, Ham, Bacon, Curry Chicken Salad, Walnut Tuna Salad, Egg Salad | Pick 1–3, required | Build Your Own Sandwich (staff match the count to the 1/2/3-meat variation; Square can't tie them together), and Build Your Own Half Sandwich |
+| **BYO Cheese** | American, Pepper Jack, Colby Jack, Provolone, Swiss | Pick 1, required | Build Your Own Sandwich and Half Sandwich |
+| **BYO Bread** | same as Bread | Pick 1, required | Build Your Own Sandwich (the 1, 2 and 3 meat sizes) |
+| **Half Sandwich Bread** | Hoagie, Kaiser, Wheat, White, 12 Grain, Rye | Pick 1, required | Build Your Own Half Sandwich. Every bread but the **croissant**, which can't be cut down (client 2026-10-12). The half is its own item only because of this: Square can't take one bread off one size of an item |
 | **Breakfast Fillings** | Bacon, Sausage, Ham, Cheese, Onion, Bell Pepper, Tomato, Jalapeno, Potato, Mushroom, Olives (bell pepper added 2026-10-12) | Pick any | Burrito, Omelet |
 | **Sour Cream or Salsa** | Sour cream, Salsa | Pick 1 | Burrito, Omelet |
 | **Breakfast Meat** | Bacon, Sausage, Ham | Pick 1, required | Breakfast Sandwich, Big Breakfast |
