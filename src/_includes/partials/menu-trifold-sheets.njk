@@ -322,7 +322,7 @@
         </section>
     </div>
 
-    <p class="fold-legend">Sheet 2 &mdash; inside (opened flat) &middot; salads, soup &amp; kids &middot; wraps, cold &amp; build-your-own sandwiches &middot; hot sandwiches &amp; sides</p>
+    <p class="fold-legend">Sheet 2 &mdash; inside (opened flat) &middot; salads &amp; kids &middot; wraps, cold &amp; build-your-own sandwiches &middot; hot sandwiches, sides &amp; soup</p>
 
     {#- INSIDE SHEET — the rest of the menu, read left to right once the
         piece is open flat. Breakfast is NOT here; it is on the outside
@@ -350,7 +350,6 @@
 
         <section class="panel">
             {{ category(salads) }}
-            {{ category(soup) }}
             {{ category(kids) }}
 
             <div class="panel-spacer"></div>
@@ -367,10 +366,14 @@
             flat-top, and a customer deciding between a Patty Melt and a
             Reuben is making one decision, not two. See _note_hot_cold.
             The sides follow them for the same reason a side is ordered:
-            with something off the griddle. -#}
+            with something off the griddle. The soup moved here from the
+            salads panel on 2026-10-12, purely for fit: the salads grew
+            ("& dressing") and the soup gained "Served with crackers", and
+            that panel overran into the consumer advisory. -#}
         <section class="panel">
             {{ category(hotSandwiches) }}
             {{ category(sides) }}
+            {{ category(soup) }}
         </section>
     </div>
 

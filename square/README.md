@@ -71,11 +71,11 @@ default in the description". (`defaultBread` in `menu.json`.)
 | **Extras** | Extra cheese **+$0.50** (add further extras here at $0.50) | Pick any, optional | All sandwiches, burgers, wraps, Breakfast Sandwich, Burrito, Omelet |
 | **Add Cheese** | Cheese **+$0.50** | Pick 1, optional | **Fried Potatoes** and **Side of Eggs** (client 2026-10-11). Its own list, not Extras, so the ticket says "Cheese", not "Extra cheese". Fried Potatoes opens its detail screen for it |
 | **Bun** | Kaiser (default), plus the Bread list | Pick 1, optional | The 7 burgers |
-| **Wrap** | Flour (white) tortilla, Spinach, Tomato | Pick 1, required | All 7 wraps |
+| **Wrap** | White Tortilla, Spinach Tortilla, Tomato Tortilla | Pick 1, required | All 7 wraps. "White", not "Flour (white)" (client 2026-10-12) |
 | **BYO Meats & Salads** | Turkey, Ham, Bacon, Curry Chicken Salad, Walnut Tuna Salad, Egg Salad | Pick 1–3, required | Build Your Own Sandwich (staff match the count to the 1/2/3-meat variation; Square can't tie them together) |
 | **BYO Cheese** | American, Pepper Jack, Colby Jack, Provolone, Swiss | Pick 1, required | Build Your Own Sandwich |
 | **BYO Bread** | same as Bread | Pick 1, required | Build Your Own Sandwich |
-| **Breakfast Fillings** | Bacon, Sausage, Ham, Cheese, Onion, Tomato, Jalapeno, Potato, Mushroom, Olives | Pick any | Burrito, Omelet |
+| **Breakfast Fillings** | Bacon, Sausage, Ham, Cheese, Onion, Bell Pepper, Tomato, Jalapeno, Potato, Mushroom, Olives (bell pepper added 2026-10-12) | Pick any | Burrito, Omelet |
 | **Sour Cream or Salsa** | Sour cream, Salsa | Pick 1 | Burrito, Omelet |
 | **Breakfast Meat** | Bacon, Sausage, Ham | Pick 1, required | Breakfast Sandwich, Big Breakfast |
 | **Eggs** | Scrambled, Sunny side up, Over easy, Over medium, Over hard | Pick 1, required. Every style **except poached**, which the kitchen does not do. Add basted or boiled only if the kitchen offers them. | Big Breakfast |

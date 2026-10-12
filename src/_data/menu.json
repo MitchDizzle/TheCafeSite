@@ -25,8 +25,22 @@
       "name": "Breakfast",
       "serving": "Serving until 12pm",
       "_note_build": "The build-your-own filling list used to be repeated verbatim on the burrito and on both omelets. It is one note on the category now — same options, stated once, which is also how the sandwiches categories read.",
-      "note": "Burritos and omelets are build-your-own. Choose from bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa.",
+      "note": "Fillings for omelets & burritos: bacon, sausage, ham, cheese, onion, bell pepper, tomato, jalapeno, potato, mushroom, olives. With sour cream or salsa.",
+      "_note_order": "The omelet and the burrito come first, straight under the fillings note, and the note names them both, and each says to pick the fillings above (client 2026-10-12: the same fillings go in both, and the list was being overlooked). Kept short on purpose: the counter menu's breakfast column and the tri-fold flap are full. Every menu that prints the note prints it under the heading, so 'above' holds; /menu-board prints neither notes nor descriptions.",
       "items": [
+        {
+          "_note_prices": "One line, two sizes. `prices` renders as '$9.00 / $11.00' in the same order as the sizes in the name — 2 egg first, 3 egg second — so the mapping is implied rather than labelled twice.",
+          "name": "2 / 3 Egg Omelet",
+          "description": "Pick fillings above. With toast.",
+          "dietOnRequest": ["V", "GF"],
+          "prices": [9.00, 11.00]
+        },
+        {
+          "name": "Burrito",
+          "description": "Pick fillings above.",
+          "dietOnRequest": ["V"],
+          "price": 8.00
+        },
         {
           "_note": "One row since 2026-10-09 (client), as it is one item in Square: Biscuit & Gravy, in Full and Half sizes (scripts/square-catalog.py). `prices` follows the sizes in the name, Full first, like the omelet.",
           "name": "Full / Half Biscuit & Gravy",
@@ -41,20 +55,9 @@
           "price": 10.00
         },
         {
-          "name": "Burrito",
-          "dietOnRequest": ["V"],
-          "price": 8.00
-        },
-        {
-          "_note_prices": "One line, two sizes. `prices` renders as '$9.00 / $11.00' in the same order as the sizes in the name — 2 egg first, 3 egg second — so the mapping is implied rather than labelled twice.",
-          "name": "2 / 3 Egg Omelet",
-          "dietOnRequest": ["V", "GF"],
-          "prices": [9.00, 11.00]
-        },
-        {
-          "_note_croissant": "The menu names three bases — biscuit, croissant, English muffin — and nothing else (client, 2026-09-30). Online (Square) the other breads are offered too, as $0 choices, but the printed menus list only these three. Not to be confused with the earlier croissant VERSION (two eggs, $8.00), which was dropped 2026-09-29 as too big: the croissant here is just the bread, same sandwich, same price.",
+          "_note_croissant": "The menu names the bases: biscuit, croissant, English muffin, and since 2026-10-12 wheat or white bread too (client). Online (Square) every bread in the Breakfast Base list is offered, as $0 choices. Not to be confused with the earlier croissant VERSION (two eggs, $8.00), which was dropped 2026-09-29 as too big: the croissant here is just the bread, same sandwich, same price.",
           "name": "Breakfast Sandwich",
-          "description": "One egg, cheese & choice of bacon, sausage or ham, on a biscuit, croissant or English muffin.",
+          "description": "One egg, cheese & choice of bacon, sausage or ham, on a biscuit, croissant, English muffin, wheat or white bread.",
           "dietOnRequest": ["V"],
           "_note_price": "The menus advertise the price WITH meat, $5.50. In Square (client 2026-10-06) the item is `squareBase` and its Meat list adds $1 for bacon, sausage or ham, nothing for No Meat. Change both together.",
           "squareBase": 4.50,
@@ -77,7 +80,7 @@
     {
       "id": "wraps",
       "name": "Wraps",
-      "note": "Choice of flour (white) tortilla, spinach or tomato wrap.",
+      "note": "Choice of white, spinach or tomato tortilla.",
       "sizing": [
         { "size": "Any wrap", "price": 8.50 }
       ],
@@ -227,7 +230,7 @@
       "items": [
         {
           "name": "Strawberry Chicken Salad",
-          "description": "Greens, chicken, strawberries, walnuts, tomato, parmesan cheese & dressing"
+          "description": "Greens, chicken, strawberries, walnuts, tomato, parmesan cheese & strawberry dressing"
         },
         {
           "name": "Buffalo Chicken Salad",
@@ -235,7 +238,7 @@
         },
         {
           "name": "Chef Salad",
-          "description": "Greens, turkey, ham, tomato, egg, cheddar & parmesan cheese"
+          "description": "Greens, turkey, ham, tomato, egg, cheddar, parmesan cheese & dressing"
         },
         {
           "name": "Taco Salad",
@@ -254,7 +257,7 @@
         },
         {
           "name": "Dinner Salad",
-          "description": "Greens, tomato, red onion & parmesan cheese",
+          "description": "Greens, tomato, red onion, parmesan cheese & dressing",
           "diet": ["V", "GF"],
           "price": 4.00
         }
@@ -264,6 +267,7 @@
       "id": "soup",
       "name": "Soup of the Day",
       "serving": "Starting at 11am",
+      "note": "Served with crackers.",
       "items": [
         { "name": "Cup", "price": 5.00 },
         { "name": "Bowl", "price": 7.00 }

@@ -72,11 +72,11 @@ one("Big Breakfast", B, i.get("squareBase", i["price"]),
     "2 eggs your way, potatoes, choice of bacon, sausage or ham, and white toast. Served until 12pm.",
     skip_detail=False)
 one("Burrito", B, item("breakfast", "Burrito")["price"],
-    "Build your own: bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 12pm.",
+    "Build your own: bacon, sausage, ham, cheese, onion, bell pepper, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 12pm.",
     skip_detail=False)
 om = item("breakfast", "2 / 3 Egg Omelet")
 add("Omelet", B, [("2 Egg", om["prices"][0]), ("3 Egg", om["prices"][1])],
-    "Build your own: bacon, sausage, ham, cheese, onion, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 12pm.")
+    "Build your own: bacon, sausage, ham, cheese, onion, bell pepper, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa and toast. Served until 12pm.")
 i = item("breakfast", "Breakfast Sandwich")
 # Meat is a +$1 add-on in Square (client 2026-10-06), as on the Big Breakfast.
 one("Breakfast Sandwich", B, i.get("squareBase", i["price"]), i["description"] + " Served until 12pm.", skip_detail=False)
@@ -153,7 +153,7 @@ for i in cats["salads"]["items"]:
         add(i["name"], S, [("Full", full), ("Half", half)], i.get("description", "") + ".")
 
 # ── Soup ───────────────────────────────────────────────────
-add("Soup of the Day", "Soup", [(i["name"], i["price"]) for i in cats["soup"]["items"]], "Starting at 11am.")
+add("Soup of the Day", "Soup", [(i["name"], i["price"]) for i in cats["soup"]["items"]], "Starting at 11am. Served with crackers.")
 
 # ── Kids ───────────────────────────────────────────────────
 k = cats["kids"]
