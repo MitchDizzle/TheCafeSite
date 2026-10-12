@@ -9,7 +9,8 @@
     "build": "npm run clean && eleventy && node scripts/export-studio.js",
     "export": "eleventy && node scripts/export-studio.js",
     "square": "python scripts/square-catalog.py",
-    "thumbs": "node scripts/photo-thumbs.js"
+    "thumbs": "node scripts/photo-thumbs.js",
+    "square-check": "node scripts/square-check.mjs"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0"
