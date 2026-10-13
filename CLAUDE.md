@@ -2,6 +2,13 @@
 
 Static site for The Cafe (breakfast, lunch & catering, Leavenworth KS), built with **Eleventy 3 + Nunjucks**. Mirrors the setup of the `mtch.tech` project at `E:\ScriptsGit\mtch.tech` — check there first when a convention is unclear.
 
+## How to report
+The owner often works between serving customers and types requests in parts as new issues come up. So:
+- **Work quietly, report once.** No step-by-step narration; at the end of a task, a short report: what changed, anything they must do, anything you need from them.
+- **Short and scannable.** A few bullets, not paragraphs. Skip what didn't change and how you got there unless asked.
+- **A new message mid-task is an addition, not a restart.** Fold it in and keep going.
+- Ask only when truly blocked, in one line.
+
 ## Planning & tasks
 Project planning, decisions, and the task backlog live OUTSIDE this public repo at `E:\GitHub\CafeWork\` (private repo) — read `PLAN.md` there first, take tasks from `TASKS.md`. Never commit business/planning details, pricing strategy, or outreach scripts to this repo.
 
