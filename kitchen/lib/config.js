@@ -80,11 +80,15 @@ const DEFAULTS = {
   // OneDrive folder or a share on another PC. "" = only the copies in
   // data\backups\.
   backupDir: "",
+  // The private GitHub repo the daily backup is pushed to
+  // (lib/offsite.js), as "git@github.com:<owner>/<repo>.git" or its web
+  // address. "" = not pushed anywhere.
+  backupRepo: "",
 };
 
 // Settings that are the cafe's own and have no meaningful default: never
 // flagged as "differs from the default".
-const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems", "openDays", "autoHandoffMinutes", "backupDir"]);
+const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems", "openDays", "autoHandoffMinutes", "backupDir", "backupRepo"]);
 
 // What's worth knowing about config.json, in plain words. Written to the
 // program window at startup and shown on /check.

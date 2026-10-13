@@ -42,6 +42,7 @@
  *   config.js         config.json and the KITCHEN_* switches
  *   data.js           data\, where this PC's own files are kept
  *   backup.js         the nightly copy of data\
+ *   offsite.js        ...and pushing it to a private GitHub repo
  *   state.js          what's been pressed (state.json) and the skip list
  *   square.js         Square's API, and fetching the orders
  *   catalog.js        Square's item list; reading and writing one object

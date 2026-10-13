@@ -235,10 +235,21 @@ Everything the board makes on this PC is in `data\`. Before 2026-10-13 these sat
 | `stats-history.json` | Every day's orders and numbers, for Reports. Never deleted, and **the only copy of the kitchen times**. |
 | `photos\` | Photo post: the photos and finished posts kept for the website, with `photos.json`. |
 | `backups\` | The daily copies, below. |
+| `offsite\`, `backup-key` | Backup to GitHub, below: the repo's clone and this PC's key for it. |
 
 **Backups.** When the board starts, and again at 3pm if it's still on, it copies `stats-history.json`, `specials-plan.json` and `state.json` into `data\backups\<date>\`, keeping the last 30 days. That covers a bad write or a deleted file, not a dead PC. For that, set **`backupDir`** in `config.json` to a folder off this PC's drive: a USB stick left plugged in (`"backupDir": "E:\\Kitchen backup"`, with two backslashes), a OneDrive folder on the Kitchen account, or a share on another PC. The same dated copies go there, plus every Photo post photo (`photos\`). If it can't be reached (the stick is out), the program window says so and the board carries on. `/check` shows when each place was last written.
 
-To put a file back: close the board, copy it from a dated folder into `data\`, start the board.
+**Backup to GitHub (the copy off this PC).** Set **`backupRepo`** in `config.json` to a private GitHub repo and the same backup is pushed there each time: one file per day of history (`history\<date>.json`), the plan, `state.json` and the Photo post photos, with every earlier version kept by git. It can be read from any computer, and Claude can read it for reports. The PC never signs in to GitHub; it makes its own key, which can write to that one repo only:
+
+1. On GitHub, make a **private** repo with nothing in it (no README needed), e.g. `CafeKitchenData`.
+2. On the kitchen PC, add `"backupRepo": "git@github.com:<you>/CafeKitchenData.git"` to `config.json` (the repo's web address works too) and restart the board.
+3. Open `localhost:8090/check`. The **Backup** line shows *This PC's backup key* (`ssh-ed25519 …`). Copy all of it.
+4. On GitHub: the repo's **Settings → Deploy keys → Add deploy key**, paste it, tick **Allow write access**, Add key.
+5. Within 10 minutes the board tries again and `/check` says when it pushed; the repo fills in.
+
+The key is `data\backup-key` (and `.pub`); the clone it pushes from is `data\offsite\`. If the PC is ever replaced, delete the old key from Deploy keys and add the new PC's.
+
+To put a file back: close the board, copy it from a dated folder into `data\`, start the board. For the history from GitHub, the day files are joined back into `stats-history.json` (ask Claude).
 
 ## Specials (Manage on the front page)
 

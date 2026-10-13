@@ -56,3 +56,17 @@ test("Photo post: phone, web address and hours come from the website's site.json
   assert.equal(d.order, `${site.social.website}/order`);
   assert.match(d.hours, new RegExp(String.raw`^${site.opening.hoursDays}, \d+(:\d\d)?(am|pm) – \d+(:\d\d)?(am|pm)$`));
 });
+
+test("backup to GitHub: the repo's web address becomes its ssh address", () => {
+  const { cfg } = require("../lib/config");
+  const { repoUrl } = require("../lib/offsite");
+  const before = cfg.backupRepo;
+  try {
+    for (const s of ["https://github.com/Owner/CafeKitchenData", "https://github.com/Owner/CafeKitchenData.git", "git@github.com:Owner/CafeKitchenData.git"]) {
+      cfg.backupRepo = s;
+      assert.equal(repoUrl(), "git@github.com:Owner/CafeKitchenData.git");
+    }
+  } finally {
+    cfg.backupRepo = before;
+  }
+});

@@ -8,6 +8,7 @@
 //     Photo post's photos go there as well (backupDir\photos\, new ones
 //     added, none ever deleted); on this PC they'd only be a second copy on
 //     the same drive.
+//   - the private GitHub repo in backupRepo, when one is set (offsite.js).
 // Taken when the program starts (yesterday's day is complete by then) and
 // again after closing, at BACKUP_HOUR, so a day is copied the same evening
 // when the PC is left on. The last KEEP_DAYS days are kept. Test mode's
@@ -16,6 +17,7 @@ const fs = require("fs");
 const path = require("path");
 const { DATA, MOCK, cfg } = require("./config");
 const { localDate } = require("./util");
+const { offsiteStatus, pushOffsite } = require("./offsite");
 
 const FILES = ["stats-history.json", "specials-plan.json", "state.json"];
 const BACKUP_HOUR = 15; // 3pm, after closing
@@ -61,6 +63,7 @@ function backupNow() {
     backupStatus.local = { at, error: err.message };
     console.error(`Backup in data\\backups: ${err.message}`);
   }
+  pushOffsite();
   if (!cfg.backupDir) return;
   try {
     // A USB stick that isn't plugged in: say so, never make the folder on
@@ -76,9 +79,12 @@ function backupNow() {
   }
 }
 
-// Once at start, then once a day after BACKUP_HOUR.
+// Once at start, then once a day after BACKUP_HOUR. A push to GitHub that
+// failed is tried again at every check, so a key just added works within
+// minutes.
 let eveningDone = "";
 function backupCheck() {
+  if (offsiteStatus.error) pushOffsite();
   const today = localDate();
   if (new Date().getHours() < BACKUP_HOUR || eveningDone === today) return;
   eveningDone = today;

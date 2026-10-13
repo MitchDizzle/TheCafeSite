@@ -8,6 +8,7 @@ const { catalog } = require("./catalog");
 const { live } = require("./live");
 const { skipSummary } = require("./state");
 const { backupStatus } = require("./backup");
+const { offsiteStatus, repoUrl } = require("./offsite");
 const { itemName, hiddenReason, orderDetail } = require("./tickets");
 
 const FRONT_URL = `http://${os.hostname().toLowerCase()}:${cfg.port}/front${cfg.frontKey ? "?key=" + encodeURIComponent(cfg.frontKey) : ""}`;
@@ -35,8 +36,14 @@ const esc = (v) =>
 function backupLine() {
   const when = (s) => !s ? "not yet" : s.error ? `<b style="color:#A02F26">failed: ${esc(s.error)}</b>` : esc(new Date(s.at).toLocaleString());
   if (MOCK) return "off in test mode.";
+  const github = !cfg.backupRepo ? "not set up (backupRepo in config.json)"
+    : offsiteStatus.error ? `<b style="color:#A02F26">failed: ${esc(offsiteStatus.error)}</b>`
+    : offsiteStatus.at ? esc(new Date(offsiteStatus.at).toLocaleString()) : "not yet";
+  const key = offsiteStatus.publicKey
+    ? `<br>This PC's backup key (GitHub: the repo's Settings &rarr; Deploy keys &rarr; Add deploy key, tick Allow write access):<br><code style="user-select:all;word-break:break-all">${esc(offsiteStatus.publicKey)}</code>` : "";
   return `on this PC (data\\backups) ${when(backupStatus.local)}; ` +
-    (cfg.backupDir ? `to ${esc(cfg.backupDir)} ${when(backupStatus.away)}.` : "<b>nowhere off this PC</b> (backupDir in config.json).");
+    (cfg.backupDir ? `to ${esc(cfg.backupDir)} ${when(backupStatus.away)}; ` : "") +
+    `to GitHub${cfg.backupRepo ? ` (${esc(repoUrl())})` : ""} ${github}.${key}`;
 }
 
 // A plain troubleshooting page: every order Square returned on the last poll
