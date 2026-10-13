@@ -32,7 +32,7 @@ before confirming — Square lists anything it rejects.
 |---|---|---|
 | Full / Half (salads, biscuits & gravy), Cup / Bowl, 2 / 3 egg | **Variations** of one item | One tile on the POS, the size prints on the ticket |
 | The 7 burgers (incl. Patty Melt) | Item "Hamburger", variations **Beef / Chicken** at the same price | The kitchen needs to see which one. The menu says "chicken instead of beef" once in the category note, not in each name |
-| Build Your Own 1 / 2 / 3 meats, half | One item, four **variations** | Price is set by the variation; the picks are modifiers (below). The **Half Sandwich** size is sold on **Point of Sale only** (client 2026-10-12): a half can't be made on a croissant, and the bread list can't leave it out for one size, so online and DoorDash customers can't order a half and the counter steers off the croissant. Set by hand in the Dashboard; the import and the API don't set sales channels |
+| Build Your Own 1 / 2 / 3 meats, half | One item, four **variations** | Price is set by the variation; the picks are modifiers (below). A half can't be made on a croissant, and Square can't take one bread off one size, so the description says a half ordered on a croissant is made on white bread (client 2026-10-12: kept as one item rather than a separate half item, for the POS and online) |
 | Chips flavours, iced tea vs fountain | **Variations** at one price | Counts which one sells, for ordering stock |
 | Toast, Biscuit or English Muffin | One item + the **Breakfast Base** modifier (below) | Was Toast / Biscuit / English Muffin variations until 2026-10-08, which never said which bread the toast was. Delete those three old variations in the Dashboard after importing |
 | Wraps, kids meals | One price per item | Choices are modifiers (below) |
@@ -56,7 +56,6 @@ pre-packaged items later.
 The import and the Catalog API leave an item's sales channels alone (a write to them is ignored, tried 2026-10-12), so these are ticked in the Dashboard:
 
 - **Lunch Special**: Point of Sale **and online ordering** (client 2026-10-12), with pickup on. The kitchen board renames its one variation each morning rather than making a new one, so the setting sticks. A day planned with no price is priced at the till, which online ordering can't sell.
-- **Build Your Own Sandwich**, the **Half Sandwich** size: Point of Sale only (above).
 
 ## Modifier lists — create these by hand in the Dashboard
 

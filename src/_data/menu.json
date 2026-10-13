@@ -138,7 +138,7 @@
       "id": "build_sandwich",
       "name": "Build Your Own Sandwich",
       "note": "With lettuce, tomato, pickle & onion. No croissant on a half.",
-      "_note_half": "A half sandwich can't be made on a croissant: there is no way to cut one down (client 2026-10-12). In Square the Half Sandwich size is sold at the counter only, not online (square/README.md, Sales channels).",
+      "_note_half": "A half sandwich can't be made on a croissant: there is no way to cut one down (client 2026-10-12). Square can't take the croissant off one size, so its description there says a half ordered on one is made on white bread (scripts/square-catalog.py).",
       "items": [
         { "name": "1 Meat", "price": 8.00 },
         { "name": "2 Meats", "price": 9.50 },
