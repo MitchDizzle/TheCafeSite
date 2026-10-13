@@ -12,7 +12,7 @@
 //   history\<date>.json   one day of stats-history.json each, so a day's
 //                         commit only changes that day
 //   specials-plan.json, state.json
-//   photos\               Photo post's photos (new ones added, none deleted)
+//   photos\               Photo post's photos, as Saved photos has them
 // git keeps every earlier version, so the files are simply overwritten.
 // Pushed by backup.js with the local copies (on start and at 3pm), and
 // tried again every 10 minutes after a failure. Never in test mode or on a
@@ -107,10 +107,13 @@ function copyIn() {
   const photos = path.join(DATA, "photos");
   if (fs.existsSync(photos)) {
     fs.mkdirSync(path.join(REPO, "photos"), { recursive: true });
-    for (const name of fs.readdirSync(photos)) {
+    const here = new Set(fs.readdirSync(photos));
+    for (const name of here) {
       const dst = path.join(REPO, "photos", name);
       if (name === "photos.json" || !fs.existsSync(dst)) fs.copyFileSync(path.join(photos, name), dst);
     }
+    // One deleted in Saved photos goes from the repo too (git still has it).
+    for (const name of fs.readdirSync(path.join(REPO, "photos"))) if (!here.has(name)) fs.rmSync(path.join(REPO, "photos", name), { force: true });
   }
   if (!fs.existsSync(path.join(REPO, "README.md"))) put(path.join(REPO, "README.md"), README);
 }

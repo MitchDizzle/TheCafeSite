@@ -175,7 +175,7 @@ Settings in `config.json`, both optional:
 | `photoPlaceholders` | `placeholders/lunch-special.png`, `placeholders/soup-of-the-day.png` | The picture for each daily item on a day its dish has no photo. Leave an item out to show nothing of ours on those days. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
-| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), delete test shots in **Saved photos** (see Photo post), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
 
 ## When an order doesn't show up
 
@@ -213,7 +213,7 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `tests\` | The tests (see "Tests"). |
 | `board.html` | The kitchen screen. |
 | `front.html` | The front page for the counter (`/front`). |
-| `front\` | The front page's Manage jobs, one file each (Specials, Photo post, Reports, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
+| `front\` | The front page's Manage jobs, one file each (Specials, Photo post, Saved photos, Reports, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
 | `kitchen.css` | The colours and base styles both screens share. |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `data\` | This PC's own files, made by the board; gitignored, never touched by an update (see "The data folder and backups"). |
@@ -324,6 +324,8 @@ Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo
 5. **Make the picture.** Press and hold it to save it to the phone's photos (or Download), and **Copy caption**: with the order link, hours and menu link.
 
 **Keep the photo on the kitchen PC for the website** (ticked by default) saves the photo (2000px, re-drawn on the phone so its GPS location is gone) and the finished post in `data\photos\` on the kitchen PC, listed in `data\photos\photos.json` in the same shape as the website's `src/_data/photos.json`. To put one on the website's `/gallery`, copy the photo into `src/assets/photos/`, move its entry over (a dish on the menu takes its menu name as `item`, not `special`), write its `alt` text, and run `npm run thumbs` (or ask Claude to).
+
+**Manage → Saved photos** shows every photo kept this way, newest first (the finished post, so a test is easy to spot). Tick the test shots and retakes, **Delete ticked**, confirm: the photo, its post and its `photos.json` entry go from the kitchen PC, and from the GitHub backup's current files at its next push (git's history still has them). A photo already copied to the website isn't touched.
 
 - The post's fonts load from Google Fonts on the phone, like the website's. Without internet the picture uses plain fonts and the screen says so.
 - The phone number, web address, hours, menu and order links in the picture and caption are the website's own: `src/_data/site.json` (`phone`, `social.website`, the `opening` hours), read each time the screen opens. Change them there and Photo post follows after the next update.

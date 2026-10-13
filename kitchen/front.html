@@ -642,12 +642,12 @@
   }
 
   // What the Manage jobs in front/*.js (Specials, Photo post, Reports,
-  // Desserts, Leave off kitchen tickets) share with this page. Each file is
+  // Desserts, Saved photos, Leave off kitchen tickets) share with this page. Each file is
   // loaded after this script and registers its menu row's job in tools
   // (and any of its own buttons in acts) under the row's data-act name.
   const listWords = (a) => (a.length < 2 ? a.join("") : `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`);
   window.Front = {
-    esc, fmtTime, postJson, screen, busy, result, dialog, listWords,
+    esc, fmtTime, postJson, screen, busy, result, dialog, listWords, api,
     get pin() { return pinValue; },
     rerender() { lastJson = ""; }, // the next poll redraws the orders
     tools: {},
@@ -716,6 +716,7 @@
         ${row("photo", "Photo post", "Take a photo of the special or any item and make its Facebook picture here.")}
         <h3 class="m-group">Now and then</h3>
         ${row("desserts", "Desserts", "Flavors on or off, and the photo online ordering shows.")}
+        ${row("saved", "Saved photos", "The photos Photo post kept on the kitchen PC. Delete test shots here.")}
         ${row("report", "Reports", "Orders, sales, kitchen times and items for any range of days.")}
         ${row("skip", "Leave off kitchen tickets", "Items and categories that go on the front's list instead.")}
         ${row("update", "Check for updates", "Install a new version of the board, if there is one.")}
@@ -759,5 +760,6 @@
 <script src="/front/reports.js"></script>
 <script src="/front/desserts.js"></script>
 <script src="/front/leave-off.js"></script>
+<script src="/front/saved-photos.js"></script>
 </body>
 </html>

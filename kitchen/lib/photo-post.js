@@ -109,4 +109,44 @@ function savePhotoPost(body) {
   return `${date}-${slug}.jpg`;
 }
 
-module.exports = { PHOTO_DIR, photoSetup, savePhotoPost, siteDetails };
+// Manage -> Saved photos: what Photo post has kept, newest first, so test
+// shots can be deleted. Only names listed in photos.json are ever read or
+// deleted, never a path from the phone.
+function readIndex() {
+  try { return JSON.parse(fs.readFileSync(path.join(PHOTO_DIR, "photos.json"), "utf8")); } catch { return { photos: [] }; }
+}
+
+function savedPhotos() {
+  return readIndex().photos
+    .filter((p) => p.saved)
+    .map((p) => ({ saved: p.saved, title: p.title || "", date: p.date || "", special: !!p.special, description: p.description || "",
+      hasPost: !!p.post && fs.existsSync(path.join(PHOTO_DIR, p.post)) }))
+    .reverse();
+}
+
+// The picture for the list: the finished post if there is one (it shows the
+// words, so a test is easy to spot), else the photo.
+function savedPhotoFile(name) {
+  const p = readIndex().photos.find((x) => x.saved === name);
+  if (!p) return null;
+  for (const f of [p.post, p.saved]) {
+    if (f && fs.existsSync(path.join(PHOTO_DIR, f))) return fs.readFileSync(path.join(PHOTO_DIR, f));
+  }
+  return null;
+}
+
+function deleteSavedPhotos(names) {
+  const drop = new Set((Array.isArray(names) ? names : []).map(String));
+  const index = readIndex();
+  const gone = index.photos.filter((p) => drop.has(p.saved));
+  if (!gone.length) throw Object.assign(new Error("Nothing was ticked."), { plain: true });
+  for (const p of gone) {
+    for (const f of [p.saved, p.post]) if (f) fs.rmSync(path.join(PHOTO_DIR, path.basename(f)), { force: true });
+  }
+  index.photos = index.photos.filter((p) => !drop.has(p.saved));
+  fs.writeFileSync(path.join(PHOTO_DIR, "photos.json"), JSON.stringify(index, null, 2));
+  console.log(`Saved photos deleted from the front page (${new Date().toLocaleTimeString()}): ${gone.map((p) => p.saved).join(", ")}`);
+  return gone.length;
+}
+
+module.exports = { PHOTO_DIR, photoSetup, savePhotoPost, siteDetails, savedPhotos, savedPhotoFile, deleteSavedPhotos };

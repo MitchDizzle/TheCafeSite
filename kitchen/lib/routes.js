@@ -13,7 +13,7 @@ const { recordHistoryNow, historyReport } = require("./stats");
 const { dessertItems, saveDesserts, saveDessertPhoto } = require("./desserts");
 const { RETRY_MINUTES, pullSite, planView, savePlanDays } = require("./specials/plan");
 const { applyToday } = require("./specials/today");
-const { photoSetup, savePhotoPost } = require("./photo-post");
+const { photoSetup, savePhotoPost, savedPhotos, savedPhotoFile, deleteSavedPhotos } = require("./photo-post");
 const { checkPage } = require("./check");
 const { power, checkUpdates, boardCheckedIn } = require("./system");
 
@@ -70,7 +70,7 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -93,6 +93,7 @@ const STATIC = {
   "/front/reports.js": "front/reports.js",
   "/front/desserts.js": "front/desserts.js",
   "/front/leave-off.js": "front/leave-off.js",
+  "/front/saved-photos.js": "front/saved-photos.js",
 };
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
@@ -283,6 +284,25 @@ async function handle(req, res) {
     } catch (err) {
       console.error(`Photo post: ${err.message}`);
       return send(res, 200, { ok: false, message: err.plain ? err.message : `Couldn't keep it: ${err.message}` });
+    }
+  }
+  // Saved photos, behind the PIN: the list, one picture (as a JPEG, for the
+  // list's thumbnails), and deleting the ticked ones.
+  if (req.method === "POST" && /^\/api\/front-saved-photo(s|s-delete)?$/.test(url.pathname)) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    try {
+      if (url.pathname === "/api/front-saved-photos") return send(res, 200, { ok: true, photos: savedPhotos() });
+      if (url.pathname === "/api/front-saved-photo") {
+        const jpeg = savedPhotoFile(String(body.name || ""));
+        return jpeg ? res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "no-store" }).end(jpeg) : send(res, 404, { ok: false });
+      }
+      const n = deleteSavedPhotos(body.names);
+      return send(res, 200, { ok: true, message: `Deleted ${n} photo${n === 1 ? "" : "s"} from the kitchen PC.` });
+    } catch (err) {
+      console.error(`Saved photos: ${err.message}`);
+      return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't work: ${err.message}` });
     }
   }
   // Reports, behind the PIN: the saved daily history for a date range.

@@ -183,6 +183,17 @@
   .m-body { padding: 0.9rem; }
 }
 
+/* Saved photos: a grid of the kept posts, each with a Delete tick. */
+.sp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 0.8rem; }
+.sp-card { display: grid; gap: 0.3rem; align-content: start; padding: 0.4rem; border: 2px solid var(--line); border-radius: 0.55rem; cursor: pointer; }
+.sp-card img, .sp-card .m-nophoto { width: 100%; aspect-ratio: 1080 / 1250; object-fit: cover; border-radius: 0.35rem; background: #F1ECE3; }
+.sp-card b { font-size: 0.95rem; line-height: 1.2; }
+.sp-card small { color: var(--muted); font-size: 0.85rem; }
+.sp-card .check { margin: 0; font-weight: 800; color: var(--red-dark); }
+.sp-card .check input { width: 1.2rem; height: 1.2rem; }
+.sp-card:has(input:checked) { border-color: var(--red-dark); background: #FDF1EF; }
+.sp-card:has(input:checked) img { opacity: 0.6; }
+
 /* Leave off kitchen tickets: Square's categories, each with its items. */
 .skip-cat { border: 1px solid var(--line); border-radius: 0.45rem; margin: 0 0 0.5rem; }
 .skip-cat > summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; cursor: pointer; font-weight: 800; }
