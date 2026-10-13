@@ -43,6 +43,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { execFile, spawn } = require("child_process");
+const crypto = require("crypto");
 
 const DIR = __dirname;
 const CONFIG_FILE = path.join(DIR, "config.json");
@@ -94,6 +95,9 @@ const DEFAULTS = {
   // DoorDash) becomes a photo of the day's dish, found by its name among the
   // photos (see "Photos in Square" in the README). false leaves them alone.
   dailyPhotos: true,
+  // The picture on a day the dish has no photo yet (or nothing is planned),
+  // per item, relative to this folder. The studio's square-placeholder pieces.
+  photoPlaceholders: { "Lunch Special": "placeholders/lunch-special.png", "Soup of the Day": "placeholders/soup-of-the-day.png" },
   // Tell Square what the kitchen and the front did, for online and delivery
   // orders (counter sales are finished in Square when they're paid): Done
   // on the board marks the order Ready in Square readyDelaySeconds later
@@ -677,8 +681,8 @@ async function saveDessertPhoto(itemId, dataUrl) {
 //   - the website's published week (cfg.specialsUrl, built from the site's
 //     src/_data/specials.json: the same days as the /menu box and the
 //     Facebook post), read every SITE_MINUTES. It adds the days it lists and
-//     keeps them in step with the site, but it NEVER changes today, an
-//     earlier day, or a day set on the front page;
+//     keeps them in step with the site, but it NEVER changes today once it's
+//     in Square, an earlier day, or a day set on the front page;
 //   - the front page. A day changed there is the front's from then on: the
 //     website's copy no longer touches it.
 // Kept in specials-plan.json beside state.json (gitignored).
@@ -695,7 +699,7 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // sidesApplied: the same, for the day's side lists on cfg.sideItem (applySides)
 // descApplied: the same, for the daily items' descriptions (applyDescriptions)
 // photoApplied: the same, for their pictures (applyPhotos)
-// squareImages: { "<photo path>": "<Square image id>" }, each photo uploaded once
+// squareImages: { "<photo path>#<content hash>": "<Square image id>" }, each picture uploaded once
 // photoTurn: { "<dish>": { date, n } }, which of a dish's photos is next
 // swapSides: the sides any side can be swapped for, as the website last listed them
 // includesDrink: every lunch special includes a drink, as the website last said
@@ -754,9 +758,13 @@ async function pullSite() {
       if (d.date < today) continue;
       const have = plan.days[d.date];
       if (have && have.from !== "site") continue; // set on the front page: theirs
-      // Today is never changed once it's in Square. It's only added, when
-      // the board starts on a day it had no plan for.
-      if (d.date === today && (have || (plan.applied[today] && plan.applied[today].sig !== "clear"))) continue;
+      // Today is never changed once it's in Square: from then on only the
+      // front page changes it. Until then the website's latest wins, so a day
+      // read on Friday and changed on the website over the weekend goes in
+      // as changed when the board starts on Monday (2026-10-12, when Friday's
+      // copy went in instead).
+      const inSquare = plan.applied[today] && plan.applied[today].at && plan.applied[today].sig !== "clear";
+      if (d.date === today && inSquare) continue;
       const items = {};
       // The plate's price: the day's own, or the website's price for every
       // special (client 2026-10-12: $10 unless a day says otherwise). Only a
@@ -1116,9 +1124,12 @@ async function applyDescriptions(today, day) {
 //     not moved to the website yet. One already on the website is the same
 //     photo (the same `file`), so it counts once.
 // A dish photographed more than once rotates: each day it's served shows the
-// next (photoTurn). A dish with no photo yet shows none of ours; a picture
-// put on the item in the Dashboard is never removed, and shows on those days.
-// Each photo is uploaded to Square once and its image id kept (squareImages).
+// next (photoTurn). A dish with no photo yet, or a day with nothing planned,
+// shows the item's placeholder (photoPlaceholders: "Today's Lunch Special"
+// over a covered plate). A picture put on the item in the Dashboard is never
+// removed; it sits behind ours. Each picture is uploaded to Square once and
+// its image id kept (squareImages), by its contents, so a changed
+// placeholder goes up again.
 const dishKey = (s) => String(s || "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
 
 function dishPhotos() {
@@ -1144,7 +1155,7 @@ function dayPhotos(today, day) {
   for (const name of cfg.dailyItems) {
     const what = day && day.items[name] && dishKey(day.items[name].today);
     const mine = what ? all.filter((p) => dishKey(p.title) === what) : [];
-    if (!mine.length) { out[name] = null; continue; }
+    if (!mine.length) { out[name] = placeholderFor(name); continue; }
     const turn = plan.photoTurn[what];
     if (!turn) plan.photoTurn[what] = { date: today, n: 0 };
     else if (turn.date !== today) plan.photoTurn[what] = { date: today, n: turn.n + 1 };
@@ -1153,15 +1164,23 @@ function dayPhotos(today, day) {
   return out;
 }
 
+function placeholderFor(name) {
+  const rel = cfg.photoPlaceholders && cfg.photoPlaceholders[name];
+  const file = rel && path.join(DIR, rel);
+  return file && fs.existsSync(file) ? file : null;
+}
+
 async function uploadImage(file, title) {
-  if (plan.squareImages[file]) return plan.squareImages[file];
-  if (MOCK) { plan.squareImages[file] = `MOCK-IMAGE-${mockNextId++}`; return plan.squareImages[file]; }
+  const bytes = fs.readFileSync(file);
+  const key = `${file}#${crypto.createHash("sha1").update(bytes).digest("hex").slice(0, 12)}`;
+  if (plan.squareImages[key]) return plan.squareImages[key];
+  if (MOCK) { plan.squareImages[key] = `MOCK-IMAGE-${mockNextId++}`; return plan.squareImages[key]; }
   const form = new FormData();
   form.append("request", new Blob([JSON.stringify({
     idempotency_key: `kitchen-image-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     image: { type: "IMAGE", id: "#photo", image_data: { name: title } },
   })], { type: "application/json" }), "request.json");
-  form.append("image_file", new Blob([fs.readFileSync(file)], { type: "image/jpeg" }), path.basename(file));
+  form.append("image_file", new Blob([bytes], { type: /\.png$/i.test(file) ? "image/png" : "image/jpeg" }), path.basename(file));
   const res = await fetch(`${API}/catalog/images`, {
     method: "POST",
     headers: { Authorization: `Bearer ${cfg.accessToken}`, "Square-Version": SQUARE_VERSION },
@@ -1170,7 +1189,7 @@ async function uploadImage(file, title) {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`Square ${res.status}: ${(json.errors || []).map((e) => e.detail || e.code).join("; ") || res.statusText}`);
-  plan.squareImages[file] = json.image.id;
+  plan.squareImages[key] = json.image.id;
   savePlan();
   return json.image.id;
 }
@@ -1199,7 +1218,7 @@ async function applyPhotos(today, day) {
       if (JSON.stringify(ids) === JSON.stringify(d.image_ids || [])) continue;
       d.image_ids = ids;
       await writeItem(item);
-      done.push(`${name}: ${file ? path.basename(file) : "no photo of today's dish"}`);
+      done.push(`${name}: ${file ? path.basename(file) : "no picture"}`);
     }
     plan.photoApplied[today] = { sig, at: new Date().toISOString() };
     if (done.length) console.log(`Photos put in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}.`);

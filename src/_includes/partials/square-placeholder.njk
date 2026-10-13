@@ -1,0 +1,41 @@
+{#- The picture Square shows for a daily item on a day its dish has no photo
+    yet (online ordering and DoorDash), shared by square-placeholder-special
+    and square-placeholder-soup. Set `icon` ("cloche" or "bowl") and `label`
+    before including. The kitchen board uploads the exported PNG, kept in
+    kitchen/placeholders/ (kitchen/README.md, "Photos in Square").
+
+    Square crops item pictures to a square, and a phone shows them small, so
+    everything sits well inside the edge and nothing is small type. -#}
+<div class="canvas sqph">
+    <div class="sqph-content">
+        <div class="wordmark wordmark--light wordmark--hero sqph-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+
+        {%- if icon == "bowl" %}
+        <svg class="sqph-icon" viewBox="0 0 400 300" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+            {#- steam -#}
+            <path d="M150 110 c-22 -24 22 -40 0 -66" />
+            <path d="M200 104 c-22 -24 22 -40 0 -66" />
+            <path d="M250 110 c-22 -24 22 -40 0 -66" />
+            {#- bowl: rim, body, foot -#}
+            <path d="M60 150 H340" />
+            <path d="M70 150 C80 225 130 262 200 262 C270 262 320 225 330 150" />
+            <path d="M160 262 L170 282 H230 L240 262" />
+        </svg>
+        {%- else %}
+        <svg class="sqph-icon" viewBox="0 0 400 300" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+            {#- covered plate: knob, dome, plate -#}
+            <circle cx="200" cy="66" r="16" />
+            <path d="M200 82 V96" />
+            <path d="M72 226 C72 150 130 96 200 96 C270 96 328 150 328 226" />
+            <path d="M118 150 C104 166 96 184 94 202" />
+            <path d="M40 240 H360" />
+            <path d="M70 262 H330" />
+        </svg>
+        {%- endif %}
+
+        <p class="p-display-italic sqph-label">{{ label }}</p>
+        <p class="p-eyebrow sqph-eyebrow">Made fresh today</p>
+    </div>
+</div>

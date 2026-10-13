@@ -167,6 +167,7 @@ Settings in `config.json`, both optional:
 | `readyDelaySeconds` | `10` | How long after Done (or Handed off) Square is told: the time to Undo. |
 | `descriptions` | Lunch Special: `Served from 11am.`, Soup of the Day: `Starting at 11am.` | The words each daily item's description ends with (see "Descriptions in Square"). `{}` leaves the descriptions alone. |
 | `dailyPhotos` | `true` | Each morning Lunch Special's and Soup of the Day's picture becomes a photo of the day's dish (see "Photos in Square"). `false` leaves the pictures alone. |
+| `photoPlaceholders` | `placeholders/lunch-special.png`, `placeholders/soup-of-the-day.png` | The picture for each daily item on a day its dish has no photo. Leave an item out to show nothing of ours on those days. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
 | `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
@@ -264,8 +265,8 @@ Each morning the board also puts a photo of the day's dish on **Lunch Special** 
 
 - **Found by name:** a photo whose title is the day's special ("BBQ Ribs"), ignoring case and punctuation. The photos are the website's Daily specials (`src/_data/photos.json`, `special: true`) and the ones Photo post saved on this PC that haven't moved to the website yet (`photos/photos.json`). Always the plain photo, never the finished post with words on it.
 - **Rotates:** a dish photographed more than once shows the next photo each day it's served.
-- **No photo yet:** none of ours shows. A picture put on the item by hand in the Dashboard is never removed, so it shows on those days instead (a good place for a general "lunch special" photo).
-- Each photo is uploaded to Square once; the board remembers its image (`squareImages` in `specials-plan.json`).
+- **No photo yet** (or nothing planned): the item's placeholder, "Today's Lunch Special" over a covered plate, or "Soup of the Day" over a bowl (`photoPlaceholders`, files in `placeholders/`). They're the studio's `square-placeholder-special` and `-soup` pieces: change one there, export it, and copy the PNG over this one. A picture put on the item by hand in the Dashboard is never removed; it sits behind ours.
+- Each picture is uploaded to Square once, by its contents; the board remembers its image (`squareImages` in `specials-plan.json`), so a changed placeholder goes up again by itself.
 - **A new dish:** take it with Photo post and tick it as a special, with its title spelled as on the specials; the next time that dish is on, it shows.
 
 ### The price
