@@ -165,6 +165,7 @@ Settings in `config.json`, both optional:
 | `autoHandoffMinutes` | `10` | Ready orders leave the front page by themselves after this long (see above). `0` turns it off. |
 | `squareStatus` | `true` | The board marks online and DoorDash orders Ready in Square after Done, and picked up after Handed off (see "Square is told"). `false`: the board only reads from Square. |
 | `readyDelaySeconds` | `10` | How long after Done (or Handed off) Square is told: the time to Undo. |
+| `descriptions` | Lunch Special: `Served from 11am.`, Soup of the Day: `Starting at 11am.` | The words each daily item's description ends with (see "Descriptions in Square"). `{}` leaves the descriptions alone. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
 | `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
@@ -247,6 +248,14 @@ Each side the special comes with is its own modifier list on **Lunch Special** (
 - **The deli salads** are the website's `swapSides` in `/specials.json`, which is menu.json's Deli Salads row. Change them there; the board reads them with the specials.
 - Every option is $0 (the price covers the sides). A list the day doesn't need is switched off on the item, not deleted, and a list is made the first time a day needs it. A day with more sides than lists logs which one can't be swapped.
 - The deli salads sold on their own are separate items in Square (Sides), one button each; these lists are only the swap on the special.
+
+### Descriptions in Square
+
+Online ordering and DoorDash show an item's description under its name, and the variation name (what the ticket prints) is easy to miss there. So every morning, with the names and sides, the board writes the day into **Lunch Special**'s and **Soup of the Day**'s descriptions (client 2026-10-12):
+
+- Lunch Special: "Lasagna with Tossed Salad or Cooked Broccoli and Breadstick. Includes a fountain drink or iced tea. Swap a side below if you like. Served from 11am." The sides are worded by the website's `specialSides` (`src/_includes/specials-caption.js`), so they read as on /menu; the drink line follows `includesDrink` in `/specials.json`; "Pick your side below." on a choice-of-side day.
+- Soup of the Day: "Chicken Pot Pie. Starting at 11am."
+- A day with nothing planned puts back the `descriptions` words alone. A day changed on the front page is rewritten straight away, like the names.
 
 ## Photo post (Manage on the front page)
 

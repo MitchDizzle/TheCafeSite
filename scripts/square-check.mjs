@@ -25,7 +25,8 @@ if (!token) {
 // renames each morning, and the Special Side (square/README.md).
 const SQUARE_ONLY = new Set(["lunch special", "special side"]);
 // The specials' variation names change daily ("Cup · Chicken Pot Pie"), so
-// only their prices are compared, by position.
+// only their prices are compared, by position; their descriptions are written
+// by the kitchen board each morning, so those aren't compared at all.
 const DAILY = new Set(["lunch special", "soup of the day"]);
 // Lists the kitchen board rewrites every morning: checked for existence only.
 const BOARD_LISTS = /^side \d$/i;
@@ -140,7 +141,7 @@ for (const r of repoItems.values()) {
     for (const sv of sqVars) if (!r.variations.has(low(sv.name))) variations.push(`${r.name}: Square's "${sv.name}" isn't in the repo`);
   }
   const sqDesc = (d.description_plaintext || d.description || "").trim();
-  if (sqDesc !== r.description.trim()) descriptions.push(`${r.name}\n    repo:   ${r.description || "(none)"}\n    Square: ${sqDesc || "(none)"}`);
+  if (!DAILY.has(low(r.name)) && sqDesc !== r.description.trim()) descriptions.push(`${r.name}\n    repo:   ${r.description || "(none)"}\n    Square: ${sqDesc || "(none)"}`);
   if (!!d.skip_modifier_screen !== r.skip) oneTap.push(`${r.name}: repo ${r.skip ? "one tap (adds straight to the check)" : "opens its screen"}, Square ${d.skip_modifier_screen ? "one tap" : "opens its screen"}`);
 }
 section("Prices that differ", prices);
