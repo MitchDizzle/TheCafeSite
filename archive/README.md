@@ -12,6 +12,7 @@ This folder is for things retired **by hand**. Studio pieces also archive
 |---|---|---|
 | `site-src/` | Retired site files, each at the **same path it had under `src/`**: `site-src/studio/fb-dish.njk` was `src/studio/fb-dish.njk` | see below |
 | `share/` | Phone hand-off copies of studio art (the opening-day post) | 2026-10-09 |
+| `docs/` | `The Cafe App.md` and `The Cafe Website.md`, the first project notes (a login/backend app; a no-build static site for catering and Meals on Wheels). Both were out of date: ordering moved to Square Online and the site is built with Eleventy | 2026-10-12 |
 | `FrontBanner/` | The first door banner, made before `/studio/` existed; `src/studio/front-door-banner.njk` replaced it | 2026-10-09 |
 | `The Cafe.htm`, `The Cafe » Catering.htm` and their `_files` | Saved copies of the old site | 2026-05 |
 
@@ -26,7 +27,7 @@ This folder is for things retired **by hand**. Studio pieces also archive
 | `studio/front-door-banner.njk`, `studio/front-door-banner-inset.njk`, `_includes/partials/banner-body.njk`, `assets/css/front-door-banner.css` | The front door banner, full bleed and as an inset panel | 2026-10-10, no longer needed (client). Nothing else used the partial |
 | `studio/newspaper-photo.njk`, `assets/css/newspaper-photo.css` | The storefront photo with the wordmark in the sky, for the October 2026 newspaper piece | 2026-10-10, no longer needed (client). The photo itself (`assets/photos/storefront.jpg`) stays: the gallery uses it |
 | `studio/sign-exit-door.njk`, `assets/css/sign-exit-door.css` | The Exit Only door sign | 2026-10-10, no longer needed (client) |
-| `studio/desktop-wallpaper.njk`, `studio/phone-wallpaper.njk`, `studio/ipad-wallpaper.njk`, `assets/css/device-wallpaper.css`, `assets/css/ipad-wallpaper.css` | Wallpapers for the kitchen PC, phones and the iPad | 2026-10-10, no longer needed (client). `partials/filigree.njk` stays in `src/`: other pieces use it |
+| `studio/desktop-wallpaper.njk`, `studio/phone-wallpaper.njk`, `studio/ipad-wallpaper.njk`, `assets/css/device-wallpaper.css`, `assets/css/ipad-wallpaper.css` | Wallpapers for the kitchen PC, phones and the iPad | 2026-10-10, no longer needed (client). `partials/filigree.njk` stays in `src/` (now `partials/studio/filigree.njk`): other pieces use it |
 | `team.njk`, `assets/css/team.css` | A Meet the Team page with photo cards, never filled in | 2026-10-09. The staff don't want their photos online (2026-10-02), so it was never published (`permalink: false`); kept as a starting point if that changes |
 
 ## Restoring something
@@ -34,6 +35,13 @@ This folder is for things retired **by hand**. Studio pieces also archive
 Move each of its files back to the same path under `src/`
 (`git mv archive/site-src/studio/x.njk src/studio/x.njk`, and its CSS), then
 `npm run build` and proof the PNG.
+
+- **Paths changed on 2026-10-12**, after everything above was archived: the
+  studio pieces' partials are in `_includes/partials/studio/` (the site's in
+  `partials/site/`), their stylesheets in `assets/css/studio/`, and
+  `_includes/specials-caption.js` is `_lib/specials-caption.js`. A restored
+  piece goes to those folders, and its `include`, `pageCss` and `require`
+  lines need the new paths.
 
 - The opening posts read the `opening` block and `owners` in
   `src/_data/site.json`, which are still there. They were written as an

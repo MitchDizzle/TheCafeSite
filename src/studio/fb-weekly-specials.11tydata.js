@@ -3,9 +3,9 @@
 // (one string per paragraph) with a Copy button.
 //
 // Edit the wording here; edit the food in the JSON. The day lines come from
-// _includes/specials-caption.js.
+// _lib/specials-caption.js.
 
-const { weekRange, dayLines, soupLine, latestWeek } = require("../_includes/specials-caption.js");
+const { weekRange, dayLines, soupLine, latestWeek } = require("../_lib/specials-caption.js");
 
 module.exports = {
   eleventyComputed: {

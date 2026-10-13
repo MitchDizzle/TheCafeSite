@@ -1,7 +1,7 @@
 /* ============================================================
    Counter signs, 8.5 × 11 in portrait, for letter stand-up sign holders.
    Pieces: sign-drinks(-bw).njk, sign-specials(-bw).njk
-   Partials: partials/sign-drinks.njk, partials/sign-specials.njk
+   Partials: partials/studio/sign-drinks.njk, partials/studio/sign-specials.njk
 
    Read from the line, four to eight feet away, so the type is poster
    size: item names ~30pt, prices the same, nothing a customer needs under
@@ -11,7 +11,7 @@
 
    .sign--bw is the black-only printer's version: every colour token
    becomes ink, and the masthead is the wordmark in solid black instead of
-   the teal box (see partials/sign-mast.njk).
+   the teal box (see partials/studio/sign-mast.njk).
 
    Every length is in inches. This is a fixed artboard.
    ============================================================ */

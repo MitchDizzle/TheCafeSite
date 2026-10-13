@@ -1,7 +1,7 @@
 /* ============================================================
    Square "no photo yet" pictures — 1200 × 1200 px
    Pieces: src/studio/square-placeholder-special.njk, -soup.njk
-   Partial: partials/square-placeholder.njk
+   Partial: partials/studio/square-placeholder.njk
 
    Square crops item pictures to a square and online ordering shows them
    at a few hundred pixels on a phone: one drawing, one name, all of it

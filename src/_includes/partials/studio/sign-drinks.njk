@@ -12,7 +12,7 @@
 {%- set chips = (sides.items | where("name", "Chips"))[0] %}
 {%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
 <div class="canvas sign sign--drinks{% if bw %} sign--bw{% endif %}">
-    {% include "partials/sign-mast.njk" %}
+    {% include "partials/studio/sign-mast.njk" %}
 
     <div class="sign-heading">
         <h2 class="p-display sign-heading-title ink-teal">Drinks, Chips &amp; Desserts</h2>

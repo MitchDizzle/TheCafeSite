@@ -5,12 +5,12 @@
         menu-counter.njk      11 x 17, one sheet printed both sides
         (menu-large-print.njk, 8.5 x 11 on three sheets, is archived)
 
-        {% from "partials/menu-large-print-parts.njk" import category, dietLegend %}
+        {% from "partials/studio/menu-large-print-parts.njk" import category, dietLegend %}
         {{ category(breakfast, menu) }}
 
     The pieces differ in page geometry only; the markup is one copy so the
     two cannot drift. `menu` is passed in because an imported template does
-    not see the page's data. Styles: assets/css/menu-large-print.css.
+    not see the page's data. Styles: assets/css/studio/menu-large-print.css.
     =========================================================== -#}
 
 {#- The marks, the key and the category renderer are the tri-fold's, class
@@ -93,7 +93,7 @@
             </ul>
             {%- endif %}
             {#- One indented priced row per variant — see the note in
-                partials/menu-trifold-sheets.njk for why this is not a string in the price
+                partials/studio/menu-trifold-sheets.njk for why this is not a string in the price
                 column. -#}
             {%- if item.variants %}
             <ul class="menu-variants">

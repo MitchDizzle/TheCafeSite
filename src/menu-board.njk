@@ -58,7 +58,7 @@ noSiteJs: true
     unbalancing everything else.
     =========================================================== #}
 
-{% from "partials/diet-marks.njk" import dietMarks %}
+{% from "partials/site/diet-marks.njk" import dietMarks %}
 
 {%- set breakfast = (menu.categories | where("id", "breakfast"))[0] %}
 {%- set breakfastSides = (menu.categories | where("id", "breakfast_sides"))[0] %}

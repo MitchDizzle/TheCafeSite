@@ -393,7 +393,7 @@
 
 /* ── Today's lunch special & soup ─────────────────────────────
    The box at the top of the page, from src/_data/specials.json via
-   partials/specials-today.njk.
+   partials/site/specials-today.njk.
 
    A TEAL GROUND so it can't be missed on the cream page — teal is a ground
    colour here, which is what the palette allows it for. Text on it is

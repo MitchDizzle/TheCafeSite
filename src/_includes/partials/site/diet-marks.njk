@@ -4,7 +4,7 @@
     Shared by the HTML surfaces that show the menu to a customer: /menu and
     the 1080p kitchen-facing board. Both call it through the same gate.
 
-        {% from "partials/diet-marks.njk" import dietMarks %}
+        {% from "partials/site/diet-marks.njk" import dietMarks %}
         {%- if menu.dietsConfirmed %}{{ dietMarks(item, menu.diets) }}{% endif %}
 
     THE GATE IS THE CALLER'S JOB and it is not optional on anything a

@@ -87,12 +87,26 @@ module.exports = function studioArchive(root, now = new Date()) {
   // so the first time a file is named is its latest change). One git call
   // for the whole board instead of one per piece. %cI keeps the committer's
   // own offset, so its first ten characters are the date they saw.
+  //
+  // A commit with the trailer "Studio-Dates: unchanged" (a tidy-up that moves
+  // files or rewrites paths, nothing anyone would see) doesn't date anything,
+  // and a file it moved keeps the history it had at its old path. Without
+  // that, a folder reshuffle would make every piece look new.
   const lastCommit = new Map();
   if (haveGit) {
-    const log = git(root, ["log", "--format=%x00%cI", "--name-only", "--", "src", "archive"]) || "";
+    const skip = new Set((git(root, ["log", "--format=%H", "--grep=^Studio-Dates: unchanged$", "--", "src", "archive"]) || "").split("\n").filter(Boolean));
+    const log = git(root, ["log", "-M", "--format=%x00%H %cI", "--name-status", "--", "src", "archive"]) || "";
+    const movedTo = new Map(); // an old path -> the path it has now
+    const current = (f) => { while (movedTo.has(f)) f = movedTo.get(f); return f; };
     for (const entry of log.split("\0").filter(Boolean)) {
-      const [when, ...files] = entry.split("\n").map((l) => l.trim()).filter(Boolean);
-      for (const f of files) if (!lastCommit.has(f)) lastCommit.set(f, when);
+      const [head, ...lines] = entry.split("\n").map((l) => l.trim()).filter(Boolean);
+      const [hash, when] = head.split(" ");
+      for (const line of lines) {
+        const [status, ...paths] = line.split("\t");
+        const file = current(paths[paths.length - 1]);
+        if (status.startsWith("R") && paths[0] !== file) movedTo.set(paths[0], file);
+        if (!skip.has(hash) && !lastCommit.has(file)) lastCommit.set(file, when);
+      }
     }
   }
 

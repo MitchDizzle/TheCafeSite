@@ -4,11 +4,11 @@ const crypto = require("crypto");
 
 module.exports = function (eleventyConfig) {
   // Passthrough copies. Everything under assets/ ships as-is.
-  // The /studio/ board's auto-archive (src/_includes/studio-archive.js): a
+  // The /studio/ board's auto-archive (src/_lib/studio-archive.js): a
   // piece that hasn't changed for two weeks, and isn't pinned, is not built,
   // exported or uploaded; the board lists it under Archive instead. Worked
   // out once, when the build (or `npm start`) begins.
-  const studio = require("./src/_includes/studio-archive.js")(__dirname);
+  const studio = require("./src/_lib/studio-archive.js")(__dirname);
   for (const file of studio.ignore) eleventyConfig.ignores.add(file);
   eleventyConfig.addGlobalData("studioPieces", studio.pieces);
   eleventyConfig.addGlobalData("studioArchive", studio.archive);
@@ -80,10 +80,10 @@ module.exports = function (eleventyConfig) {
   );
 
   // The newest week of specials.json's `days`, for the printed and posted
-  // pieces: `specials.days | latestWeek`. See _includes/specials-caption.js.
-  eleventyConfig.addFilter("latestWeek", require("./src/_includes/specials-caption.js").latestWeek);
+  // pieces: `specials.days | latestWeek`. See _lib/specials-caption.js.
+  eleventyConfig.addFilter("latestWeek", require("./src/_lib/specials-caption.js").latestWeek);
   // "with your choice of side" / "with A and B": see specialSides there.
-  eleventyConfig.addFilter("specialSides", require("./src/_includes/specials-caption.js").specialSides);
+  eleventyConfig.addFilter("specialSides", require("./src/_lib/specials-caption.js").specialSides);
 
   // Narrow a list to the items whose `key` equals `value`.
   //
@@ -102,12 +102,6 @@ module.exports = function (eleventyConfig) {
     return fs.existsSync(path.join(__dirname, "src", url.replace(/^\//, "")));
   });
 
-  // Inline an SVG file's markup into the page.
-  //
-  // An <img> is a separate document, so page CSS cannot reach inside it and
-  // an SVG with no fill of its own renders black. Inlining puts the paths in
-  // the document, where `fill` inherits normally — one wordmark file can then
-  // be cream on the dark hero and dark anywhere else, driven purely by CSS.
   // The /gallery grid's small copy of a photo: /assets/photos/x.jpg becomes
   // /assets/photos/thumbs/x.jpg, made by `npm run thumbs`. A photo with no
   // thumbnail yet gets the full photo, so a new one still shows.
@@ -117,6 +111,12 @@ module.exports = function (eleventyConfig) {
     return fs.existsSync(path.join(__dirname, "src", small.replace(/^\//, ""))) ? small : url;
   });
 
+  // Inline an SVG file's markup into the page.
+  //
+  // An <img> is a separate document, so page CSS cannot reach inside it and
+  // an SVG with no fill of its own renders black. Inlining puts the paths in
+  // the document, where `fill` inherits normally — one wordmark file can then
+  // be cream on the dark hero and dark anywhere else, driven purely by CSS.
   eleventyConfig.addShortcode("inlineSvg", (url, className, label) => {
     const file = path.join(__dirname, "src", String(url).replace(/^\//, ""));
     let svg;

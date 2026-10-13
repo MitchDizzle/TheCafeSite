@@ -1050,7 +1050,7 @@ async function applySides(today, day) {
 // words. The counter's ticket still goes by the variation name (saveDaily).
 let specialSides;
 try {
-  ({ specialSides } = require(path.join(DIR, "..", "src", "_includes", "specials-caption.js")));
+  ({ specialSides } = require(path.join(DIR, "..", "src", "_lib", "specials-caption.js")));
 } catch {
   // A board copied without the website beside it: the same words, simply.
   specialSides = (d) => (d.anySide ? "with choice of side" : (d.sides || []).length ? `with ${d.sides.join(" and ")}` : "");

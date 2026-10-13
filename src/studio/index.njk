@@ -2,7 +2,7 @@
 layout: layouts/base.njk
 title: "Studio — The Café"
 description: "Internal proof board."
-pageCss: "/assets/css/studio.css"
+pageCss: "/assets/css/studio/studio.css"
 bodyClass: "studio-body"
 # No nav or footer on this page, so the shared nav/footer script has nothing
 # to do. The viewport scaler at the bottom is the only JS here.
@@ -16,7 +16,7 @@ eleventyExcludeFromCollections: true
        They are live: the preview iframe shows whatever the current build
        renders, so a CSS tweak is visible on the board immediately. Each is
        dated by when it last changed (studioPieces, from
-       src/_includes/studio-archive.js).
+       src/_lib/studio-archive.js).
     2. studioFiles — anything dropped into src/studio/files/, dated by the
        file. Auto-discovered by src/_data/studioFiles.js.
 

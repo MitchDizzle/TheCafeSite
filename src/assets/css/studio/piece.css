@@ -164,7 +164,7 @@
 }
 
 /* ── Filigree divider ─────────────────────────────────────────
-   partials/filigree.njk strokes with currentColor, so set `color` on the
+   partials/studio/filigree.njk strokes with currentColor, so set `color` on the
    element or an ancestor to tint it. */
 .filigree {
     display: block;

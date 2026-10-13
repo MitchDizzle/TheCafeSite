@@ -255,7 +255,7 @@ Each side the special comes with is its own modifier list on **Lunch Special** (
 
 Online ordering and DoorDash show an item's description under its name, and the variation name (what the ticket prints) is easy to miss there. So every morning, with the names and sides, the board writes the day into **Lunch Special**'s and **Soup of the Day**'s descriptions (client 2026-10-12):
 
-- Lunch Special: "Lasagna with Tossed Salad or Cooked Broccoli and Breadstick. Includes a fountain drink or iced tea. Swap a side below if you like. Served from 11am." The sides are worded by the website's `specialSides` (`src/_includes/specials-caption.js`), so they read as on /menu; the drink line follows `includesDrink` in `/specials.json`; "Pick your side below." on a choice-of-side day.
+- Lunch Special: "Lasagna with Tossed Salad or Cooked Broccoli and Breadstick. Includes a fountain drink or iced tea. Swap a side below if you like. Served from 11am." The sides are worded by the website's `specialSides` (`src/_lib/specials-caption.js`), so they read as on /menu; the drink line follows `includesDrink` in `/specials.json`; "Pick your side below." on a choice-of-side day.
 - Soup of the Day: "Chicken Pot Pie. Starting at 11am."
 - A day with nothing planned puts back the `descriptions` words alone. A day changed on the front page is rewritten straight away, like the names.
 

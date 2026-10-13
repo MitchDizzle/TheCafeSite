@@ -27,7 +27,7 @@ pageCss: "/assets/css/menu.css"
     means what, and in what order. The gate below is this page's, not the
     partial's — see the comment in the partial for why the tri-fold is
     allowed to render marks that this page is not. -#}
-{% from "partials/diet-marks.njk" import dietMarks %}
+{% from "partials/site/diet-marks.njk" import dietMarks %}
 
 <section class="section menu-body" aria-labelledby="menu-heading">
     <div class="container">
@@ -48,7 +48,7 @@ pageCss: "/assets/css/menu.css"
             week lists today or a day still to come — see the partial. Above
             the list because it is the one thing on this page that changes
             daily, and a regular checks it first. -#}
-        {% include "partials/specials-today.njk" %}
+        {% include "partials/site/specials-today.njk" %}
 
         {%- if site.ordering.url %}
         <p class="menu-order">

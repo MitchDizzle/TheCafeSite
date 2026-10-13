@@ -65,7 +65,7 @@ Copy `fb-profile.njk` as a starting point. The front matter contract:
 | `title` | yes | Browser tab |
 | `canvasW` / `canvasH` | yes | Artboard size — `"11in"` or `"1080px"` |
 | `pageSize` | print only | `@page` size as **two lengths, width first, no orientation keyword** — `"11in 17in"`, `"11in 8.5in"`. `"11in 8.5in landscape"` is invalid CSS and silently falls back to Letter portrait. Its presence is also what puts a **Print** button on the card, and what makes `npm run export` write a PDF as well as a PNG. |
-| `pageCss` | usually | The piece's own stylesheet in `assets/css/` |
+| `pageCss` | usually | The piece's own stylesheet in `assets/css/studio/` |
 | `tags: studio` | yes | This is what puts it on the board |
 | `studioTitle` | | Board heading (defaults to `title`) |
 | `studioCategory` | | `Print`, `Social`, `Menus`, `Flyers`, … |
@@ -75,7 +75,7 @@ Copy `fb-profile.njk` as a starting point. The front matter contract:
 | `studioOrder` | | Sort within its category (default 500) |
 
 Shared piece styles — the wordmark treatment, filigree, QR padding, type
-helpers — live in `src/assets/css/piece.css`. Read it before writing a new
+helpers — live in `src/assets/css/studio/piece.css`. Read it before writing a new
 piece; the wordmark's stroke-and-single-shadow construction is fussy and the
 reasoning is documented there.
 
@@ -102,10 +102,13 @@ to its source on GitHub. Change it and it's back on the next build.
   computer: `STUDIO_ALL=1 npm run build` (PowerShell:
   `$env:STUDIO_ALL=1; npm run build`). Don't upload that build. Earlier
   exports are also in `exports/`, dated.
-- The rule is `src/_includes/studio-archive.js` (`ARCHIVE_DAYS`). It's worked
+- The rule is `src/_lib/studio-archive.js` (`ARCHIVE_DAYS`). It's worked
   out when a build starts, so restart `npm start` to see a change in it.
 - It needs the git history, which is why the deploy checks out with
   `fetch-depth: 0`. Without git, every piece counts as new and nothing archives.
+- A commit that only moves files or rewrites paths ends with the trailer
+  `Studio-Dates: unchanged`: it then dates nothing, and a moved file keeps the
+  history from its old path. Otherwise a folder tidy-up makes every piece new.
 
 A piece retired for good moves to `archive/site-src/` instead, at the same
 path it had under `src/` (its CSS too), rather than being deleted: git keeps

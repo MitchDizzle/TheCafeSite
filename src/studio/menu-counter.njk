@@ -4,7 +4,7 @@ title: "The Café — Menu, counter copy (11 × 17)"
 canvasW: "11in"
 canvasH: "17in"
 pageSize: "11in 17in"
-pageCss: "/assets/css/menu-large-print.css"
+pageCss: "/assets/css/studio/menu-large-print.css"
 
 tags: studio
 studioPinned: true
@@ -48,7 +48,7 @@ studioOrder: 22
 {%- set sides = (menu.categories | where("id", "sides"))[0] %}
 {%- set drinks = (menu.categories | where("id", "drinks"))[0] %}
 
-{%- from "partials/menu-large-print-parts.njk" import category, dietLegend %}
+{%- from "partials/studio/menu-large-print-parts.njk" import category, dietLegend %}
 
 <div class="lp-stack lp-stack--counter{% if not menu.dietsConfirmed %} diets-unconfirmed{% endif %}">
 
