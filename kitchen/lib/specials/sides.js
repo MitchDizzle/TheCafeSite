@@ -12,8 +12,11 @@
 // The swap sides are the day's own extra sides (the website's extraSides),
 // then the website's swapSides (menu.json's Deli Salads), then a cup of the
 // day's soup when the website sets soupSide (client 2026-10-13). Every
-// option is $0, and a list is never required: nobody has to tap anything for
-// the plate to come as planned. A list the day doesn't need is switched off
+// option is $0, and each list is pick exactly one with the day's side
+// picked already, so nobody has to tap anything for the plate to come as
+// planned. It was optional (pick at most one) until 2026-10-13, which Square
+// Online showed as checkboxes with the one allowed already ticked: nothing
+// else could be picked. Required, it shows them as choices to switch between. A list the day doesn't need is switched off
 // on the item, not deleted, and a list is only made the first time a day
 // needs it. A side past the last list can't be swapped, and the log says so.
 // Written "or", the same words become a choice on the website, the posts and
@@ -95,9 +98,8 @@ async function saveSides(slots, swaps) {
     const pick = (list.modifier_list_data.modifiers || []).find((m) => m.modifier_data.name.toLowerCase() === slot.pick.toLowerCase());
     set.push({ list, pickId: pick ? pick.id : null });
   }
-  // Then the item: each list on it, on or off, never required, one pick at
-  // most, with the day's side pre-picked. Read fresh: saveDaily may have
-  // just written it.
+  // Then the item: each list on it, on or off, exactly one pick, with the
+  // day's side pre-picked. Read fresh: saveDaily may have just written it.
   const fresh = await readObject(itemId);
   const infos = (fresh.item_data.modifier_list_info ||= []);
   const before = JSON.stringify(infos);
@@ -106,7 +108,7 @@ async function saveSides(slots, swaps) {
     let info = infos.find((x) => x.modifier_list_id === list.id);
     if (!info) { info = { modifier_list_id: list.id }; infos.push(info); }
     info.enabled = !!pickId;
-    info.min_selected_modifiers = 0;
+    info.min_selected_modifiers = pickId ? 1 : 0;
     info.max_selected_modifiers = 1;
     info.modifier_overrides = pickId ? [{ modifier_id: pickId, on_by_default: true }] : [];
   }
@@ -132,7 +134,9 @@ async function applySides(today, day) {
   if (!cfg.sideItem || !cfg.sideLists.length) return null;
   const slots = sideSlots(day);
   const swaps = swapsFor(today, day);
-  const sig = JSON.stringify({ slots, swaps });
+  // `v`: bumped when the way the lists are written changes, so today's are
+  // rewritten after an update (2: required, 2026-10-13).
+  const sig = JSON.stringify({ v: 2, slots, swaps });
   const last = plan.sidesApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
   if (!slots.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;

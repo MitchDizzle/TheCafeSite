@@ -259,7 +259,7 @@ Each side the special comes with is its own modifier list on **Lunch Special** (
 | Choice of side | Side 1 = **Chef's Choice** (picked already), then the deli salads |
 | Nothing | the side lists switched off |
 
-- **Nobody has to tap anything.** The lists are never required and the day's side is picked already, so a plain Lunch Special comes as planned, and its sides print on the ticket. Tap a deli salad in Side 1 or Side 2 to swap that one side. Chef's Choice means the kitchen picks.
+- **Nobody has to tap anything.** Each list is pick one, with the day's side picked already, so a plain Lunch Special comes as planned, and its sides print on the ticket. Tap a deli salad in Side 1 or Side 2 to swap that one side. Chef's Choice means the kitchen picks.
 - **The deli salads** are the website's `swapSides` in `/specials.json`, which is menu.json's Deli Salads row. Change them there; the board reads them with the specials.
 - **The side lists come first** on Lunch Special, Side 1 to Side 3, and its other lists (Dressing) after them, so the dressing is asked after the sides (client 2026-10-13). The board puts them in that order whenever it writes the sides.
 - **A cup of the day's soup** comes last in every list, as **Soup of the Day** (the kitchen knows which), when the website's `soupSide` is on (client 2026-10-13). A day with no soup planned has none.
