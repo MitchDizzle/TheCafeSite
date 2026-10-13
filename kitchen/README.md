@@ -208,6 +208,8 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `tests\` | The tests (see "Tests"). |
 | `board.html` | The kitchen screen. |
 | `front.html` | The front page for the counter (`/front`). |
+| `front\` | The front page's Manage jobs, one file each (Specials, Photo post, Reports, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
+| `kitchen.css` | The colours and base styles both screens share. |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `state.json` | Which orders have been cleared. Created automatically; gitignored. |
 | `photos\` | Photo post: the photos and finished posts kept for the website, with `photos.json`. Gitignored. |
@@ -292,7 +294,7 @@ Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo
 **Keep the photo on the kitchen PC for the website** (ticked by default) saves the photo (2000px, re-drawn on the phone so its GPS location is gone) and the finished post in `photos\` on the kitchen PC, listed in `photos\photos.json` in the same shape as the website's `src/_data/photos.json`. To put one on the website's `/gallery`, copy the photo into `src/assets/photos/`, move its entry over (a dish on the menu takes its menu name as `item`, not `special`), write its `alt` text, and run `npm run thumbs` (or ask Claude to).
 
 - The post's fonts load from Google Fonts on the phone, like the website's. Without internet the picture uses plain fonts and the screen says so.
-- The phone number, web address, hours and order link in the picture and caption are set near the top of the Photo post code in `front.html` (`SITE`). Change them there along with the website's `site.json`.
+- The phone number, web address, hours and order link in the picture and caption are set near the top of `front/photo-post.js` (`SITE`). Change them there along with the website's `site.json`.
 
 ## Reports and the daily history (Manage on the front page)
 

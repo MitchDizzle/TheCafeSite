@@ -82,6 +82,19 @@ const APP_FILES = {
   "/front-wordmark.svg": "wordmark.svg", // drawn into Photo post's pictures
 };
 
+// The screens' stylesheets and the front page's Manage jobs (front/*.js).
+// Colours and code, nothing private, so like the icons they need no ?key=.
+// Never cached: after an update the pages get the new ones straight away.
+const STATIC = {
+  "/kitchen.css": "kitchen.css",
+  "/front/manage.css": "front/manage.css",
+  "/front/specials.js": "front/specials.js",
+  "/front/photo-post.js": "front/photo-post.js",
+  "/front/reports.js": "front/reports.js",
+  "/front/desserts.js": "front/desserts.js",
+  "/front/leave-off.js": "front/leave-off.js",
+};
+
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
 let pinFails = [];
 let pinLockedUntil = 0;
@@ -102,7 +115,7 @@ function pinRefusal(pin) {
 }
 
 function networkAllowed(req, url) {
-  if (req.method === "GET" && url.pathname in APP_FILES) return true;
+  if (req.method === "GET" && (url.pathname in APP_FILES || url.pathname in STATIC)) return true;
   if (!NETWORK_PATHS.has(url.pathname)) return false;
   return !cfg.frontKey || url.searchParams.get("key") === cfg.frontKey;
 }
@@ -142,6 +155,11 @@ async function handle(req, res) {
         { src: "/front-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
       ],
     }, "application/manifest+json; charset=utf-8");
+  }
+  if (req.method === "GET" && STATIC[url.pathname]) {
+    const file = STATIC[url.pathname];
+    return send(res, 200, fs.readFileSync(path.join(DIR, file), "utf8"),
+      file.endsWith(".css") ? "text/css; charset=utf-8" : "text/javascript; charset=utf-8");
   }
   if (req.method === "GET" && APP_FILES[url.pathname]) {
     res.writeHead(200, { "Content-Type": url.pathname.endsWith(".svg") ? "image/svg+xml" : "image/png", "Cache-Control": "max-age=86400" });

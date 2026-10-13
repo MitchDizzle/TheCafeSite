@@ -1,0 +1,28 @@
+/* The colours and base styles both screens share: the kitchen board
+   (board.html) and the front page (front.html). Each page's own sizes and
+   layout are in the page. The website's palette, plus amber and green for
+   the kitchen's own signals. System fonts on purpose: neither screen may
+   depend on Google Fonts loading to be readable. */
+:root {
+  --cream: #FAF7F2;
+  --paper: #FFFFFF;
+  --teal: #2C5E70;
+  --teal-dark: #1F4552;
+  --ground: #15323C; /* behind the kitchen board's tickets */
+  --red: #C0392F;
+  --red-dark: #A02F26;
+  --amber: #E8A33D;
+  --mint: #8ED9D4;
+  --green: #2E7D4F;
+  --green-soft: #E3F2E8;
+  --text: #22323A;
+  --muted: #5B6B72;
+  --line: #E3DDD3;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+}

@@ -1,0 +1,193 @@
+/* The front page's Manage panel and its jobs (front/*.js). Loaded by
+   front.html before its own styles; the phone layout of the panel is in
+   front.html's phone block, after these. */
+/* Manage: one panel, one screen at a time. A fixed header (Back, title,
+   close) and footer (the screen's one or two buttons) with the body
+   scrolling between them, so Save is always in reach on a long list. */
+.scrim { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 1rem; background: rgba(10, 25, 30, 0.6); }
+.scrim[hidden] { display: none; }
+.dialog {
+  width: min(38rem, 100%);
+  max-height: min(46rem, 92vh);
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border-radius: 0.7rem;
+  box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+.m-head {
+  display: grid;
+  grid-template-columns: 6rem 1fr 6rem;
+  align-items: center;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+}
+.m-head h2 { margin: 0; text-align: center; font-size: 1.25rem; color: var(--text); text-transform: none; letter-spacing: 0; }
+.m-back, .m-x { font: inherit; font-weight: 800; border: 0; background: transparent; color: var(--teal-dark); cursor: pointer; padding: 0.4rem 0.5rem; border-radius: 0.4rem; }
+.m-back { justify-self: start; }
+.m-x { justify-self: end; font-size: 1.2rem; color: var(--muted); }
+.m-back:hover, .m-x:hover { background: #F1ECE3; }
+.m-body { padding: 1rem 1.2rem; overflow-y: auto; flex: 1; }
+.m-body p { margin: 0 0 0.8rem; }
+.m-foot { display: flex; gap: 0.6rem; justify-content: flex-end; padding: 0.8rem 1.2rem; border-top: 1px solid var(--line); background: #FBFAF7; }
+.m-btn { font: inherit; font-weight: 800; font-size: 1.05rem; padding: 0.65rem 1.3rem; border-radius: 0.45rem; border: 2px solid var(--teal); background: transparent; color: var(--teal-dark); cursor: pointer; }
+.m-btn.primary { background: var(--teal); color: var(--cream); }
+.m-btn.danger { background: var(--red); border-color: var(--red); color: #fff; }
+.m-btn:hover { filter: brightness(1.08); }
+.m-note { color: var(--muted); font-size: 0.95rem; }
+.m-error { color: var(--red-dark); font-weight: 700; }
+.m-error[hidden] { display: none; }
+.m-busy { color: var(--muted); font-size: 1.1rem; padding: 1.5rem 0; text-align: center; }
+.m-result { font-size: 1.1rem; font-weight: 700; padding: 0.6rem 0; }
+.m-result.good { color: var(--green); }
+.m-result.bad { color: var(--red-dark); }
+
+/* The PIN */
+.m-lock { display: grid; gap: 0.5rem; justify-items: center; padding: 0.5rem 0 0.2rem; }
+.m-lock > label[for="pin"] { font-weight: 800; font-size: 1.1rem; }
+/* The PIN box only: these would also stretch the Remember checkbox. */
+.m-lock #pin { width: 12rem; font: inherit; font-size: 1.8rem; text-align: center; letter-spacing: 0.4em; padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.45rem; }
+.m-lock #pin:focus { outline: none; border-color: var(--teal); }
+.m-lock .check { align-items: center; margin-top: 0.3rem; color: var(--muted); }
+.m-lock .check input { width: 1.2rem; height: 1.2rem; margin: 0; }
+
+/* The menu: four big rows, each saying what it does. */
+.m-menu { display: grid; gap: 0.6rem; }
+.m-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  background: var(--paper);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.m-row:hover { border-color: var(--teal); background: #F6FAFA; }
+.m-row b { display: block; font-size: 1.12rem; }
+.m-row small { display: block; color: var(--muted); font-size: 0.92rem; margin-top: 0.1rem; }
+.m-row.warn b { color: var(--red-dark); }
+.m-chev { margin-left: auto; font-size: 1.6rem; color: var(--muted); }
+
+/* Cards (Desserts), fields and price boxes. */
+.m-card { border: 1px solid var(--line); border-radius: 0.55rem; padding: 0.8rem 1rem; margin: 0 0 0.7rem; }
+.m-card h3 { margin: 0 0 0.6rem; font-size: 1.12rem; }
+.m-field { display: grid; gap: 0.25rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); }
+.m-field input { font: inherit; font-size: 1.15rem; color: var(--text); padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
+.m-prices { display: flex; flex-wrap: wrap; gap: 0.8rem 1.4rem; margin-top: 0.7rem; }
+.m-price { display: grid; gap: 0.25rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); }
+.m-money { display: flex; align-items: center; gap: 0.3rem; font-size: 1.15rem; color: var(--text); }
+.m-money input { width: 7rem; font: inherit; padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
+.m-field input:focus, .m-money input:focus { outline: none; border-color: var(--teal); }
+
+/* Specials: one fold-out row per day, today's open. */
+.m-day { border: 1px solid var(--line); border-radius: 0.55rem; margin: 0 0 0.55rem; }
+.m-day > summary { display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 0.6rem; padding: 0.65rem 0.9rem; cursor: pointer; list-style: none; }
+.m-day > summary::-webkit-details-marker { display: none; }
+.m-day > summary::after { content: "›"; grid-row: 1 / span 2; grid-column: 2; align-self: center; font-size: 1.5rem; color: var(--muted); transition: transform 0.15s; }
+.m-day[open] > summary::after { transform: rotate(90deg); }
+.m-day .d-date { font-weight: 800; font-size: 1.08rem; }
+.m-day .d-what { grid-column: 1; color: var(--muted); font-size: 0.92rem; overflow-wrap: anywhere; }
+.m-day .d-what.none { font-style: italic; }
+.m-day.today { border-color: var(--teal); }
+.m-day.edited { border-color: var(--amber); background: #FFFBF2; }
+.d-tag { display: inline-block; margin-left: 0.4rem; padding: 0 0.4rem; border-radius: 0.25rem; font-size: 0.78rem; font-weight: 800; vertical-align: 0.1em; }
+.d-tag.site { background: #E3EEF1; color: var(--teal-dark); }
+.d-tag.front { background: #FFF0C2; color: #6B4A08; }
+.d-tag.now { background: var(--teal); color: var(--cream); }
+.d-body { padding: 0 0.9rem 0.8rem; display: grid; gap: 0.8rem; }
+.d-item { display: grid; gap: 0.4rem; }
+.d-item .m-prices { margin-top: 0; }
+.d-status { font-size: 0.92rem; font-weight: 700; }
+.d-status.good { color: var(--green); }
+.d-status.bad { color: var(--red-dark); }
+.d-clear { justify-self: start; font: inherit; font-size: 0.92rem; font-weight: 700; padding: 0.3rem 0.6rem; border: 1.5px solid var(--line); border-radius: 0.35rem; background: transparent; color: var(--muted); cursor: pointer; }
+.m-site { font-size: 0.9rem; }
+.m-field small { font-weight: 400; }
+.m-field textarea { width: 100%; box-sizing: border-box; }
+.d-sides { display: grid; gap: 0.3rem; margin: 0.2rem 0 0; padding: 0.55rem 0.7rem 0.7rem; border: 1px solid var(--line); border-radius: 0.45rem; }
+.d-sides legend { padding: 0 0.3rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); }
+.d-sides .check { margin: 0; font-size: 1.05rem; }
+.d-sides .check input { width: 1.2rem; height: 1.2rem; }
+.d-sides input[type="text"] { font: inherit; font-size: 1.05rem; color: var(--text); padding: 0.4rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
+.d-sides input[type="text"]:disabled { background: #F1ECE3; color: var(--muted); }
+.d-prices > summary { cursor: pointer; font-weight: 700; color: var(--teal-dark); padding: 0.25rem 0; }
+.d-prices > summary small { font-weight: 400; color: var(--muted); margin-left: 0.4rem; }
+.d-price-item { margin-top: 0.6rem; }
+.d-price-name { margin: 0 0 0.3rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); }
+.d-price-item .m-prices { margin-top: 0; }
+/* The menu's group headings. */
+.m-group { margin: 0.5rem 0 -0.2rem; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.m-group:first-child { margin-top: 0; }
+
+/* Photo post: the picture being made, then the form under it. */
+.pp { display: grid; gap: 0.8rem; }
+.pp-canvas { width: 100%; max-width: 30rem; height: auto; justify-self: center; border-radius: 0.4rem; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); touch-action: none; cursor: grab; }
+.pp-photo-btn { display: block; text-align: center; font-weight: 800; font-size: 1.1rem; padding: 0.8rem; border: 2px dashed var(--teal); border-radius: 0.55rem; color: var(--teal-dark); cursor: pointer; }
+.pp-photo-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.m-field select, .m-field textarea { font: inherit; font-size: 1.05rem; color: var(--text); padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; background: var(--paper); }
+.m-field textarea { resize: vertical; }
+.m-field input[type="range"] { padding: 0; border: 0; }
+.pp-result img { display: block; width: 100%; max-width: 30rem; margin: 0 auto 0.6rem; border-radius: 0.4rem; -webkit-touch-callout: default; }
+.pp-caption { width: 100%; font: inherit; font-size: 0.98rem; padding: 0.5rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
+
+/* Reports: a date range, its numbers, by day, and the items. */
+.r-range { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: end; }
+.r-range input { font: inherit; font-size: 1.05rem; padding: 0.4rem 0.5rem; border: 2px solid var(--line); border-radius: 0.4rem; color: var(--text); }
+.r-quick { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.7rem 0 1rem; }
+.r-quick button { font: inherit; font-size: 0.92rem; font-weight: 700; padding: 0.35rem 0.7rem; border: 1.5px solid var(--teal); border-radius: 999px; background: transparent; color: var(--teal-dark); cursor: pointer; }
+.r-quick button.on { background: var(--teal); color: var(--cream); }
+.r-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+.r-stats .stat { border: 1px solid var(--line); border-radius: 0.45rem; padding: 0.5rem 0.7rem; }
+.r-stats .stat b { display: block; font-size: 1.35rem; }
+.r-stats .stat span { color: var(--muted); font-size: 0.85rem; }
+.r-h { margin: 1rem 0 0.4rem; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.r-table-wrap { overflow-x: auto; }
+.r-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.r-table th, .r-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.r-table th:first-child, .r-table td:first-child { text-align: left; }
+.r-table thead th { font-size: 0.8rem; color: var(--muted); }
+.r-items { margin: 0; padding-left: 1.4rem; columns: 2 14rem; column-gap: 1.5rem; }
+.r-items li { break-inside: avoid; padding: 0.1rem 0; }
+
+.dialog .check { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.98rem; cursor: pointer; }
+.dialog .check input { margin-top: 0.25rem; }
+.m-check { padding: 0.8rem 1rem; border: 1px solid var(--line); border-radius: 0.55rem; }
+
+/* Desserts: photo on the left, options beside it. */
+.m-dessert { display: grid; grid-template-columns: 7.5rem 1fr; gap: 1rem; align-items: start; }
+.m-photo { display: grid; gap: 0.4rem; justify-items: center; }
+.m-photo img, .m-photo .m-nophoto { width: 7.5rem; height: 7.5rem; object-fit: cover; border-radius: 0.45rem; border: 1px solid var(--line); background: #F1ECE3; }
+.m-nophoto { display: grid; place-items: center; color: var(--muted); font-size: 0.85rem; }
+.m-photo label { font-weight: 800; font-size: 0.92rem; color: var(--teal-dark); cursor: pointer; text-decoration: underline; }
+.m-photo input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.m-photo-msg { font-size: 0.85rem; color: var(--muted); text-align: center; }
+.m-list-name { font-weight: 800; font-size: 0.92rem; color: var(--muted); margin: 0 0 0.3rem; }
+.m-opts { display: grid; gap: 0.15rem; }
+.m-opts .check { margin: 0; padding: 0.3rem 0; font-size: 1.05rem; }
+.m-opts .check input { width: 1.2rem; height: 1.2rem; }
+.m-opts .off span { color: var(--muted); text-decoration: line-through; }
+.m-add { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.m-add input { flex: 1; min-width: 0; font: inherit; padding: 0.4rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
+.m-add button { font: inherit; font-weight: 800; padding: 0.4rem 0.8rem; border: 2px solid var(--teal); border-radius: 0.4rem; background: transparent; color: var(--teal-dark); cursor: pointer; }
+.m-dessert > * { min-width: 0; }
+/* Phone width (media queries count rem at 16px, not this page's 17). */
+@media (max-width: 36rem) {
+  .m-dessert { grid-template-columns: 1fr; justify-items: start; }
+  .m-head { grid-template-columns: 4.5rem 1fr 4.5rem; }
+  .m-body { padding: 0.9rem; }
+}
+
+/* Leave off kitchen tickets: Square's categories, each with its items. */
+.skip-cat { border: 1px solid var(--line); border-radius: 0.45rem; margin: 0 0 0.5rem; }
+.skip-cat > summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; cursor: pointer; font-weight: 800; }
+.skip-cat > summary .count { margin-left: auto; font-weight: 400; color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
+.skip-cat[data-whole="1"] > summary { background: #FFF7E6; }
+.skip-cat .skip-items { padding: 0.2rem 0.7rem 0.6rem 2.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.1rem 0.8rem; }
+.dialog .skip-cat .check { margin: 0.15rem 0; }
+.dialog .skip-cat input:disabled + span { color: var(--muted); }
