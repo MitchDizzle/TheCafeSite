@@ -310,7 +310,7 @@
       "id": "drinks",
       "name": "Drinks",
       "items": [
-        { "name": "Iced Tea / Fountain Drink", "price": 2.00, "squareChoices": ["Sweet Tea", "Unsweet Tea", "Pepsi", "Pepsi Zero", "Mountain Dew", "Starry", "Dr Pepper", "Diet Dr Pepper", "Mug Root Beer", "Tropicana Lemonade"], "_note_choices": "`squareChoices` is Square only: the item's variations, one per drink at the one price, so an online or DoorDash order says which drink to pour (client 2026-10-13). They are not printed on any menu (the tri-fold is full); add or remove a drink here and run `npm run square`." },
+        { "name": "Iced Tea / Fountain Drink", "price": 2.00, "squareChoices": ["Self-Serve", "Sweet Tea", "Unsweet Tea", "Pepsi", "Pepsi Zero", "Mountain Dew", "Starry", "Dr Pepper", "Diet Dr Pepper", "Mug Root Beer", "Tropicana Lemonade"], "_note_choices": "`squareChoices` is Square only: the item's variations, one per drink at the one price, so an online or DoorDash order says which drink to pour (client 2026-10-13). Self-Serve, first, is for the counter: the customer pours their own, so the POS needn't ask which. They are not printed on any menu (the tri-fold is full); add or remove a drink here and run `npm run square`." },
         { "name": "Coffee", "price": 1.00 },
         { "name": "Bottle Water", "price": 1.50 },
         { "name": "Bottle Juice", "_note_flavours": "No flavour list on purpose (client 2026-10-09). The flavours are left over from the old contract and change as they run out, so a printed list goes wrong as soon as one is gone; customers ask at the counter. They live only in Square, as the Juice modifier list on this one item, kept up to date there by hand. Don't add a description or a row per flavour.", "price": 3.00 }

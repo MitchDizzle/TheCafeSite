@@ -73,6 +73,7 @@ Token,Item Name,Customer-facing Name,Variation Name,SKU,Description,Categories,R
 ,Chips,Chips,Cheetos,,,Sides,Sides,,Prepared food and beverage,,,,1.75,,N,Y,N,N,N,,,,,,
 ,Chips,Chips,Doritos,,,Sides,Sides,,Prepared food and beverage,,,,1.75,,N,Y,N,N,N,,,,,,
 ,Fruit Side,Fruit Side,Regular,,,Sides,Sides,,Prepared food and beverage,,,,1.00,,N,Y,N,N,Y,,,,,,
+,Iced Tea / Fountain Drink,Iced Tea / Fountain Drink,Self-Serve,,"Sweet or unsweet tea, or a Pepsi fountain drink.",Drinks,Drinks,,Prepared food and beverage,,,,2.00,,N,Y,N,N,N,,,,,,
 ,Iced Tea / Fountain Drink,Iced Tea / Fountain Drink,Sweet Tea,,"Sweet or unsweet tea, or a Pepsi fountain drink.",Drinks,Drinks,,Prepared food and beverage,,,,2.00,,N,Y,N,N,N,,,,,,
 ,Iced Tea / Fountain Drink,Iced Tea / Fountain Drink,Unsweet Tea,,"Sweet or unsweet tea, or a Pepsi fountain drink.",Drinks,Drinks,,Prepared food and beverage,,,,2.00,,N,Y,N,N,N,,,,,,
 ,Iced Tea / Fountain Drink,Iced Tea / Fountain Drink,Pepsi,,"Sweet or unsweet tea, or a Pepsi fountain drink.",Drinks,Drinks,,Prepared food and beverage,,,,2.00,,N,Y,N,N,N,,,,,,
