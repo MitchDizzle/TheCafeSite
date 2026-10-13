@@ -187,10 +187,11 @@ for i in cats["sides"]["items"]:
 D = "Drinks"
 for i in cats["drinks"]["items"]:
     if i["name"] == "Iced Tea / Fountain Drink":
-        # Fountain is self-serve Pepsi products, so no flavour list: the
-        # variation only says which cup was sold.
-        add("Iced Tea / Fountain Drink", D, [("Iced Tea", i["price"]), ("Fountain Drink", i["price"])],
-            "Fountain drinks are self-serve Pepsi products.")
+        # A variation per drink (squareChoices), so an online or DoorDash
+        # order says which one to pour (client 2026-10-13; it was just Iced
+        # Tea / Fountain Drink before). Also counts which one sells.
+        add("Iced Tea / Fountain Drink", D, [(v, i["price"]) for v in i["squareChoices"]],
+            "Sweet or unsweet tea, or a Pepsi fountain drink.")
     elif i["name"] == "Bottle Juice":
         # One item; the flavour is the Juice modifier list in Square (made by
         # hand, see square/README.md), as the till was set up on 2026-10-05.
