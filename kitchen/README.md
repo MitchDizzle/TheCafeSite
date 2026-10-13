@@ -28,7 +28,7 @@ Header colors (amber and red mean time and nothing else on the board):
 
 - **The timer:** a counter order counts up from when it was rung ("17:09 waiting"). A pickup or DoorDash order shows the time it's due, "Due 10:13", with "in 8 min" or "3 min late" under it, so the two never look alike.
 - **The header names Online or DoorDash.** Counter, which is most tickets, isn't written. Every ticket says TO GO or FOR HERE.
-- **Five tickets across** on the 1920-wide screen (2026-10-12; it was four), with a slim Done, so nine tickets and every number key fit on one screen. Back to four: `minmax(19rem, 1fr)` in `.board` in `board.html`.
+- **Four tickets across** on the 1920-wide screen, kept large for the cooks who don't see well (client 2026-10-13), with a slim Done to fit more of each ticket. Five across fits nine tickets but smaller: `minmax(15rem, 1fr)` in `.board` in `board.html`.
 
 ### Square is told (online and DoorDash orders)
 

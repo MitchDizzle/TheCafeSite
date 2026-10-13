@@ -200,9 +200,10 @@
 
   .board {
     display: grid;
-    /* Five across at 1920 wide (2026-10-12; four before): nine tickets, every
-       number key, fit on one screen. 19rem here puts it back to four. */
-    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    /* Four across at 1920 wide, kept for the cooks who don't see well
+       (client 2026-10-13; five fitted nine tickets, but smaller). The slim
+       Done is what buys the room. */
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
     gap: 1rem;
     align-items: start;
     padding: 1rem 1.25rem 2rem;
