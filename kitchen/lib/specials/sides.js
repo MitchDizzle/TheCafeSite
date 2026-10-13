@@ -38,11 +38,12 @@ function sideSlots(day) {
 }
 
 // What any side can be swapped for on `date`: the day's extra sides, the
-// deli salads, and a cup of the day's soup.
+// deli salads, and "Soup of the Day" when there's a soup today (client
+// 2026-10-13: just that, the kitchen knows which soup it is).
 function swapsFor(date, day) {
   const soupItem = Object.keys((day && day.items) || {}).find((n) => /soup/i.test(n));
   const soup = plan.soupSide && soupItem && cleanText(day.items[soupItem].today);
-  return [...(plan.extraSides[date] || []), ...plan.swapSides, ...(soup ? [`Cup of soup: ${soup}`] : [])];
+  return [...(plan.extraSides[date] || []), ...plan.swapSides, ...(soup ? ["Soup of the Day"] : [])];
 }
 
 // slots: from sideSlots. swaps: the swap sides. Returns words for the log.

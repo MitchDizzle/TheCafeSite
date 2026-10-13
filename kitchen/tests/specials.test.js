@@ -40,7 +40,7 @@ test("the swap list: the day's extra sides, the deli salads, then a cup of the s
   assert.deepEqual(swapsFor("2026-10-13", d), ["Tossed Salad", "Cottage Cheese"]);
   plan.soupSide = true;
   plan.extraSides = { "2026-10-13": ["Oven Browned Potatoes"] };
-  assert.deepEqual(swapsFor("2026-10-13", d), ["Oven Browned Potatoes", "Tossed Salad", "Cottage Cheese", "Cup of soup: Broccoli Cheese"]);
+  assert.deepEqual(swapsFor("2026-10-13", d), ["Oven Browned Potatoes", "Tossed Salad", "Cottage Cheese", "Soup of the Day"]);
   assert.deepEqual(swapsFor("2026-10-14", day("Meatloaf")), ["Tossed Salad", "Cottage Cheese"], "extra sides are that day's only; no soup planned, no soup side");
 });
 
