@@ -1,0 +1,113 @@
+// The kitchen PC itself: the board menu's power actions, Check for updates,
+// and the watchdog that reopens the board window if it goes missing.
+const path = require("path");
+const { execFile, spawn } = require("child_process");
+const { DIR, MOCK, DEV } = require("./config");
+
+// The same match start-kitchen.bat uses: the board's own Chrome profile, so
+// no other Chrome window on the PC is touched.
+const CLOSE_BOARD =
+  "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*--user-data-dir=*KitchenBoard*' } | " +
+  "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }";
+
+function power(action) {
+  const what = { close: "closed the board", restart: "restarted the PC", shutdown: "shut down the PC" }[action];
+  if (!what) return { ok: false, message: "Unknown action." };
+  // Test mode is how the board gets tried on other computers. Shutting one
+  // of those down from a test board would be a nasty surprise.
+  if (MOCK || DEV) return { ok: false, message: `${MOCK ? "Test mode" : "Development copy"}: this would have ${what}.` };
+  if (process.platform !== "win32") return { ok: false, message: "The power menu only works on the Windows kitchen PC." };
+  console.log(`Power menu: ${what} (${new Date().toLocaleTimeString()}).`);
+  // Closed on purpose: the watchdog must not reopen it.
+  if (action === "close") boardClosed = true;
+  // Run after the reply has gone out, so the board hears back first.
+  setTimeout(() => {
+    const run = (cmd, args) => execFile(cmd, args, { windowsHide: true }, (err) => err && console.error(`Power menu: ${err.message}`));
+    if (action === "close") run("powershell", ["-NoProfile", "-Command", CLOSE_BOARD]);
+    if (action === "restart") run("shutdown", ["/r", "/t", "0"]);
+    if (action === "shutdown") run("shutdown", ["/s", "/t", "0"]);
+  }, 300);
+  return { ok: true };
+}
+
+// "Check for updates": fetch the branch this copy is on and compare. If
+// anything is new, re-run start-kitchen.bat, which pulls it and restarts the
+// program and the board window — the same as double-clicking it, so there
+// is one update path, not two. That run replaces this process.
+function git(args) {
+  return new Promise((resolve, reject) =>
+    execFile("git", ["-C", path.join(DIR, ".."), ...args], { windowsHide: true, timeout: 30000 }, (err, out) =>
+      err ? reject(err) : resolve(String(out).trim())
+    )
+  );
+}
+
+async function checkUpdates() {
+  // A development copy is updated with git by hand. Updating it from here
+  // would pull over work in progress.
+  if (DEV) return { ok: true, message: "Development copy: it doesn't update itself. Use git." };
+  let branch, behind;
+  try {
+    branch = await git(["rev-parse", "--abbrev-ref", "HEAD"]);
+    await git(["fetch", "origin", branch]);
+    behind = Number(await git(["rev-list", "--count", `HEAD..origin/${branch}`]));
+  } catch (err) {
+    console.error(`Update check: ${err.message}`);
+    return { ok: false, message: "Couldn't check for updates. Is the internet up, and is git installed?" };
+  }
+  if (!behind) return { ok: true, message: "The board is up to date." };
+  const n = `${behind} update${behind === 1 ? "" : "s"}`;
+  if (MOCK) return { ok: true, message: `Test mode: ${n} found. Run start-kitchen.bat to install them.` };
+  if (process.platform !== "win32") return { ok: true, message: `${n} found. Run start-kitchen.bat to install them.` };
+  console.log(`Update check: ${n} on ${branch}. Restarting through start-kitchen.bat.`);
+  setTimeout(() => {
+    // Verbatim, because start's empty "" window title must reach cmd as-is;
+    // Node's own quoting would turn it into \"\". Started through `start`
+    // so the batch file is not a child of this process: its first act is
+    // to close this program's window, and taskkill /T would take it too.
+    spawn("cmd.exe", ["/c", `start "" "${path.join(DIR, "start-kitchen.bat")}"`], {
+      cwd: DIR,
+      detached: true,
+      stdio: "ignore",
+      windowsHide: true,
+      windowsVerbatimArguments: true,
+    }).unref();
+  }, 300);
+  return { ok: true, restarting: true, message: `Installing ${n}. The board will be back in about 10 seconds.` };
+}
+
+// Board watchdog. The board page asks for /api/tickets every second, and
+// only the board on this PC can (it isn't open to the wifi). If it goes
+// quiet, the board window has been navigated away or closed: a keyboard's
+// Home or Back key took Chrome to another page, a tab crashed. So the
+// program reopens it, through start-kitchen.bat's "window" step, the same
+// launch the batch file does. Not before a board has been seen at all, not
+// after Close on the power menu, and never in test mode or on a development
+// copy. After a reopen it waits a while before trying again, so a PC that
+// can't show the board (Chrome missing) isn't reopened in a loop.
+const WATCHDOG_QUIET_MS = 30000;
+const WATCHDOG_RETRY_MS = 120000;
+let boardSeen = 0;
+let boardClosed = false;
+let boardReopened = 0;
+// The board page asked for its tickets: it's on screen.
+function boardCheckedIn() {
+  boardSeen = Date.now();
+  boardClosed = false;
+}
+const startWatchdog = () => setInterval(() => {
+  if (MOCK || DEV || process.platform !== "win32" || !boardSeen || boardClosed) return;
+  const now = Date.now();
+  if (now - boardSeen < WATCHDOG_QUIET_MS || now - boardReopened < WATCHDOG_RETRY_MS) return;
+  boardReopened = now;
+  console.log(`Watchdog: the board hasn't checked in for ${Math.round((now - boardSeen) / 1000)} s. Reopening it (${new Date().toLocaleTimeString()}).`);
+  spawn("cmd.exe", ["/c", `start "" /min "${path.join(DIR, "start-kitchen.bat")}" window`], {
+    cwd: DIR,
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+    windowsVerbatimArguments: true,
+  }).unref();
+}, 5000).unref();
+
+module.exports = { power, checkUpdates, startWatchdog, boardCheckedIn };

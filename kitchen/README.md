@@ -204,6 +204,8 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | File | What it is |
 |---|---|
 | `server.js` | Polls Square every 5 s and serves the board on `http://localhost:8090`. It only listens on the PC itself, not the network, and the power menu and update check only answer the board page itself. |
+| `lib\` | The board program's parts, one file per job (config, Square, tickets, specials, stats, routes…); `server.js` lists them. Nothing to install. |
+| `tests\` | The tests (see "Tests"). |
 | `board.html` | The kitchen screen. |
 | `front.html` | The front page for the counter (`/front`). |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
