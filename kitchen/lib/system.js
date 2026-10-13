@@ -4,11 +4,21 @@ const path = require("path");
 const { execFile, spawn } = require("child_process");
 const { DIR, MOCK, DEV } = require("./config");
 
-// The same match start-kitchen.bat uses: the board's own Chrome profile, so
-// no other Chrome window on the PC is touched.
-const CLOSE_BOARD =
-  "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*--user-data-dir=*KitchenBoard*' } | " +
-  "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }";
+// Runs a step of start-kitchen.bat ("window", "close", or none for the full
+// start). Verbatim, because start's empty "" window title must reach cmd
+// as-is; Node's own quoting would turn it into \"\". Started through
+// `start` so the batch file is not a child of this process: "close" and the
+// full start end this program's window, and taskkill /T would take the
+// batch file with it.
+function startBatch(step) {
+  spawn("cmd.exe", ["/c", `start "" /min "${path.join(DIR, "start-kitchen.bat")}"${step ? ` ${step}` : ""}`], {
+    cwd: DIR,
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+    windowsVerbatimArguments: true,
+  }).unref();
+}
 
 function power(action) {
   const what = { close: "closed the board", restart: "restarted the PC", shutdown: "shut down the PC" }[action];
@@ -18,12 +28,15 @@ function power(action) {
   if (MOCK || DEV) return { ok: false, message: `${MOCK ? "Test mode" : "Development copy"}: this would have ${what}.` };
   if (process.platform !== "win32") return { ok: false, message: "The power menu only works on the Windows kitchen PC." };
   console.log(`Power menu: ${what} (${new Date().toLocaleTimeString()}).`);
-  // Closed on purpose: the watchdog must not reopen it.
+  // Closed on purpose: the watchdog must not reopen it, even if the board
+  // checks in once more before its window goes.
   if (action === "close") boardClosed = true;
   // Run after the reply has gone out, so the board hears back first.
   setTimeout(() => {
     const run = (cmd, args) => execFile(cmd, args, { windowsHide: true }, (err) => err && console.error(`Power menu: ${err.message}`));
-    if (action === "close") run("powershell", ["-NoProfile", "-Command", CLOSE_BOARD]);
+    // The board window and this program, both: nothing is left running to
+    // bring the board back until start-kitchen.bat is run.
+    if (action === "close") startBatch("close");
     if (action === "restart") run("shutdown", ["/r", "/t", "0"]);
     if (action === "shutdown") run("shutdown", ["/s", "/t", "0"]);
   }, 300);
@@ -60,19 +73,7 @@ async function checkUpdates() {
   if (MOCK) return { ok: true, message: `Test mode: ${n} found. Run start-kitchen.bat to install them.` };
   if (process.platform !== "win32") return { ok: true, message: `${n} found. Run start-kitchen.bat to install them.` };
   console.log(`Update check: ${n} on ${branch}. Restarting through start-kitchen.bat.`);
-  setTimeout(() => {
-    // Verbatim, because start's empty "" window title must reach cmd as-is;
-    // Node's own quoting would turn it into \"\". Started through `start`
-    // so the batch file is not a child of this process: its first act is
-    // to close this program's window, and taskkill /T would take it too.
-    spawn("cmd.exe", ["/c", `start "" "${path.join(DIR, "start-kitchen.bat")}"`], {
-      cwd: DIR,
-      detached: true,
-      stdio: "ignore",
-      windowsHide: true,
-      windowsVerbatimArguments: true,
-    }).unref();
-  }, 300);
+  setTimeout(() => startBatch(), 300);
   return { ok: true, restarting: true, message: `Installing ${n}. The board will be back in about 10 seconds.` };
 }
 
@@ -93,7 +94,6 @@ let boardReopened = 0;
 // The board page asked for its tickets: it's on screen.
 function boardCheckedIn() {
   boardSeen = Date.now();
-  boardClosed = false;
 }
 const startWatchdog = () => setInterval(() => {
   if (MOCK || DEV || process.platform !== "win32" || !boardSeen || boardClosed) return;
@@ -101,13 +101,7 @@ const startWatchdog = () => setInterval(() => {
   if (now - boardSeen < WATCHDOG_QUIET_MS || now - boardReopened < WATCHDOG_RETRY_MS) return;
   boardReopened = now;
   console.log(`Watchdog: the board hasn't checked in for ${Math.round((now - boardSeen) / 1000)} s. Reopening it (${new Date().toLocaleTimeString()}).`);
-  spawn("cmd.exe", ["/c", `start "" /min "${path.join(DIR, "start-kitchen.bat")}" window`], {
-    cwd: DIR,
-    detached: true,
-    stdio: "ignore",
-    windowsHide: true,
-    windowsVerbatimArguments: true,
-  }).unref();
+  startBatch("window");
 }, 5000).unref();
 
 module.exports = { power, checkUpdates, startWatchdog, boardCheckedIn };

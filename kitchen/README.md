@@ -63,7 +63,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 - **The power button** in the top right opens the board menu. It works with the mouse only, so nothing on the number pad can open it or confirm anything in it.
   - **Settings & help:** the key guide, today's numbers (orders, breakfast / lunch, average time in the kitchen, most ordered), whether sound is on, and a link to the order check page. **Demo orders** adds practice tickets for training the staff (see below). **Reset for the day** clears the Undo list on both screens (so test or yesterday's tickets can't come back with a stray Backspace) and restarts today's stats from that moment. Tick **Also clear every order on the board** to empty both screens too: the morning after testing, before the doors open. The key guide also shows on the board when there are no orders.
   - **Check for updates:** looks for new board code. If there is any, it runs `start-kitchen.bat`, which installs it and restarts the board in about 10 seconds. If not, it says the board is up to date.
-  - **Close the board:** back to Windows. Run `start-kitchen.bat` to bring it back. The watchdog leaves a closed board closed.
+  - **Close the board:** closes the board window and the program window, back to Windows. Nothing reopens it until `start-kitchen.bat` is run (or the PC restarts). The front page is off too while it's closed.
   - **Restart the PC** and **Shut down the PC:** each asks first, then counts down from 5 with a big Cancel. Prefer Restart when working remotely: once the PC is off, someone has to press its power button.
   - In test mode (`KITCHEN_MOCK=1`) or on a development copy (`KITCHEN_DEV=1`) the power items only say what they would have done, so a laptop running the test board can't be shut down from it.
 - **Sound needs speakers.** Make sure they're plugged in, set as the default output in Windows, and not muted.
@@ -103,7 +103,7 @@ To make every run on your computer a development run, set it once for good: `set
 
 ### Keeping the board on screen
 
-- **Watchdog:** the board checks in with its program every second. If it stops for 30 seconds while the program is running, the program reopens the board full screen. This covers a keyboard's Home or Back key taking Chrome to another page, a closed tab, or a crashed tab. It doesn't run after **Close the board** on the power menu (until the board is opened again), in test mode, or on a development copy. It waits 2 minutes between tries. Each reopen is logged in the program's window.
+- **Watchdog:** the board checks in with its program every second. If it stops for 30 seconds while the program is running, the program reopens the board full screen. This covers a keyboard's Home or Back key taking Chrome to another page, a closed tab, or a crashed tab. **Close the board** ends the program too, so there's no watchdog after it. It doesn't run in test mode or on a development copy either. It waits 2 minutes between tries. Each reopen is logged in the program's window.
 - **Turn the internet keys off (optional, kitchen PC only):** double-click `keyboard-lock.reg`, accept, and restart the PC. It disables the Browser Home / Back / Forward / Refresh / Search / Mail and app keys that many keyboards have, so a stray press does nothing at all. `keyboard-unlock.reg` turns them back on. Not needed once the kitchen has only a number pad.
 
 ## Training: demo orders

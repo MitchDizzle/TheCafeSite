@@ -12,6 +12,7 @@ cd /d "%~dp0"
 if "%~1"=="server" goto server
 if "%~1"=="launch" goto launch
 if "%~1"=="window" goto window
+if "%~1"=="close" goto close
 
 if "%KITCHEN_DEV%"=="1" (
   echo Development copy: not updating from git, opening the board in a normal window.
@@ -110,6 +111,13 @@ start "" %BROWSER% --kiosk --no-first-run --no-default-browser-check --autoplay-
 rem Bring the board to the front once Chrome has opened it, so the number
 rem pad types into the board and not into this window. Waits up to 20 s.
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0focus-board.ps1"
+exit /b
+
+:close
+rem Close the board window and the board program (Close the board on the
+rem power menu). Nothing brings them back until this file is run again.
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*--user-data-dir=*KitchenBoard*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+taskkill /FI "WINDOWTITLE eq Kitchen board program*" /T /F >nul 2>&1
 exit /b
 
 :server
