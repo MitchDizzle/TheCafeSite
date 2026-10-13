@@ -135,6 +135,12 @@
     color: var(--teal-dark);
 }
 
+/* A day whose plate isn't the usual price (specials.json `price` on the day). */
+.wk-day-price {
+    color: var(--accent);
+    white-space: nowrap;
+}
+
 .wk-sides {
     font-size: 26px;
     line-height: 1.3;

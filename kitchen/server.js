@@ -90,6 +90,10 @@ const DEFAULTS = {
   // front of these words ("Lasagna with ... Served from 11am."), and puts
   // them back alone on a day with nothing planned. {} leaves them alone.
   descriptions: { "Lunch Special": "Served from 11am.", "Soup of the Day": "Starting at 11am." },
+  // Each morning, the daily items' picture in Square (online ordering and
+  // DoorDash) becomes a photo of the day's dish, found by its name among the
+  // photos (see "Photos in Square" in the README). false leaves them alone.
+  dailyPhotos: true,
   // Tell Square what the kitchen and the front did, for online and delivery
   // orders (counter sales are finished in Square when they're paid): Done
   // on the board marks the order Ready in Square readyDelaySeconds later
@@ -690,10 +694,13 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // applied: { "YYYY-MM-DD": { sig, at } after a good write, { sig, failedAt, error } after a bad one }
 // sidesApplied: the same, for the day's side lists on cfg.sideItem (applySides)
 // descApplied: the same, for the daily items' descriptions (applyDescriptions)
+// photoApplied: the same, for their pictures (applyPhotos)
+// squareImages: { "<photo path>": "<Square image id>" }, each photo uploaded once
+// photoTurn: { "<dish>": { date, n } }, which of a dish's photos is next
 // swapSides: the sides any side can be swapped for, as the website last listed them
 // includesDrink: every lunch special includes a drink, as the website last said
 // site:    the last read of the website, for the front to show
-let plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, swapSides: [], includesDrink: false, site: { checkedAt: null, error: null } };
+let plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, swapSides: [], includesDrink: false, site: { checkedAt: null, error: null } };
 try {
   plan = { ...plan, ...JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")) };
 } catch {}
@@ -701,7 +708,7 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.notes, plan.applied, plan.sidesApplied, plan.descApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
 }
 
@@ -716,6 +723,10 @@ function localDate(d = new Date()) {
 const dayWords = (date) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 const cleanText = (s) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
 const PRICE = /^\d{1,3}(\.\d{1,2})?$/;
+
+// A price from the website as the plan keeps it ("10.00"), or "" when it
+// isn't one.
+const sitePrice = (n) => (typeof n === "number" && n > 0 && n < 1000 ? n.toFixed(2) : "");
 
 // Which of the website's fields goes into which daily item, by the item's
 // name: "Soup of the Day" takes the soup, "Lunch Special" the plate. One that
@@ -747,10 +758,14 @@ async function pullSite() {
       // the board starts on a day it had no plan for.
       if (d.date === today && (have || (plan.applied[today] && plan.applied[today].sig !== "clear"))) continue;
       const items = {};
+      // The plate's price: the day's own, or the website's price for every
+      // special (client 2026-10-12: $10 unless a day says otherwise). Only a
+      // one-size item takes it; one in sizes keeps Square's prices.
+      const price = sitePrice(d.price ?? json.price);
       for (const name of cfg.dailyItems) {
         const field = siteFieldFor(name);
         const text = field ? cleanText(d[field]) : "";
-        if (text) items[name] = { today: text, prices: {} };
+        if (text) items[name] = { today: text, prices: field === "special" && price ? { "": price } : {} };
       }
       if (!Object.keys(items).length) continue;
       // The sides go nowhere in Square; Photo post words the special with
@@ -814,9 +829,10 @@ async function applyTodayOnce() {
   const result = await applySpecials(today, day);
   const sides = await applySides(today, day);
   const words = await applyDescriptions(today, day);
+  const photos = await applyPhotos(today, day);
   // What the front is told after saving today: the specials, or else the
-  // sides, or else the descriptions.
-  return [result, sides, words].find((r) => r && r.error) || result;
+  // sides, the descriptions, the photos.
+  return [result, sides, words, photos].find((r) => r && r.error) || result;
 }
 
 async function applySpecials(today, day) {
@@ -1087,6 +1103,112 @@ async function applyDescriptions(today, day) {
   }
   savePlan();
   return plan.descApplied[today];
+}
+
+// ---------------------------------------------------------------- the day's photos
+
+// The picture online ordering and DoorDash show for Lunch Special and Soup of
+// the Day: a photo of the day's dish, found by its name (client 2026-10-12).
+// The photos are the plain ones, never the finished posts with words on:
+//   - the website's, src/_data/photos.json in the repo beside the board
+//     (Daily specials, `special: true`), files under src/;
+//   - Photo post's, photos/photos.json on this PC (`saved`), for a dish
+//     not moved to the website yet. One already on the website is the same
+//     photo (the same `file`), so it counts once.
+// A dish photographed more than once rotates: each day it's served shows the
+// next (photoTurn). A dish with no photo yet shows none of ours; a picture
+// put on the item in the Dashboard is never removed, and shows on those days.
+// Each photo is uploaded to Square once and its image id kept (squareImages).
+const dishKey = (s) => String(s || "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
+
+function dishPhotos() {
+  const byFile = new Map();
+  const read = (file) => { try { return JSON.parse(fs.readFileSync(file, "utf8")).photos || []; } catch { return []; } };
+  for (const p of read(path.join(DIR, "..", "src", "_data", "photos.json"))) {
+    const where = p.file && path.join(DIR, "..", "src", ...String(p.file).split("/").filter(Boolean));
+    if (p.special && p.title && where && fs.existsSync(where)) byFile.set(p.file, { title: p.title, date: p.date || "", path: where });
+  }
+  for (const p of read(path.join(PHOTO_DIR, "photos.json"))) {
+    const where = p.saved && path.join(PHOTO_DIR, p.saved);
+    const key = p.file || p.saved;
+    if (p.special && p.title && where && !byFile.has(key) && fs.existsSync(where)) byFile.set(key, { title: p.title, date: p.date || "", path: where });
+  }
+  return [...byFile.values()].sort((a, b) => a.date.localeCompare(b.date) || a.path.localeCompare(b.path));
+}
+
+// Today's photo for each daily item: { "<item name>": path | null }. Moves a
+// dish's turn on the first time it's asked on a new day.
+function dayPhotos(today, day) {
+  const all = dishPhotos();
+  const out = {};
+  for (const name of cfg.dailyItems) {
+    const what = day && day.items[name] && dishKey(day.items[name].today);
+    const mine = what ? all.filter((p) => dishKey(p.title) === what) : [];
+    if (!mine.length) { out[name] = null; continue; }
+    const turn = plan.photoTurn[what];
+    if (!turn) plan.photoTurn[what] = { date: today, n: 0 };
+    else if (turn.date !== today) plan.photoTurn[what] = { date: today, n: turn.n + 1 };
+    out[name] = mine[plan.photoTurn[what].n % mine.length].path;
+  }
+  return out;
+}
+
+async function uploadImage(file, title) {
+  if (plan.squareImages[file]) return plan.squareImages[file];
+  if (MOCK) { plan.squareImages[file] = `MOCK-IMAGE-${mockNextId++}`; return plan.squareImages[file]; }
+  const form = new FormData();
+  form.append("request", new Blob([JSON.stringify({
+    idempotency_key: `kitchen-image-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    image: { type: "IMAGE", id: "#photo", image_data: { name: title } },
+  })], { type: "application/json" }), "request.json");
+  form.append("image_file", new Blob([fs.readFileSync(file)], { type: "image/jpeg" }), path.basename(file));
+  const res = await fetch(`${API}/catalog/images`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${cfg.accessToken}`, "Square-Version": SQUARE_VERSION },
+    body: form,
+    signal: AbortSignal.timeout(60000),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`Square ${res.status}: ${(json.errors || []).map((e) => e.detail || e.code).join("; ") || res.statusText}`);
+  plan.squareImages[file] = json.image.id;
+  savePlan();
+  return json.image.id;
+}
+
+async function applyPhotos(today, day) {
+  if (!cfg.dailyPhotos) return null;
+  const want = dayPhotos(today, day);
+  const sig = JSON.stringify(want);
+  const last = plan.photoApplied[today];
+  if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
+  // Nothing to show and never shown one: nothing to take off either.
+  if (!Object.values(want).some(Boolean) && !Object.keys(plan.squareImages).length) return null;
+  try {
+    await loadCatalog();
+    const ours = new Set(Object.values(plan.squareImages));
+    const done = [];
+    for (const name of cfg.dailyItems) {
+      const id = catalog.itemIds.get(name.trim().toLowerCase());
+      if (!id) continue;
+      const file = want[name];
+      const imageId = file ? await uploadImage(file, `${name}: ${path.basename(file, path.extname(file))}`) : null;
+      const item = await readItem(id);
+      const d = item.item_data;
+      const own = (d.image_ids || []).filter((x) => !ours.has(x) && x !== imageId);
+      const ids = imageId ? [imageId, ...own] : own;
+      if (JSON.stringify(ids) === JSON.stringify(d.image_ids || [])) continue;
+      d.image_ids = ids;
+      await writeItem(item);
+      done.push(`${name}: ${file ? path.basename(file) : "no photo of today's dish"}`);
+    }
+    plan.photoApplied[today] = { sig, at: new Date().toISOString() };
+    if (done.length) console.log(`Photos put in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}.`);
+  } catch (err) {
+    if (!last || last.error !== err.message) console.error(`Today's photos: ${err.message}`);
+    plan.photoApplied[today] = { sig, failedAt: new Date().toISOString(), error: err.message };
+  }
+  savePlan();
+  return plan.photoApplied[today];
 }
 
 // What Specials shows: today and the next PLAN_DAYS days the cafe is open

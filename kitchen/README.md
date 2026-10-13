@@ -166,6 +166,7 @@ Settings in `config.json`, both optional:
 | `squareStatus` | `true` | The board marks online and DoorDash orders Ready in Square after Done, and picked up after Handed off (see "Square is told"). `false`: the board only reads from Square. |
 | `readyDelaySeconds` | `10` | How long after Done (or Handed off) Square is told: the time to Undo. |
 | `descriptions` | Lunch Special: `Served from 11am.`, Soup of the Day: `Starting at 11am.` | The words each daily item's description ends with (see "Descriptions in Square"). `{}` leaves the descriptions alone. |
+| `dailyPhotos` | `true` | Each morning Lunch Special's and Soup of the Day's picture becomes a photo of the day's dish (see "Photos in Square"). `false` leaves the pictures alone. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
 | `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
@@ -256,6 +257,20 @@ Online ordering and DoorDash show an item's description under its name, and the 
 - Lunch Special: "Lasagna with Tossed Salad or Cooked Broccoli and Breadstick. Includes a fountain drink or iced tea. Swap a side below if you like. Served from 11am." The sides are worded by the website's `specialSides` (`src/_includes/specials-caption.js`), so they read as on /menu; the drink line follows `includesDrink` in `/specials.json`; "Pick your side below." on a choice-of-side day.
 - Soup of the Day: "Chicken Pot Pie. Starting at 11am."
 - A day with nothing planned puts back the `descriptions` words alone. A day changed on the front page is rewritten straight away, like the names.
+
+### Photos in Square
+
+Each morning the board also puts a photo of the day's dish on **Lunch Special** (and **Soup of the Day**, once a soup is photographed), for online ordering and DoorDash (client 2026-10-12):
+
+- **Found by name:** a photo whose title is the day's special ("BBQ Ribs"), ignoring case and punctuation. The photos are the website's Daily specials (`src/_data/photos.json`, `special: true`) and the ones Photo post saved on this PC that haven't moved to the website yet (`photos/photos.json`). Always the plain photo, never the finished post with words on it.
+- **Rotates:** a dish photographed more than once shows the next photo each day it's served.
+- **No photo yet:** none of ours shows. A picture put on the item by hand in the Dashboard is never removed, so it shows on those days instead (a good place for a general "lunch special" photo).
+- Each photo is uploaded to Square once; the board remembers its image (`squareImages` in `specials-plan.json`).
+- **A new dish:** take it with Photo post and tick it as a special, with its title spelled as on the specials; the next time that dish is on, it shows.
+
+### The price
+
+`/specials.json` carries the usual price of a special (`price`, $10) and a day's own when it differs; the board puts it into Square with the day's plate, like the name (client 2026-10-12). A price set on the front page for a day wins, as always.
 
 ## Photo post (Manage on the front page)
 

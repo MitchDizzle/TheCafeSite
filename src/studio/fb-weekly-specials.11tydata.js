@@ -14,6 +14,9 @@ module.exports = {
       if (!week.length) return [];
 
       const { site } = data;
+      // "$10", or "$10.50": the usual price of a special (specials.json).
+      const dollars = (n) => `$${Number(n).toFixed(2).replace(/\.00$/, "")}`;
+      const price = data.specials.price ? dollars(data.specials.price) : "";
       const o = site.opening;
       const hours = `${o.opens.time.replace(":00", "")}${o.opens.meridiem} – ${o.closes.time.replace(":00", "")}${o.closes.meridiem}`;
 
@@ -32,8 +35,9 @@ module.exports = {
 
       return [
         // The town up front: Facebook shows the post well beyond Leavenworth.
-        `Lunch specials at The Café in ${site.address.locality}, ${site.address.region}, ${weekRange(week)}. From 11am${data.specials.includesDrink ? ", each with a drink" : ""}.`,
-        ...dayLines(week),
+        `Lunch specials at The Café in ${site.address.locality}, ${site.address.region}, ${weekRange(week)}. From 11am${price ? `, ${price} each` : ""}${data.specials.includesDrink ? ", with a drink" : ""}.`,
+        // A day that costs something else says so on its own line.
+        ...dayLines(week).map((line, i) => (week[i].price && week[i].price !== data.specials.price ? `${line} (${dollars(week[i].price)})` : line)),
         ...[choiceLine, soupLine(week)].filter(Boolean),
         [
           `${site.address.street}, ${site.address.locality}, ${site.address.region}`,

@@ -16,7 +16,7 @@ studioData: ["specials.json"]
 studioTitle: "Weekly lunch specials — Facebook post"
 studioCategory: "Social"
 studioSize: "1080 × 1350 px · portrait feed post"
-studioNote: "The one Facebook post a week, made a week ahead. Every word on it comes from src/_data/specials.json — add next week there (it shows the newest week in the file), run npm run build, and this image and its caption (on /studio/downloads/) both follow. No prices: they are in Square. Portrait 4:5 is the tallest a feed post shows uncropped. Cream body with teal bands, so it sits well beside food photos in a multi-image post."
+studioNote: "The one Facebook post a week, made a week ahead. Every word on it comes from src/_data/specials.json — add next week there (it shows the newest week in the file), run npm run build, and this image and its caption (on /studio/downloads/) both follow. The price is said once at the top (specials.json's `price`), and beside a plate only when that day costs something else. Portrait 4:5 is the tallest a feed post shows uncropped. Cream body with teal bands, so it sits well beside food photos in a multi-image post."
 studioW: 1080
 studioH: 1350
 studioOrder: 22
@@ -76,7 +76,9 @@ studioOrder: 22
     <div class="wk-body">
         <p class="p-label wk-served">Starting at 11am</p>
         <div class="wk-tags">
-            {%- if specials.includesDrink %}
+            {%- if specials.price %}
+            <p class="wk-tag wk-tag--drink">Every special {{ specials.price | money | replace(".00", "") }}{% if specials.includesDrink %}, drink included{% endif %}</p>
+            {%- elif specials.includesDrink %}
             <p class="wk-tag wk-tag--drink">Every special includes a drink</p>
             {%- endif %}
             {%- if soupCat and soupCat.items %}
@@ -90,7 +92,7 @@ studioOrder: 22
             <div class="wk-row">
                 <p class="p-display wk-dayname">{{ d.date | dayDate("short") }}</p>
                 <div class="wk-special-cell">
-                    <p class="p-display wk-special">{{ d.special }}</p>
+                    <p class="p-display wk-special">{{ d.special }}{% if d.price and d.price != specials.price %} <span class="wk-day-price">{{ d.price | money | replace(".00", "") }}</span>{% endif %}</p>
                     {%- if sides %}
                     <p class="p-body wk-sides">{{ sides }}</p>
                     {%- endif %}
