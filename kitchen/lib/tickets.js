@@ -86,8 +86,9 @@ function toTicket(order) {
 
   const lines = order.line_items || [];
   // Condiment packets ("Ketchup packet") are chosen as modifiers in Square
-  // but go in the bag, not on the food: they come off the kitchen ticket
-  // and onto the front's list. See the Packets list in square/README.md.
+  // but go in the bag, not on the food: on a counter sale they come off the
+  // kitchen ticket and onto the front's list (an online order's stay, see
+  // below). See the Packets list in square/README.md.
   const isPacket = (m) => /\bpackets?\b/i.test(m.name || "");
   // Items to go on a For Here ticket: "we're eating here, and a plate to
   // take home". The POS sets the dining option per item; the Restaurants
@@ -107,7 +108,8 @@ function toTicket(order) {
     name: itemName(li),
     variation:
       li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
-    mods: (li.modifiers || []).filter((m) => !isPacket(m) && !isToGoMod(m)).map((m) =>
+    // An online order's packets stay on its items: the kitchen bags it all.
+    mods: (li.modifiers || []).filter((m) => !(isPacket(m) && !online) && !isToGoMod(m)).map((m) =>
       Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name
     ),
     note: li.name && li.note ? li.note : null,
@@ -116,17 +118,16 @@ function toTicket(order) {
   const food = lines.filter((li) => !NOT_FOOD.has(li.item_type));
   const isSkip = isSkipped;
   // items: what the kitchen makes. front: what the counter adds to the bag.
-  let items = food.filter((li) => !isSkip(li)).map(toItem);
-  let front = food.filter(isSkip).map(toItem);
-  // An online or DoorDash order of only drinks or chips goes to the kitchen
-  // as an ordinary ticket all the same (2026-10-13: two V8s from DoorDash
-  // showed on the front page only, and the back never saw them). Its Done is
-  // also what tells Square it's ready.
-  if (online && !items.length) [items, front] = [front, []];
-  // Packets, totalled across the order: 2 burgers each wanting ketchup is
-  // "2 Ketchup packet", one line.
+  // An online or DoorDash order is the kitchen's whole (client 2026-10-13:
+  // the kitchen needs the full order): every item, drinks and chips too,
+  // with its packets, and nothing on the front's list. Its Done is also
+  // what tells Square it's ready.
+  const items = food.filter((li) => online || !isSkip(li)).map(toItem);
+  const front = online ? [] : food.filter(isSkip).map(toItem);
+  // A counter sale's packets, totalled across the order: 2 burgers each
+  // wanting ketchup is "2 Ketchup packet", one line.
   const packets = new Map();
-  for (const li of food) {
+  for (const li of online ? [] : food) {
     for (const m of li.modifiers || []) {
       if (!isPacket(m)) continue;
       const n = (Number(li.quantity) || 1) * (Number(m.quantity) || 1);
