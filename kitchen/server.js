@@ -46,7 +46,11 @@ const { execFile, spawn } = require("child_process");
 const crypto = require("crypto");
 
 const DIR = __dirname;
-const CONFIG_FILE = path.join(DIR, "config.json");
+// KITCHEN_CONFIG and KITCHEN_DATA move config.json and the PC's own files
+// (state, plan, history, photos) elsewhere. Only the tests use them, so a
+// test run never reads the real config or touches this PC's files.
+const CONFIG_FILE = process.env.KITCHEN_CONFIG || path.join(DIR, "config.json");
+const DATA = process.env.KITCHEN_DATA || DIR;
 const MOCK = process.env.KITCHEN_MOCK === "1";
 // KITCHEN_MUTE=1 silences the board for testing on another computer. On the
 // kitchen PC, leave sound on: the chime is how a new order gets noticed.
@@ -56,7 +60,7 @@ const MUTE = process.env.KITCHEN_MUTE === "1";
 // the watchdog that reopens the board window. Only the kitchen PC runs
 // without it.
 const DEV = process.env.KITCHEN_DEV === "1";
-const STATE_FILE = path.join(DIR, MOCK ? "state-mock.json" : "state.json");
+const STATE_FILE = path.join(DATA, MOCK ? "state-mock.json" : "state.json");
 const BOARD_FILE = path.join(DIR, "board.html");
 const FRONT_FILE = path.join(DIR, "front.html");
 
@@ -686,7 +690,7 @@ async function saveDessertPhoto(itemId, dataUrl) {
 //   - the front page. A day changed there is the front's from then on: the
 //     website's copy no longer touches it.
 // Kept in specials-plan.json beside state.json (gitignored).
-const PLAN_FILE = path.join(DIR, MOCK ? "specials-plan-mock.json" : "specials-plan.json");
+const PLAN_FILE = path.join(DATA, MOCK ? "specials-plan-mock.json" : "specials-plan.json");
 const SITE_MINUTES = 30;
 const RETRY_MINUTES = 5; // after Square refuses the morning's write
 const PLAN_DAYS = 14; // how far ahead Specials reaches
@@ -1464,7 +1468,7 @@ async function syncSquare() {
 // the finished post, in photos/, with photos/photos.json in the same shape as
 // the site's src/_data/photos.json so they can be moved over as they are.
 // Gitignored.
-const PHOTO_DIR = path.join(DIR, MOCK ? "photos-mock" : "photos");
+const PHOTO_DIR = path.join(DATA, MOCK ? "photos-mock" : "photos");
 
 // What the screen starts from: today's planned special and soup (with the
 // website's sides), and every item in Square with its words and price.
@@ -1926,7 +1930,7 @@ function statsToday() {
 // being closed properly at night. A day the board never ran is missing.
 // Counts from the same orders as Today, so a Reset for the day restarts
 // that day's history too, and test and demo orders never get in.
-const HISTORY_FILE = path.join(DIR, MOCK ? "stats-history-mock.json" : "stats-history.json");
+const HISTORY_FILE = path.join(DATA, MOCK ? "stats-history-mock.json" : "stats-history.json");
 const HISTORY_SECONDS = 30;
 let history = { days: {} };
 try {
@@ -2492,7 +2496,7 @@ const WATCHDOG_RETRY_MS = 120000;
 let boardSeen = 0;
 let boardClosed = false;
 let boardReopened = 0;
-setInterval(() => {
+const startWatchdog = () => setInterval(() => {
   if (MOCK || DEV || process.platform !== "win32" || !boardSeen || boardClosed) return;
   const now = Date.now();
   if (now - boardSeen < WATCHDOG_QUIET_MS || now - boardReopened < WATCHDOG_RETRY_MS) return;
@@ -2881,6 +2885,9 @@ function frontAddresses() {
   }
   return out;
 }
+// Started only when run (node server.js), not when the tests load it.
+if (require.main === module) {
+startWatchdog();
 server.listen(cfg.port, HOST, () => {
   console.log(`Kitchen board on http://localhost:${cfg.port}${MOCK ? "  (MOCK ORDERS)" : ""}`);
   console.log(cfg.frontOnNetwork ? `Front page for the counter: ${FRONT_URL}` : "Front page: this PC only (frontOnNetwork is false).");
@@ -2901,3 +2908,11 @@ server.listen(cfg.port, HOST, () => {
   setInterval(applyToday, 6e4);
   setInterval(syncSquare, 2000);
 });
+}
+
+// For the tests (tests/*.test.js): the rules that turn Square's orders into
+// tickets, and the state they read.
+module.exports = {
+  cfg, toTicket, isOnline, hiddenReason, frontHiddenReason, readyAt, orderDetail, setSkip, loadCatalog,
+  sideSlots, dayDescription, plan, bumped, canceled, handedOff, markedReady,
+};

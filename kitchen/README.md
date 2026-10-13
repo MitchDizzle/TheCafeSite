@@ -195,6 +195,10 @@ This shows fake orders and adds a new one every 45 seconds, so you can hear the 
 
 To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` before `start-kitchen.bat`, or just tap the speaker icon. A muted speaker shows amber, so a silent board can't go unnoticed. To silence the kitchen PC for good, add `"sound": false` to `config.json`, but the chime is how a new order gets noticed, so leave it on there.
 
+## Tests
+
+`npm test` (or `node --test` in this folder) checks the rules that turn Square's orders into tickets: names, table numbers, to go and for here, the to-go split, packets and the skip list, online and DoorDash, which screen a ticket is on, and the specials' words in Square. No `npm install` needed. The tests run on demo orders, with `config.example.json`'s settings and a scratch folder for the board's own files, so they never touch Square, `config.json` or this PC's files. Add a test when an order surprises the board: copy its **raw** copy from `/check` into a test, minus names.
+
 ## Files
 
 | File | What it is |
