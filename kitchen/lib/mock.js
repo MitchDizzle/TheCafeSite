@@ -120,8 +120,8 @@ function mockOrders() {
     fulfillments: [{ type: "PICKUP", state: "COMPLETED", pickup_details: {} }],
     line_items: [li(1, "Philly Steak Sandwich")],
   });
-  // Online, drinks and chips only: nothing for the kitchen, but the front
-  // still bags it. Shows on /front only.
+  // Online, drinks and chips only: nothing to cook, but it still goes on
+  // the kitchen board so the back sees it.
   orders.push({
     id: "MOCKONLINEDRNK8",
     state: "OPEN",

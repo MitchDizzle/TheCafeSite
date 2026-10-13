@@ -192,14 +192,14 @@ test("a counter sale of only skipped items shows nowhere", () => {
   assert.equal(toTicket(counter({ line_items: [li(1, "Chips")] })).reason, "every item is on the skip list (or a gift card)");
 });
 
-test("an online order of only skipped items is a ticket for the front only", () => {
-  board.setSkip({ items: ["Chips"], categories: [] });
-  const t = ticketOf(online({ line_items: [li(1, "Chips", { variation_name: "BBQ" })] }));
-  assert.equal(t.items.length, 0);
-  assert.equal(t.front.length, 1);
-  assert.equal(hiddenReason(t, Date.now()), "every item is on the skip list (front only)");
+test("an online order of only skipped items goes to the kitchen like any other", () => {
+  board.setSkip({ items: ["Chips", "V8"], categories: [] });
+  const t = ticketOf(online({ line_items: [li(2, "V8"), li(1, "Chips", { variation_name: "BBQ", modifiers: [{ name: "Ketchup packet" }] })] }));
+  assert.deepEqual(t.items.map((it) => [it.qty, it.name]), [[2, "V8"], [1, "Chips"]]);
+  assert.deepEqual(t.front.map((it) => it.name), ["Ketchup packet"], "packets still go on the front's list");
+  assert.equal(hiddenReason(t, Date.now()), null);
   assert.equal(frontHiddenReason(t, Date.now()), null);
-  assert.equal(readyAt(t), t.createdAt, "nothing to cook, so it's ready");
+  assert.equal(readyAt(t), null, "ready once the kitchen presses Done");
 });
 
 test("gift cards never go on a ticket; keypad amounts do, under their note", () => {

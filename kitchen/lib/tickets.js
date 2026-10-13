@@ -92,8 +92,13 @@ function toTicket(order) {
   const food = lines.filter((li) => !NOT_FOOD.has(li.item_type));
   const isSkip = isSkipped;
   // items: what the kitchen makes. front: what the counter adds to the bag.
-  const items = food.filter((li) => !isSkip(li)).map(toItem);
-  const front = food.filter(isSkip).map(toItem);
+  let items = food.filter((li) => !isSkip(li)).map(toItem);
+  let front = food.filter(isSkip).map(toItem);
+  // An online or DoorDash order of only drinks or chips goes to the kitchen
+  // as an ordinary ticket all the same (2026-10-13: two V8s from DoorDash
+  // showed on the front page only, and the back never saw them). Its Done is
+  // also what tells Square it's ready.
+  if (online && !items.length) [items, front] = [front, []];
   // Packets, totalled across the order: 2 burgers each wanting ketchup is
   // "2 Ketchup packet", one line.
   const packets = new Map();
@@ -107,9 +112,8 @@ function toTicket(order) {
   for (const [name, qty] of packets) front.push({ qty, name, variation: null, mods: [], note: null });
   if (!lines.length) return { reason: "no items on the order" };
   // A counter sale of only drinks or chips is handed over as it's rung up;
-  // it belongs on neither screen. An online one still needs bagging, so it
-  // stays a ticket and shows on /front only (see hiddenReason).
-  if (!items.length && (!online || !front.length)) {
+  // it belongs on neither screen.
+  if (!items.length) {
     return { reason: "every item is on the skip list (or a gift card)" };
   }
 
@@ -189,7 +193,6 @@ function hiddenReason(t, now) {
   // A Ready the board wrote itself follows Done/Undo, so Undo still
   // brings the ticket back after Square has been told.
   if (t.squareReady && !markedReady[t.id]) return "front already marked it prepared";
-  if (!t.items.length) return "every item is on the skip list (front only)";
   return outOfWindow(t, now);
 }
 
@@ -200,11 +203,11 @@ function frontHiddenReason(t, now) {
   return outOfWindow(t, now);
 }
 
-// Ready for the front: the kitchen pressed Done, the front already marked it
-// ready in Square, or there was nothing for the kitchen to make.
+// Ready for the front: the kitchen pressed Done, or the front already marked
+// it ready in Square.
 function readyAt(t) {
   if (bumped[t.id]) return bumped[t.id];
-  if ((t.squareReady && !markedReady[t.id]) || !t.items.length) return t.createdAt;
+  if (t.squareReady && !markedReady[t.id]) return t.createdAt;
   return null;
 }
 
