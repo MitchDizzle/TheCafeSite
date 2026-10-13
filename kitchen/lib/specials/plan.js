@@ -35,9 +35,13 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // squareImages: { "<photo path>#<content hash>": "<Square image id>" }, each picture uploaded once
 // photoTurn: { "<dish>": { date, n } }, which of a dish's photos is next
 // swapSides: the sides any side can be swapped for, as the website last listed them
+// extraSides: { "YYYY-MM-DD": [...] }, sides added to the swap list that day only (the
+//            website's day `extraSides`). Kept apart from `days`, so the website can add
+//            them to today, or to a day set on the front page, without touching its names.
+// soupSide: a cup of the day's soup can be picked as a side, as the website last said
 // includesDrink: every lunch special includes a drink, as the website last said
 // site:    the last read of the website, for the front to show
-const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, swapSides: [], includesDrink: false, site: { checkedAt: null, error: null } };
+const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, swapSides: [], extraSides: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
 try {
   Object.assign(plan, JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")));
 } catch {}
@@ -45,7 +49,7 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.notes, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.extraSides, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
 }
 
@@ -115,6 +119,24 @@ async function pullSite() {
         plan.swapSides = swaps;
         console.log(`Sides to swap from the website: ${swaps.join(", ")}.`);
       }
+    }
+    // A day's own extra sides, from today on: read even for today once it's
+    // in Square, or a day set on the front page, as they only add to what
+    // Square offers and never change the day's names.
+    const extras = {};
+    for (const d of listed) {
+      const list = Array.isArray(d.extraSides) ? [...new Set(d.extraSides.map(cleanText).filter(Boolean))].slice(0, 6) : [];
+      if (d.date >= today && list.length) extras[d.date] = list;
+    }
+    for (const date of Object.keys(plan.extraSides)) if (date >= today && !extras[date]) delete plan.extraSides[date];
+    for (const [date, list] of Object.entries(extras)) {
+      if (JSON.stringify(plan.extraSides[date]) === JSON.stringify(list)) continue;
+      plan.extraSides[date] = list;
+      console.log(`Extra sides for ${date} from the website: ${list.join(", ")}.`);
+    }
+    if (typeof json.soupSide === "boolean" && json.soupSide !== plan.soupSide) {
+      plan.soupSide = json.soupSide;
+      console.log(`A cup of the day's soup ${json.soupSide ? "can" : "can no longer"} be picked as a side, says the website.`);
     }
     if (typeof json.includesDrink === "boolean" && json.includesDrink !== plan.includesDrink) {
       plan.includesDrink = json.includesDrink;

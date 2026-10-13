@@ -31,7 +31,7 @@ module.exports = {
       const sides = (data.menu.categories.find((c) => c.id === "sides") || { items: [] })
         .items.find((i) => i.choices);
       const choiceLine = sides
-        ? `Sides (pick one on a choice-of-side day, or swap for the sides on any special): ${sides.choices.join(", ")}` : null;
+        ? `Sides (pick one on a choice-of-side day, or swap for the sides on any special): ${sides.choices.join(", ")}${data.specials.soupSide ? ", or a cup of the day's soup" : ""}` : null;
 
       return [
         // The town up front: Facebook shows the post well beyond Leavenworth.

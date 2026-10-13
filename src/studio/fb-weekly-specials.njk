@@ -115,6 +115,9 @@ studioOrder: 22
                 {%- for c in deli.choices %}
                 <li>{{ c }}</li>
                 {%- endfor %}
+                {%- if specials.soupSide %}
+                <li>Cup of the day&rsquo;s soup</li>
+                {%- endif %}
             </ul>
         </section>
         {%- endif %}

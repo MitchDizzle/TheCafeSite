@@ -45,9 +45,15 @@
         <section class="ds-swap">
             <p class="p-label ds-box-label ink-accent">{% if d.anySide %}Pick your side{% else %}Swap a side for any of these{% endif %}</p>
             <ul class="ds-swap-list">
+                {%- for c in d.extraSides or [] %}
+                <li>{{ c }}</li>
+                {%- endfor %}
                 {%- for c in deli.choices %}
                 <li>{{ c }}</li>
                 {%- endfor %}
+                {%- if specials.soupSide and d.soup %}
+                <li>Cup of {{ d.soup }}</li>
+                {%- endif %}
             </ul>
         </section>
         {%- endif %}

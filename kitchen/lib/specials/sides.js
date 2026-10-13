@@ -9,7 +9,9 @@
 //     pre-picked, then both, then the swap sides.
 //   - choice of side (anySide): one list, Chef's Choice pre-picked, then the
 //     swap sides.
-// The swap sides are the website's swapSides (menu.json's Deli Salads). Every
+// The swap sides are the day's own extra sides (the website's extraSides),
+// then the website's swapSides (menu.json's Deli Salads), then a cup of the
+// day's soup when the website sets soupSide (client 2026-10-13). Every
 // option is $0, and a list is never required: nobody has to tap anything for
 // the plate to come as planned. A list the day doesn't need is switched off
 // on the item, not deleted, and a list is only made the first time a day
@@ -33,6 +35,14 @@ function sideSlots(day) {
     const parts = String(s).split(/\s+or\s+/i).map(cleanText).filter(Boolean);
     return parts.length > 1 ? { pick: CHEFS_CHOICE, also: parts } : { pick: cleanText(s), also: [] };
   }).filter((slot) => slot.pick);
+}
+
+// What any side can be swapped for on `date`: the day's extra sides, the
+// deli salads, and a cup of the day's soup.
+function swapsFor(date, day) {
+  const soupItem = Object.keys((day && day.items) || {}).find((n) => /soup/i.test(n));
+  const soup = plan.soupSide && soupItem && cleanText(day.items[soupItem].today);
+  return [...(plan.extraSides[date] || []), ...plan.swapSides, ...(soup ? [`Cup of soup: ${soup}`] : [])];
 }
 
 // slots: from sideSlots. swaps: the swap sides. Returns words for the log.
@@ -99,6 +109,12 @@ async function saveSides(slots, swaps) {
     info.max_selected_modifiers = 1;
     info.modifier_overrides = pickId ? [{ modifier_id: pickId, on_by_default: true }] : [];
   }
+  // The side lists first, in order, then the item's other lists (Dressing),
+  // so the dressing is asked after the sides (client 2026-10-13).
+  const sideIds = set.filter((x) => x.list).map((x) => x.list.id);
+  const rank = (info) => (sideIds.includes(info.modifier_list_id) ? sideIds.indexOf(info.modifier_list_id) : sideIds.length);
+  infos.sort((a, b) => rank(a) - rank(b));
+  infos.forEach((info, ordinal) => { info.ordinal = ordinal; });
   if (JSON.stringify(infos) !== before) await upsertObject(fresh);
   if (slots.length > cfg.sideLists.length) {
     console.log(`${slots.length} sides today but ${cfg.sideLists.length} side lists: ${slots.slice(cfg.sideLists.length).map((x) => x.pick).join(", ")} can't be swapped.`);
@@ -114,12 +130,13 @@ async function saveSides(slots, swaps) {
 async function applySides(today, day) {
   if (!cfg.sideItem || !cfg.sideLists.length) return null;
   const slots = sideSlots(day);
-  const sig = JSON.stringify({ slots, swaps: plan.swapSides });
+  const swaps = swapsFor(today, day);
+  const sig = JSON.stringify({ slots, swaps });
   const last = plan.sidesApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
   if (!slots.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;
   try {
-    const done = await saveSides(slots, plan.swapSides);
+    const done = await saveSides(slots, swaps);
     plan.sidesApplied[today] = { sig, at: new Date().toISOString() };
     console.log(done.length
       ? `Today's sides put on ${cfg.sideItem} in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}.`
@@ -132,4 +149,4 @@ async function applySides(today, day) {
   return plan.sidesApplied[today];
 }
 
-module.exports = { sideSlots, applySides };
+module.exports = { sideSlots, swapsFor, applySides };

@@ -260,6 +260,9 @@ Each side the special comes with is its own modifier list on **Lunch Special** (
 
 - **Nobody has to tap anything.** The lists are never required and the day's side is picked already, so a plain Lunch Special comes as planned, and its sides print on the ticket. Tap a deli salad in Side 1 or Side 2 to swap that one side. Chef's Choice means the kitchen picks.
 - **The deli salads** are the website's `swapSides` in `/specials.json`, which is menu.json's Deli Salads row. Change them there; the board reads them with the specials.
+- **The side lists come first** on Lunch Special, Side 1 to Side 3, and its other lists (Dressing) after them, so the dressing is asked after the sides (client 2026-10-13). The board puts them in that order whenever it writes the sides.
+- **A cup of the day's soup** comes last in every list, as **Cup of soup: Broccoli Cheese**, when the website's `soupSide` is on (client 2026-10-13). A day with no soup planned has none.
+- **A day's extra sides** (`extraSides` on that day in the website's `specials.json`, "just for today") come first, before the deli salads, that day only. They're the one part of a day the website can still change once today is in Square: they reach Square within half an hour, or at Check for updates. They don't show on the front page.
 - Every option is $0 (the price covers the sides). A list the day doesn't need is switched off on the item, not deleted, and a list is made the first time a day needs it. A day with more sides than lists logs which one can't be swapped.
 - The deli salads sold on their own are separate items in Square (Sides), one button each; these lists are only the swap on the special.
 

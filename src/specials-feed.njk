@@ -7,6 +7,8 @@
 # `swapSides` is the Deli Salads row's `choices` in menu.json: the sides
 # that can be picked on a choice-of-side day or swapped in on any special.
 # The kitchen PC lists them under Side 1 / Side 2 on Lunch Special in Square.
+# `soupSide` (the file's own flag) adds a cup of the day's soup to those
+# lists, and a day's `extraSides` adds to them for that day only.
 # `includesDrink` is the file's own flag: the kitchen PC says so in Lunch
 # Special's description, which online ordering and DoorDash show.
 permalink: /specials.json
@@ -14,4 +16,4 @@ eleventyExcludeFromCollections: true
 ---
 {%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
 {%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
-{{ { days: specials.days, swapSides: deli.choices if deli else [], includesDrink: specials.includesDrink === true, price: specials.price } | dump(2) | safe }}
+{{ { days: specials.days, swapSides: deli.choices if deli else [], includesDrink: specials.includesDrink === true, soupSide: specials.soupSide === true, price: specials.price } | dump(2) | safe }}
