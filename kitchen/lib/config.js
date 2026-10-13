@@ -3,12 +3,11 @@
 const fs = require("fs");
 const path = require("path");
 
-const DIR = path.join(__dirname, ".."); // the kitchen folder
-// KITCHEN_CONFIG and KITCHEN_DATA move config.json and the PC's own files
-// (state, plan, history, photos) elsewhere. Only the tests use them, so a
-// test run never reads the real config or touches this PC's files.
+// The kitchen folder, and data\ in it: this PC's own files (lib/data.js).
+const { DIR, DATA } = require("./data");
+// KITCHEN_CONFIG moves config.json elsewhere. Only the tests use it, so a
+// test run never reads the real config.
 const CONFIG_FILE = process.env.KITCHEN_CONFIG || path.join(DIR, "config.json");
-const DATA = process.env.KITCHEN_DATA || DIR;
 const MOCK = process.env.KITCHEN_MOCK === "1";
 // KITCHEN_MUTE=1 silences the board for testing on another computer. On the
 // kitchen PC, leave sound on: the chime is how a new order gets noticed.
@@ -76,11 +75,16 @@ const DEFAULTS = {
   // 0 = never. Not for unpaid orders, or online orders not yet marked ready
   // in Square: those still need someone.
   autoHandoffMinutes: 10,
+  // A second place for the nightly backup of data\ (lib/backup.js), off
+  // this PC's drive: a USB stick ("E:\\Kitchen backup" in config.json), a
+  // OneDrive folder or a share on another PC. "" = only the copies in
+  // data\backups\.
+  backupDir: "",
 };
 
 // Settings that are the cafe's own and have no meaningful default: never
 // flagged as "differs from the default".
-const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems", "openDays", "autoHandoffMinutes"]);
+const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems", "openDays", "autoHandoffMinutes", "backupDir"]);
 
 // What's worth knowing about config.json, in plain words. Written to the
 // program window at startup and shown on /check.

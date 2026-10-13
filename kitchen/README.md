@@ -87,7 +87,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 
 ## Updating the board
 
-The kitchen PC runs the **`main`** branch, the same one that deploys the website. Work happens on **`dev`** and is merged into `main` to ship it (see "Branches" in the repo's CLAUDE.md). After a merge, restart the board on the kitchen PC: run `start-kitchen.bat`, restart the PC, or use **Check for updates**. Before starting, it fetches `main` and fast-forwards. The branch is set at the top of `start-kitchen.bat` (`BOARD_BRANCH`). If git isn't installed or the update fails, it says so on screen and starts the version already there. `config.json` and `state.json` (cleared tickets) are never changed by an update.
+The kitchen PC runs the **`main`** branch, the same one that deploys the website. Work happens on **`dev`** and is merged into `main` to ship it (see "Branches" in the repo's CLAUDE.md). After a merge, restart the board on the kitchen PC: run `start-kitchen.bat`, restart the PC, or use **Check for updates**. Before starting, it fetches `main` and fast-forwards. The branch is set at the top of `start-kitchen.bat` (`BOARD_BRANCH`). If git isn't installed or the update fails, it says so on screen and starts the version already there. `config.json` and the `data\` folder (cleared tickets, the plan, the history, photos) are never changed by an update.
 
 **It only updates a copy that is on `main`** (or on `kitchen-board`, the branch the PC ran before 2026-10-08, which it moves to `main` once). A copy on any other branch is someone's work in progress, so it starts it as it stands and leaves git alone.
 
@@ -216,16 +216,29 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `front\` | The front page's Manage jobs, one file each (Specials, Photo post, Reports, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
 | `kitchen.css` | The colours and base styles both screens share. |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
-| `state.json` | Which orders have been cleared. Created automatically; gitignored. |
-| `photos\` | Photo post: the photos and finished posts kept for the website, with `photos.json`. Gitignored. |
+| `data\` | This PC's own files, made by the board; gitignored, never touched by an update (see "The data folder and backups"). |
 | `wordmark.svg` | The Café wordmark drawn into Photo post's pictures. |
-| `stats-history.json` | Every day's orders and numbers, for Reports. Created automatically; gitignored; never deleted. |
-| `specials-plan.json` | Specials: the days ahead, the words for each day's photo, and which days are in Square already. Created automatically; gitignored. |
 | `icon-*.png` | The front page's home-screen icon. |
 | `start-kitchen.bat` | Pulls updates from `main`, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. `start-kitchen.bat window` only reopens the board window (what the watchdog runs). |
 | `start-dev.bat` | `start-kitchen.bat` for a development computer: no git, a normal window, demo orders. See "Updating the board". |
 | `keyboard-lock.reg`, `keyboard-unlock.reg` | Turn the keyboard's internet and app keys off / back on. Kitchen PC only, then restart. |
 | `focus-board.ps1` | Run by `start-kitchen.bat` after Chrome opens: brings the board window to the front so the number pad types into it, not into a console window. Tries for 20 seconds; if it can't, click the board once. |
+
+### The data folder and backups
+
+Everything the board makes on this PC is in `data\`. Before 2026-10-13 these sat loose in the kitchen folder; the first start on the new code moved them in by itself.
+
+| File | What it is |
+|---|---|
+| `state.json` | Which orders have been cleared, and the skip list. |
+| `specials-plan.json` | Specials: the days ahead, the words for each day's photo, and which days are in Square already. |
+| `stats-history.json` | Every day's orders and numbers, for Reports. Never deleted, and **the only copy of the kitchen times**. |
+| `photos\` | Photo post: the photos and finished posts kept for the website, with `photos.json`. |
+| `backups\` | The daily copies, below. |
+
+**Backups.** When the board starts, and again at 3pm if it's still on, it copies `stats-history.json`, `specials-plan.json` and `state.json` into `data\backups\<date>\`, keeping the last 30 days. That covers a bad write or a deleted file, not a dead PC. For that, set **`backupDir`** in `config.json` to a folder off this PC's drive: a USB stick left plugged in (`"backupDir": "E:\\Kitchen backup"`, with two backslashes), a OneDrive folder on the Kitchen account, or a share on another PC. The same dated copies go there, plus every Photo post photo (`photos\`). If it can't be reached (the stick is out), the program window says so and the board carries on. `/check` shows when each place was last written.
+
+To put a file back: close the board, copy it from a dated folder into `data\`, start the board.
 
 ## Specials (Manage on the front page)
 
@@ -246,7 +259,7 @@ Today's specials and the days ahead on one screen (until 2026-10-09 they were tw
   So putting next week on the website mid-week changes nothing for this week. A day the website still lists can't be blanked here (clearing it lets the website's copy back in on the next read); change it on the website instead, or type something else here.
 - **A day with nothing planned** puts the plain names back ("Regular", "Cup", "Bowl") that morning, so yesterday's plate never prints on today's tickets. Prices are left alone. A board that has never had a plan leaves Square alone.
 - **What it writes to Square** is narrow: nothing but those items' prices and size names, and the side lists below. It reads each item fresh before saving, and if someone changed the item in the Dashboard a moment before, Square refuses the save and the front is asked to open it again, so nothing is overwritten. A mistyped price saves nothing at all.
-- The plan is kept in `specials-plan.json` on the kitchen PC (gitignored). The program window logs every day it reads from the website and every write to Square.
+- The plan is kept in `data\specials-plan.json` on the kitchen PC (gitignored). The program window logs every day it reads from the website and every write to Square.
 
 ### Sides in Square
 
@@ -299,21 +312,21 @@ Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo
 4. **Frame it:** drag the picture to move it, and zoom with the slider. The post shows a square of it.
 5. **Make the picture.** Press and hold it to save it to the phone's photos (or Download), and **Copy caption**: with the order link, hours and menu link.
 
-**Keep the photo on the kitchen PC for the website** (ticked by default) saves the photo (2000px, re-drawn on the phone so its GPS location is gone) and the finished post in `photos\` on the kitchen PC, listed in `photos\photos.json` in the same shape as the website's `src/_data/photos.json`. To put one on the website's `/gallery`, copy the photo into `src/assets/photos/`, move its entry over (a dish on the menu takes its menu name as `item`, not `special`), write its `alt` text, and run `npm run thumbs` (or ask Claude to).
+**Keep the photo on the kitchen PC for the website** (ticked by default) saves the photo (2000px, re-drawn on the phone so its GPS location is gone) and the finished post in `data\photos\` on the kitchen PC, listed in `data\photos\photos.json` in the same shape as the website's `src/_data/photos.json`. To put one on the website's `/gallery`, copy the photo into `src/assets/photos/`, move its entry over (a dish on the menu takes its menu name as `item`, not `special`), write its `alt` text, and run `npm run thumbs` (or ask Claude to).
 
 - The post's fonts load from Google Fonts on the phone, like the website's. Without internet the picture uses plain fonts and the screen says so.
-- The phone number, web address, hours and order link in the picture and caption are set near the top of `front/photo-post.js` (`SITE`). Change them there along with the website's `site.json`.
+- The phone number, web address, hours, menu and order links in the picture and caption are the website's own: `src/_data/site.json` (`phone`, `social.website`, the `opening` hours), read each time the screen opens. Change them there and Photo post follows after the next update.
 
 ## Reports and the daily history (Manage on the front page)
 
-**Every day's numbers are kept for good** in `stats-history.json` on the kitchen PC, one entry per day, saved as the day goes (every 30 seconds while orders come in), so nothing depends on the board being closed properly at night. Each day keeps every order that counted: when, breakfast or lunch, counter or online, to go or for here, paid, its total in Square, the items (with the size or "what it is today", so a report can tell which specials sold), and its time in the kitchen. No customer names. Test, demo and canceled orders never get in, and a **Reset for the day** restarts that day's history the same as Today's numbers.
+**Every day's numbers are kept for good** in `data\stats-history.json` on the kitchen PC, one entry per day, saved as the day goes (every 30 seconds while orders come in), so nothing depends on the board being closed properly at night. Each day keeps every order that counted: when, breakfast or lunch, counter or online, to go or for here, paid, its total in Square, the items (with the size or "what it is today", so a report can tell which specials sold), and its time in the kitchen. No customer names. Test, demo and canceled orders never get in, and a **Reset for the day** restarts that day's history the same as Today's numbers.
 
 **Manage → Reports** shows any range of days: This week, Last week, This month, Last month, Last 30 days, or any two dates. For the range: orders (and a day's average), sales, breakfast / lunch, counter / online, to go / for here, average and longest time in the kitchen, a line per day, and every item ordered. Two downloads for a report made elsewhere (a spreadsheet opens them):
 
 - **Days (CSV):** one row per day.
 - **Every order (CSV):** one row per order, with its items.
 
-A day the board never ran is missing; Square's own reports still have its sales. Sales are each order's total in Square, tax included. To keep a copy off the PC, copy `stats-history.json` somewhere now and then: it's the only place the kitchen times exist.
+A day the board never ran is missing; Square's own reports still have its sales. Sales are each order's total in Square, tax included. It's the only place the kitchen times exist, so it's copied every day; set `backupDir` to keep a copy off the PC (see "The data folder and backups").
 
 ## Desserts (Manage on the front page)
 

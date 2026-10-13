@@ -37,7 +37,7 @@ rem It only updates a copy that is on main already, or on kitchen-board,
 rem the branch the kitchen PC ran before 2026-10-08 (that one is moved to
 rem main, once). A copy on any other branch is somebody's work in progress:
 rem it is left exactly as it is and started as it stands.
-rem config.json and state.json are never changed by this: git ignores them.
+rem config.json and the data folder are never changed by this: git ignores them.
 rem
 rem This is one parenthesised block ON PURPOSE. The update can rewrite this
 rem very file, and cmd reads a batch file line by line while it runs, so

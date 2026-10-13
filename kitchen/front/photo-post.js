@@ -15,15 +15,10 @@
   // archive/site-src/ as a reference. The look: photo in the top 1080 square,
   // the name over a teal fade at the top, and a band under the photo with the
   // words, the wordmark, the phone and the web address.
-  const SITE = { // from the website's src/_data/site.json; change together
-    phone: "(913) 547-9994",
-    website: "lvcafetogo.com",
-    menu: "lvcafetogo.com/menu",
-    // Our own address for ordering, which forwards to the ordering page
-    // (the website's src/order.njk), as on the printed QR codes.
-    order: "lvcafetogo.com/order",
-    hours: "Monday – Friday, 6am – 2pm",
-  };
+  // Phone, web address, menu and order links, hours: the website's
+  // src/_data/site.json, sent by the kitchen PC when the screen opens
+  // (siteDetails in lib/photo-post.js).
+  let SITE = null;
   const INK = { cream: "#FAF7F2", teal: "#2C5E70", tealDark: "#1F4552", mint: "#8ED9D4", accent: "#C0392F", coral: "#EB5E64" };
   const SERIF = '"Playfair Display", Georgia, serif';
   const SANS = 'Lato, "Segoe UI", Arial, sans-serif';
@@ -228,6 +223,7 @@
       loadMarks().catch(() => null),
     ]);
     if (!r.ok) return result("Photo post", r);
+    SITE = r.site;
     pp = { setup: r, fontsOk, img: null, photo: null, zoom: 1, cx: 0.5, cy: 0.5, keep: true, choice: "", title: "", kicker: "", desc: "", drink: false, special: false, price: null, sizes: false, item: null };
     const t = r.today;
     choosePhotoSubject(t.special ? "special" : t.soup ? "soup" : "other");

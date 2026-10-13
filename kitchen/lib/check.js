@@ -7,6 +7,7 @@ const { locations } = require("./square");
 const { catalog } = require("./catalog");
 const { live } = require("./live");
 const { skipSummary } = require("./state");
+const { backupStatus } = require("./backup");
 const { itemName, hiddenReason, orderDetail } = require("./tickets");
 
 const FRONT_URL = `http://${os.hostname().toLowerCase()}:${cfg.port}/front${cfg.frontKey ? "?key=" + encodeURIComponent(cfg.frontKey) : ""}`;
@@ -27,12 +28,21 @@ function frontAddresses() {
   return out;
 }
 
+const esc = (v) =>
+  String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// When data\ was last copied, here and to backupDir, in words.
+function backupLine() {
+  const when = (s) => !s ? "not yet" : s.error ? `<b style="color:#A02F26">failed: ${esc(s.error)}</b>` : esc(new Date(s.at).toLocaleString());
+  if (MOCK) return "off in test mode.";
+  return `on this PC (data\\backups) ${when(backupStatus.local)}; ` +
+    (cfg.backupDir ? `to ${esc(cfg.backupDir)} ${when(backupStatus.away)}.` : "<b>nowhere off this PC</b> (backupDir in config.json).");
+}
+
 // A plain troubleshooting page: every order Square returned on the last poll
 // and whether it's on the board, and if not, why. Open
 // http://localhost:8090/check in a normal Chrome window.
 function checkPage() {
-  const esc = (v) =>
-    String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const now = Date.now();
   const rows = [
     ...live.all.map((t) => ({
@@ -71,6 +81,7 @@ ${esc(startOfToday().toLocaleString())} and pickups due within ${cfg.showAheadMi
 ${status}
 <p>Kitchen skips: ${esc(skipSummary())}. Square catalog:
 ${catalog.error ? `<b style="color:#A02F26">${esc(catalog.error)}</b> (skipping whole categories needs it)` : catalog.loadedAt ? `${catalog.categories.length} categories, read at ${esc(new Date(catalog.loadedAt).toLocaleTimeString())}` : "not read yet"}.</p>
+<p>Backup: ${backupLine()}</p>
 ${cfg.notes.length ? `<h2>config.json</h2><ul>${cfg.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : "<p>config.json: no problems found.</p>"}
 <p>${rows.length} order(s) came back from Square. Refresh to update.</p>
 <table><tr><th>Created</th><th>Order</th><th>Board type</th><th>From Square</th><th>Items</th><th>Board</th></tr>

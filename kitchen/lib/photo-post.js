@@ -7,12 +7,41 @@
 // Gitignored.
 const fs = require("fs");
 const path = require("path");
-const { DATA, MOCK } = require("./config");
+const { DIR, DATA, MOCK } = require("./config");
 const { localDate, cleanText } = require("./util");
 const { catalog, loadCatalog } = require("./catalog");
 const { plan, siteFieldFor } = require("./specials/plan");
 
 const PHOTO_DIR = path.join(DATA, MOCK ? "photos-mock" : "photos");
+
+// The phone number, web address and hours in the picture and caption: the
+// website's own (src/_data/site.json, in the repo beside the board), read
+// each time so a change there reaches the post with the next update. These
+// are the fallback for a board copied without the website beside it.
+const SITE_FALLBACK = {
+  phone: "(913) 547-9994",
+  website: "lvcafetogo.com",
+  menu: "lvcafetogo.com/menu",
+  order: "lvcafetogo.com/order",
+  hours: "Monday – Friday, 6am – 2pm",
+};
+
+function siteDetails() {
+  try {
+    const s = JSON.parse(fs.readFileSync(path.join(DIR, "..", "src", "_data", "site.json"), "utf8"));
+    const website = (s.social && s.social.website) || String(s.url || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+    const o = s.opening || {};
+    // "6:00" + "am" -> "6am", as the posts write it.
+    const time = (t) => t && t.time ? `${t.time.replace(/:00$/, "")}${t.meridiem || ""}` : "";
+    const hours = o.hoursDays && time(o.opens) && time(o.closes) ? `${o.hoursDays}, ${time(o.opens)} – ${time(o.closes)}` : SITE_FALLBACK.hours;
+    if (!s.phone || !website) return SITE_FALLBACK;
+    // /order is the website's own address for ordering (src/order.njk),
+    // which forwards to the ordering page, as on the printed QR codes.
+    return { phone: s.phone, website, menu: `${website}/menu`, order: `${website}/order`, hours };
+  } catch {
+    return SITE_FALLBACK;
+  }
+}
 
 // What the screen starts from: today's planned special and soup (with the
 // website's sides), and every item in Square with its words and price.
@@ -32,7 +61,7 @@ async function photoSetup() {
   // The words for the photo written in Specials, if any.
   const note = plan.notes[date];
   if (note && note.description) today.description = note.description;
-  return { date, today, items: catalog.menuItems, catalogError: catalog.error };
+  return { date, today, site: siteDetails(), items: catalog.menuItems, catalogError: catalog.error };
 }
 
 const slugOf = (s) => String(s).toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "photo";
@@ -80,4 +109,4 @@ function savePhotoPost(body) {
   return `${date}-${slug}.jpg`;
 }
 
-module.exports = { PHOTO_DIR, photoSetup, savePhotoPost };
+module.exports = { PHOTO_DIR, photoSetup, savePhotoPost, siteDetails };

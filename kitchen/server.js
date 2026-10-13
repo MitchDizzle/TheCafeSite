@@ -16,7 +16,7 @@
  * What shows on the board:
  *   - Counter (POS) sales from today. Square marks these COMPLETED the moment
  *     they're paid, so Square never "finishes" them for us — the cooks bump
- *     them off with Done. Bumps are kept in state.json, local to this PC.
+ *     them off with Done. Bumps are kept in data\state.json, local to this PC.
  *   - A counter sale with nothing paid on it shows like any other, tagged
  *     NOT PAID: a pay-later phone order is cooked straight away and kept
  *     warm. If it was a sale that fell through (card declined, payment
@@ -40,6 +40,8 @@
  * This file only starts things. The work is in lib/, one file per job, with
  * nothing to npm install:
  *   config.js         config.json and the KITCHEN_* switches
+ *   data.js           data\, where this PC's own files are kept
+ *   backup.js         the nightly copy of data\
  *   state.js          what's been pressed (state.json) and the skip list
  *   square.js         Square's API, and fetching the orders
  *   catalog.js        Square's item list; reading and writing one object
@@ -70,6 +72,7 @@ const { setSkip, bumped, canceled, handedOff, markedReady } = require("./lib/sta
 const { toTicket, isOnline, hiddenReason, frontHiddenReason, readyAt, orderDetail } = require("./lib/tickets");
 const { FRONT_URL, frontAddresses } = require("./lib/check");
 const { startWatchdog } = require("./lib/system");
+const { startBackups } = require("./lib/backup");
 const { handle } = require("./lib/routes");
 
 function start() {
@@ -110,6 +113,7 @@ function start() {
     setInterval(pullSite, SITE_MINUTES * 6e4);
     setInterval(applyToday, 6e4);
     setInterval(syncSquare, 2000);
+    startBackups();
   });
 }
 

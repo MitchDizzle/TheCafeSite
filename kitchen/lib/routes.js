@@ -279,7 +279,7 @@ async function handle(req, res) {
     try {
       if (url.pathname === "/api/front-photo") return send(res, 200, { ok: true, ...(await photoSetup()) });
       const name = savePhotoPost(body);
-      return send(res, 200, { ok: true, message: `Kept on the kitchen PC for the website (photos\\${name}).` });
+      return send(res, 200, { ok: true, message: `Kept on the kitchen PC for the website (data\\photos\\${name}).` });
     } catch (err) {
       console.error(`Photo post: ${err.message}`);
       return send(res, 200, { ok: false, message: err.plain ? err.message : `Couldn't keep it: ${err.message}` });

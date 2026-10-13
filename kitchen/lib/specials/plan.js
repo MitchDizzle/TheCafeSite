@@ -12,7 +12,7 @@
 //     in Square, an earlier day, or a day set on the front page;
 //   - the front page. A day changed there is the front's from then on: the
 //     website's copy no longer touches it.
-// Kept in specials-plan.json beside state.json (gitignored).
+// Kept in data\specials-plan.json (gitignored).
 const fs = require("fs");
 const path = require("path");
 const { DATA, MOCK, cfg } = require("../config");

@@ -16,6 +16,9 @@ exports/
 photos-originals/
 
 # Kitchen board — the Square token and bump state live only on the kitchen PC
+# (its own files are in kitchen/data/ since 2026-10-13; the lines after it
+# keep a copy that hasn't started on the new code yet out of git)
+kitchen/data/
 kitchen/config.json
 kitchen/state*.json
 
