@@ -92,6 +92,24 @@ test("a number is only a table on a counter order", () => {
   assert.equal(t.toGo, true);
 });
 
+test("a time in a counter ticket's name makes it due then", () => {
+  // Local times on the PC, as the POS rings them.
+  const rung = (h, m) => new Date(2026, 9, 13, h, m).toISOString();
+  const due = (name, at) => ticketOf(counter({ ticket_name: name, created_at: at }));
+  let t = due("Mike 1:00", rung(12, 33));
+  assert.equal(t.label, "Mike");
+  assert.equal(t.dueAt, new Date(2026, 9, 13, 13, 0).toISOString(), "1:00 rung at 12:33 is 1pm");
+  assert.equal(due("11:30 Sue", rung(8, 5)).dueAt, new Date(2026, 9, 13, 11, 30).toISOString());
+  assert.equal(due("Bob 1pm", rung(9, 0)).dueAt, new Date(2026, 9, 13, 13, 0).toISOString());
+  assert.equal(due("Ann 7:45am", rung(6, 30)).dueAt, new Date(2026, 9, 13, 7, 45).toISOString());
+  assert.equal(due("Kay 12:15", rung(12, 33)).dueAt, new Date(2026, 9, 13, 12, 15).toISOString(), "a little before it was rung: due, and late");
+  t = due("1:30", rung(12, 0));
+  assert.equal(t.label, "#R7KQ", "only a time: the receipt number");
+  assert.equal(t.dueAt, new Date(2026, 9, 13, 13, 30).toISOString());
+  for (const name of ["Mike 2", "Table 5", "Mike", "Jo 99:00"]) assert.equal(due(name, rung(12, 0)).dueAt, null, name);
+  assert.equal(due("5", rung(12, 0)).label, "Table 5");
+});
+
 test("with no name, a paid order shows its receipt number", () => {
   assert.equal(ticketOf(counter()).label, "#R7KQ");
 });

@@ -50,6 +50,30 @@ function isSkipped(li) {
   return categoriesOf(li).some((c) => skipSets.categories.has(c.trim().toLowerCase()));
 }
 
+// A time typed in a counter ticket's name ("Mike 1:00", "Sue 11:30am",
+// "Bob 1pm"): when a phone order is wanted (client 2026-10-13). It needs a
+// colon or am/pm, so "Table 5" or "Mike 2" is never read as one. Without
+// am/pm it's the first of the two that isn't more than half an hour before
+// the order was rung ("1:00" rung at 12:33 is 1pm). Returns { at, rest }
+// (rest: the name without the time) or null.
+const NAME_TIME = /(?:^|\s)(\d{1,2})(?::([0-5]\d))?\s*([ap])\.?m?\.?(?=\s|$)|(?:^|\s)(\d{1,2}):([0-5]\d)(?=\s|$)/i;
+function timeInName(name, createdAt) {
+  const m = NAME_TIME.exec(name);
+  if (!m) return null;
+  const h = Number(m[1] ?? m[4]), min = Number(m[2] ?? m[5] ?? 0), ap = m[3] && m[3].toLowerCase();
+  if (h > 23 || (ap && (h < 1 || h > 12))) return null;
+  const hours = ap ? [h % 12 + (ap === "p" ? 12 : 0)] : h >= 13 || h === 0 ? [h] : h === 12 ? [12] : [h, h + 12];
+  const rung = Date.parse(createdAt);
+  for (const hh of hours) {
+    const at = new Date(rung);
+    at.setHours(hh, min, 0, 0);
+    if (at.getTime() >= rung - 30 * 6e4) {
+      return { at: at.toISOString(), rest: `${name.slice(0, m.index)} ${name.slice(m.index + m[0].length)}`.replace(/\s+/g, " ").trim() };
+    }
+  }
+  return null;
+}
+
 // Returns { ticket } or { reason } — the reason is what /check shows for an
 // order that came back from Square but isn't on the board.
 function toTicket(order) {
@@ -120,7 +144,7 @@ function toTicket(order) {
   const details = f && (f.pickup_details || f.delivery_details || f.shipment_details);
   const recipient = details && details.recipient;
   // When it's wanted: a pickup's time, or when the delivery courier comes for it.
-  const dueAt = (f && f.pickup_details && f.pickup_details.pickup_at)
+  let dueAt = (f && f.pickup_details && f.pickup_details.pickup_at)
     || (f && f.delivery_details && (f.delivery_details.courier_pickup_at || f.delivery_details.pickup_at)) || null;
   // A counter sale still OPEN with nothing paid: usually a pay-later phone
   // order (cooked now, kept warm), sometimes a sale that fell through (card
@@ -132,7 +156,10 @@ function toTicket(order) {
   // cafe hands them out to people eating in); TEST marks a practice order.
   const ticketName = (order.ticket_name || "").trim();
   const table = !online && /^\d{1,3}$/.test(ticketName) ? ticketName : null;
+  // A counter order with a time in its name is due then, like a pickup.
+  const wanted = !online && !table ? timeInName(ticketName, order.created_at) : null;
   const test = /^test\b/i.test(ticketName);
+  if (wanted) dueAt = wanted.at;
   // To go or for here. The Restaurants POS records the dining option as the
   // fulfillment: "To Go" is PICKUP, "For Here" is IN_STORE. To Go is the
   // POS default, so a table number wins: someone sitting down with a number
@@ -159,7 +186,7 @@ function toTicket(order) {
     kind: online ? (f && f.type) || "PICKUP" : "COUNTER", // PICKUP, DELIVERY, SHIPMENT, or COUNTER
     name: (recipient && recipient.display_name) || order.ticket_name || null,
     shortId: order.id.slice(-4).toUpperCase(),
-    label: table ? `Table ${table}` : (recipient && recipient.display_name) || ticketName || `#${receipt || order.id.slice(-4).toUpperCase()}`,
+    label: table ? `Table ${table}` : (recipient && recipient.display_name) || (wanted ? wanted.rest : ticketName) || `#${receipt || order.id.slice(-4).toUpperCase()}`,
     table,
     test,
     source: (order.source && order.source.name) || null,

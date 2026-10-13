@@ -360,7 +360,7 @@
   };
 
   function kindLabel(o) {
-    if (o.kind === "COUNTER") return "Counter";
+    if (o.kind === "COUNTER") return o.dueAt ? `Counter · due ${fmtTime(o.dueAt)}` : "Counter";
     const k = o.kind === "PICKUP" && (!o.source || /square online|ordering profile/i.test(o.source)) ? "Online" : (o.source || o.kind);
     return o.dueAt ? `${k} · due ${fmtTime(o.dueAt)}` : k;
   }
