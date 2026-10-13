@@ -17,14 +17,18 @@ Not part of the website. Nothing in this folder is built or uploaded.
 - A ticket named **TEST** (or starting with it) is marked TEST and left out of the day's numbers.
 - Amounts typed on the POS keypad show too, under the note typed with them (or "Custom amount"), in case a special or an off-menu plate gets rung up that way.
 
-Header colors:
+Header colors (amber and red mean time and nothing else on the board):
 
-| Color | Counter order | Pickup order |
+| Color | Counter order | Pickup or DoorDash order |
 |---|---|---|
 | Teal | under 8 min | — |
 | Gray | — | due more than 10 min from now |
 | Amber | 8–15 min | due within 10 min |
 | Red | over 15 min | past due |
+
+- **The timer:** a counter order counts up from when it was rung ("17:09 waiting"). A pickup or DoorDash order shows the time it's due, "Due 10:13", with "in 8 min" or "3 min late" under it, so the two never look alike.
+- **The header names Online or DoorDash.** Counter, which is most tickets, isn't written. Every ticket says TO GO or FOR HERE.
+- **Five tickets across** on the 1920-wide screen (2026-10-12; it was four), with a slim Done, so nine tickets and every number key fit on one screen. Back to four: `minmax(19rem, 1fr)` in `.board` in `board.html`.
 
 ### Square is told (online and DoorDash orders)
 
@@ -49,12 +53,12 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 
 - With more than nine tickets up, the extras have no number until one frees up. Use the mouse for those, or clear some first.
 - **Undo with the mouse:** click Undo for a list of everything cleared today (name, first item, how long ago) and click the one to bring back. Backspace / 0 still steps back one at a time.
-- **A new order** flashes amber around the edge of the whole screen, and the ticket keeps an amber outline and a **NEW** tag for a minute. Without speakers, that's the only alert, so it lasts long enough to be noticed from the grill.
+- **A new order** flashes mint around the edge of the whole screen, and the ticket keeps a mint outline and a mint **NEW** tag for a minute (mint, not amber, so new never looks like late). Without speakers, that's the only alert, so it lasts long enough to be noticed from the grill.
 - **Allergy notes** (peanut, gluten, dairy and the like) show in red with a ⚠ sign, on the ticket or on the item.
-- **The board checks Square every 5 seconds.** The refresh icon in the top right has a ring that empties as the next check approaches and refills when it runs. Tap it (or press **Enter**) to check right now. The ring turns amber when Square can't be reached.
-- **The speaker icon** mutes and unmutes the chime and the alarm. Muted shows amber with a cross, and that screen remembers the setting until someone taps it again.
-- **A two-tone chime** means a new order. **A low falling tone** plus an amber banner means the board lost Square or its own program. Tickets shown at that point might be out of date, and new ones might be missing, so go by the printer until it clears.
-- **An amber "continues below" pointer** appears when a ticket runs off the bottom of the screen. Press **+** to see it.
+- **The board checks Square every 5 seconds.** The refresh icon in the top right has a ring that empties as the next check approaches and refills when it runs. Tap it (or press **Enter**) to check right now. The ring turns light red when Square can't be reached.
+- **The speaker icon** mutes and unmutes the chime and the alarm. Muted shows as a filled cream button with a cross, and that screen remembers the setting until someone taps it again.
+- **A two-tone chime** means a new order. **A low falling tone** plus a red banner means the board lost Square or its own program. Tickets shown at that point might be out of date, and new ones might be missing, so go by the printer until it clears.
+- **A cream "continues below" pointer** appears when a ticket runs off the bottom of the screen. Press **+** to see it.
 - **The power button** in the top right opens the board menu. It works with the mouse only, so nothing on the number pad can open it or confirm anything in it.
   - **Settings & help:** the key guide, today's numbers (orders, breakfast / lunch, average time in the kitchen, most ordered), whether sound is on, and a link to the order check page. **Demo orders** adds practice tickets for training the staff (see below). **Reset for the day** clears the Undo list on both screens (so test or yesterday's tickets can't come back with a stray Backspace) and restarts today's stats from that moment. Tick **Also clear every order on the board** to empty both screens too: the morning after testing, before the doors open. The key guide also shows on the board when there are no orders.
   - **Check for updates:** looks for new board code. If there is any, it runs `start-kitchen.bat`, which installs it and restarts the board in about 10 seconds. If not, it says the board is up to date.
@@ -191,9 +195,9 @@ set KITCHEN_MOCK=1
 start-kitchen.bat
 ```
 
-This shows fake orders and adds a new one every 45 seconds, so you can hear the chime. Bumps in test mode go to `state-mock.json` and never mix with real ones.
+This shows fake orders under a purple TEST MODE banner (the demo's purple: practice, not a problem) and adds a new one every 45 seconds, so you can hear the chime. Bumps in test mode go to `state-mock.json` and never mix with real ones.
 
-To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` before `start-kitchen.bat`, or just tap the speaker icon. A muted speaker shows amber, so a silent board can't go unnoticed. To silence the kitchen PC for good, add `"sound": false` to `config.json`, but the chime is how a new order gets noticed, so leave it on there.
+To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` before `start-kitchen.bat`, or just tap the speaker icon. A muted speaker shows as a filled cream button, so a silent board can't go unnoticed. To silence the kitchen PC for good, add `"sound": false` to `config.json`, but the chime is how a new order gets noticed, so leave it on there.
 
 ## Tests
 

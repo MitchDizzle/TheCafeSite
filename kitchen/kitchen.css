@@ -11,7 +11,9 @@
   --ground: #15323C; /* behind the kitchen board's tickets */
   --red: #C0392F;
   --red-dark: #A02F26;
-  --amber: #E8A33D;
+  --amber: #E8A33D; /* time only: a ticket getting late, a pickup due soon */
+  --new: #8ED9D4; /* a ticket that just arrived (the mint) */
+  --alarm-light: #F28B82; /* a problem, drawn on the teal bar */
   --mint: #8ED9D4;
   --green: #2E7D4F;
   --green-soft: #E3F2E8;

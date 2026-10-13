@@ -49,11 +49,12 @@
   .icon-btn:focus-visible { outline: 3px solid var(--mint); outline-offset: 2px; }
   .icon-btn svg { width: 100%; height: 100%; overflow: visible; }
 
-  /* Muted is amber, not just a different icon: a silent board in a loud
-     kitchen should be noticeable from across the room. */
+  /* Muted is a filled cream button, not just a different icon: a silent
+     board in a loud kitchen should be noticeable from across the room.
+     Not amber: amber on the board means time and nothing else. */
   .sound .waves { display: inline; }
   .sound .cross { display: none; }
-  .sound.is-muted { color: var(--amber); }
+  .sound.is-muted, .sound.is-muted:hover { background: var(--cream); color: var(--teal-dark); }
   .sound.is-muted .waves { display: none; }
   .sound.is-muted .cross { display: inline; }
 
@@ -61,7 +62,7 @@
      then refills when it runs. Amber when Square can't be reached. */
   .refresh .track { stroke: rgba(250, 247, 242, 0.22); }
   .refresh .ring { stroke: var(--mint); transform: rotate(-90deg); transform-origin: 22px 22px; }
-  .refresh.is-down .ring { stroke: var(--amber); }
+  .refresh.is-down .ring { stroke: var(--alarm-light); }
   .refresh.is-checking svg .glyph-spin { animation: spin 0.8s linear infinite; transform-origin: 22px 22px; }
   @keyframes spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .refresh.is-checking svg .glyph-spin { animation: none; opacity: 0.6; } }
@@ -178,18 +179,20 @@
     transform: translateX(-50%);
     padding: 0.6rem 1.4rem;
     border-radius: 2rem;
-    background: var(--amber);
-    color: #1A1A1A;
+    background: var(--cream);
+    color: var(--teal-dark);
     font-size: 1.2rem;
     font-weight: 800;
     box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.5);
   }
   .more[hidden] { display: none; }
 
+  /* A problem (Square or the program lost) is red; test mode and the demo
+     are the practice purple. Neither is amber, which means time. */
   .alert {
     padding: 0.7rem 1.25rem;
-    background: var(--amber);
-    color: #1A1A1A;
+    background: var(--red-dark);
+    color: #fff;
     font-size: 1.15rem;
     font-weight: 700;
   }
@@ -197,7 +200,9 @@
 
   .board {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    /* Five across at 1920 wide (2026-10-12; four before): nine tickets, every
+       number key, fit on one screen. 19rem here puts it back to four. */
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
     gap: 1rem;
     align-items: start;
     padding: 1rem 1.25rem 2rem;
@@ -223,18 +228,19 @@
     box-shadow: 0 0.2rem 0.6rem rgba(0, 0, 0, 0.35);
   }
   .ticket.new { animation: arrive 1.2s ease-out 3; }
-  @keyframes arrive { 50% { box-shadow: 0 0 0 0.45rem var(--amber); } }
+  @keyframes arrive { 50% { box-shadow: 0 0 0 0.45rem var(--new); } }
   @media (prefers-reduced-motion: reduce) { .ticket.new { animation: none; } }
   /* NEW stays for a minute, not just the three pulses: without sound, a
-     cook who was facing the grill when it arrived still has to spot it. */
-  .ticket.is-fresh { outline: 0.3rem solid var(--amber); outline-offset: 0.15rem; }
+     cook who was facing the grill when it arrived still has to spot it.
+     Mint, never amber: a cook must tell "new" from "getting late". */
+  .ticket.is-fresh { outline: 0.3rem solid var(--new); outline-offset: 0.15rem; }
   .fresh-tag {
     display: none;
     padding: 0 0.45rem;
     margin-right: 0.45rem;
     border-radius: 0.3rem;
-    background: var(--amber);
-    color: #1A1A1A;
+    background: var(--new);
+    color: #0E2A33;
     font-weight: 900;
   }
   .ticket.is-fresh .fresh-tag { display: inline-block; }
@@ -250,8 +256,9 @@
     font-weight: 900;
   }
   .ticket.demo { outline: 0.25rem dashed #B48BD6; outline-offset: 0.1rem; }
-  .alert.demo-banner { background: #E7D9F3; color: #3D1A5C; }
-  .ticket.warn .fresh-tag, .ticket.late .fresh-tag { background: #1A1A1A; color: var(--amber); }
+  .alert.practice { background: #E7D9F3; color: #3D1A5C; }
+  /* On an amber or red header the tag keeps its mint, with a dark edge. */
+  .ticket.warn .fresh-tag, .ticket.late .fresh-tag { box-shadow: inset 0 0 0 0.12rem #0E2A33; }
   /* To go or for here, on every ticket: solid for to go (it needs boxing),
      outlined for here. Readable on every header color. */
   .dining {
@@ -263,6 +270,7 @@
     color: #1A1A1A;
     font-weight: 900;
   }
+  .dining, .unpaid-tag, .test-tag, .demo-tag, .fresh-tag { white-space: nowrap; }
   .dining.here { background: transparent; color: inherit; box-shadow: inset 0 0 0 0.12rem currentColor; }
   /* Not paid yet: cook it anyway (pay-later orders wait in the warmer).
      Only the front needs to act, so it's a quiet tag, not an alarm. */
@@ -284,7 +292,7 @@
     inset: 0;
     z-index: 10;
     pointer-events: none;
-    box-shadow: inset 0 0 0 0.9rem var(--amber);
+    box-shadow: inset 0 0 0 0.9rem var(--new);
     opacity: 0;
   }
   .edge-flash.go { animation: edge 0.9s ease-in-out 3; }
@@ -323,6 +331,7 @@
   .who .name { display: block; font-size: 1.25rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .who .kind { display: block; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.9; }
   .timer { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
+  .timer .pre { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin-right: 0.2rem; }
   .timer small { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
 
   .items { list-style: none; margin: 0; padding: 0.4rem 0.75rem 0.2rem; }
@@ -371,15 +380,17 @@
   /* Quiet on purpose. Six solid red buttons were the loudest thing on the
      screen, and red is kept for "late". The number pad does the bumping;
      this is the mouse's way to do the same. */
+  /* Slim (2026-10-12): the number pad bumps, so a full-size button on every
+     ticket mostly took room another ticket could use. */
   .done {
-    margin: 0.4rem 0.75rem 0.7rem;
-    padding: 0.5rem;
-    border: 2px solid #C9C0B2;
+    margin: 0.15rem 0.75rem 0.45rem;
+    padding: 0.15rem;
+    border: 1.5px solid #C9C0B2;
     border-radius: 0.4rem;
     background: transparent;
     color: var(--muted);
     font: inherit;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 800;
     letter-spacing: 0.04em;
     cursor: pointer;
@@ -532,6 +543,8 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fmtTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   const label = (t) => t.label || t.name || `#${t.shortId}`;
+  // "10:13", for the timer: the board's clock already says AM or PM.
+  const clock = (iso) => fmtTime(iso).replace(/\s?[AP]M$/i, "");
 
   function mmss(ms) {
     const s = Math.max(0, Math.floor(ms / 1000));
@@ -543,9 +556,14 @@
   function age(t, now) {
     if (t.dueAt) {
       const until = Date.parse(t.dueAt) - now;
-      if (until > PICKUP_WARN * 6e4) return { cls: "later", text: fmtTime(t.dueAt), sub: "due" };
-      if (until > 0) return { cls: "warn", text: mmss(until), sub: "due in" };
-      return { cls: "late", text: mmss(-until), sub: "past due" };
+      // The time it's due, not a countdown: a countdown looked just like a
+      // counter ticket's count up ("7:50" due in vs "17:09" waiting).
+      const text = clock(t.dueAt);
+      const m = Math.ceil(until / 6e4);
+      if (until > PICKUP_WARN * 6e4) return { cls: "later", pre: "Due", text, sub: `in ${m} min` };
+      if (until > 0) return { cls: "warn", pre: "Due", text, sub: `in ${m} min` };
+      const over = Math.floor(-until / 6e4);
+      return { cls: "late", pre: "Due", text, sub: over < 1 ? "now" : `${over} min late` };
     }
     const since = now - Date.parse(t.createdAt);
     const cls = since >= COUNTER_LATE * 6e4 ? "late" : since >= COUNTER_WARN * 6e4 ? "warn" : "";
@@ -572,13 +590,15 @@
       card.classList.remove("warn", "late", "later");
       if (a.cls) card.classList.add(a.cls);
       card.classList.toggle("is-fresh", now - (seenAt.get(t.id) || 0) < FRESH_MS);
-      card.querySelector(".timer").innerHTML = `${esc(a.text)}<small>${a.sub}</small>`;
+      card.querySelector(".timer").innerHTML = `${a.pre ? `<span class="pre">${a.pre}</span>` : ""}${esc(a.text)}<small>${a.sub}</small>`;
     }
   }
 
   // ---- rendering
+  // Counter is most tickets, so it goes unsaid: only Online and DoorDash
+  // (and any other app) are named.
   function kindLabel(t) {
-    if (t.kind === "COUNTER") return "Counter";
+    if (t.kind === "COUNTER") return "";
     // Square Online is where nearly every pickup comes from, so it is just
     // "Online"; "Pickup · Square Online" wrapped to three lines on a ticket.
     // Any other source (a delivery app, say) is still named.
@@ -691,6 +711,7 @@
     if (text && !down && wasOk) alarm();
     if (!text) wasOk = true;
     down = !!text;
+    alertEl.classList.remove("practice");
     alertEl.hidden = !text;
     if (text) alertEl.textContent = text;
   }
@@ -698,6 +719,7 @@
   // A banner that is information, not an outage (test mode): never sounds.
   function notice(text) {
     down = false;
+    alertEl.classList.add("practice");
     alertEl.hidden = false;
     alertEl.textContent = text;
   }
@@ -729,7 +751,6 @@
         wasOk = true;
         notice(`DEMO — practice orders (dashed, marked DEMO) until ${fmtTime(demo.until)}. Real orders still show. End it in Settings.`);
       } else problem(null);
-      alertEl.classList.toggle("demo-banner", !!demo && !data.mock && !(data.error || stale));
     }
 
     const json = JSON.stringify(data.tickets);

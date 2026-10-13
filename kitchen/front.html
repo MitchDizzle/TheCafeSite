@@ -204,6 +204,8 @@
 
   .square { font-size: 0.92rem; font-weight: 700; }
   .square.todo { color: var(--red-dark); }
+  /* The board is doing it by itself: nothing for anyone to do, so not red. */
+  .square.pending { color: var(--teal); }
   .square.done { color: var(--green); }
 
   .actions { padding: 0.6rem 0.8rem 0.8rem; }
@@ -385,7 +387,7 @@
     const square = !online ? "" : o.squareReady
       ? `<div class="square done">✓ Marked ready in Square.${o.kind === "PICKUP" ? " Customer texted." : ""}${o.autoSquare ? " Handed off marks it picked up." : ""}</div>`
       : ready ? (o.autoSquare
-        ? `<div class="square todo">Marking it ready in Square…</div>`
+        ? `<div class="square pending">Marking it ready in Square…</div>`
         : `<div class="square todo">Mark it ready in Square Order Manager to text the customer.</div>`) : "";
     return `
       <article class="order ${ready ? "ready" : "cooking"}${o.unpaid ? " unpaid" : ""}${o.demo ? " demo" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
@@ -449,7 +451,8 @@
     const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000;
     alertEl.hidden = !(data.error || stale || data.mock);
     alertEl.hidden = alertEl.hidden && !data.demo;
-    alertEl.classList.toggle("demo-banner", !!data.demo && !data.mock && !data.error && !stale);
+    // Test mode and the demo are practice: the demo's purple, like the board.
+    alertEl.classList.toggle("demo-banner", (!!data.demo || !!data.mock) && !data.error && !stale);
     alertEl.textContent = data.mock ? "TEST MODE: these are fake orders, not from Square."
       : data.demo && !data.error && !stale ? `DEMO: practice orders (dashed, marked DEMO) until ${fmtTime(data.demo.until)}. Real orders still show.`
       : data.lastOkAt ? `The kitchen PC can't reach Square. Orders as of ${fmtTime(data.lastOkAt)}; new ones may be missing.`
@@ -491,6 +494,7 @@
       apply(await res.json());
     } catch {
       alertEl.hidden = false;
+      alertEl.classList.remove("demo-banner");
       alertEl.textContent = "Can't reach the kitchen PC. Is it on, and is this device on the cafe wifi?";
     } finally {
       setTimeout(load, POLL_MS);
