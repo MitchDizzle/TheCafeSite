@@ -21,6 +21,12 @@ caused it.
 
 ## Importing
 
+**A change to an item already in Square is made by hand in the Dashboard,
+not by importing** (2026-10-13). The file has no Square ids, so an import can
+duplicate items or undo what was changed there since (sales channels,
+modifier lists, desserts, the Lunch Special). The CSV stays the record of
+what the menu says; import it only to add many new items at once.
+
 Square Dashboard → **Items → Import** (or Actions → Import library) → upload
 `catalog-import.csv` → choose **add to library**, not replace. Leave the five
 instruction rows at the top; they are Square's own header. Review the preview
@@ -33,7 +39,7 @@ before confirming — Square lists anything it rejects.
 | Full / Half (salads, biscuits & gravy), Cup / Bowl, 2 / 3 egg | **Variations** of one item | One tile on the POS, the size prints on the ticket |
 | The 7 burgers (incl. Patty Melt) | Item "Hamburger", variations **Beef / Chicken** at the same price | The kitchen needs to see which one. The menu says "chicken instead of beef" once in the category note, not in each name |
 | Build Your Own 1 / 2 / 3 meats, half | One item, four **variations** | Price is set by the variation; the picks are modifiers (below). A half can't be made on a croissant, and Square can't take one bread off one size, so the description says a half ordered on a croissant is made on white bread (client 2026-10-12: kept as one item rather than a separate half item, for the POS and online) |
-| Chips flavours, each tea and fountain drink | **Variations** at one price | Counts which one sells, for ordering stock. The drinks are `squareChoices` in `menu.json` (Square only, not on the menus); an online or DoorDash order picks one, so the front knows what to pour. Delete the old **Iced Tea** and **Fountain Drink** variations in the Dashboard after importing (2026-10-13) |
+| Chips flavours, each tea and fountain drink | **Variations** at one price | Counts which one sells, for ordering stock. The drinks are `squareChoices` in `menu.json` (Square only, not on the menus); an online or DoorDash order picks one, so the front knows what to pour. Added by hand in the Dashboard (2026-10-13), replacing the old **Iced Tea** and **Fountain Drink** variations |
 | Toast, Biscuit or English Muffin | One item + the **Breakfast Base** modifier (below) | Was Toast / Biscuit / English Muffin variations until 2026-10-08, which never said which bread the toast was. Delete those three old variations in the Dashboard after importing |
 | Wraps, kids meals | One price per item | Choices are modifiers (below) |
 | Everything | Item type *Prepared food and beverage*, not stockable, category = reporting category | No inventory tracking yet |
