@@ -10,8 +10,8 @@
 //     the same drive.
 //   - the private GitHub repo in backupRepo, when one is set (offsite.js).
 // Taken when the program starts (yesterday's day is complete by then) and
-// again after closing, at BACKUP_HOUR, so a day is copied the same evening
-// when the PC is left on. The last KEEP_DAYS days are kept. Test mode's
+// again at closing, at BACKUP_HOUR, so a day is copied the same day
+// while the PC is still on. The last KEEP_DAYS days are kept. Test mode's
 // files are never backed up.
 const fs = require("fs");
 const path = require("path");
@@ -20,7 +20,7 @@ const { localDate } = require("./util");
 const { offsiteStatus, pushOffsite } = require("./offsite");
 
 const FILES = ["stats-history.json", "specials-plan.json", "state.json"];
-const BACKUP_HOUR = 15; // 3pm, after closing
+const BACKUP_HOUR = 14; // 2pm, closing time: the PC may be off by 3
 const KEEP_DAYS = 30;
 const LOCAL = path.join(DATA, "backups");
 

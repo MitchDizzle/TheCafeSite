@@ -14,7 +14,7 @@
 //   specials-plan.json, state.json
 //   photos\               Photo post's photos, as Saved photos has them
 // git keeps every earlier version, so the files are simply overwritten.
-// Pushed by backup.js with the local copies (on start and at 3pm), and
+// Pushed by backup.js with the local copies (on start and at 2pm), and
 // tried again every 10 minutes after a failure. Never in test mode or on a
 // development copy.
 const fs = require("fs");
@@ -86,7 +86,7 @@ function put(file, text) {
 const README = `# Kitchen board backups
 
 Pushed by the kitchen PC's board program (TheCafeSite, kitchen/lib/offsite.js)
-when it starts and at 3pm. Nothing here is edited by hand.
+when it starts and at 2pm. Nothing here is edited by hand.
 
 - history/<date>.json: that day's orders, as in Manage -> Reports (no customer names)
 - specials-plan.json, state.json: the board's specials plan and cleared tickets
