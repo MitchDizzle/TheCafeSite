@@ -1,6 +1,7 @@
 // Manage -> Saved photos: what Photo post kept on the kitchen PC (its
 // "Keep the photo on the kitchen PC for the website"), newest first, so
-// test shots can be deleted. Loaded by front.html after its own script,
+// test shots can be deleted, and the rest moved off the PC to the GitHub
+// backup. Loaded by front.html after its own script,
 // which shares its helpers as window.Front (see "Manage" there).
 (() => {
   const { esc, postJson, screen, busy, result } = Front;
@@ -53,7 +54,8 @@
             <span class="check"><input type="checkbox" name="del" value="${esc(p.saved)}"><span>Delete</span></span>
           </label>`).join("")}
         </form>`,
-      buttons: [{ label: "Delete ticked", submit: "m-saved", kind: "danger" }] });
+      buttons: [r.backup ? { label: "Move all to GitHub", act: "saved-move" } : null,
+        { label: "Delete ticked", submit: "m-saved", kind: "danger" }].filter(Boolean) });
     const form = document.getElementById("m-saved");
     form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -83,6 +85,22 @@
     result(TITLE, r);
   }
 
+  // Move all to GitHub: its own screen, as the photos leave this PC.
+  function confirmMove() {
+    forgetThumbs();
+    screen({ title: TITLE, back: true,
+      body: `<p>Back up now, then take every photo the backup reached off the kitchen PC. They stay in the GitHub backup
+        (its photos folder), ready for the website. Delete test shots first, or they go to GitHub too.</p>`,
+      buttons: [{ label: "Cancel", act: "saved" }, { label: "Move all to GitHub", act: "saved-move-go", kind: "primary" }] });
+  }
+
+  async function runMove() {
+    busy(TITLE, "Backing up, then moving…");
+    result(TITLE, await postJson("/api/front-saved-photos-clear", { pin: Front.pin }));
+  }
+
   Front.tools.saved = openSaved;
   Front.acts["saved-delete"] = runDelete;
+  Front.acts["saved-move"] = confirmMove;
+  Front.acts["saved-move-go"] = runMove;
 })();

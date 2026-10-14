@@ -12,11 +12,13 @@
 //   history\<date>.json   one day of stats-history.json each, so a day's
 //                         commit only changes that day
 //   specials-plan.json, state.json
-//   photos\               Photo post's photos, as Saved photos has them
+//   photos\               Photo post's photos, as Saved photos has them,
+//                         plus the ones moved off this PC
 // git keeps every earlier version, so the files are simply overwritten.
-// Pushed by backup.js with the local copies (on start and at 2pm), and
-// tried again every 10 minutes after a failure. Never in test mode or on a
-// development copy.
+// Pushed by backup.js with the local copies (on start, at 2pm and from
+// Manage -> Back up now), and tried again every 10 minutes after a
+// failure. Never in test mode or on a development copy. git runs as its
+// own process, so the board and the orders carry on while it pushes.
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -86,11 +88,13 @@ function put(file, text) {
 const README = `# Kitchen board backups
 
 Pushed by the kitchen PC's board program (TheCafeSite, kitchen/lib/offsite.js)
-when it starts and at 2pm. Nothing here is edited by hand.
+when it starts, at 2pm and from Manage -> Back up now. Nothing here is
+edited by hand.
 
 - history/<date>.json: that day's orders, as in Manage -> Reports (no customer names)
 - specials-plan.json, state.json: the board's specials plan and cleared tickets
-- photos/: Photo post's photos, kept for the website
+- photos/: Photo post's photos, kept for the website, with the ones moved
+  off the kitchen PC (Saved photos -> Move to GitHub)
 
 To put the history back on the kitchen PC, the days are joined into
 kitchen/data/stats-history.json as { "days": { "<date>": <file> } }.
@@ -108,20 +112,36 @@ function copyIn() {
   if (fs.existsSync(photos)) {
     fs.mkdirSync(path.join(REPO, "photos"), { recursive: true });
     const here = new Set(fs.readdirSync(photos));
+    let index = { photos: [] };
+    try { index = JSON.parse(fs.readFileSync(path.join(photos, "photos.json"), "utf8")); } catch {}
+    // Photos moved off this PC (Saved photos -> Move to GitHub) stay here,
+    // listed first in the repo's photos.json as if they were still kept.
+    const cleared = index.cleared || [];
+    const keep = new Set(here);
+    for (const p of [...cleared, ...(index.photos || [])]) for (const f of [p.saved, p.post]) if (f) keep.add(path.basename(f));
     for (const name of here) {
       const dst = path.join(REPO, "photos", name);
-      if (name === "photos.json" || !fs.existsSync(dst)) fs.copyFileSync(path.join(photos, name), dst);
+      if (name !== "photos.json" && !fs.existsSync(dst)) fs.copyFileSync(path.join(photos, name), dst);
     }
+    const { cleared: _, ...rest } = index;
+    put(path.join(REPO, "photos", "photos.json"), JSON.stringify({ ...rest, photos: [...cleared, ...(index.photos || [])] }, null, 2));
     // One deleted in Saved photos goes from the repo too (git still has it).
-    for (const name of fs.readdirSync(path.join(REPO, "photos"))) if (!here.has(name)) fs.rmSync(path.join(REPO, "photos", name), { force: true });
+    for (const name of fs.readdirSync(path.join(REPO, "photos"))) if (!keep.has(name)) fs.rmSync(path.join(REPO, "photos", name), { force: true });
   }
   if (!fs.existsSync(path.join(REPO, "README.md"))) put(path.join(REPO, "README.md"), README);
 }
 
-let running = false;
-async function pushOffsite() {
-  if (!cfg.backupRepo || MOCK || DEV || running) return;
-  running = true;
+// One push at a time. Asked for while one is going (Back up now during the
+// 2pm one), it runs once more after it, so what changed since is in too.
+let current = null;
+let again = null;
+function pushOffsite() {
+  if (!cfg.backupRepo || MOCK || DEV) return Promise.resolve();
+  if (!current) return (current = push().finally(() => { current = null; }));
+  return again || (again = current.then(() => { again = null; return pushOffsite(); }));
+}
+
+async function push() {
   try {
     await ensureKey();
     if (!fs.existsSync(path.join(REPO, ".git"))) {
@@ -148,9 +168,7 @@ async function pushOffsite() {
       : err.message;
     if (offsiteStatus.error !== msg) console.error(`Backup to GitHub: ${msg}`);
     offsiteStatus.error = msg;
-  } finally {
-    running = false;
   }
 }
 
-module.exports = { offsiteStatus, pushOffsite, repoUrl };
+module.exports = { REPO, offsiteStatus, pushOffsite, repoUrl };

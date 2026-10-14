@@ -15,7 +15,7 @@
 // files are never backed up.
 const fs = require("fs");
 const path = require("path");
-const { DATA, MOCK, cfg } = require("./config");
+const { DATA, MOCK, DEV, cfg } = require("./config");
 const { localDate } = require("./util");
 const { offsiteStatus, pushOffsite } = require("./offsite");
 
@@ -53,8 +53,9 @@ function copyPhotos(root) {
   }
 }
 
-function backupNow() {
-  if (MOCK) return;
+// Also Manage -> Back up now, which waits for it and shows what happened.
+async function backupNow() {
+  if (MOCK) return { ok: false, message: "Test mode: nothing is backed up." };
   const at = new Date().toISOString();
   try {
     copyDay(LOCAL);
@@ -63,20 +64,30 @@ function backupNow() {
     backupStatus.local = { at, error: err.message };
     console.error(`Backup in data\\backups: ${err.message}`);
   }
-  pushOffsite();
-  if (!cfg.backupDir) return;
-  try {
-    // A USB stick that isn't plugged in: say so, never make the folder on
-    // this PC's drive instead.
-    if (!fs.existsSync(path.parse(path.resolve(cfg.backupDir)).root)) throw new Error("that drive isn't there (is the USB stick plugged in?)");
-    copyDay(cfg.backupDir);
-    copyPhotos(cfg.backupDir);
-    backupStatus.away = { at };
-    console.log(`Backed up to ${cfg.backupDir} (${new Date().toLocaleTimeString()}).`);
-  } catch (err) {
-    if (!backupStatus.away || backupStatus.away.error !== err.message) console.error(`Backup to ${cfg.backupDir}: ${err.message}`);
-    backupStatus.away = { at, error: err.message };
+  if (cfg.backupDir) {
+    try {
+      // A USB stick that isn't plugged in: say so, never make the folder on
+      // this PC's drive instead.
+      if (!fs.existsSync(path.parse(path.resolve(cfg.backupDir)).root)) throw new Error("that drive isn't there (is the USB stick plugged in?)");
+      copyDay(cfg.backupDir);
+      copyPhotos(cfg.backupDir);
+      backupStatus.away = { at };
+      console.log(`Backed up to ${cfg.backupDir} (${new Date().toLocaleTimeString()}).`);
+    } catch (err) {
+      if (!backupStatus.away || backupStatus.away.error !== err.message) console.error(`Backup to ${cfg.backupDir}: ${err.message}`);
+      backupStatus.away = { at, error: err.message };
+    }
   }
+  await pushOffsite();
+  const said = [
+    backupStatus.local.error ? `On this PC: failed (${backupStatus.local.error}).` : "On this PC: copied.",
+    cfg.backupDir ? (backupStatus.away.error ? `To ${cfg.backupDir}: failed (${backupStatus.away.error}).` : `To ${cfg.backupDir}: copied.`) : "",
+    !cfg.backupRepo ? "GitHub: not set up (backupRepo in config.json)."
+      : DEV ? "GitHub: not from a development copy."
+      : offsiteStatus.error ? `GitHub: failed (${offsiteStatus.error}).` : "GitHub: pushed.",
+  ].filter(Boolean);
+  const failed = backupStatus.local.error || (cfg.backupDir && backupStatus.away.error) || (cfg.backupRepo && !DEV && offsiteStatus.error);
+  return { ok: !failed, message: said.join(" ") };
 }
 
 // Once at start, then once a day after BACKUP_HOUR. A push to GitHub that

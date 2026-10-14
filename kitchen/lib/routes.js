@@ -3,7 +3,7 @@
 // purpose (NETWORK_PATHS); everything else answers this PC alone.
 const fs = require("fs");
 const path = require("path");
-const { DIR, cfg } = require("./config");
+const { DIR, DEV, cfg } = require("./config");
 const { localDate, dayWords } = require("./util");
 const { live } = require("./live");
 const { catalog, loadCatalog } = require("./catalog");
@@ -13,7 +13,9 @@ const { recordHistoryNow, historyReport } = require("./stats");
 const { dessertItems, saveDesserts, saveDessertPhoto } = require("./desserts");
 const { RETRY_MINUTES, pullSite, planView, savePlanDays } = require("./specials/plan");
 const { applyToday } = require("./specials/today");
-const { photoSetup, savePhotoPost, savedPhotos, savedPhotoFile, deleteSavedPhotos } = require("./photo-post");
+const { photoSetup, savePhotoPost, savedPhotos, savedPhotoFile, deleteSavedPhotos, clearBackedUpPhotos } = require("./photo-post");
+const { backupNow } = require("./backup");
+const { offsiteStatus } = require("./offsite");
 const { checkPage } = require("./check");
 const { power, checkUpdates, boardCheckedIn } = require("./system");
 
@@ -70,7 +72,7 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-backup"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -287,13 +289,25 @@ async function handle(req, res) {
     }
   }
   // Saved photos, behind the PIN: the list, one picture (as a JPEG, for the
-  // list's thumbnails), and deleting the ticked ones.
-  if (req.method === "POST" && /^\/api\/front-saved-photo(s|s-delete)?$/.test(url.pathname)) {
+  // list's thumbnails), deleting the ticked ones, and moving them all to the
+  // GitHub backup (a backup first; only what it pushed leaves this PC).
+  if (req.method === "POST" && /^\/api\/front-saved-photo(s|s-delete|s-clear)?$/.test(url.pathname)) {
     const body = await readBody(req);
     const refused = pinRefusal(body.pin);
     if (refused) return send(res, 200, { ok: false, message: refused });
     try {
-      if (url.pathname === "/api/front-saved-photos") return send(res, 200, { ok: true, photos: savedPhotos() });
+      if (url.pathname === "/api/front-saved-photos") return send(res, 200, { ok: true, photos: savedPhotos(), backup: !!cfg.backupRepo });
+      if (url.pathname === "/api/front-saved-photos-clear") {
+        console.log(`Move to GitHub from the front page (${new Date().toLocaleTimeString()}).`);
+        const b = await backupNow();
+        if (!cfg.backupRepo || DEV || offsiteStatus.error) {
+          return send(res, 200, { ok: false, message: `Nothing was moved: the backup didn't reach GitHub. ${b.message}` });
+        }
+        const n = clearBackedUpPhotos();
+        return send(res, 200, { ok: true, message: n
+          ? `Moved ${n} photo${n === 1 ? "" : "s"} to GitHub. They're off the kitchen PC now.`
+          : "Nothing to move: no photo here is in the GitHub backup yet." });
+      }
       if (url.pathname === "/api/front-saved-photo") {
         const jpeg = savedPhotoFile(String(body.name || ""));
         return jpeg ? res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "no-store" }).end(jpeg) : send(res, 404, { ok: false });
@@ -351,6 +365,16 @@ async function handle(req, res) {
 
   // Check for updates and Reset for the day from the front page, both
   // behind the PIN in config.json. Same actions as the board's own.
+  // Back up now, behind the PIN: the same backup as at start and at 2pm,
+  // waited for so the phone can say how it went. git runs as its own
+  // process, so orders keep coming in meanwhile.
+  if (req.method === "POST" && url.pathname === "/api/front-backup") {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    console.log(`Back up now from the front page (${new Date().toLocaleTimeString()}).`);
+    return send(res, 200, await backupNow());
+  }
   if (req.method === "POST" && (url.pathname === "/api/front-update" || url.pathname === "/api/front-reset")) {
     const body = await readBody(req);
     const refused = pinRefusal(body.pin);

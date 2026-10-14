@@ -664,6 +664,7 @@
     else if (to === "forget") { savedPin.set(""); closeManage(); }
     else if (to === "reset") openReset();
     else if (to === "update") runUpdate();
+    else if (to === "backup") runBackup();
     else if (to === "do-reset") runReset();
     // The jobs in front/*.js, and their own buttons (Photo post's, Reports' CSVs).
     else if (Front.tools[to]) Front.tools[to]();
@@ -716,9 +717,10 @@
         ${row("photo", "Photo post", "Take a photo of the special or any item and make its Facebook picture here.")}
         <h3 class="m-group">Now and then</h3>
         ${row("desserts", "Desserts", "Flavors on or off, and the photo online ordering shows.")}
-        ${row("saved", "Saved photos", "The photos Photo post kept on the kitchen PC. Delete test shots here.")}
+        ${row("saved", "Saved photos", "The photos Photo post kept on the kitchen PC. Delete test shots, or move them all to GitHub.")}
         ${row("report", "Reports", "Orders, sales, kitchen times and items for any range of days.")}
         ${row("skip", "Leave off kitchen tickets", "Items and categories that go on the front's list instead.")}
+        ${row("backup", "Back up now", "Copy the orders, specials plan and photos to the backup now. Sales carry on.")}
         ${row("update", "Check for updates", "Install a new version of the board, if there is one.")}
         ${row("reset", "Reset for the day", "After testing: start today's numbers and the Undo lists fresh.", true)}
       </div>`,
@@ -749,6 +751,12 @@
       screen({ title: "Updating", back: false, body: `<p class="m-result good">${esc(r.message)}</p>`,
         buttons: [{ label: "Done", act: "close", kind: "primary" }] });
     } else result("Check for updates", r);
+  }
+
+  // ---- Back up now: what the board does at start and at 2pm, on demand.
+  async function runBackup() {
+    busy("Back up now", "Backing up…");
+    result("Back up now", await postJson("/api/front-backup", { pin: pinValue }));
   }
 
   setInterval(tick, 15000);

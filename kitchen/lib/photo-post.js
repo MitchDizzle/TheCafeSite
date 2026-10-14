@@ -11,6 +11,7 @@ const { DIR, DATA, MOCK } = require("./config");
 const { localDate, cleanText } = require("./util");
 const { catalog, loadCatalog } = require("./catalog");
 const { plan, siteFieldFor } = require("./specials/plan");
+const { REPO } = require("./offsite");
 
 const PHOTO_DIR = path.join(DATA, MOCK ? "photos-mock" : "photos");
 
@@ -149,4 +150,23 @@ function deleteSavedPhotos(names) {
   return gone.length;
 }
 
-module.exports = { PHOTO_DIR, photoSetup, savePhotoPost, siteDetails, savedPhotos, savedPhotoFile, deleteSavedPhotos };
+// Saved photos -> Move to GitHub, run straight after a backup that pushed:
+// every photo already in the backup repo's folder (so on GitHub) leaves this
+// PC. photos.json keeps them under `cleared`, which tells the next push to
+// leave them in the repo rather than follow a deletion.
+function clearBackedUpPhotos() {
+  const index = readIndex();
+  const inRepo = (f) => !f || fs.existsSync(path.join(REPO, "photos", path.basename(f)));
+  const moved = index.photos.filter((p) => p.saved && inRepo(p.saved) && inRepo(p.post));
+  if (!moved.length) return 0;
+  index.photos = index.photos.filter((p) => !moved.includes(p));
+  index.cleared = [...(index.cleared || []), ...moved];
+  fs.writeFileSync(path.join(PHOTO_DIR, "photos.json"), JSON.stringify(index, null, 2));
+  for (const p of moved) {
+    for (const f of [p.saved, p.post]) if (f) fs.rmSync(path.join(PHOTO_DIR, path.basename(f)), { force: true });
+  }
+  console.log(`Saved photos moved to GitHub from the front page (${new Date().toLocaleTimeString()}): ${moved.map((p) => p.saved).join(", ")}`);
+  return moved.length;
+}
+
+module.exports = { PHOTO_DIR, photoSetup, savePhotoPost, siteDetails, savedPhotos, savedPhotoFile, deleteSavedPhotos, clearBackedUpPhotos };
