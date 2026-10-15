@@ -6,7 +6,7 @@ const { test, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
 const board = require("./board.js");
 
-const { sideSlots, swapsFor, dayDescription, plan } = board;
+const { sideSlots, swapsFor, specialSideOptions, dayDescription, plan } = board;
 
 const day = (special, extra = {}) => ({ from: "site", items: { "Lunch Special": { today: special, prices: {} } }, ...extra });
 
@@ -33,6 +33,17 @@ test("the side lists: choice of side is one list, Chef's Choice", () => {
 test("the side lists: nothing planned, or no sides, is none", () => {
   assert.deepEqual(sideSlots(null), []);
   assert.deepEqual(sideSlots(day("Chili Dog")), []);
+});
+
+test("the Special Side: the plate's sides, each 'or' as both", () => {
+  assert.deepEqual(specialSideOptions(day("Lasagna", { sides: ["Tossed Salad or Cooked Broccoli", "Breadstick"] })), ["Tossed Salad", "Cooked Broccoli", "Breadstick"]);
+  assert.deepEqual(specialSideOptions(day("Sausage & Kraut", { sides: ["Cheesy Potatoes"] })), ["Cheesy Potatoes"]);
+});
+
+test("the Special Side: none on a choice-of-side day, or with no sides", () => {
+  assert.deepEqual(specialSideOptions(day("Meatloaf", { anySide: true, sides: ["Corn"] })), []);
+  assert.deepEqual(specialSideOptions(day("Chili Dog")), []);
+  assert.deepEqual(specialSideOptions(null), []);
 });
 
 test("the swap list: the day's extra sides, the deli salads, then a cup of the soup", () => {

@@ -111,7 +111,9 @@ an option there when they do. The menus deliberately don't list flavours
 **Special Side** (a side from the day's special, ordered on its own) is sold
 in Square only: it's on no printed or website menu (client 2026-10-09), so
 `menu.json` doesn't have it and neither does `catalog-import.csv`. Keep it in
-the Dashboard; its price lives there, like the specials'.
+the Dashboard; its price lives there, like the specials'. Its **Today's Side**
+list is written each morning by the kitchen PC from the day's sides
+(`kitchen/README.md`, "Sides in Square"), like Lunch Special's Side 1–3.
 
 Fountain drinks are **Pepsi products**, one variation each (sweet and
 unsweet tea too), from `squareChoices` in `menu.json`. When the fountain

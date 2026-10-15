@@ -290,6 +290,7 @@ Each side the special comes with is its own modifier list on **Lunch Special** (
 - **A day's extra sides** (`extraSides` on that day in the website's `specials.json`, "just for today") come first, before the deli salads, that day only. They're the one part of a day the website can still change once today is in Square: they reach Square within half an hour, or at Check for updates. They don't show on the front page.
 - Every option is $0 (the price covers the sides). A list the day doesn't need is switched off on the item, not deleted, and a list is made the first time a day needs it. A day with more sides than lists logs which one can't be swapped.
 - The deli salads sold on their own are separate items in Square (Sides), one button each; these lists are only the swap on the special.
+- **The Special Side** (`specialSideItem`, the $2 side sold on its own) gets the same morning write: one list, **Today's Side** (`specialSideList`), with the sides the plate comes with ("Tossed salad or cooked broccoli" as both), so the ticket says which side (client 2026-10-15). One side is picked already, so it's one tap; with more, it asks which. Off on a choice-of-side day or a day without sides. No deli salads or soup on it: those are sold as their own items.
 
 ### Descriptions in Square
 

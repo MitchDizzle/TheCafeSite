@@ -213,6 +213,7 @@ function mockCatalog() {
     ? { name, pricing_type: "VARIABLE_PRICING" } : { name, pricing_type: "FIXED_PRICING", price_money: { amount: price, currency: "USD" } } });
   const daily = [
     { type: "ITEM", id: "ITEM-Lunch Special", version: 1, item_data: { name: "Lunch Special", categories: [{ id: "CAT-Specials" }], variations: [v("VAR-LS", "Regular", null)] } },
+    { type: "ITEM", id: "ITEM-Special Side", version: 1, item_data: { name: "Special Side", categories: [{ id: "CAT-Specials" }], variations: [v("VAR-SS", "Regular", 200)] } },
     { type: "ITEM", id: "ITEM-Soup of the Day", version: 1, item_data: { name: "Soup of the Day", categories: [{ id: "CAT-Soups & Salads" }], variations: [v("VAR-SC", "Cup", 500), v("VAR-SB", "Bowl", 700)] } },
   ];
   out.push({ type: "CATEGORY", id: "CAT-Specials", category_data: { name: "Lunch Specials" } });

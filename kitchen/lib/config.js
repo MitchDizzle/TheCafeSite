@@ -43,6 +43,11 @@ const DEFAULTS = {
   // a list that isn't there yet is made the first time it's needed.
   sideItem: "Lunch Special",
   sideLists: ["Side 1", "Side 2", "Side 3"],
+  // The side sold on its own, and its list: each morning it offers the sides
+  // the day's plate comes with (pick one; picked already when there's one).
+  // "" leaves it alone.
+  specialSideItem: "Special Side",
+  specialSideList: "Today's Side",
   // The daily items' descriptions, which online ordering and DoorDash show
   // under the name: each morning the board writes the day's plate or soup in
   // front of these words ("Lasagna with ... Served from 11am."), and puts
