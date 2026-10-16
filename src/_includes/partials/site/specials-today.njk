@@ -24,7 +24,9 @@
     served, so the table only ever lists ONE week: the Monday-to-Sunday week
     of the next listed day (today's week on a weekday, next week at the
     weekend). Its rows say only "Tuesday", so next week's Tuesday must never
-    sit under this week's.
+    sit under this week's. The week AFTER that one, once it is in the file,
+    gets a table of its own under "Next week", its rows dated in full
+    ("Monday, October 19"), so people can see it before the Facebook post.
 
     THE LUNCH SPECIAL AND THE SOUP ARE SOLD SEPARATELY, so they are two
     cards side by side and two columns in the table — never one line, which
@@ -98,6 +100,28 @@
         </table>
     </div>
 
+    <div class="ts-week" data-specials-next hidden>
+        <p class="ts-week-label">Next week</p>
+        <table class="ts-table">
+            <thead>
+                <tr>
+                    <th scope="col">Day</th>
+                    <th scope="col">Lunch special</th>
+                    <th scope="col">Soup of the day</th>
+                </tr>
+            </thead>
+            <tbody>
+                {%- for d in specials.days %}
+                <tr data-special-next="{{ d.date }}" hidden>
+                    <th scope="row">{{ d.date | dayDate("long") }}</th>
+                    <td data-label="Lunch special">{{ d.special }}{% if d | specialSides %}<span class="ts-table-sides"> {{ d | specialSides }}</span>{% endif %}</td>
+                    <td data-label="Soup">{{ d.soup }}</td>
+                </tr>
+                {%- endfor %}
+            </tbody>
+        </table>
+    </div>
+
     <p class="ts-follow">New specials every week, here and on <a href="{{ site.social.facebook }}" rel="noopener">Facebook</a>.</p>
 </section>
 
@@ -153,6 +177,22 @@
     if (upcoming.length) {
         upcoming.forEach(function (row) { row.hidden = false; });
         box.querySelector('[data-specials-upcoming]').hidden = false;
+    }
+
+    // The week after the one listed, in its own table, if it's in the file.
+    var after = new Date(week + 'T00:00:00Z');
+    after.setUTCDate(after.getUTCDate() + 7);
+    after = after.toISOString().slice(0, 10);
+    var nextRows = Array.prototype.slice.call(box.querySelectorAll('[data-special-next]'));
+    var nextWeek = nextRows.filter(function (row) {
+        return mondayOf(row.getAttribute('data-special-next')) === after;
+    });
+    nextRows.forEach(function (row) {
+        if (nextWeek.indexOf(row) < 0) row.parentNode.removeChild(row);
+    });
+    if (nextWeek.length) {
+        nextWeek.forEach(function (row) { row.hidden = false; });
+        box.querySelector('[data-specials-next]').hidden = false;
     }
 
     box.hidden = false;
