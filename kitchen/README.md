@@ -172,6 +172,7 @@ Settings in `config.json`, both optional:
 | `readyDelaySeconds` | `10` | How long after Done (or Handed off) Square is told: the time to Undo. |
 | `descriptions` | Lunch Special: `Served from 11am.`, Soup of the Day: `Starting at 11am.` | The words each daily item's description ends with (see "Descriptions in Square"). `{}` leaves the descriptions alone. |
 | `dailyPhotos` | `true` | Each morning Lunch Special's and Soup of the Day's picture becomes a photo of the day's dish (see "Photos in Square"). `false` leaves the pictures alone. |
+| `itemPhotos` | `true` | A photo saved by Photo post for any other item in Square becomes that item's picture, the newest one (see "Photos in Square"). `false` leaves them alone. |
 | `photoPlaceholders` | `placeholders/lunch-special.png`, `placeholders/soup-of-the-day.png` | The picture for each daily item on a day its dish has no photo. Leave an item out to show nothing of ours on those days. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
@@ -309,6 +310,9 @@ Each morning the board also puts a photo of the day's dish on **Lunch Special** 
 - **No photo yet** (or nothing planned): the item's placeholder, "Today's Lunch Special" over a covered plate, or "Soup of the Day" over a bowl (`photoPlaceholders`, files in `placeholders/`). They're the studio's `square-placeholder-special` and `-soup` pieces: change one there, export it, and copy the PNG over this one. A picture put on the item by hand in the Dashboard is never removed; it sits behind ours.
 - Each picture is uploaded to Square once, by its contents; the board remembers its image (`squareImages` in `specials-plan.json`), so a changed placeholder goes up again by itself.
 - **A new dish:** take it with Photo post and tick it as a special, with its title spelled as on the specials; the next time that dish is on, it shows.
+- **Moved to GitHub:** a photo taken off this PC with **Saved photos → Move all to GitHub** is still found, in the backup's copy (`data\offsite\photos\`).
+
+**The rest of the menu fills up the same way** (`itemPhotos`, client 2026-10-16). A Photo post made for any item in Square (step 2, "any item in Square") becomes that item's picture for online ordering and DoorDash within a minute of saving it, and so does a website photo with an `item` (`src/_data/photos.json`). With several photos of one item, the newest is used. Each photo goes up once: a picture changed afterwards in the Dashboard or in **Desserts** stays until the next Photo post of that item. Pictures already on the item stay behind it. An item name Square doesn't have (renamed since) is logged in the program window and skipped.
 
 ### The price
 

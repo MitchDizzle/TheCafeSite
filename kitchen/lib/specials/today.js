@@ -9,7 +9,7 @@ const { plan, savePlan, RETRY_MINUTES } = require("./plan");
 const { dailyItems, saveDaily } = require("./daily");
 const { applySides } = require("./sides");
 const { applyDescriptions } = require("./descriptions");
-const { applyPhotos } = require("./photos");
+const { applyPhotos, applyItemPhotos } = require("./photos");
 
 let applying = null;
 function applyToday() {
@@ -24,6 +24,7 @@ async function applyTodayOnce() {
   const sides = await applySides(today, day);
   const words = await applyDescriptions(today, day);
   const photos = await applyPhotos(today, day);
+  await applyItemPhotos();
   // What the front is told after saving today: the specials, or else the
   // sides, the descriptions, the photos.
   return [result, sides, words, photos].find((r) => r && r.error) || result;

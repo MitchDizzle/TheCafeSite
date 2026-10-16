@@ -57,6 +57,10 @@ const DEFAULTS = {
   // DoorDash) becomes a photo of the day's dish, found by its name among the
   // photos (see "Photos in Square" in the README). false leaves them alone.
   dailyPhotos: true,
+  // A photo Photo post saved for any other item in Square becomes that item's
+  // picture (the newest one), so the online menu fills up as dishes are
+  // photographed. false leaves them alone.
+  itemPhotos: true,
   // The picture on a day the dish has no photo yet (or nothing is planned),
   // per item, relative to this folder. The studio's square-placeholder pieces.
   photoPlaceholders: { "Lunch Special": "placeholders/lunch-special.png", "Soup of the Day": "placeholders/soup-of-the-day.png" },

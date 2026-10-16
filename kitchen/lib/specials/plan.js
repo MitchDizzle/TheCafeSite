@@ -33,6 +33,7 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // descApplied: the same, for the daily items' descriptions (applyDescriptions)
 // photoApplied: the same, for their pictures (applyPhotos)
 // squareImages: { "<photo path>#<content hash>": "<Square image id>" }, each picture uploaded once
+// itemPhotoApplied: { "<menu item, lower case>": "<photo path>" }, the photo last put on it (applyItemPhotos)
 // photoTurn: { "<dish>": { date, n } }, which of a dish's photos is next
 // swapSides: the sides any side can be swapped for, as the website last listed them
 // extraSides: { "YYYY-MM-DD": [...] }, sides added to the swap list that day only (the

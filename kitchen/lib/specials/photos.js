@@ -13,6 +13,13 @@
 // removed; it sits behind ours. Each picture is uploaded to Square once and
 // its image id kept (squareImages), by its contents, so a changed
 // placeholder goes up again.
+//
+// The rest of the menu fills up the same way (client 2026-10-16): a photo
+// Photo post saved for an item in Square (`item`, not a special) becomes that
+// item's picture, the newest one when there are several, once per photo
+// (itemPhotoApplied), so a picture changed in the Dashboard or in Desserts
+// afterwards stays until the next photo of that dish. `itemPhotos: false`
+// in config.json turns it off.
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
@@ -21,24 +28,34 @@ const { API, SQUARE_VERSION } = require("../square");
 const { catalog, loadCatalog, readItem, writeItem } = require("../catalog");
 const { nextMockId } = require("../mock");
 const { PHOTO_DIR } = require("../photo-post");
+const { REPO } = require("../offsite");
 const { plan, savePlan, RETRY_MINUTES } = require("./plan");
 
 const dishKey = (s) => String(s || "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
 
-function dishPhotos() {
+// Every photo kept, from the website and from Photo post, as
+// { title, item, special, date, path }, oldest first. One already on the
+// website is the same photo (the same `file`), so it counts once. One moved
+// off this PC (Saved photos -> Move all to GitHub, listed under `cleared`) is
+// read from the backup's copy in data\offsite\photos.
+function keptPhotos() {
   const byFile = new Map();
-  const read = (file) => { try { return JSON.parse(fs.readFileSync(file, "utf8")).photos || []; } catch { return []; } };
-  for (const p of read(path.join(DIR, "..", "src", "_data", "photos.json"))) {
+  const read = (file) => { try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch { return {}; } };
+  for (const p of read(path.join(DIR, "..", "src", "_data", "photos.json")).photos || []) {
     const where = p.file && path.join(DIR, "..", "src", ...String(p.file).split("/").filter(Boolean));
-    if (p.special && p.title && where && fs.existsSync(where)) byFile.set(p.file, { title: p.title, date: p.date || "", path: where });
+    if (p.title && where && fs.existsSync(where)) byFile.set(p.file, { title: p.title, item: p.item || null, special: !!p.special, date: p.date || "", path: where });
   }
-  for (const p of read(path.join(PHOTO_DIR, "photos.json"))) {
-    const where = p.saved && path.join(PHOTO_DIR, p.saved);
+  const mine = read(path.join(PHOTO_DIR, "photos.json"));
+  for (const p of [...(mine.photos || []), ...(mine.cleared || [])]) {
     const key = p.file || p.saved;
-    if (p.special && p.title && where && !byFile.has(key) && fs.existsSync(where)) byFile.set(key, { title: p.title, date: p.date || "", path: where });
+    if (!p.title || !p.saved || byFile.has(key)) continue;
+    const where = [path.join(PHOTO_DIR, path.basename(p.saved)), path.join(REPO, "photos", path.basename(p.saved))].find((f) => fs.existsSync(f));
+    if (where) byFile.set(key, { title: p.title, item: p.item || null, special: !!p.special, date: p.date || "", path: where });
   }
   return [...byFile.values()].sort((a, b) => a.date.localeCompare(b.date) || a.path.localeCompare(b.path));
 }
+
+const dishPhotos = () => keptPhotos().filter((p) => p.special);
 
 // Today's photo for each daily item: { "<item name>": path | null }. Moves a
 // dish's turn on the first time it's asked on a new day.
@@ -123,4 +140,59 @@ async function applyPhotos(today, day) {
   return plan.photoApplied[today];
 }
 
-module.exports = { applyPhotos };
+// Each menu item's newest photo: { "<item name, lower case>": { name, path } }.
+// The daily items are left to applyPhotos.
+function itemPhotos() {
+  const daily = new Set(cfg.dailyItems.map((n) => n.trim().toLowerCase()));
+  const out = {};
+  for (const p of keptPhotos()) {
+    const key = p.item && !p.special && p.item.trim().toLowerCase();
+    if (key && !daily.has(key)) out[key] = { name: p.item.trim(), path: p.path };
+  }
+  return out;
+}
+
+let itemsRunning = null;
+let itemsFailedAt = 0;
+function applyItemPhotos() {
+  if (!itemsRunning) itemsRunning = applyItemPhotosOnce().finally(() => { itemsRunning = null; });
+  return itemsRunning;
+}
+
+async function applyItemPhotosOnce() {
+  if (cfg.itemPhotos === false) return;
+  if (Date.now() - itemsFailedAt < RETRY_MINUTES * 6e4) return;
+  plan.itemPhotoApplied = plan.itemPhotoApplied || {};
+  const want = Object.entries(itemPhotos()).filter(([key, p]) => plan.itemPhotoApplied[key] !== p.path);
+  if (!want.length) return;
+  const done = [];
+  try {
+    await loadCatalog();
+    for (const [key, p] of want) {
+      const id = catalog.itemIds.get(key);
+      if (!id) { // not in Square (renamed or deleted): left, and tried again with its next photo
+        console.log(`Menu photos: no item called "${p.name}" in Square, so ${path.basename(p.path)} isn't on it.`);
+        plan.itemPhotoApplied[key] = p.path;
+        savePlan();
+        continue;
+      }
+      const imageId = await uploadImage(p.path, `${p.name}: ${path.basename(p.path, path.extname(p.path))}`);
+      const item = await readItem(id);
+      const d = item.item_data;
+      const ids = [imageId, ...(d.image_ids || []).filter((x) => x !== imageId)];
+      if (JSON.stringify(ids) !== JSON.stringify(d.image_ids || [])) {
+        d.image_ids = ids;
+        await writeItem(item);
+        done.push(`${p.name}: ${path.basename(p.path)}`);
+      }
+      plan.itemPhotoApplied[key] = p.path;
+      savePlan();
+    }
+  } catch (err) {
+    itemsFailedAt = Date.now();
+    console.error(`Menu photos: ${err.message}`);
+  }
+  if (done.length) console.log(`Menu photos put in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}.`);
+}
+
+module.exports = { applyPhotos, applyItemPhotos };
