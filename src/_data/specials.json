@@ -99,6 +99,51 @@
         "Mashed Potatoes & Brown Gravy",
         "Green Beans"
       ]
+    },
+    {
+      "date": "2026-10-19",
+      "soup": "Chicken Noodle",
+      "special": "Ham Steak",
+      "sides": [
+        "Sweet Potatoes",
+        "Peas",
+        "Carrots"
+      ]
+    },
+    {
+      "date": "2026-10-20",
+      "soup": "Beef Vegetable",
+      "special": "Chicken Bacon Avocado Wrap",
+      "sides": [
+        "Cheesy Potatoes"
+      ]
+    },
+    {
+      "date": "2026-10-21",
+      "soup": "Tomato",
+      "special": "Hot Beef Sandwich",
+      "sides": [
+        "Mashed Potatoes & Brown Gravy",
+        "Corn"
+      ]
+    },
+    {
+      "date": "2026-10-22",
+      "soup": "Corn Chowder",
+      "special": "Hawaiian Chicken",
+      "sides": [
+        "Wild Rice",
+        "Broccoli"
+      ]
+    },
+    {
+      "date": "2026-10-23",
+      "soup": "Cheesy Potato",
+      "special": "Cabbage Roll",
+      "sides": [
+        "Potatoes",
+        "Green Beans"
+      ]
     }
   ]
 }
