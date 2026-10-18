@@ -84,6 +84,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addFilter("latestWeek", require("./src/_lib/specials-caption.js").latestWeek);
   // "with your choice of side" / "with A and B": see specialSides there.
   eleventyConfig.addFilter("specialSides", require("./src/_lib/specials-caption.js").specialSides);
+  // The week with repeated plates (or soups) dropped, for the day-free board signs.
+  eleventyConfig.addFilter("distinctBy", require("./src/_lib/specials-caption.js").distinctBy);
 
   // Narrow a list to the items whose `key` equals `value`.
   //

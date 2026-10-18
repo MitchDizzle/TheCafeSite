@@ -80,4 +80,21 @@ function latestWeek(days) {
   return sorted.filter((d) => mondayOf(d.date) === monday);
 }
 
-module.exports = { weekRange, dayLines, soupLine, specialSides, latestWeek };
+// A week's days with repeats dropped, for the board signs, which carry no
+// day or date so a sheet can go up again whenever that plate (or soup)
+// comes back. `key` is "special" (the plate with its sides, so Meatloaf
+// with other sides is its own sheet) or "soup".
+function distinctBy(days, key) {
+  const seen = new Set();
+  return (days || []).filter((d) => {
+    if (!d[key]) return false;
+    const id = key === "special"
+      ? [d.special, specialSides(d, true)].join("|").toLowerCase()
+      : d[key].toLowerCase();
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+
+module.exports = { weekRange, dayLines, soupLine, specialSides, latestWeek, distinctBy };

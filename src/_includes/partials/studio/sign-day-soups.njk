@@ -1,0 +1,21 @@
+{#- One sign per soup of the week, for the board beside the day's plate
+    (sign-day-specials.njk). Shared by sign-day-soups.njk (colour) and
+    sign-day-soups-bw.njk (`bw: true`).
+
+    No day or date (client 2026-10-18), so a soup's sheet goes up again
+    whenever it comes back. Letter landscape, one soup per page, sized for
+    the same 6 to 14 feet as the plates; a soup repeated within the week is
+    one page. The price is the menu's Cup / Bowl (menu.json). -#}
+{%- set soups = specials.days | latestWeek | distinctBy("soup") %}
+{%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
+<div class="ds-stack">
+    {%- for d in soups %}
+    <div class="canvas sign dsoup{% if bw %} sign--bw{% endif %}">
+        <p class="p-display dsoup-label ink-accent">Soup of the Day</p>
+        <p class="p-display dsoup-name{% if d.soup.length > 16 %} dsoup-name--long{% endif %} ink-teal">{{ d.soup }}</p>
+        {%- if soupCat and soupCat.items %}
+        <p class="dsoup-price">{% for s in soupCat.items %}{% if not loop.first %} &middot; {% endif %}{{ s.name }} {{ s.price | money }}{% endfor %}</p>
+        {%- endif %}
+    </div>
+    {%- endfor %}
+</div>

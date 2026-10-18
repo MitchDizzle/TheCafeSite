@@ -426,8 +426,11 @@
     padding-bottom: 0.2in;
 }
 
+/* "Today's Special" rather than a weekday (client 2026-10-18: a sheet is
+   reused on any day), so it is set to fit the width on one line. */
 .ds-day {
-    font-size: 1.6in;
+    font-size: 1.2in;
+    white-space: nowrap;
     line-height: 1;
 }
 
@@ -540,7 +543,43 @@
     white-space: nowrap;
 }
 
+/* ── Soup of the day, one per page (sign-day-soups(-bw).njk) ──
+   Letter landscape, beside the plate's sheet on the board; same distance
+   rules, so the name is about an inch and nothing is under 0.45in. */
+.sign.dsoup {
+    padding: 0.55in 0.65in;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border: 0.08in solid var(--teal);
+}
+
+.dsoup-label {
+    font-size: 0.7in;
+    line-height: 1;
+    padding-bottom: 0.18in;
+    border-bottom: 0.06in solid var(--accent);
+}
+
+.dsoup-name {
+    font-size: 1.35in;
+    line-height: 1.05;
+    margin: 0.4in 0 0.35in;
+}
+
+/* Over 16 characters ("Baked Potato Soup" is 17) the name steps down so it
+   stays on two lines at most. */
+.dsoup-name--long {
+    font-size: 1.05in;
+}
+
+.dsoup-price {
+    font-size: 0.55in;
+    font-weight: 700;
+}
+
 @media print {
     .ds-stack { gap: 0; }
-    .ds:not(:last-child) { break-after: page; }
+    .ds:not(:last-child),
+    .dsoup:not(:last-child) { break-after: page; }
 }

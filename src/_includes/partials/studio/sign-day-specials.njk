@@ -1,32 +1,38 @@
-{#- One sign per day of the week's lunch specials, for the board on the
-    wall (client 2026-10-10: read from 6 to 14 feet). Shared by
+{#- One sign per lunch special of the week, for the board on the wall
+    (client 2026-10-10: read from 6 to 14 feet). Shared by
     sign-day-specials.njk (colour) and sign-day-specials-bw.njk (`bw: true`).
 
-    Each day is its own 11 × 17 portrait page, so the PDF prints the week
-    as a stack and any one day can be printed again on its own (print page
-    3 for Wednesday). The week is the newest one in specials.json, like the
-    weekly post and the counter sign.
+    NO DAY OR DATE (client 2026-10-18): a sheet says "Today's Special", so
+    it can be kept and put up again whenever that plate comes back, on any
+    day. For the same reason the soup is not on it (a plate comes back with
+    a different soup: Meatloaf had Baked Potato on 10/09, French Onion on
+    10/16); the soups are their own signs (sign-day-soups.njk), and the
+    swap list offers "a cup of the soup of the day" without naming it. A
+    day's extraSides are "just for today", so they stay off too. A plate
+    repeated within the week (same sides) is one page.
+
+    Each plate is its own 11 × 17 portrait page, so the PDF prints the week
+    as a stack and any one can be printed again on its own. The week is the
+    newest one in specials.json, like the weekly post and the counter sign.
 
     SIZED FOR DISTANCE. About an inch of letter height reads at ten feet,
-    so the plate is set at 1.5in (letters about an inch tall) and nothing
-    on the sheet is under 0.4in. The sides ("A, B", or "Choice of side") go
-    bare: "with" would only cost a line.
+    so the plate is set at 1.4in and nothing on the sheet is under 0.4in.
+    The sides ("A, B", or "Choice of side") go bare: "with" would only
+    cost a line.
 
     THE SIDES BOX lists the Deli Salads (menu.json), which a customer can
     pick on a choice-of-side day and swap in for the set sides on any
-    other (client 2026-10-10), so it says which of the two it is. The soup
-    is a separate item, so it has its own box at the foot, with its price. -#}
-{%- set week = specials.days | latestWeek %}
-{%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
+    other (client 2026-10-10), so it says which of the two it is. -#}
+{%- set plates = specials.days | latestWeek | distinctBy("special") %}
 {%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
 {%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
 <div class="ds-stack">
-    {%- for d in week %}
+    {%- for d in plates %}
     {%- set sides = d | specialSides(true) %}
     <div class="canvas sign ds{% if bw %} sign--bw{% endif %}">
         <header class="ds-top">
-            <p class="p-display ds-day ink-accent">{{ d.date | dayDate("weekday") }}</p>
-            <p class="ds-date ink-teal">{{ d.date | dayDate("monthDay") }} &middot; lunch special from 11am</p>
+            <p class="p-display ds-day ink-accent">Today&rsquo;s Special</p>
+            <p class="ds-date ink-teal">Lunch special from 11am</p>
         </header>
 
         <div class="ds-main">
@@ -45,29 +51,14 @@
         <section class="ds-swap">
             <p class="p-label ds-box-label ink-accent">{% if d.anySide %}Pick your side{% else %}Swap a side for any of these{% endif %}</p>
             <ul class="ds-swap-list">
-                {%- for c in d.extraSides or [] %}
-                <li>{{ c }}</li>
-                {%- endfor %}
                 {%- for c in deli.choices %}
                 <li>{{ c }}</li>
                 {%- endfor %}
-                {%- if specials.soupSide and d.soup %}
-                <li>Cup of {{ d.soup }}</li>
+                {%- if specials.soupSide %}
+                <li>Cup of the soup of the day</li>
                 {%- endif %}
             </ul>
         </section>
-        {%- endif %}
-
-        {%- if d.soup %}
-        <footer class="ds-soup">
-            <p class="p-label ds-box-label ink-accent">Soup of the day</p>
-            <div class="ds-soup-row">
-                <p class="p-display ds-soup-name ink-teal">{{ d.soup }}</p>
-                {%- if soupCat and soupCat.items %}
-                <p class="ds-soup-price">{% for s in soupCat.items %}{% if not loop.first %} &middot; {% endif %}{{ s.name }} {{ s.price | money }}{% endfor %}</p>
-                {%- endif %}
-            </div>
-        </footer>
         {%- endif %}
     </div>
     {%- endfor %}
