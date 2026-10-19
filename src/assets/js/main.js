@@ -171,10 +171,18 @@
             dateEl.setCustomValidity(day === 0 || day === 6 ? "We're open Monday to Friday. Please pick a weekday." : '');
         };
         dateEl.addEventListener('change', checkDay);
+        // The script wants a number it can call back: ten digits at least.
+        var phoneEl = form.querySelector('[name="phone"]');
+        var checkPhone = function () {
+            phoneEl.setCustomValidity(phoneEl.value.replace(/\D/g, '').length < 10
+                ? 'Please add a phone number with the area code.' : '');
+        };
+        phoneEl.addEventListener('input', checkPhone);
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             checkDay();
+            checkPhone();
             if (!form.reportValidity()) return;
 
             var button = form.querySelector('button[type="submit"]');
