@@ -66,3 +66,14 @@ test("reservations: booked from the front page, a request accepted, seated from 
   assert.ok(!rv.markSeated("web1"), "only a booked table can be seated");
   await assert.rejects(rv.actOn("nope", "accept"), /isn't in the book/);
 });
+
+test("reservations: a removed one stays in the file, so the website's copy can't come back as new", async () => {
+  rv.book.list.length = 0;
+  rv.book.list.push({ ...tableIn(60 * 24 * 2), id: "web2", status: "request", source: "web" });
+  await rv.actOn("web2", "decline", false);
+  await rv.actOn("web2", "remove", false);
+  rv.load();
+  assert.equal(rv.book.list.find((r) => r.id === "web2")?.status, "removed");
+  assert.equal(rv.screenView().requests, 0);
+  assert.ok(!rv.manageView().list.some((r) => r.id === "web2"), "hidden from Manage");
+});

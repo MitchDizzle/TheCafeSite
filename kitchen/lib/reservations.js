@@ -59,9 +59,11 @@ function load() {
     if (MOCK) book.list = mockList();
   }
 }
+// Removed ones are kept (and hidden), like everything else, until they're
+// KEEP_DAYS old: an id the PC still knows is never taken in again as new.
 function save() {
   const oldest = localDate(new Date(Date.now() - KEEP_DAYS * 864e5));
-  book.list = book.list.filter((r) => r.date >= oldest && !(r.status === "removed" && !r.sync));
+  book.list = book.list.filter((r) => r.date >= oldest);
   fs.mkdirSync(DATA, { recursive: true });
   fs.writeFileSync(FILE, JSON.stringify({ list: book.list }, null, 2));
 }
@@ -144,7 +146,9 @@ async function pullRequests() {
     const known = new Set(book.list.map((r) => r.id));
     const added = [];
     for (const q of requests) {
-      if (!q.id || known.has(q.id)) continue;
+      // Already in the book (answered, removed, or taken in before), or
+      // answered already in the sheet: not new.
+      if (!q.id || known.has(q.id) || (q.status && q.status !== "request")) continue;
       let r;
       try { r = clean(q); } catch { continue; }
       book.list.push({ id: q.id, status: "request", source: "web", ...r, received: q.received || new Date().toISOString(), updated: new Date().toISOString() });
@@ -170,7 +174,7 @@ async function pushOne(r) {
       action: "save",
       op: r.sync.op,
       email: r.sync.email || "",
-      reservation: { id: r.id, status: r.status, date: r.date, time: r.time, party: r.party, name: r.name, phone: r.phone, email: r.email, notes: r.notes, source: r.source },
+      reservation: { id: r.id, received: r.received, status: r.status, date: r.date, time: r.time, party: r.party, name: r.name, phone: r.phone, email: r.email, notes: r.notes, source: r.source },
     });
     if (emailed) (r.emailed ||= {})[r.sync.email] = new Date().toISOString();
     delete r.sync;

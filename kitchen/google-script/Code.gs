@@ -217,9 +217,11 @@ function pcAction_(b) {
     const sh = sheet_();
     const rows = rows_(sh);
     // The website's requests the PC hasn't saved yet. Sent again until
-    // the PC acks them, so one lost on the way comes next time.
+    // the PC acks them, so one lost on the way comes next time. Only rows
+    // still waiting for an answer: one the PC has already answered never
+    // goes back to it as new.
     if (b.action === "pull") {
-      return { ok: true, requests: rows.filter((r) => r.source === "web" && !r.pulled).map((r) => pick_(r)) };
+      return { ok: true, requests: rows.filter((r) => r.source === "web" && r.status === "request" && !r.pulled).map((r) => pick_(r)) };
     }
     if (b.action === "ack") {
       const ids = new Set(b.ids || []);
@@ -243,7 +245,9 @@ function pcAction_(b) {
       if (before) return JSON.parse(before);
       const now = stamp_();
       let r = rows.find((x) => x.id === want.id);
-      if (!r) r = { id: want.id, source: want.source || "front", received: now, row: sh.getLastRow() + 1 };
+      // A reservation the sheet doesn't have yet (typed in on the front page,
+      // or a request in an older sheet): a new row, which the PC already has.
+      if (!r) r = { id: want.id, source: want.source || "front", received: want.received || now, pulled: now, row: sh.getLastRow() + 1 };
       const was = { date: r.date, time: r.time };
       for (const c of ["status", "date", "time", "party", "name", "phone", "email", "notes"]) {
         if (want[c] !== undefined) r[c] = String(want[c]);
@@ -350,7 +354,7 @@ function rows_(sh) {
   });
 }
 
-const pick_ = (r) => ({ id: r.id, date: r.date, time: r.time, party: Number(r.party), name: r.name, phone: r.phone, email: r.email, notes: r.notes, received: r.received });
+const pick_ = (r) => ({ id: r.id, status: r.status, date: r.date, time: r.time, party: Number(r.party), name: r.name, phone: r.phone, email: r.email, notes: r.notes, received: r.received });
 const stamp_ = () => new Date().toISOString();
 const esc_ = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
