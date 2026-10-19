@@ -3,13 +3,13 @@
     sign-day-specials.njk (colour) and sign-day-specials-bw.njk (`bw: true`).
 
     NO DAY OR DATE (client 2026-10-18): a sheet says "Today's Special", so
-    it can be kept and put up again whenever that plate comes back, on any
-    day. For the same reason the soup is not on it (a plate comes back with
-    a different soup: Meatloaf had Baked Potato on 10/09, French Onion on
-    10/16); the soups are their own signs (sign-day-soups.njk), and the
-    swap list offers "a cup of the soup of the day" without naming it. A
-    day's extraSides are "just for today", so they stay off too. A plate
-    repeated within the week (same sides) is one page.
+    it can be kept and put up again whenever that plate comes back with the
+    same soup. The soup is on it, at the foot (client 2026-10-18: a soup
+    sign of its own was tried the same day and archived while the board's
+    layout is worked out), but the swap list says "the soup of the day"
+    without naming it. A day's extraSides are "just for today", so they
+    stay off. A plate repeated within the week with the same sides and soup
+    is one page.
 
     Each plate is its own 11 × 17 portrait page, so the PDF prints the week
     as a stack and any one can be printed again on its own. The week is the
@@ -24,6 +24,7 @@
     pick on a choice-of-side day and swap in for the set sides on any
     other (client 2026-10-10), so it says which of the two it is. -#}
 {%- set plates = specials.days | latestWeek | distinctBy("special") %}
+{%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
 {%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
 {%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
 <div class="ds-stack">
@@ -59,6 +60,18 @@
                 {%- endif %}
             </ul>
         </section>
+        {%- endif %}
+
+        {%- if d.soup %}
+        <footer class="ds-soup">
+            <p class="p-label ds-box-label ink-accent">Soup of the day</p>
+            <div class="ds-soup-row">
+                <p class="p-display ds-soup-name ink-teal">{{ d.soup }}</p>
+                {%- if soupCat and soupCat.items %}
+                <p class="ds-soup-price">{% for s in soupCat.items %}{% if not loop.first %} &middot; {% endif %}{{ s.name }} {{ s.price | money }}{% endfor %}</p>
+                {%- endif %}
+            </div>
+        </footer>
         {%- endif %}
     </div>
     {%- endfor %}

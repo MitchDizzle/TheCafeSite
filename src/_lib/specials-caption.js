@@ -81,15 +81,16 @@ function latestWeek(days) {
 }
 
 // A week's days with repeats dropped, for the board signs, which carry no
-// day or date so a sheet can go up again whenever that plate (or soup)
-// comes back. `key` is "special" (the plate with its sides, so Meatloaf
-// with other sides is its own sheet) or "soup".
+// day or date so a sheet can go up again whenever that plate comes back.
+// `key` is "special" (the plate with its sides and its soup, as the daily
+// sheet shows them, so Meatloaf with another soup is its own sheet) or
+// "soup".
 function distinctBy(days, key) {
   const seen = new Set();
   return (days || []).filter((d) => {
     if (!d[key]) return false;
     const id = key === "special"
-      ? [d.special, specialSides(d, true)].join("|").toLowerCase()
+      ? [d.special, specialSides(d, true), d.soup || ""].join("|").toLowerCase()
       : d[key].toLowerCase();
     if (seen.has(id)) return false;
     seen.add(id);

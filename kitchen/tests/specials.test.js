@@ -6,11 +6,11 @@ const { test, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
 const board = require("./board.js");
 
-const { sideSlots, swapsFor, specialSideOptions, dayDescription, plan } = board;
+const { sideSlots, swapsFor, specialSideOptions, leaveOffOptions, dayDescription, plan } = board;
 
 const day = (special, extra = {}) => ({ from: "site", items: { "Lunch Special": { today: special, prices: {} } }, ...extra });
 
-beforeEach(() => { plan.includesDrink = false; plan.soupSide = false; plan.extraSides = {}; plan.swapSides = ["Tossed Salad", "Cottage Cheese"]; });
+beforeEach(() => { plan.includesDrink = false; plan.soupSide = false; plan.extraSides = {}; plan.leaveOff = {}; plan.swapSides = ["Tossed Salad", "Cottage Cheese"]; });
 
 test("the side lists: a set side is picked already", () => {
   assert.deepEqual(sideSlots(day("Meatloaf", { sides: ["Mashed Potatoes & White Gravy", "Corn"] })), [
@@ -53,6 +53,12 @@ test("the swap list: the day's extra sides, the deli salads, then a cup of the s
   plan.extraSides = { "2026-10-13": ["Oven Browned Potatoes"] };
   assert.deepEqual(swapsFor("2026-10-13", d), ["Oven Browned Potatoes", "Tossed Salad", "Cottage Cheese", "Soup of the Day"]);
   assert.deepEqual(swapsFor("2026-10-14", day("Meatloaf")), ["Tossed Salad", "Cottage Cheese"], "extra sides are that day's only; no soup planned, no soup side");
+});
+
+test("Leave Off: that day's words as No options, kept if already written No", () => {
+  plan.leaveOff = { "2026-10-20": ["Bacon", "No Onions"] };
+  assert.deepEqual(leaveOffOptions("2026-10-20"), ["No Bacon", "No Onions"]);
+  assert.deepEqual(leaveOffOptions("2026-10-21"), [], "that day's only");
 });
 
 test("Lunch Special's description: the plate, its sides, the drink, the swap", () => {

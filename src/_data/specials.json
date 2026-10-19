@@ -11,6 +11,7 @@
   "_note_soup_side": "`soupSide: true` here, at the top of the file, means a cup of the day's soup can be picked as a side on EVERY lunch special, at no charge, like the Deli Salads (client 2026-10-13). The kitchen PC adds 'Soup of the Day' to the end of Lunch Special's side lists in Square, and the weekly post, its caption and the day sign list it with the swap sides. The soup on its own is still its own item.",
   "soupSide": true,
   "_note_extra_sides": "`extraSides` on a day adds sides to that day's swap list only, ahead of the Deli Salads ('just for today': Oven Browned Potatoes on 2026-10-13, client). Nothing else shows them; they only add choices in Square. Unlike the rest of a day, the kitchen PC takes them even for today once it's in Square, so adding one this morning reaches Square within half an hour (or at Check for updates).",
+  "_note_leave_off": "`leaveOff` on a day lists what a customer can have left off that plate, a word each: [\"Bacon\"] on the Chicken Bacon Avocado Wrap (client 2026-10-18). The kitchen PC puts them on Lunch Special in Square that morning as a 'Leave Off' list, pick any, $0, worded 'No Bacon', so the ticket says so; on a day without one the list is off. Like extraSides it is read even for today once it's in Square. Nothing else shows it: the post and the signs don't. Plan one with each week's specials whenever a plate has something people often ask to leave off. kitchen/README.md, 'Leave Off'.",
   "_note_price": "`price` here, at the top of the file, is what EVERY lunch special costs unless its day sets its own `price` (client 2026-10-12: $10 unless otherwise described). The kitchen PC puts it into Square with the day's plate each morning, so this file is now where the price is set: change it here, not on the till. The weekly Facebook post shows it once at the top, and a day's own price beside that plate. The soup's Cup / Bowl prices stay in menu.json.",
   "price": 10,
   "days": [
@@ -116,6 +117,9 @@
       "special": "Chicken Bacon Avocado Wrap",
       "sides": [
         "Cheesy Potatoes"
+      ],
+      "leaveOff": [
+        "Bacon"
       ]
     },
     {

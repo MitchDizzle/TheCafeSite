@@ -39,10 +39,13 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // extraSides: { "YYYY-MM-DD": [...] }, sides added to the swap list that day only (the
 //            website's day `extraSides`). Kept apart from `days`, so the website can add
 //            them to today, or to a day set on the front page, without touching its names.
+// leaveOff: { "YYYY-MM-DD": [...] }, what can be left off that day's plate ("Bacon": a "No
+//            Bacon" option on Lunch Special), the website's day `leaveOff`. Kept apart
+//            from `days` like extraSides, and read the same way, even for today.
 // soupSide: a cup of the day's soup can be picked as a side, as the website last said
 // includesDrink: every lunch special includes a drink, as the website last said
 // site:    the last read of the website, for the front to show
-const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, swapSides: [], extraSides: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
+const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, swapSides: [], extraSides: {}, leaveOff: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
 try {
   Object.assign(plan, JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")));
 } catch {}
@@ -50,7 +53,7 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.notes, plan.extraSides, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
 }
 
@@ -134,6 +137,19 @@ async function pullSite() {
       if (JSON.stringify(plan.extraSides[date]) === JSON.stringify(list)) continue;
       plan.extraSides[date] = list;
       console.log(`Extra sides for ${date} from the website: ${list.join(", ")}.`);
+    }
+    // What can be left off a day's plate, read the same way: it only adds
+    // "No ..." options in Square and never changes the day's names.
+    const offs = {};
+    for (const d of listed) {
+      const list = Array.isArray(d.leaveOff) ? [...new Set(d.leaveOff.map(cleanText).filter(Boolean))].slice(0, 8) : [];
+      if (d.date >= today && list.length) offs[d.date] = list;
+    }
+    for (const date of Object.keys(plan.leaveOff)) if (date >= today && !offs[date]) delete plan.leaveOff[date];
+    for (const [date, list] of Object.entries(offs)) {
+      if (JSON.stringify(plan.leaveOff[date]) === JSON.stringify(list)) continue;
+      plan.leaveOff[date] = list;
+      console.log(`Can be left off ${date}'s plate, from the website: ${list.join(", ")}.`);
     }
     if (typeof json.soupSide === "boolean" && json.soupSide !== plan.soupSide) {
       plan.soupSide = json.soupSide;

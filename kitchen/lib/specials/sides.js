@@ -52,7 +52,7 @@ function swapsFor(date, day) {
 // One pick-one list's options, $0 each, in this order: made the first time
 // it's needed (list null), written only when they changed. Returns Square's
 // copy, with real ids.
-async function writeOptions(list, name, key, words, where) {
+async function writeOptions(list, name, key, words, where, selection = "SINGLE") {
   const zero = { amount: 0, currency: "USD" };
   const optionsOf = (d) => JSON.stringify([d.selection_type, (d.modifiers || []).map((m) => [m.id, m.modifier_data.name, m.modifier_data.ordinal, m.modifier_data.price_money])]);
   const wanted = [];
@@ -66,7 +66,7 @@ async function writeOptions(list, name, key, words, where) {
   const removed = (d.modifiers || [])
     .filter((m) => !wanted.some((w) => w.toLowerCase() === String(m.modifier_data.name).trim().toLowerCase()))
     .map((m) => m.id);
-  d.selection_type = "SINGLE";
+  d.selection_type = selection;
   d.modifiers = wanted.map((w, ordinal) => {
     const m = have.get(w.toLowerCase());
     if (m) {
@@ -176,6 +176,46 @@ async function saveSpecialSide(options) {
   return options.length ? `${cfg.specialSideItem}: ${options.join(", ")}` : `${cfg.specialSideItem}: off`;
 }
 
+// What can be left off today's plate, as Square's options: "Bacon" is
+// "No Bacon" (one already written "No ..." stays as it is).
+function leaveOffOptions(date) {
+  return (plan.leaveOff[date] || []).map((w) => (/^no\s/i.test(w) ? w : `No ${w}`));
+}
+
+// options: from leaveOffOptions. One list on cfg.sideItem (cfg.leaveOffList),
+// pick any, optional, $0, after the side lists and the dressing; off on a day
+// with nothing to leave off. Returns words for the log, or null when there's
+// nothing to do.
+async function saveLeaveOff(options) {
+  const name = cfg.leaveOffList;
+  let list = (await modifierListsByName()).get(name.trim().toLowerCase()) || null;
+  if (!list && !options.length) return null;
+  await loadCatalog();
+  const itemId = catalog.itemIds.get(cfg.sideItem.trim().toLowerCase());
+  if (!itemId) return null;
+  const item = await readObject(itemId);
+  if (options.length) {
+    const where = { present_at_all_locations: item.present_at_all_locations, present_at_location_ids: item.present_at_location_ids };
+    list = await writeOptions(list, name, "leave-off", options, where, "MULTIPLE");
+  }
+  const fresh = await readObject(itemId);
+  const infos = (fresh.item_data.modifier_list_info ||= []);
+  const before = JSON.stringify(infos);
+  let info = infos.find((x) => x.modifier_list_id === list.id);
+  if (!info) {
+    if (!options.length) return null;
+    info = { modifier_list_id: list.id };
+    infos.push(info);
+  }
+  info.enabled = options.length > 0;
+  info.min_selected_modifiers = 0;
+  delete info.max_selected_modifiers;
+  info.modifier_overrides = [];
+  infos.forEach((x, ordinal) => { x.ordinal = ordinal; });
+  if (JSON.stringify(infos) !== before) await upsertObject(fresh);
+  return options.length ? `${name}: ${options.join(", ")}` : `${name}: off`;
+}
+
 // Put today's sides into Square, the way applySpecials does the names:
 // once, retried after a failure, redone when the day's sides or the swap
 // sides change. A board that has never set sides leaves Square alone on a
@@ -185,16 +225,18 @@ async function applySides(today, day) {
   const slots = sideSlots(day);
   const swaps = swapsFor(today, day);
   const special = cfg.specialSideItem ? specialSideOptions(day) : [];
+  const offs = cfg.leaveOffList ? leaveOffOptions(today) : [];
   // `v`: bumped when the way the lists are written changes, so today's are
   // rewritten after an update (2: required, 2026-10-13; 3: the Special Side
-  // too, 2026-10-15).
-  const sig = JSON.stringify({ v: 3, slots, swaps, special });
+  // too, 2026-10-15; 4: Leave Off, 2026-10-18).
+  const sig = JSON.stringify({ v: 4, slots, swaps, special, offs });
   const last = plan.sidesApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
-  if (!slots.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;
+  if (!slots.length && !offs.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;
   try {
     const done = await saveSides(slots, swaps);
-    const side = cfg.specialSideItem ? await saveSpecialSide(special) : null;
+    const side = [cfg.specialSideItem ? await saveSpecialSide(special) : null,
+      cfg.leaveOffList ? await saveLeaveOff(offs) : null].filter(Boolean).join("; ");
     plan.sidesApplied[today] = { sig, at: new Date().toISOString() };
     console.log(done.length
       ? `Today's sides put on ${cfg.sideItem} in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}${side ? `; ${side}` : ""}.`
@@ -207,4 +249,4 @@ async function applySides(today, day) {
   return plan.sidesApplied[today];
 }
 
-module.exports = { sideSlots, swapsFor, specialSideOptions, applySides };
+module.exports = { sideSlots, swapsFor, specialSideOptions, leaveOffOptions, applySides };

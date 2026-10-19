@@ -48,6 +48,11 @@ const DEFAULTS = {
   // "" leaves it alone.
   specialSideItem: "Special Side",
   specialSideList: "Today's Side",
+  // The list on sideItem for what can be left off that day's plate ("No
+  // Bacon" on a Chicken Bacon Avocado Wrap day): each morning it holds the
+  // day's `leaveOff` from the website, pick any, $0, and is off on a day
+  // without one. "" leaves it alone.
+  leaveOffList: "Leave Off",
   // The daily items' descriptions, which online ordering and DoorDash show
   // under the name: each morning the board writes the day's plate or soup in
   // front of these words ("Lasagna with ... Served from 11am."), and puts
