@@ -133,11 +133,17 @@ function thanksPage_(r) {
 
 function formRequest_(p) {
   // The hidden field only a bot fills in: told it worked, nothing kept.
-  if (p.website) return { ok: true };
+  // (It was "website" until 2026-10-19, which browsers autofilled.) Every
+  // way out says why in the log: Executions -> the run -> its log lines.
+  if (p.hp_x7) {
+    console.log(`Not kept: the hidden spam-trap field was filled ("${String(p.hp_x7).slice(0, 40)}"). Name: ${String(p.name || "").slice(0, 40)}`);
+    return { ok: true };
+  }
   let r;
   try {
     r = clean_(p);
   } catch (err) {
+    console.log(`Refused: ${err.message} (name "${String(p.name || "").slice(0, 40)}", date ${p.date}, time ${p.time}, party ${p.party}, phone "${String(p.phone || "").slice(0, 30)}", email "${String(p.email || "").slice(0, 60)}")`);
     return { ok: false, message: err.message };
   }
   const cache = CacheService.getScriptCache();
@@ -156,6 +162,7 @@ function formRequest_(p) {
     r.received = now;
     r.updated = now;
     sheet_().appendRow(COLS.map((c) => r[c] || ""));
+    console.log(`Saved request ${r.id}: ${r.name}, ${r.party} on ${r.date} at ${r.time}.`);
   } finally {
     lock.releaseLock();
   }

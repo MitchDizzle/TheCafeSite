@@ -36,8 +36,10 @@ pageCss: "/assets/css/reserve.css"
                       data-max-ahead="{{ site.reservations.maxAheadDays }}"
                       data-success="Thank you! We got your request. We'll call or email to confirm your table.">
 
-                    <!-- honeypot: people never see or fill this -->
-                    <input type="text" name="website" tabindex="-1" autocomplete="off"
+                    <!-- honeypot: people never see or fill this. Not called "website":
+                         browsers and password managers autofill a field by that name,
+                         and a filled trap drops the request without a word (2026-10-19). -->
+                    <input type="text" name="hp_x7" tabindex="-1" autocomplete="off"
                            style="position:absolute; left:-9999px;" aria-hidden="true">
 
                     <div class="form-grid">

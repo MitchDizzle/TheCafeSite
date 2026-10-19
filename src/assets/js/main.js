@@ -178,11 +178,20 @@
                 ? 'Please add a phone number with the area code.' : '');
         };
         phoneEl.addEventListener('input', checkPhone);
+        // The browser takes "jane@example" as an email; the script doesn't.
+        var emailEl = form.querySelector('[name="email"]');
+        var checkEmail = function () {
+            var v = emailEl.value.trim();
+            emailEl.setCustomValidity(v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+                ? 'Please check your email address, or leave it empty.' : '');
+        };
+        emailEl.addEventListener('input', checkEmail);
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             checkDay();
             checkPhone();
+            checkEmail();
             if (!form.reportValidity()) return;
 
             var button = form.querySelector('button[type="submit"]');
