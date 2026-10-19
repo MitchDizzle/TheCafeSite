@@ -127,9 +127,9 @@ The same orders for the counter, on any laptop, tablet or phone on the cafe wifi
 - **An online or DoorDash order of only drinks or chips** goes on the kitchen board like any other order (those items on the ticket), and shows as Cooking here until the kitchen presses Done. A counter sale of only those doesn't show anywhere, because it's handed over as it's rung up.
 - **Handed off** clears an order from the front page only; it never touches the kitchen board. **Undo** in the top bar lists today's hand-offs; click one to bring it back.
 - **Ready orders clear themselves** after 10 minutes if nobody presses Handed off (`autoHandoffMinutes`; the Ready heading says so). They go on Undo, marked "cleared by itself", and one brought back stays until it's handed off by hand. Two kinds never clear themselves: a **not paid** order, and an **online or DoorDash order** (its Handed off tells Square it was picked up; with `squareStatus` off, only one not yet marked ready in Square).
-- **Today**, under the orders: how many orders so far, breakfast vs lunch (before or after 11am, by when it was rung up or due), counter vs online, average and longest time in the kitchen (counter orders, rung up to Done; if a ticket is undone and Done again, the time it sat cleared doesn't count), and the most ordered items. Canceled orders and unpaid open checks aren't counted.
+- **Today**, under the orders: how many orders so far, breakfast vs lunch (before or after 11am, by when it was rung up or due), counter vs online, average and longest time in the kitchen (counter orders, rung up to Done; if a ticket is undone and Done again, the time it sat cleared doesn't count), and the most ordered items. Canceled orders and unpaid open checks aren't counted. Sales and comparisons with other days are on the owner's phone page, `/today` (below).
 
-Only the front page, its Handed off and Undo, and the PIN-protected Manage actions answer other devices. The kitchen board, `/check`, Done, the power menu and updates answer the kitchen PC alone.
+Only the front page, its Handed off and Undo, the PIN-protected Manage actions and the owner's phone page (`/today`) answer other devices. The kitchen board, `/check`, Done, the power menu and updates answer the kitchen PC alone.
 
 ### On a phone, like an app
 
@@ -138,7 +138,7 @@ The front page works on a phone on the cafe wifi: the orders stack in one column
 - **Put it on the home screen.** iPhone: open the front page in Safari, tap Share, then **Add to Home Screen**. Android: open it in Chrome, tap ⋮, then **Add to Home screen**. The icon is a cream C on teal, named "Café Front". On an iPhone it opens full screen, with no address bar. Android may open it in an ordinary Chrome tab, because the kitchen PC isn't on https; it works the same.
 - **If the phone can't find the PC by name** (`http://kitchen-pc:8090/front`), try the name with `.local` on the end (`http://kitchen-pc.local:8090/front`). Phones often don't know Windows names without it.
 - **Remember on this device**, under the PIN, keeps the PIN on that phone, so Manage opens straight to its menu. Use it on your own phone only. **Forget the PIN here** at the foot of the Manage menu removes it, and a phone forgets it by itself if the PIN is changed in `config.json`.
-- **Only on the cafe wifi.** The kitchen PC isn't on the internet, on purpose, so the page doesn't open from home or on mobile data.
+- **Only on the cafe wifi**, unless the phone has Tailscale (see "Today, on the owner's phone"). The kitchen PC isn't open to the internet, on purpose, so without it the page doesn't open from home or on mobile data.
 
 ### A fixed address for the front page (for the iPad's bookmark)
 
@@ -176,7 +176,37 @@ Settings in `config.json`, both optional:
 | `photoPlaceholders` | `placeholders/lunch-special.png`, `placeholders/soup-of-the-day.png` | The picture for each daily item on a day its dish has no photo. Leave an item out to show nothing of ours on those days. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
-| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), delete test shots or move the photos to GitHub in **Saved photos** (see Photo post), **Back up now** (the backup below, on demand; the board and orders carry on while it runs), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu (Back returns to it; closing the panel forgets the PIN, unless **Remember on this device** was ticked). With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), delete test shots or move the photos to GitHub in **Saved photos** (see Photo post), **Back up now** (the backup below, on demand; the board and orders carry on while it runs), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update; it restarts in about 10 seconds if there's anything new) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below), or open **Today on the phone** (see "Today, on the owner's phone"). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+
+## Today, on the owner's phone (`/today`)
+
+How the day is going, for the owner's phone, at the shop or away from it: `http://<kitchen PC name>:8090/today`, or **Manage → Today on the phone** on the front page. Read-only: nothing on it presses Done or Handed off.
+
+- **At the top, behind the PIN** (the Manage PIN; sales are the owner's business, not the counter's): sales so far with the order count and average ticket, and how that compares with **last week's same day by this time** ("▲ $45 (12%) ahead of last Mon by now"). Pickups already booked for later today are listed apart, so a morning is compared with a morning.
+- **The day's split:** breakfast / lunch, counter / online, to go / for here, and time in the kitchen.
+- **Compared with:** today, last week's same day and a usual one (the average of up to four of them) up to this time, then those days' whole-day totals, then this week so far against last week's to the same day and time. A day the board never ran is missing from the history, so it isn't compared; the first weeks after this update show less.
+- **Busiest hours:** orders per hour today, last week's same day beside each.
+- **Most ordered today** (top ten), then **on the board now**: every open order as the front page has it, with how long it's been cooking or when it's due. It checks every 5 seconds while the page is open, the numbers every 30, and nothing while the phone is locked.
+- **The numbers are the board's own count**, the same as Reports: each order's total in Square, tax included, once it's paid (online orders when they're placed). Canceled, test and demo orders aren't in it. Square's Dashboard has the official sales, and it's the place to look when the kitchen PC is off.
+- **The PIN** is asked once; **Remember on this phone** (ticked) keeps it, shared with the front page's Manage on the same phone. A changed PIN is forgotten by itself and asked again, never tried over and over (five wrong PINs would lock Manage for 10 minutes).
+- **On the home screen** it's its own icon, "Café Today" (Share → Add to Home Screen, as for the front page).
+
+### Away from the shop: Tailscale (one time)
+
+The kitchen PC stays closed to the internet. **Tailscale** (free for personal use) joins the owner's phone and the kitchen PC in a private network of their own, so the phone reaches the PC as if it were on the cafe wifi, from anywhere, and nothing else can. No router settings, no port opened, no token or sales figures copied anywhere: the numbers never leave the PC except to the phone asking for them. It also brings the front page and Manage (Specials, Photo post, Reports) to the phone away from the shop.
+
+1. **Make a Tailscale account** at tailscale.com (Personal, free). Sign in with the owner's own Google, Microsoft or Apple account.
+2. **On the kitchen PC:** install Tailscale for Windows from tailscale.com/download, sign in with that account. In the Tailscale icon by the clock, turn on **Run unattended** (Preferences), so it connects after a restart without anyone at the PC.
+3. **Stop its sign-in running out:** on login.tailscale.com, **Machines** → the kitchen PC → ⋯ → **Disable key expiry**. Otherwise it signs out after 180 days and someone has to sign it in again at the PC.
+4. **Let the phone in through Windows Firewall.** In PowerShell **as administrator** (only Tailscale's own addresses, on any network profile):
+   ```powershell
+   New-NetFirewallRule -DisplayName "Kitchen board over Tailscale" -Direction Inbound -Program (Get-Command node).Source -Protocol TCP -LocalPort 8090 -RemoteAddress 100.64.0.0/10 -Action Allow
+   ```
+5. **On the phone:** install the Tailscale app, sign in with the same account, and switch it on. (iPhone: Settings in the app → **VPN On Demand**, so it connects by itself.)
+6. **Open `http://<kitchen PC name>:8090/today`**, using the PC's name as the Tailscale app lists it under Machines (or its `100.x.x.x` address there), and add it to the home screen. With `frontKey` set, add `?key=<the key>`.
+
+- **Only devices signed in to that Tailscale account** reach it. Never turn on **Funnel** or share the kitchen PC from the Tailscale admin page: either would open it to other people. A lost phone: remove it under Machines.
+- **The kitchen PC must be on** and the board running. After closing (or if the page says it can't reach the kitchen PC), Square's own Dashboard app has the sales.
 
 ## When an order doesn't show up
 
@@ -197,7 +227,7 @@ set KITCHEN_MOCK=1
 start-kitchen.bat
 ```
 
-This shows fake orders under a purple TEST MODE banner (the demo's purple: practice, not a problem) and adds a new one every 45 seconds, so you can hear the chime. Bumps in test mode go to `state-mock.json` and never mix with real ones.
+This shows fake orders under a purple TEST MODE banner (the demo's purple: practice, not a problem) and adds a new one every 45 seconds, so you can hear the chime. Test mode also makes up four weeks of history before today (in `stats-history-mock.json` only), so `/today` and Reports have something to compare with; they need `updatePin` in `config.json` (or a test config: `set KITCHEN_CONFIG=<a file with "updatePin">`). Bumps in test mode go to `state-mock.json` and never mix with real ones.
 
 To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` before `start-kitchen.bat`, or just tap the speaker icon. A muted speaker shows as a filled cream button, so a silent board can't go unnoticed. To silence the kitchen PC for good, add `"sound": false` to `config.json`, but the chime is how a new order gets noticed, so leave it on there.
 
@@ -214,6 +244,7 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `tests\` | The tests (see "Tests"). |
 | `board.html` | The kitchen screen. |
 | `front.html` | The front page for the counter (`/front`). |
+| `today.html` | The owner's phone page (`/today`): the day's numbers and the open orders. |
 | `front\` | The front page's Manage jobs, one file each (Specials, Photo post, Saved photos, Reports, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
 | `kitchen.css` | The colours and base styles both screens share. |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |

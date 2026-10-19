@@ -665,6 +665,7 @@
     else if (to === "reset") openReset();
     else if (to === "update") runUpdate();
     else if (to === "backup") runBackup();
+    else if (to === "today") location.href = api("/today");
     else if (to === "do-reset") runReset();
     // The jobs in front/*.js, and their own buttons (Photo post's, Reports' CSVs).
     else if (Front.tools[to]) Front.tools[to]();
@@ -719,6 +720,7 @@
         ${row("desserts", "Desserts", "Flavors on or off, and the photo online ordering shows.")}
         ${row("saved", "Saved photos", "The photos Photo post kept on the kitchen PC. Delete test shots, or move them all to GitHub.")}
         ${row("report", "Reports", "Orders, sales, kitchen times and items for any range of days.")}
+        ${row("today", "Today on the phone", "Sales so far against last week, busiest hours, what's selling, and the open orders. Add it to your home screen.")}
         ${row("skip", "Leave off kitchen tickets", "Items and categories that go on the front's list instead.")}
         ${row("backup", "Back up now", "Copy the orders, specials plan and photos to the backup now. Sales carry on.")}
         ${row("update", "Check for updates", "Install a new version of the board, if there is one.")}
