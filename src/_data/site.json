@@ -56,7 +56,7 @@
   "web3forms": { "catering": "07aa526a-9ef8-4833-b6c3-eb737ed28d12" },
   "_comment_reservations": "Table requests from /reserve go to a Google Apps Script on the cafe's Google account (kitchen/google-script/Code.gs, set up as in kitchen/README.md, 'Reservations'), which keeps them in a Google Sheet, emails the cafe and hands them to the kitchen PC. formUrl is that script's web app address (public by design, like a form endpoint; the PC's key is never here). Empty means /reserve shows the phone number instead of the form. holdMinutes and the seating times are said on the page and must match Code.gs (HOLD_MINUTES, FIRST_TIME, LAST_TIME, MAX_AHEAD_DAYS).",
   "reservations": {
-    "formUrl": "",
+    "formUrl": "https://script.google.com/macros/s/AKfycbzNFq_Cc-bCXLr-CqonCJFws1AwnQHt20CsYrlYdXmQ_7YvO1ParhpzLA7Mg5BUrwFJag/exec",
     "holdMinutes": 20,
     "firstSeating": "06:00",
     "lastSeating": "13:30",
