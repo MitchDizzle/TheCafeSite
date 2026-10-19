@@ -113,15 +113,17 @@ async function callScript(body) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: cfg.reservationsKey, ...body }),
         redirect: "manual",
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(20000),
       });
       let res = post;
       if (post.status >= 300 && post.status < 400 && post.headers.get("location")) {
-        res = await fetch(post.headers.get("location"), { redirect: "manual", signal: AbortSignal.timeout(30000) });
+        res = await fetch(post.headers.get("location"), { redirect: "manual", signal: AbortSignal.timeout(15000) });
       }
       if (res.status === 401 || res.status === 403) throw Object.assign(new Error("Google wants a sign-in: deploy the script to Anyone, executed as Me"), { final: true });
-      const json = await res.json().catch(() => null);
-      if (!json) throw new Error(`Google's answer got lost on the way (${res.status})`);
+      const text = await res.text().catch(() => "");
+      let json = null;
+      try { json = JSON.parse(text); } catch {}
+      if (!json) throw new Error(`Google's answer got lost on the way (${res.status}${res.status === 200 ? `: ${text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 120)}` : ""})`);
       if (!json.ok) throw Object.assign(new Error(json.message || "Google refused it"), { final: true });
       return json;
     } catch (err) {

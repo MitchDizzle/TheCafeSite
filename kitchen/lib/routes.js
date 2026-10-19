@@ -237,9 +237,11 @@ async function handle(req, res) {
     const refused = pinRefusal(body.pin);
     if (refused) return send(res, 200, { ok: false, message: refused });
     try {
+      // Google gets a few seconds to hand over new requests; a slow one
+      // carries on behind the screen (it's checked every 2 minutes anyway).
       if (url.pathname === "/api/front-reservations") {
-        await syncNow();
-        return send(res, 200, { ok: true, ...manageView() });
+        const done = await Promise.race([syncNow().then(() => true), new Promise((r) => setTimeout(() => r(false), 8000))]);
+        return send(res, 200, { ok: true, ...manageView(), stillChecking: !done });
       }
       const done = url.pathname === "/api/front-reservation-save"
         ? await saveReservation(body.reservation || {}, !!body.email)

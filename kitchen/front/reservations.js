@@ -69,7 +69,8 @@
 
     const google = !view.google
       ? `<p class="m-note">Google isn't set up yet, so the website's requests don't come in and nobody is emailed. Reservations typed in here are kept on the kitchen PC.</p>`
-      : view.googleError ? `<p class="m-error">Can't reach Google right now (${esc(view.googleError)}). New website requests and emails wait until it can.</p>` : "";
+      : view.googleError ? `<p class="m-error">Can't reach Google right now (${esc(view.googleError)}). New website requests and emails wait until it can.</p>`
+      : view.stillChecking ? `<p class="m-note">Google is slow to answer. Any new website request shows up here and on the front page by itself within a couple of minutes.</p>` : "";
 
     screen({ title: TITLE, back: true,
       body: `${google}
