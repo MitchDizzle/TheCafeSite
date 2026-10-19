@@ -90,3 +90,52 @@ test("a day with nothing planned puts back the plain words", () => {
   assert.equal(dayDescription("Lunch Special", null), "Served from 11am.");
   assert.equal(dayDescription("Soup of the Day", day("Lasagna")), "Starting at 11am.");
 });
+
+// Fake Square (mock.js) and a stand-in for the website, for the two below.
+const { pullSite } = require("../lib/specials/plan");
+const { applySides } = require("../lib/specials/sides");
+const { mockItems } = require("../lib/mock");
+const { loadCatalog } = require("../lib/catalog");
+const { localDate } = require("../lib/util");
+
+function website(days) {
+  const real = global.fetch;
+  global.fetch = async () => ({ ok: true, json: async () => ({ price: 10, days }) });
+  return () => { global.fetch = real; };
+}
+
+test("today's sides changed on the website reach today once it's in Square; its names don't", async () => {
+  const today = localDate();
+  plan.days[today] = { from: "site", items: { "Lunch Special": { today: "Ham Steak", prices: { "": "10.00" } } }, sides: ["Sweet Potatoes", "Peas", "Carrots"] };
+  plan.applied[today] = { sig: "x", at: new Date().toISOString() };
+  const restore = website([{ date: today, special: "Ham Steak (renamed)", sides: ["Sweet Potatoes", "Peas & Carrots"] }]);
+  try { await pullSite(); } finally { restore(); }
+  assert.deepEqual(plan.days[today].sides, ["Sweet Potatoes", "Peas & Carrots"]);
+  assert.equal(plan.days[today].items["Lunch Special"].today, "Ham Steak");
+});
+
+test("today's sides: a day set on the front page keeps its own", async () => {
+  const today = localDate();
+  plan.days[today] = { from: "front", items: { "Lunch Special": { today: "Ham Steak", prices: {} } }, sides: ["Corn"] };
+  plan.applied[today] = { sig: "x", at: new Date().toISOString() };
+  const restore = website([{ date: today, special: "Ham Steak", sides: ["Peas & Carrots"] }]);
+  try { await pullSite(); } finally { restore(); }
+  assert.deepEqual(plan.days[today].sides, ["Corn"]);
+});
+
+test("each side list has its side picked already, on the option and on the item", async () => {
+  const today = localDate();
+  await loadCatalog();
+  delete plan.sidesApplied[today];
+  await applySides(today, day("Ham Steak", { sides: ["Sweet Potatoes", "Peas & Carrots"] }));
+  const lists = [...mockItems.values()].filter((o) => o.type === "MODIFIER_LIST" && /^Side \d$/.test(o.modifier_list_data.name));
+  const infos = mockItems.get("ITEM-Lunch Special").item_data.modifier_list_info;
+  for (const [name, side] of [["Side 1", "Sweet Potatoes"], ["Side 2", "Peas & Carrots"]]) {
+    const list = lists.find((l) => l.modifier_list_data.name === name);
+    const mods = list.modifier_list_data.modifiers;
+    assert.deepEqual(mods.filter((m) => m.modifier_data.on_by_default).map((m) => m.modifier_data.name), [side], name);
+    const info = infos.find((x) => x.modifier_list_id === list.id);
+    assert.equal(info.enabled, true, name);
+    assert.deepEqual(info.modifier_overrides, [{ modifier_id: mods.find((m) => m.modifier_data.name === side).id, on_by_default_override: "YES" }], name);
+  }
+});

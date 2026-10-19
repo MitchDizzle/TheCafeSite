@@ -265,7 +265,7 @@ Today's specials and the days ahead on one screen (until 2026-10-09 they were tw
 - **Today** shows the names Square has right now, so a change made in the Dashboard isn't saved over, and whether today's specials are in Square yet. Saving today puts them in straight away. If Square refuses (no internet, say), it says so and the board tries again every 5 minutes.
 - **Days come in from the website by themselves.** Every half hour the board reads the specials the website publishes (`specialsUrl`, built from the site's `src/_data/specials.json`, the same days as the /menu box and the Facebook post). The plate goes into Lunch Special and the soup into Soup of the Day. They're tagged **From the website**.
 - **The website never overwrites:**
-  - **today**, once it's in Square (and no earlier day);
+  - **today**, once it's in Square (and no earlier day). **Its sides are the exception:** fix them on the website and they reach Square's side lists within half an hour, or at **Check for updates** (client 2026-10-19). The plate's and the soup's names stay as they went in;
   - **a day changed here**, tagged **Set here**. From then on the website's copy of that day is ignored.
 
   So putting next week on the website mid-week changes nothing for this week. A day the website still lists can't be blanked here (clearing it lets the website's copy back in on the next read); change it on the website instead, or type something else here.
@@ -284,7 +284,7 @@ Each side the special comes with is its own modifier list on **Lunch Special** (
 | Choice of side | Side 1 = **Chef's Choice** (picked already), then the deli salads |
 | Nothing | the side lists switched off |
 
-- **Nobody has to tap anything.** Each list is pick one, with the day's side picked already, so a plain Lunch Special comes as planned, and its sides print on the ticket. Tap a deli salad in Side 1 or Side 2 to swap that one side. Chef's Choice means the kitchen picks.
+- **Nobody has to tap anything.** Each list is pick one, with the day's side picked already (marked on the option itself and on Lunch Special; the catalog calls use Square API 2025-05-21, as older versions got the pick wrong and Side 1 came up empty, 2026-10-19), so a plain Lunch Special comes as planned, and its sides print on the ticket. Tap a deli salad in Side 1 or Side 2 to swap that one side. Chef's Choice means the kitchen picks.
 - **The deli salads** are the website's `swapSides` in `/specials.json`, which is menu.json's Deli Salads row. Change them there; the board reads them with the specials.
 - **The side lists come first** on Lunch Special, Side 1 to Side 3, and its other lists (Dressing) after them, so the dressing is asked after the sides (client 2026-10-13). The board puts them in that order whenever it writes the sides.
 - **A cup of the day's soup** comes last in every list, as **Soup of the Day** (the kitchen knows which), when the website's `soupSide` is on (client 2026-10-13). A day with no soup planned has none.

@@ -8,13 +8,18 @@ const API =
     ? "https://connect.squareupsandbox.com/v2"
     : "https://connect.squareup.com/v2";
 const SQUARE_VERSION = "2025-01-23";
+// The catalog (Specials, sides, desserts, photos) on a newer version: from
+// 2025-05-21 an option picked already is said differently, and Square warns
+// that older versions get modifier selection wrong (client 2026-10-19: Side 1
+// came up with nothing picked). Orders stay where they were tested.
+const CATALOG_VERSION = "2025-05-21";
 
 async function square(method, endpoint, body) {
   const res = await fetch(API + endpoint, {
     method,
     headers: {
       Authorization: `Bearer ${cfg.accessToken}`,
-      "Square-Version": SQUARE_VERSION,
+      "Square-Version": endpoint.startsWith("/catalog") ? CATALOG_VERSION : SQUARE_VERSION,
       "Content-Type": "application/json",
     },
     body: body ? JSON.stringify(body) : undefined,

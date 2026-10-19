@@ -8,8 +8,9 @@
 //   - the website's published week (cfg.specialsUrl, built from the site's
 //     src/_data/specials.json: the same days as the /menu box and the
 //     Facebook post), read every SITE_MINUTES. It adds the days it lists and
-//     keeps them in step with the site, but it NEVER changes today once it's
-//     in Square, an earlier day, or a day set on the front page;
+//     keeps them in step with the site, but it NEVER changes today's names
+//     once they're in Square (its sides, yes), an earlier day, or a day set
+//     on the front page;
 //   - the front page. A day changed there is the front's from then on: the
 //     website's copy no longer touches it.
 // Kept in data\specials-plan.json (gitignored).
@@ -92,8 +93,21 @@ async function pullSite() {
       // read on Friday and changed on the website over the weekend goes in
       // as changed when the board starts on Monday (2026-10-12, when Friday's
       // copy went in instead).
+      // Its sides are the exception: a fix to them on the website still
+      // reaches today (client 2026-10-19, "Peas, Carrots" that were one side),
+      // as they only change the side lists, never the names on the tickets.
       const inSquare = plan.applied[today] && plan.applied[today].at && plan.applied[today].sig !== "clear";
-      if (d.date === today && inSquare) continue;
+      if (d.date === today && inSquare) {
+        if (!have) continue;
+        const sides = Array.isArray(d.sides) ? d.sides.map(cleanText).filter(Boolean) : [];
+        const anySide = d.anySide === true;
+        if (JSON.stringify(have.sides || []) === JSON.stringify(sides) && !!have.anySide === anySide) continue;
+        plan.days[d.date] = { ...have, sides, ...(anySide ? { anySide: true } : {}) };
+        if (!anySide) delete plan.days[d.date].anySide;
+        console.log(`Today's sides changed on the website: ${anySide ? "choice of side" : sides.join(", ") || "none"}.`);
+        changed.push(d.date);
+        continue;
+      }
       const items = {};
       // The plate's price: the day's own, or the website's price for every
       // special (client 2026-10-12: $10 unless a day says otherwise). Only a

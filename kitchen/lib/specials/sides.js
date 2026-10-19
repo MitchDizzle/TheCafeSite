@@ -30,6 +30,9 @@ const { catalog, loadCatalog, readObject, modifierListsByName, upsertObject } = 
 const { plan, savePlan, RETRY_MINUTES } = require("./plan");
 
 const CHEFS_CHOICE = "Chef's Choice";
+// The item's own word that an option is picked already (on_by_default before
+// Square's 2025-05-21, which the catalog calls now use).
+const pickOverride = (id) => [{ modifier_id: id, on_by_default_override: "YES" }];
 
 function sideSlots(day) {
   if (!day) return [];
@@ -50,11 +53,15 @@ function swapsFor(date, day) {
 }
 
 // One pick-one list's options, $0 each, in this order: made the first time
-// it's needed (list null), written only when they changed. Returns Square's
-// copy, with real ids.
-async function writeOptions(list, name, key, words, where, selection = "SINGLE") {
+// it's needed (list null), written only when they changed. `pick`, the option
+// picked already, is marked so on the option itself as well as on the item
+// (pickOverride): Side 1 kept coming up with nothing picked on the till while
+// the item said otherwise (client 2026-10-19), and Square has since deprecated
+// the item's old on_by_default (see square.js). Returns Square's copy, with real ids.
+async function writeOptions(list, name, key, words, where, selection = "SINGLE", pick = null) {
   const zero = { amount: 0, currency: "USD" };
-  const optionsOf = (d) => JSON.stringify([d.selection_type, (d.modifiers || []).map((m) => [m.id, m.modifier_data.name, m.modifier_data.ordinal, m.modifier_data.price_money])]);
+  const optionsOf = (d) => JSON.stringify([d.selection_type, (d.modifiers || []).map((m) => [m.id, m.modifier_data.name, m.modifier_data.ordinal, m.modifier_data.price_money, !!m.modifier_data.on_by_default])]);
+  const picked = (w) => !!pick && w.toLowerCase() === pick.toLowerCase();
   const wanted = [];
   for (const w of words) {
     if (w && !wanted.some((x) => x.toLowerCase() === w.toLowerCase())) wanted.push(w);
@@ -70,11 +77,11 @@ async function writeOptions(list, name, key, words, where, selection = "SINGLE")
   d.modifiers = wanted.map((w, ordinal) => {
     const m = have.get(w.toLowerCase());
     if (m) {
-      m.modifier_data = { ...m.modifier_data, name: w, ordinal, price_money: zero };
+      m.modifier_data = { ...m.modifier_data, name: w, ordinal, price_money: zero, on_by_default: picked(w) };
       return m;
     }
     return { type: "MODIFIER", id: `#${key}-${ordinal}`, ...where,
-      modifier_data: { name: w, ordinal, price_money: zero, ...(list.id.startsWith("#") ? {} : { modifier_list_id: list.id }) } };
+      modifier_data: { name: w, ordinal, price_money: zero, on_by_default: picked(w), ...(list.id.startsWith("#") ? {} : { modifier_list_id: list.id }) } };
   });
   if (optionsOf(d) === before) return list;
   list = await upsertObject(list);
@@ -101,7 +108,7 @@ async function saveSides(slots, swaps) {
     // A side typed on the front page in its own case ("tossed salad") takes
     // the swap list's spelling, so it doesn't rename that option.
     const canon = (w) => swaps.find((x) => x.toLowerCase() === w.toLowerCase()) || w;
-    list = await writeOptions(list, name, `side-${i + 1}`, [slot.pick, ...slot.also, ...swaps].map(canon), where);
+    list = await writeOptions(list, name, `side-${i + 1}`, [slot.pick, ...slot.also, ...swaps].map(canon), where, "SINGLE", canon(slot.pick));
     const pick = (list.modifier_list_data.modifiers || []).find((m) => m.modifier_data.name.toLowerCase() === slot.pick.toLowerCase());
     set.push({ list, pickId: pick ? pick.id : null });
   }
@@ -117,7 +124,7 @@ async function saveSides(slots, swaps) {
     info.enabled = !!pickId;
     info.min_selected_modifiers = pickId ? 1 : 0;
     info.max_selected_modifiers = 1;
-    info.modifier_overrides = pickId ? [{ modifier_id: pickId, on_by_default: true }] : [];
+    info.modifier_overrides = pickId ? pickOverride(pickId) : [];
   }
   // The side lists first, in order, then the item's other lists (Dressing),
   // so the dressing is asked after the sides (client 2026-10-13).
@@ -155,7 +162,7 @@ async function saveSpecialSide(options) {
   const item = await readObject(itemId);
   if (options.length) {
     const where = { present_at_all_locations: item.present_at_all_locations, present_at_location_ids: item.present_at_location_ids };
-    list = await writeOptions(list, name, "special-side", options, where);
+    list = await writeOptions(list, name, "special-side", options, where, "SINGLE", options.length === 1 ? options[0] : null);
   }
   const fresh = await readObject(itemId);
   const infos = (fresh.item_data.modifier_list_info ||= []);
@@ -170,7 +177,7 @@ async function saveSpecialSide(options) {
   info.enabled = options.length > 0;
   info.min_selected_modifiers = options.length ? 1 : 0;
   info.max_selected_modifiers = 1;
-  info.modifier_overrides = mods.length === 1 && options.length ? [{ modifier_id: mods[0].id, on_by_default: true }] : [];
+  info.modifier_overrides = mods.length === 1 && options.length ? pickOverride(mods[0].id) : [];
   infos.forEach((x, ordinal) => { x.ordinal = ordinal; });
   if (JSON.stringify(infos) !== before) await upsertObject(fresh);
   return options.length ? `${cfg.specialSideItem}: ${options.join(", ")}` : `${cfg.specialSideItem}: off`;
@@ -228,8 +235,9 @@ async function applySides(today, day) {
   const offs = cfg.leaveOffList ? leaveOffOptions(today) : [];
   // `v`: bumped when the way the lists are written changes, so today's are
   // rewritten after an update (2: required, 2026-10-13; 3: the Special Side
-  // too, 2026-10-15; 4: Leave Off, 2026-10-18).
-  const sig = JSON.stringify({ v: 4, slots, swaps, special, offs });
+  // too, 2026-10-15; 4: Leave Off, 2026-10-18; 5: the pick marked on the
+  // option too, 2026-10-19).
+  const sig = JSON.stringify({ v: 5, slots, swaps, special, offs });
   const last = plan.sidesApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
   if (!slots.length && !offs.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;
