@@ -208,6 +208,19 @@
     align-items: start;
     padding: 1rem 1.25rem 2rem;
   }
+  /* A number whose ticket was cleared keeps its place on the board, so
+     nobody else's ticket moves into it (client 2026-10-19). The next new
+     order fills it. Faint, so it never reads as an order. */
+  .slot-free {
+    display: grid;
+    place-items: center;
+    height: 4rem;
+    border: 0.15rem dashed #3E5961;
+    border-radius: 0.5rem;
+    color: #5F7880;
+    font-size: 1.6rem;
+    font-weight: 900;
+  }
   .empty {
     grid-column: 1 / -1;
     margin-top: 18vh;
@@ -516,11 +529,12 @@
   let stats = null; // the day so far, from the server
   let demo = null; // { startedAt, until } while practice orders are showing
 
-  // STABLE NUMBERS. A ticket keeps its number key from the moment it
-  // arrives until it's done: when 1 is cleared, 2 stays 2 and slides over.
-  // A cook working on 2 who looks back must still see 2 on it, and pressing
-  // 2 must still clear it. A new order takes the lowest free number, so
-  // numbers can be out of order on screen, but never change under anyone.
+  // STABLE NUMBERS AND PLACES. A ticket keeps its number key from the
+  // moment it arrives until it's done, and the number is its place on the
+  // board: when 2 is cleared, 1 and 3 stay exactly where they are and 2's
+  // spot sits empty (client 2026-10-19). A cook working on 3 who looks back
+  // must find it where it was, with 3 on it, and pressing 3 must still clear
+  // it. A new order takes the lowest free number, and so the first gap.
   // Remembered on this screen, so a reload keeps them.
   let slots = {};
   try { slots = JSON.parse(localStorage.getItem("kb-slots") || "{}"); } catch {}
@@ -627,7 +641,16 @@
         <p class="empty-keys keys"><b>1</b>–<b>9</b> done &nbsp; <b>⌫</b> or <b>0</b> undo &nbsp; <b>+</b> <b>−</b> scroll &nbsp; <b>⏎</b> check Square now</p></div>`;
     } else {
       assignSlots();
-      board.innerHTML = tickets.map((t) => `
+      // Numbered tickets in their number's place, a gap for each free number
+      // before the last one used, then any without a number (more than nine).
+      const bySlot = new Map(tickets.filter((t) => slots[t.id]).map((t) => [slots[t.id], t]));
+      const top = Math.max(0, ...bySlot.keys());
+      const cells = [];
+      for (let n = 1; n <= top; n++) cells.push(bySlot.get(n) || n);
+      for (const t of tickets) if (!slots[t.id]) cells.push(t);
+      board.innerHTML = cells.map((t) => typeof t === "number"
+        ? `<div class="slot-free" aria-hidden="true">${t}</div>`
+        : `
         <article class="ticket${fresh.has(t.id) ? " new" : ""}${t.demo ? " demo" : ""}" data-id="${esc(t.id)}">
           <header>
             <span class="key">${slots[t.id] || ""}</span>

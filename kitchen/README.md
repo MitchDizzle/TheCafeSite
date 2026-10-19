@@ -47,12 +47,12 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 
 | Key | Does |
 |---|---|
-| **1–9** | Done on that ticket (the number in its corner). **A ticket keeps its number until it's done:** when 1 is cleared, 2 stays 2. A new order takes the lowest free number, so the numbers on screen aren't always in order, but they never change under a cook. |
+| **1–9** | Done on that ticket (the number in its corner). **A ticket keeps its number and its place until it's done:** when 2 is cleared, 1 and 3 don't move, and 2's spot stays empty (a faint dashed box). A new order takes the lowest free number and fills that spot, so the numbers on screen aren't always in order, but nothing moves under a cook. |
 | **Backspace** or **0** | Undo: brings back the last ticket cleared. Press again to go further back. Still works after a restart. |
 | **+** / **−** | Scroll down / up |
 | **Enter** | Check Square right now instead of waiting for the next check |
 
-- With more than nine tickets up, the extras have no number until one frees up. Use the mouse for those, or clear some first.
+- With more than nine tickets up, the extras have no number until one frees up, then the oldest of them takes that number and its spot. Use the mouse for those, or clear some first.
 - **Undo with the mouse:** click Undo for a list of everything cleared today (name, first item, how long ago) and click the one to bring back. Backspace / 0 still steps back one at a time.
 - **A new order** flashes mint around the edge of the whole screen, and the ticket keeps a mint outline and a mint **NEW** tag for a minute (mint, not amber, so new never looks like late). Without speakers, that's the only alert, so it lasts long enough to be noticed from the grill.
 - **Allergy notes** (peanut, gluten, dairy and the like) show in red with a ⚠ sign, on the ticket or on the item.
