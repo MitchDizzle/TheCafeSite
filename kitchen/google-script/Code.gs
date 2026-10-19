@@ -89,7 +89,22 @@ function doPost(e) {
     return json_({ ok: false, message: "Unreadable request." });
   }
   if (body.action) return json_(pcAction_(body));
-  const r = formRequest_(body);
+  let r;
+  try {
+    r = formRequest_(body);
+  } catch (err) {
+    // The website can't read this reply (it takes Google's redirect as the
+    // answer), so a request that breaks here would be lost without a word.
+    // The cafe gets it by email instead, to call them back.
+    r = { ok: false, message: `Sorry, that didn't save. Please call us at ${CAFE.phone}.` };
+    try {
+      const fields = ["name", "phone", "email", "date", "time", "party", "notes"].map((k) => `${k}: ${String(body[k] || "").slice(0, 400)}`);
+      MailApp.sendEmail({ to: CAFE.email, subject: "Table request that didn't save", body: `The reservations script failed (${err.message}).\nCall them back:\n\n${fields.join("\n")}`, name: `${CAFE.name} website` });
+    } catch (mailErr) {
+      console.error(`Couldn't email the failed request: ${mailErr.message}`);
+    }
+    console.error(`Table request failed: ${err.stack || err.message}`);
+  }
   return body._js ? json_(r) : thanksPage_(r);
 }
 
