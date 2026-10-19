@@ -1,18 +1,22 @@
 {#- This week's specials counter sign, shared by sign-specials.njk (colour)
     and sign-specials-bw.njk (`bw: true`). Read from src/_data/specials.json
     like the /menu box and the Facebook post: add the week there, build,
-    print. It shows the newest week in the file (see latestWeek). Day names and dates are computed from `date`, never typed.
+    print. It shows the newest week in the file (see latestWeek). Day names
+    and dates are computed from `date`, never typed.
 
-    No price on the plate (yet): specials.json has carried `price` since
-    2026-10-12, but the client asked for it on the Facebook post first. The
-    soup's Cup / Bowl prices DO print, because they come from menu.json.
-
-    The soup is a separate item, so it is NOT listed under each plate any
-    more: the plates come first, then a ruled Soup of the Day block that
-    says "sold separately". The drink (fountain or iced tea) is part of every plate
-    (specials.includesDrink), so it is said once under the heading. -#}
+    LAID OUT LIKE THE FACEBOOK POST (client 2026-10-18: the soups in a block
+    at the foot were small and hard to read). Each day reads across: the day,
+    the plate with its sides, then that day's soup in its own ruled cell
+    under a "Soup" label. What is true of every plate is said once, as two
+    tags under the heading: the price (specials.price) with the drink, and
+    the soup's Cup / Bowl price from menu.json (the soup is sold
+    separately). A day that costs something else shows its price beside the
+    plate. The Deli Salads box at the foot is what "choice of side" means
+    and what can be swapped in on any special, as on the post. -#}
 {%- set week = specials.days | latestWeek %}
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
+{%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
+{%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
 {%- set first = week[0].date | dayDate("monthDay") %}
 {%- set last = week[week.length - 1].date | dayDate("monthDay") %}
 {%- if first.split(" ")[0] == last.split(" ")[0] %}
@@ -25,35 +29,52 @@
 
     <div class="sign-heading">
         <h2 class="p-display sign-heading-title ink-teal">This Week&rsquo;s Specials</h2>
-        <p class="p-label sign-heading-sub ink-accent">{{ range }}</p>
+        <p class="p-label sign-heading-sub ink-accent">{{ range }} &middot; from 11am</p>
     </div>
 
-    {%- if specials.includesDrink %}
-    <p class="sign-drink ink-accent">Every special includes a drink</p>
-    {%- endif %}
+    <div class="sw-tags">
+        {%- if specials.price %}
+        <p class="sw-tag sw-tag--plate">Every special {{ specials.price | money | replace(".00", "") }}{% if specials.includesDrink %}, drink included{% endif %}</p>
+        {%- elif specials.includesDrink %}
+        <p class="sw-tag sw-tag--plate">Every special includes a drink</p>
+        {%- endif %}
+        {%- if soup and soup.items %}
+        <p class="sw-tag sw-tag--soup">Soup {% for i in soup.items %}{% if not loop.first %} &middot; {% endif %}{{ i.name }} {{ i.price | money }}{% endfor %}</p>
+        {%- endif %}
+    </div>
 
-    <ul class="sign-days">
+    <ul class="sw-days">
         {%- for d in week %}
-        {%- set sides = d | specialSides %}
-        <li class="sign-day">
-            <p class="p-display sign-day-name ink-teal">{{ d.date | dayDate("weekday") }}<span class="p-body sign-day-date">{{ d.date | dayDate("monthDay") }}</span></p>
+        {%- set sides = d | specialSides(true) %}
+        <li class="sw-row">
+            <p class="p-display sw-day ink-accent">{{ d.date | dayDate("short") }}<span class="p-body sw-date">{{ d.date | dayDate("monthDay") }}</span></p>
             <div>
-                <p class="sign-day-special">{{ d.special }}</p>
+                <p class="p-display sw-special ink-teal">{{ d.special }}{% if d.price and d.price != specials.price %} <span class="sw-day-price ink-accent">{{ d.price | money | replace(".00", "") }}</span>{% endif %}</p>
                 {%- if sides %}
-                <p class="sign-day-sides">{{ sides }}</p>
+                <p class="sw-sides">{{ sides }}</p>
                 {%- endif %}
+            </div>
+            <div class="sw-soup">
+                <p class="p-label sw-soup-label ink-accent">Soup</p>
+                <p class="sw-soup-name ink-teal">{{ d.soup or "&mdash;" | safe }}</p>
             </div>
         </li>
         {%- endfor %}
     </ul>
 
     <div class="sign-spacer"></div>
-    <section class="sign-soups">
-        <p class="sign-soups-head"><span class="p-display sign-soups-title ink-teal">Soup of the Day</span><span class="sign-soups-note">from 11am &middot; sold separately{% if soup and soup.items %}{% for i in soup.items %} &middot; {{ i.name }} {{ i.price | money }}{% endfor %}{% endif %}</span></p>
-        <ul class="sign-soups-list">
-            {%- for d in week %}
-            <li><b class="ink-accent">{{ d.date | dayDate("short") }}</b> {{ d.soup or "&mdash;" | safe }}</li>
+    {%- if deli %}
+    <section class="sw-choice">
+        <p class="p-display sw-choice-title ink-teal">Sides</p>
+        <p class="sw-choice-note">Pick one on a &ldquo;choice of side&rdquo; day, or swap them for the sides on any special</p>
+        <ul class="sw-choices">
+            {%- for c in deli.choices %}
+            <li>{{ c }}</li>
             {%- endfor %}
+            {%- if specials.soupSide %}
+            <li>Cup of the day&rsquo;s soup</li>
+            {%- endif %}
         </ul>
     </section>
+    {%- endif %}
 </div>

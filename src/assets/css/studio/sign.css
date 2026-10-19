@@ -164,114 +164,142 @@
     border-top-color: #000;
 }
 
-/* ── The week's specials ────────────────────────────────── */
+/* ── This week's specials, laid out like the Facebook post ──
+   (sign-specials(-bw).njk, client 2026-10-18). Each row reads across: day,
+   plate with its sides, then the soup in a ruled cell of its own. */
+.sw-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.1in 0.14in;
+    margin-top: 0.16in;
+}
 
-.sign-days {
+.sw-tag {
+    padding: 0.05in 0.18in;
+    border: 0.025in solid var(--teal);
+    border-radius: 999px;
+    font-size: 0.2in;
+    font-weight: 900;
+    color: var(--teal);
+    white-space: nowrap;
+}
+
+.sw-tag--plate {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.sw-days {
     list-style: none;
-    margin-top: 0.2in;
+    margin-top: 0.18in;
+    border-top: 0.03in solid var(--accent);
 }
 
-.sign-day {
+.sw-row {
     display: grid;
-    grid-template-columns: 1.55in 1fr;
-    gap: 0.22in;
-    /* Was 0.16in: taken down when the soups moved out of the rows into
-       their own block at the foot, which needs the height. */
-    padding: 0.1in 0;
-    border-top: 0.015in solid #ccc;
-}
-
-.sign--bw .sign-day {
-    border-top-color: #000;
-}
-
-.sign-day:last-child {
+    grid-template-columns: 0.95in 1fr 1.9in;
+    gap: 0.18in;
+    align-items: center;
+    padding: 0.12in 0;
     border-bottom: 0.015in solid #ccc;
 }
 
-.sign--bw .sign-day:last-child {
+.sign--bw .sw-row {
     border-bottom-color: #000;
 }
 
-.sign-day-name {
-    font-size: 0.3in;
-    line-height: 1.1;
+.sw-day {
+    font-size: 0.36in;
+    line-height: 1;
 }
 
-.sign-day-date {
+.sw-date {
     display: block;
-    font-size: 0.16in;
-    margin-top: 0.04in;
+    font-size: 0.15in;
+    color: var(--text-dark);
+    margin-top: 0.05in;
 }
 
-.sign-day-special {
+.sw-special {
     font-size: 0.32in;
-    font-weight: 700;
-    line-height: 1.15;
+    line-height: 1.12;
 }
 
-.sign-day-sides {
-    font-size: 0.2in;
+.sw-day-price {
+    font-size: 0.24in;
+    white-space: nowrap;
+}
+
+.sw-sides {
+    font-size: 0.19in;
     line-height: 1.3;
     margin-top: 0.03in;
 }
 
-/* Under the heading: true of every plate, so said once. */
-.sign-drink {
-    text-align: center;
-    font-weight: 900;
-    font-size: 0.22in;
-    margin-top: 0.12in;
-}
-
-/* The soups, apart from the plates: a separate item, sold separately. */
-.sign-soups {
-    border: 0.02in solid #ccc;
-    border-radius: 0.08in;
-    padding: 0.12in 0.18in 0.14in;
-}
-
-.sign--bw .sign-soups {
-    border-color: #000;
-}
-
-.sign-soups-head {
+/* The day's soup, beside its plate: as large as the sides or larger, set
+   apart by a rule so it still reads as its own item. */
+.sw-soup {
+    border-left: 0.02in solid #ccc;
+    padding-left: 0.16in;
+    align-self: stretch;
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.15in;
+    flex-direction: column;
+    justify-content: center;
 }
 
-.sign-soups-title {
+.sign--bw .sw-soup {
+    border-left-color: #000;
+}
+
+.sw-soup-label {
+    font-size: 0.13in;
+}
+
+.sw-soup-name {
+    font-size: 0.23in;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-top: 0.02in;
+}
+
+.sw-choice {
+    border: 0.025in solid var(--teal);
+    border-radius: 0.1in;
+    padding: 0.12in 0.2in 0.14in;
+    text-align: center;
+}
+
+.sw-choice-title {
     font-size: 0.28in;
+    line-height: 1.1;
+}
+
+.sw-choice-note {
+    font-size: 0.15in;
+    font-style: italic;
+    margin-top: 0.03in;
+}
+
+.sw-choices {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.04in 0.3in;
+    margin-top: 0.08in;
+    font-size: 0.19in;
+    font-weight: 700;
+}
+
+.sw-choices li {
     white-space: nowrap;
 }
 
-.sign-soups-note {
-    font-size: 0.15in;
-    text-align: right;
-}
-
-.sign-soups-list {
-    list-style: none;
-    display: grid;
-    /* Read down the columns, Monday to Friday, not across in Z order. */
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: repeat(3, auto);
-    grid-auto-flow: column;
-    gap: 0.04in 0.25in;
-    margin-top: 0.08in;
-    font-size: 0.19in;
-    line-height: 1.3;
-}
-
-.sign-soups-list b {
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    font-size: 0.15in;
-    display: inline-block;
-    width: 0.5in;
+.sw-choices li::before {
+    content: "\2022";
+    color: var(--accent);
+    margin-right: 0.08in;
 }
 
 /* ── "How did we do?" survey sign ──────────────────────────
