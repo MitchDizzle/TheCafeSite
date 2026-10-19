@@ -45,10 +45,19 @@ const COLS = ["id", "status", "date", "time", "party", "name", "phone", "email",
 
 // Run once from the editor (pick setup, press Run, allow access). Makes the
 // sheet's columns, the kitchen PC's key and the two daily timers. Running
-// it again is safe: it keeps the key and remakes the timers.
+// it again is safe: it keeps the sheet and the key and remakes the timers.
+//
+// The sheet is the one the script sits in (Extensions -> Apps Script). A
+// script made on its own at script.google.com has none, so the first setup
+// makes a "Reservations" sheet in the account's Drive and logs its address.
 function setup() {
-  const book = SpreadsheetApp.getActiveSpreadsheet();
   const props = PropertiesService.getScriptProperties();
+  const known = props.getProperty("SHEET_ID");
+  let book = SpreadsheetApp.getActiveSpreadsheet() || (known ? SpreadsheetApp.openById(known) : null);
+  if (!book) {
+    book = SpreadsheetApp.create("Reservations");
+    Logger.log("Made the Reservations sheet in Google Drive: " + book.getUrl());
+  }
   props.setProperty("SHEET_ID", book.getId());
   let sh = book.getSheetByName(SHEET);
   if (!sh) sh = book.insertSheet(SHEET);

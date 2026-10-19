@@ -373,10 +373,10 @@ Tables booked ahead, for any number of people (client 2026-10-19). The paper boo
 
 ### Setting up Google (one time)
 
-All of it on the cafe's Google account (theabcafe@gmail.com), in a browser.
+All of it on the cafe's Google account (theabcafe@gmail.com), in a browser signed into **that account only** (a private window, or a Chrome profile of its own). Signed into several Google accounts, Apps Script opens as the first one and says "Sorry, unable to open the file at this time."
 
 1. **Make the sheet:** in Google Sheets, a new blank spreadsheet named *Reservations*.
-2. **Add the script:** in the sheet, **Extensions → Apps Script**. Delete what's in `Code.gs` there, paste in all of `kitchen/google-script/Code.gs` from this repo, and press Save.
+2. **Add the script:** in the sheet, **Extensions → Apps Script**. Delete what's in `Code.gs` there, paste in all of `kitchen/google-script/Code.gs` from this repo, and press Save. (A script made on its own at script.google.com works too: its first setup makes the *Reservations* sheet in Drive and logs where it is.)
 3. **Run setup once:** pick **setup** in the function list at the top and press **Run**. Google asks for access (the sheet, sending email, running at set times): pick the cafe's account; on "Google hasn't verified this app", **Advanced → Go to … (unsafe)**. That warning is normal for a script you wrote yourself. When it finishes, the log at the bottom shows a long **key**. Copy it.
 4. **Deploy it:** **Deploy → New deployment**, type **Web app**, *Execute as:* **Me**, *Who has access:* **Anyone**. Deploy, and copy the **Web app URL** (it ends in `/exec`).
 5. **The website:** put that URL in `src/_data/site.json` as `reservations.formUrl`, build and upload (or tell Claude). The form appears on `/reserve`.
