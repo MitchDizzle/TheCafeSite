@@ -139,26 +139,59 @@ function syncFailed(err) {
 }
 
 // The website's new requests, into the book.
+// A row as the sheet shows it. The script writes "2026-10-21" and "07:30"
+// as text, but a sheet whose columns lost that format shows its own:
+// "10/21/2026", "7:30", "7:30:00", "7:30 AM". Those become ours here.
+function fromSheet(q) {
+  let date = String(q.date ?? "").trim();
+  let time = String(q.time ?? "").trim();
+  const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(date);
+  if (us) date = `${us[3]}-${us[1].padStart(2, "0")}-${us[2].padStart(2, "0")}`;
+  const t = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap]\.?m\.?)?$/i.exec(time);
+  if (t) {
+    let h = Number(t[1]);
+    if (t[3]) h = (h % 12) + (/^p/i.test(t[3]) ? 12 : 0);
+    time = `${String(h).padStart(2, "0")}:${t[2]}`;
+  }
+  return { ...q, date, time };
+}
+
+// The website's new requests, into the book. Only what was taken in (or
+// was there already) is acked: a row the PC can't read stays waiting in the
+// sheet, is named on /check and in the program window, and comes in once
+// it's fixed in the sheet or the PC learns to read it.
 async function pullRequests() {
   if (!google()) return;
   try {
     const { requests = [] } = await callScript({ action: "pull" });
     const known = new Set(book.list.map((r) => r.id));
     const added = [];
+    const taken = [];
+    const unreadable = [];
     for (const q of requests) {
+      if (!q.id) continue;
       // Already in the book (answered, removed, or taken in before), or
       // answered already in the sheet: not new.
-      if (!q.id || known.has(q.id) || (q.status && q.status !== "request")) continue;
+      if (known.has(q.id) || (q.status && q.status !== "request")) { taken.push(q.id); continue; }
       let r;
-      try { r = clean(q); } catch { continue; }
+      try {
+        r = clean(fromSheet(q));
+      } catch (err) {
+        unreadable.push(`${q.name || q.id} (date "${q.date}", time "${q.time}"): ${err.message}`);
+        continue;
+      }
       book.list.push({ id: q.id, status: "request", source: "web", ...r, received: q.received || new Date().toISOString(), updated: new Date().toISOString() });
       added.push(r);
+      taken.push(q.id);
     }
     if (added.length) {
       save();
       console.log(`Reservations: ${added.length} new table request(s) from the website: ${added.map((r) => `${r.name} (${r.party})`).join(", ")}.`);
     }
-    if (requests.length) await callScript({ action: "ack", ids: requests.map((q) => q.id) });
+    const said = unreadable.join("; ");
+    if (said && said !== syncStatus.unreadable) console.error(`Reservations: can't read from the sheet, left there: ${said}`);
+    syncStatus.unreadable = said || null;
+    if (taken.length) await callScript({ action: "ack", ids: taken });
     syncStatus.error = null;
     syncStatus.at = new Date().toISOString();
   } catch (err) {
@@ -343,8 +376,9 @@ function reservationsLine() {
   if (!scriptUrl()) return "reservationsKey is set, but the website has no reservations.formUrl yet.";
   const when = syncStatus.at ? new Date(syncStatus.at).toLocaleTimeString() : "not yet";
   const waiting = book.list.filter((r) => r.sync).length;
-  return syncStatus.error ? `Google: failed at ${when}: ${syncStatus.error.replace(/\.$/, "")}${waiting ? ` (${waiting} change(s) waiting)` : ""}.`
-    : `Google: last checked ${when}${waiting ? `, ${waiting} change(s) waiting` : ""}.`;
+  const unread = syncStatus.unreadable ? ` Request(s) in the sheet it can't read: ${syncStatus.unreadable}.` : "";
+  return (syncStatus.error ? `Google: failed at ${when}: ${syncStatus.error.replace(/\.$/, "")}${waiting ? ` (${waiting} change(s) waiting)` : ""}.`
+    : `Google: last checked ${when}${waiting ? `, ${waiting} change(s) waiting` : ""}.`) + unread;
 }
 
 // ---------------------------------------------------------------- test mode
@@ -365,4 +399,4 @@ function mockList() {
 
 load();
 
-module.exports = { book, load, startReservations, syncNow, saveReservation, actOn, markSeated, screenView, manageView, reservationsLine, phase, clean };
+module.exports = { fromSheet, book, load, startReservations, syncNow, saveReservation, actOn, markSeated, screenView, manageView, reservationsLine, phase, clean };

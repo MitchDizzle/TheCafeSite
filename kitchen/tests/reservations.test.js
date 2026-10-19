@@ -77,3 +77,13 @@ test("reservations: a removed one stays in the file, so the website's copy can't
   assert.equal(rv.screenView().requests, 0);
   assert.ok(!rv.manageView().list.some((r) => r.id === "web2"), "hidden from Manage");
 });
+
+test("reservations: the sheet's own date and time formats are read", () => {
+  const f = (date, time) => { const r = rv.fromSheet({ date, time }); return `${r.date} ${r.time}`; };
+  assert.equal(f("2026-10-21", "07:30"), "2026-10-21 07:30");
+  assert.equal(f("10/21/2026", "7:30"), "2026-10-21 07:30");
+  assert.equal(f("10/21/2026", "7:30:00"), "2026-10-21 07:30");
+  assert.equal(f("10/21/2026", "1:15 PM"), "2026-10-21 13:15");
+  assert.equal(f("10/21/2026", "12:00 PM"), "2026-10-21 12:00");
+  assert.equal(f("10/21/2026", "13:30:00"), "2026-10-21 13:30");
+});
