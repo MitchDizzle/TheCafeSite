@@ -5,7 +5,8 @@
 //     booking, the paper book copied over): saved here straight away;
 //   - the website's /reserve form, through the cafe's Google Apps Script
 //     (google-script/Code.gs). The PC asks it for new requests every
-//     SYNC_MINUTES ("pull", then "ack" once they're saved here), so the PC
+//     SYNC_MINUTES while the cafe is busy, QUIET_MINUTES otherwise ("pull",
+//     then "ack" once they're saved here), so the PC
 //     only ever calls out and stays closed to the internet. A request waits
 //     in Manage for Accept or Decline.
 //
@@ -13,7 +14,12 @@
 // Sheet as a copy of the book, emails the customer when asked (confirm,
 // change, decline, cancel) and sends the day-before reminders and the
 // cafe's 5am list itself. A save that can't get through waits in the
-// reservation (`sync`) and is tried again every SYNC_MINUTES.
+// reservation (`sync`) and is tried again at the next check.
+//
+// Google's limit on a free account is about 90 minutes of script time a
+// day; a check takes a second or two, so a check every SYNC_MINUTES through
+// the cafe's day and every QUIET_MINUTES through the night stays far under
+// it (about 300 checks, well under 15 minutes, a day).
 //
 // Without reservationsKey in config.json there is no Google: the book is
 // this PC's alone and nothing is emailed.
@@ -28,7 +34,9 @@ const { DIR, DATA, MOCK, DEV, cfg } = require("./config");
 const { localDate } = require("./util");
 
 const FILE = path.join(DATA, MOCK ? "reservations-mock.json" : "reservations.json");
-const SYNC_MINUTES = 2;
+const SYNC_MINUTES = 2; // BUSY_HOURS, on this PC's clock
+const QUIET_MINUTES = 15; // the rest of the day and night
+const BUSY_HOURS = [5, 15]; // 5am up to 3pm: an hour before opening to an hour after closing
 const UPCOMING_DAYS = 14;
 const KEEP_DAYS = 400; // older days are dropped from the file (the sheet keeps them)
 const STATUSES = new Set(["request", "booked", "seated", "declined", "canceled", "removed"]);
@@ -102,7 +110,7 @@ function clean(input) {
 // pull and ack can be repeated, and a save carries its `op`, which the
 // script answers from memory the second time instead of doing (and
 // emailing) it again.
-const TRIES = 4;
+const TRIES = 3;
 async function callScript(body) {
   let last;
   for (let i = 0; i < TRIES; i++) {
@@ -239,8 +247,15 @@ function startReservations() {
     return;
   }
   if (DEV) console.log("Reservations: a development copy talks to the real Google sheet. Careful: Accept emails real customers.");
+  let last = Date.now();
   syncNow();
-  setInterval(syncNow, SYNC_MINUTES * 6e4);
+  setInterval(() => {
+    const h = new Date().getHours();
+    const every = h >= BUSY_HOURS[0] && h < BUSY_HOURS[1] ? SYNC_MINUTES : QUIET_MINUTES;
+    if (Date.now() - last < every * 6e4 - 5000) return;
+    last = Date.now();
+    syncNow();
+  }, 6e4);
 }
 
 // ---------------------------------------------------------------- changes
