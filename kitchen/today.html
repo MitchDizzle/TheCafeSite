@@ -102,6 +102,15 @@
   .tag.unpaid { background: #FBE3E1; color: #7A1F18; }
   .tag.demo { background: #E7D9F3; color: #5B2A86; }
 
+  /* Reservations: today's tables and the next two weeks', one line each. */
+  .resv { display: grid; gap: 0.1rem; }
+  .resv .day { margin: 0.5rem 0 0.1rem; font-weight: 800; font-size: 0.9rem; color: var(--teal-dark); }
+  .resv .day:first-child { margin-top: 0; }
+  .resv .r { display: grid; grid-template-columns: 4.2rem 1fr; gap: 0.5rem; padding: 0.2rem 0; }
+  .resv .r .t { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .resv .r.seated { color: var(--muted); }
+  .resv .r small { display: block; color: var(--muted); }
+
   /* The PIN, when this phone doesn't remember it yet. */
   form.pin { display: grid; gap: 0.6rem; }
   form.pin input[type=password] { font: inherit; font-size: 1.3rem; padding: 0.5rem 0.7rem; border: 2px solid var(--line); border-radius: 0.4rem; width: 100%; }
@@ -154,6 +163,9 @@
       <h2>Most ordered today</h2>
       <div class="card" id="top"></div>
     </div>
+
+    <h2>Reservations</h2>
+    <div class="card resv" id="resv"><p class="muted">Reading…</p></div>
 
     <h2>On the board now <span id="board-count"></span></h2>
     <div class="orders" id="orders"><p class="muted">Reading…</p></div>
@@ -329,10 +341,28 @@
     </div>`;
   }
 
+  // Today's tables and the next two weeks', from the same answer as the
+  // orders. Taken and answered on the front page (Manage -> Reservations).
+  const clockWords = (t) => { const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`; };
+  function renderResv(rv) {
+    if (!rv) return;
+    const line = (r) => `<div class="r${r.phase === "seated" ? " seated" : ""}"><span class="t">${clockWords(r.time)}</span>
+      <span><b>${esc(r.name)}</b> · ${r.party} ${r.party === 1 ? "person" : "people"}${r.phase === "seated" ? " · seated" : ""}${r.notes ? `<small>${esc(r.notes)}</small>` : ""}</span></div>`;
+    const days = new Map();
+    for (const r of rv.upcoming) days.set(r.date, [...(days.get(r.date) || []), r]);
+    const html = [
+      rv.today.length ? `<p class="day">Today</p>${rv.today.map(line).join("")}` : "",
+      ...[...days].map(([d, rs]) => `<p class="day">${esc(dayName(d))}</p>${rs.map(line).join("")}`),
+      rv.requests ? `<p class="day" style="color:var(--red-dark)">${rv.requests} request${rv.requests === 1 ? "" : "s"} from the website to answer (front page, Manage &rarr; Reservations)</p>` : "",
+    ].join("");
+    $("resv").innerHTML = html || `<p class="muted">No tables booked for the next two weeks.</p>`;
+  }
+
   let ordersTimer = null;
   let lastFront = null;
   function renderOrders() {
     if (!lastFront) return;
+    renderResv(lastFront.reservations);
     const list = lastFront.orders;
     const ready = list.filter((o) => o.readyAt).length;
     $("board-count").textContent = list.length ? `· ${list.length - ready} cooking, ${ready} ready` : "";

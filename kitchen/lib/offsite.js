@@ -11,7 +11,8 @@
 // The repo is a clone in data\offsite\, laid out to be read:
 //   history\<date>.json   one day of stats-history.json each, so a day's
 //                         commit only changes that day
-//   specials-plan.json, state.json
+//   specials-plan.json, state.json, reservations.json (names and phone
+//                         numbers: keep the repo private)
 //   photos\               Photo post's photos, as Saved photos has them,
 //                         plus the ones moved off this PC
 // git keeps every earlier version, so the files are simply overwritten.
@@ -105,7 +106,7 @@ function copyIn() {
     const history = JSON.parse(fs.readFileSync(path.join(DATA, "stats-history.json"), "utf8"));
     for (const [date, day] of Object.entries(history.days || {})) put(path.join(REPO, "history", `${date}.json`), JSON.stringify(day, null, 1) + "\n");
   } catch {}
-  for (const name of ["specials-plan.json", "state.json"]) {
+  for (const name of ["specials-plan.json", "state.json", "reservations.json"]) {
     try { put(path.join(REPO, name), fs.readFileSync(path.join(DATA, name), "utf8")); } catch {}
   }
   const photos = path.join(DATA, "photos");

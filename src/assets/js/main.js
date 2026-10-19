@@ -1,6 +1,7 @@
 /* ============================================================
    The Cafe — Shared Inner-Page JS
-   Handles: mobile nav toggle, footer year, Formspree and Web3Forms forms
+   Handles: mobile nav toggle, footer year, Formspree and Web3Forms forms,
+   and /reserve's table requests
    ============================================================ */
 
 (function () {
@@ -134,6 +135,75 @@
                 status.classList.add('form-status--error');
                 status.textContent = 'Sorry — something went wrong and your message was not sent. ' +
                     'Please try again in a moment, or call us at (913) 547-9994.';
+                status.hidden = false;
+                status.focus();
+            });
+        });
+    });
+
+    /* ── /reserve: table requests to the cafe's Google Apps Script ──
+       Same checks as the script (kitchen/google-script/Code.gs), so a
+       refusal there is rare: today or later, within maxAheadDays, Monday to
+       Friday (Central time, the cafe's). Sent as a plain form post with
+       _js=1, which makes the script answer in JSON ({ ok, message }); a
+       refusal shows its message and leaves the form filled in. */
+
+    document.querySelectorAll('form[data-reserve]').forEach(function (form) {
+        var dateEl = form.querySelector('[name="date"]');
+        var central = function (ms) {
+            return new Date(ms).toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+        };
+        var ahead = +form.getAttribute('data-max-ahead') || 90;
+        dateEl.min = central(Date.now());
+        dateEl.max = central(Date.now() + ahead * 864e5);
+        var checkDay = function () {
+            var v = dateEl.value;
+            var day = /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(v + 'T12:00:00Z').getUTCDay() : -1;
+            dateEl.setCustomValidity(day === 0 || day === 6 ? "We're open Monday to Friday. Please pick a weekday." : '');
+        };
+        dateEl.addEventListener('change', checkDay);
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            checkDay();
+            if (!form.reportValidity()) return;
+
+            var button = form.querySelector('button[type="submit"]');
+            var status = form.querySelector('.form-status');
+            if (!status) {
+                status = document.createElement('p');
+                status.className = 'form-status';
+                status.setAttribute('role', 'status');
+                status.setAttribute('tabindex', '-1');
+                form.appendChild(status);
+            }
+            status.hidden = true;
+            status.classList.remove('form-status--error');
+            var buttonText = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Sending…';
+
+            var body = new URLSearchParams(new FormData(form));
+            body.set('_js', '1');
+            fetch(form.action, { method: 'POST', body: body }).then(function (response) {
+                if (!response.ok) throw new Error('Request service returned ' + response.status);
+                return response.json();
+            }).then(function (result) {
+                if (!result || !result.ok) {
+                    var err = new Error((result && result.message) || 'Refused');
+                    err.plain = !!(result && result.message);
+                    throw err;
+                }
+                form.querySelectorAll('.form-grid').forEach(function (el) { el.hidden = true; });
+                status.textContent = form.getAttribute('data-success');
+                status.hidden = false;
+                status.focus();
+            }).catch(function (err) {
+                button.disabled = false;
+                button.textContent = buttonText;
+                status.classList.add('form-status--error');
+                status.textContent = err.plain ? err.message
+                    : 'Sorry — something went wrong and your request was not sent. Please try again in a moment, or call us at (913) 547-9994.';
                 status.hidden = false;
                 status.focus();
             });

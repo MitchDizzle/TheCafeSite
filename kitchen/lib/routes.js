@@ -17,6 +17,7 @@ const { photoSetup, savePhotoPost, savedPhotos, savedPhotoFile, deleteSavedPhoto
 const { backupNow } = require("./backup");
 const { offsiteStatus } = require("./offsite");
 const { checkPage } = require("./check");
+const { syncNow, saveReservation, actOn, markSeated, manageView } = require("./reservations");
 const { power, checkUpdates, boardCheckedIn } = require("./system");
 
 const BOARD_FILE = path.join(DIR, "board.html");
@@ -73,7 +74,7 @@ function isLocal(req) {
 
 // What another device on the wifi (or the owner's phone over Tailscale) may
 // reach: the front page, the phone page (/today) and their own actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-backup"]);
+const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -98,6 +99,7 @@ const STATIC = {
   "/front/desserts.js": "front/desserts.js",
   "/front/leave-off.js": "front/leave-off.js",
   "/front/saved-photos.js": "front/saved-photos.js",
+  "/front/reservations.js": "front/reservations.js",
 };
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
@@ -225,6 +227,36 @@ async function handle(req, res) {
         ? "Someone changed that in Square a moment ago. Open Desserts again."
         : `Square didn't take it: ${err.message}` });
     }
+  }
+  // Reservations, behind the PIN: the book (Google's new requests fetched
+  // first), a new or changed reservation, and Accept / Decline / Cancel /
+  // Seated and the rest. A change that emails the customer waits for Google
+  // so the front can say whether it went.
+  if (req.method === "POST" && /^\/api\/front-reservation(s|-save|-act)$/.test(url.pathname)) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    try {
+      if (url.pathname === "/api/front-reservations") {
+        await syncNow();
+        return send(res, 200, { ok: true, ...manageView() });
+      }
+      const done = url.pathname === "/api/front-reservation-save"
+        ? await saveReservation(body.reservation || {}, !!body.email)
+        : { message: await actOn(String(body.id || ""), String(body.act || ""), !!body.email) };
+      return send(res, 200, { ok: true, ...done, ...manageView() });
+    } catch (err) {
+      console.error(`Reservations: ${err.message}`);
+      return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't work: ${err.message}` });
+    }
+  }
+  // Seated, from the band at the top of the front page: no PIN, like
+  // Handed off. Anything else about a reservation is in Manage.
+  if (req.method === "POST" && url.pathname === "/api/reservation-seated") {
+    const { id } = await readBody(req);
+    if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
+    markSeated(id);
+    return send(res, 200, frontSnapshot());
   }
   // Manage's first screen: is the PIN right? (Every action checks it again;
   // this only lets the front say "Wrong PIN" before showing the menu.)

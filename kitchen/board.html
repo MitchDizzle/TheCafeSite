@@ -198,6 +198,20 @@
   }
   .alert[hidden] { display: none; }
 
+  /* Reservations: a table coming up (within reservationAheadMinutes) is a
+     cream row under the bar, big enough to read from the line; amber from
+     15 minutes before its time to the end of the hold, as amber means time.
+     The rest of today's tables are one quiet line. Seated is pressed on the
+     front page; the row goes then, or when the hold runs out. */
+  .resv { display: grid; gap: 0.35rem; padding: 0.45rem 1.25rem; background: var(--teal); }
+  .resv[hidden] { display: none; }
+  .resv-item { display: flex; align-items: baseline; gap: 1.2rem; padding: 0.35rem 0.9rem; border-radius: 0.4rem; background: var(--cream); color: var(--text); font-size: 1.35rem; }
+  .resv-item.now { background: var(--amber); color: #1A1A1A; }
+  .resv-item b { font-size: 1.5rem; }
+  .resv-item .notes { color: inherit; opacity: 0.8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .resv-item .when { margin-left: auto; font-weight: 800; white-space: nowrap; }
+  .resv-line { margin: 0; color: var(--cream); font-size: 1.1rem; }
+
   .board {
     display: grid;
     /* Four across at 1920 wide, kept for the cooks who don't see well
@@ -474,6 +488,7 @@
     </div>
   </div>
   <div class="alert" id="alert" hidden></div>
+  <section class="resv" id="resv" aria-label="Reservations today" hidden></section>
   <main class="board" id="board"></main>
   <div class="more" id="more" hidden></div>
   <div class="edge-flash" id="edge" aria-hidden="true"></div>
@@ -748,6 +763,28 @@
     alertEl.textContent = text;
   }
 
+  // Reservations under the bar (see .resv above).
+  const resvEl = document.getElementById("resv");
+  let resvHtml = "";
+  const clockWords = (t) => { const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`; };
+  function renderResv(rv) {
+    if (!rv) { resvEl.hidden = true; return; }
+    const now = Date.now();
+    const close = rv.today.filter((r) => ["soon", "now", "held"].includes(r.phase));
+    const later = rv.today.filter((r) => r.phase === "later");
+    const when = (r) => {
+      if (r.phase === "held") return `here? held till ${fmtTime(r.heldUntil)}`;
+      const m = Math.round((Date.parse(r.at) - now) / 6e4);
+      return m > 0 ? `in ${m} min` : "due now";
+    };
+    const html = close.map((r) => `<div class="resv-item${r.phase === "soon" ? "" : " now"}">
+        <b>Table for ${r.party}</b><span>${esc(r.name)} · ${clockWords(r.time)}</span>
+        ${r.notes ? `<span class="notes">${esc(r.notes)}</span>` : ""}<span class="when">${when(r)}</span></div>`).join("")
+      + (later.length ? `<p class="resv-line">${close.length ? "Later today" : "Tables today"}: ${later.map((r) => `${clockWords(r.time)} ${esc(r.name)} (${r.party})`).join(" · ")}</p>` : "");
+    resvEl.hidden = !html;
+    if (html !== resvHtml) resvEl.innerHTML = resvHtml = html;
+  }
+
   function apply(data) {
     serverSound = data.sound !== false;
     renderSound();
@@ -760,6 +797,7 @@
     stats = data.stats || null;
     demo = data.demo || null;
     renderUndo();
+    renderResv(data.reservations);
 
     // Status banner: Square unreachable, or the last good poll is stale.
     const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000;

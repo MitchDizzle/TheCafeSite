@@ -244,8 +244,9 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `tests\` | The tests (see "Tests"). |
 | `board.html` | The kitchen screen. |
 | `front.html` | The front page for the counter (`/front`). |
-| `today.html` | The owner's phone page (`/today`): the day's numbers and the open orders. |
-| `front\` | The front page's Manage jobs, one file each (Specials, Photo post, Saved photos, Reports, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
+| `today.html` | The owner's phone page (`/today`): the day's numbers, the reservations and the open orders. |
+| `google-script\Code.gs` | The reservations' Google Apps Script, pasted into the cafe's Google Sheet (see "Reservations"). Not run on this PC. |
+| `front\` | The front page's Manage jobs, one file each (Specials, Reservations, Photo post, Saved photos, Reports, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
 | `kitchen.css` | The colours and base styles both screens share. |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `data\` | This PC's own files, made by the board; gitignored, never touched by an update (see "The data folder and backups"). |
@@ -265,11 +266,12 @@ Everything the board makes on this PC is in `data\`. Before 2026-10-13 these sat
 | `state.json` | Which orders have been cleared, and the skip list. |
 | `specials-plan.json` | Specials: the days ahead, the words for each day's photo, and which days are in Square already. |
 | `stats-history.json` | Every day's orders and numbers, for Reports. Never deleted, and **the only copy of the kitchen times**. |
+| `reservations.json` | Reservations: every table booked or asked for, with names and phone numbers. |
 | `photos\` | Photo post: the photos and finished posts kept for the website, with `photos.json`. |
 | `backups\` | The daily copies, below. |
 | `offsite\`, `backup-key` | Backup to GitHub, below: the repo's clone and this PC's key for it. |
 
-**Backups.** When the board starts, again at 2pm (closing) if it's still on, and whenever **Manage → Back up now** is pressed, it copies `stats-history.json`, `specials-plan.json` and `state.json` into `data\backups\<date>\`, keeping the last 30 days. That covers a bad write or a deleted file, not a dead PC. For that, set **`backupDir`** in `config.json` to a folder off this PC's drive: a USB stick left plugged in (`"backupDir": "E:\\Kitchen backup"`, with two backslashes), a OneDrive folder on the Kitchen account, or a share on another PC. The same dated copies go there, plus every Photo post photo (`photos\`). If it can't be reached (the stick is out), the program window says so and the board carries on. `/check` shows when each place was last written.
+**Backups.** When the board starts, again at 2pm (closing) if it's still on, and whenever **Manage → Back up now** is pressed, it copies `stats-history.json`, `specials-plan.json`, `state.json` and `reservations.json` into `data\backups\<date>\`, keeping the last 30 days. That covers a bad write or a deleted file, not a dead PC. For that, set **`backupDir`** in `config.json` to a folder off this PC's drive: a USB stick left plugged in (`"backupDir": "E:\\Kitchen backup"`, with two backslashes), a OneDrive folder on the Kitchen account, or a share on another PC. The same dated copies go there, plus every Photo post photo (`photos\`). If it can't be reached (the stick is out), the program window says so and the board carries on. `/check` shows when each place was last written.
 
 **Backup to GitHub (the copy off this PC).** Set **`backupRepo`** in `config.json` to a private GitHub repo and the same backup is pushed there each time: one file per day of history (`history\<date>.json`), the plan, `state.json` and the Photo post photos, with every earlier version kept by git. It can be read from any computer, and Claude can read it for reports. The PC never signs in to GitHub; it makes its own key, which can write to that one repo only:
 
@@ -349,6 +351,44 @@ Each morning the board also puts a photo of the day's dish on **Lunch Special** 
 ### The price
 
 `/specials.json` carries the usual price of a special (`price`, $10) and a day's own when it differs; the board puts it into Square with the day's plate, like the name (client 2026-10-12). A price set on the front page for a day wins, as always.
+
+## Reservations (Manage on the front page)
+
+Tables booked ahead, for any number of people (client 2026-10-19). The paper book can stay; this is so the board and the counter see what's coming. Everyone still orders and pays at the counter, so a big table's checks are as separate as anyone's.
+
+**Where they show**
+- **The kitchen board and the top of the front page:** a table booked for today shows from 90 minutes before its time (`reservationAheadMinutes`): "Table for 12 · Johnson · 11:30am · in 40 min". It turns amber 15 minutes before and stays until the hold runs out (20 minutes after its time, `holdMinutes` in the website's `site.json`), or until the front presses **Seated** (no PIN, like Handed off). The rest of today's tables are one line under it.
+- **The front page** also shows a red button when the website has sent requests nobody has answered yet; it opens Reservations.
+- **`/today`** on the owner's phone lists today's tables and the next two weeks'.
+- **Email, from Google** (once it's set up, below): the cafe's inbox gets every website request as it comes in, and a list of the day's tables at 5am on any day that has some. Customers with an email address get the confirmation, any change, and a reminder at 3pm the day before.
+
+**Manage → Reservations**
+- **To answer:** the website's requests. **Accept** books it and, with *Email them the answer* ticked, emails the confirmation. **Decline** emails that you can't (call them to find another time). **Edit** fixes a request before answering it.
+- **Coming up:** every table by day, with the phone number. **Seated** (today), **Edit**, **Cancel** (asks first, and can email them). A canceled or declined one can be **booked again**.
+- **+ New reservation:** a phone call or a booking at the counter. It's booked straight away; with an email address it's confirmed by email too. A day the cafe is closed asks once more before it's kept.
+- **Texting them:** after Accept, Decline, Cancel or a new booking, the screen has **Call**, **Text them** (opens the phone's or iPad's messages with the words written) and **Copy the text** (for pasting into Google Voice). Nothing can text a customer by itself without a paid texting service; Google Voice is free but only sends what a person sends from its app, so the words are ready to paste.
+- The list shows the last 7 days too. A change that couldn't reach Google is marked *Not sent yet*; the PC keeps trying every 2 minutes.
+
+**The website's form** is `/reserve` (`src/reserve.njk`), in the menu as Reserve. Until the script's address is in `site.json` it shows the phone number instead of the form. The form checks the same things as the script: today up to 90 days ahead, Monday to Friday, 6am to 1:30pm, 1 to 80 people. It says the table is held for 20 minutes and to check in at the counter. Change those in both `site.json` (`reservations`) and the top of `google-script/Code.gs`.
+
+### Setting up Google (one time)
+
+All of it on the cafe's Google account (theabcafe@gmail.com), in a browser.
+
+1. **Make the sheet:** in Google Sheets, a new blank spreadsheet named *Reservations*.
+2. **Add the script:** in the sheet, **Extensions → Apps Script**. Delete what's in `Code.gs` there, paste in all of `kitchen/google-script/Code.gs` from this repo, and press Save.
+3. **Run setup once:** pick **setup** in the function list at the top and press **Run**. Google asks for access (the sheet, sending email, running at set times): pick the cafe's account; on "Google hasn't verified this app", **Advanced → Go to … (unsafe)**. That warning is normal for a script you wrote yourself. When it finishes, the log at the bottom shows a long **key**. Copy it.
+4. **Deploy it:** **Deploy → New deployment**, type **Web app**, *Execute as:* **Me**, *Who has access:* **Anyone**. Deploy, and copy the **Web app URL** (it ends in `/exec`).
+5. **The website:** put that URL in `src/_data/site.json` as `reservations.formUrl`, build and upload (or tell Claude). The form appears on `/reserve`.
+6. **The kitchen PC:** add `"reservationsKey": "<the key>"` to `config.json` and restart the board. `/check` shows *Reservations: Google: last checked …* once it's talking to the script. The PC reads the script's address from the website's `site.json`, which it already has.
+7. **Try it:** send a request from `/reserve` with your own email. The cafe's inbox gets it, and within 2 minutes the front page shows the red request button. Accept it and the confirmation arrives.
+8. **Google Business Profile:** in the profile's edit screen, add `https://lvcafetogo.com/reserve` as the **reservations** link, so Google Search and Maps show a Reserve button.
+
+**After a change to `Code.gs`:** paste it into the script again, Save, then **Deploy → Manage deployments → ✎ Edit → Version: New version → Deploy**. The address stays the same. Without a new version the website keeps using the old script.
+
+The key is a password for the reservations: it stays in `config.json` and the script's own settings, never in this repo, an email or a text. To change it, delete `KEY` under the script's **Project Settings → Script Properties**, run **setup** again, and put the new key in `config.json`.
+
+The sheet is a copy of the book that the PC keeps up to date. Change reservations on the front page, not in the sheet: the PC never reads the sheet's edits back.
 
 ## Photo post (Manage on the front page)
 

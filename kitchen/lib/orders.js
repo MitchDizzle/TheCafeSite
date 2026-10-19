@@ -9,6 +9,7 @@ const { toTicket, hiddenReason, frontHiddenReason, readyAt } = require("./ticket
 const { withMockStates } = require("./square-status");
 const { statsToday, recordHistory } = require("./stats");
 const { DEMO_MINUTES, isDemo, mockOrders, demoOrders } = require("./mock");
+const { screenView } = require("./reservations");
 
 // Everything cleared that could come back, newest first: what Undo offers.
 // Kept on the server, so Undo still works after the page or PC restarts.
@@ -98,7 +99,8 @@ function snapshot() {
     .filter((t) => !hiddenReason(t, now))
     .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
   return { tickets, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
-    clearedList: undoList(bumped), stats: statsToday(), demo: live.demo, pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
+    clearedList: undoList(bumped), stats: statsToday(), demo: live.demo, pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling,
+    reservations: screenView() };
 }
 
 // A ready order nobody pressed Handed off for clears itself off the front
@@ -145,7 +147,8 @@ function frontSnapshot() {
     });
   return { orders, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, lastHandedOff: lastHandedOff(),
     handedOffList: undoList(handedOff).map((h) => ({ ...h, auto: autoOff.has(h.id) })), stats: statsToday(), demo: live.demo,
-    updatePin: !!cfg.updatePin, pollSeconds: cfg.pollSeconds, autoHandoffMinutes: cfg.autoHandoffMinutes };
+    updatePin: !!cfg.updatePin, pollSeconds: cfg.pollSeconds, autoHandoffMinutes: cfg.autoHandoffMinutes,
+    reservations: screenView() };
 }
 
 // ---------------------------------------------------------------- demo

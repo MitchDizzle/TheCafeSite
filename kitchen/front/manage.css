@@ -202,3 +202,35 @@
 .skip-cat .skip-items { padding: 0.2rem 0.7rem 0.6rem 2.2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.1rem 0.8rem; }
 .dialog .skip-cat .check { margin: 0.15rem 0; }
 .dialog .skip-cat input:disabled + span { color: var(--muted); }
+
+/* Reservations: requests as cards, the book as one row per table under
+   its day, and the form as two columns (one on a phone). */
+.rv-req .rv-when { margin: -0.3rem 0 0.4rem; font-weight: 700; }
+.rv-req .rv-notes, .rv-row small { overflow-wrap: anywhere; }
+.rv-req .rv-notes { margin: 0 0 0.4rem; padding: 0.3rem 0.5rem; background: #FFF0C2; border-left: 0.25rem solid var(--amber); }
+.rv-acts, .rv-contact { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+.rv-contact a.m-btn { text-decoration: none; }
+.rv-text { flex-basis: 100%; font: inherit; font-size: 0.95rem; padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; resize: vertical; }
+.rv-day { border: 1px solid var(--line); border-radius: 0.55rem; margin: 0 0 0.6rem; padding: 0.2rem 0.8rem 0.4rem; }
+.rv-day.today { border-color: var(--teal); }
+.rv-date { margin: 0.4rem 0 0.2rem !important; font-weight: 800; }
+.rv-date small { font-weight: 400; color: var(--muted); margin-left: 0.4rem; }
+.rv-row { display: grid; grid-template-columns: 4.6rem 1fr auto; gap: 0.2rem 0.7rem; align-items: start; padding: 0.45rem 0; border-top: 1px solid var(--line); }
+.rv-date + .rv-row { border-top: 0; }
+.rv-row.off { color: var(--muted); }
+.rv-row.off b { text-decoration: line-through; }
+.rv-time { font-weight: 800; font-variant-numeric: tabular-nums; }
+.rv-time small, .rv-who small { display: block; font-weight: 400; color: var(--muted); font-size: 0.88rem; }
+.rv-tag { display: inline-block; padding: 0 0.4rem; border-radius: 0.25rem; font-size: 0.78rem; font-weight: 800; background: #E3EEF1; color: var(--teal-dark); }
+.rv-tag.wait { background: #FFF0C2; color: #6B4A08; }
+.rv-row-acts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.2rem 0.6rem; }
+.rv-link { font: inherit; font-size: 0.92rem; font-weight: 800; padding: 0.15rem 0.2rem; border: 0; background: transparent; color: var(--teal-dark); text-decoration: underline; cursor: pointer; }
+.rv-earlier > summary { cursor: pointer; font-weight: 700; color: var(--teal-dark); padding: 0.4rem 0; }
+.rv-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem 1rem; }
+.rv-wide { grid-column: 1 / -1; }
+.rv-form .m-field textarea { font-size: 1.05rem; }
+@media (max-width: 36rem) {
+  .rv-form { grid-template-columns: 1fr; }
+  .rv-row { grid-template-columns: 4rem 1fr; }
+  .rv-row-acts { grid-column: 2; justify-content: flex-start; }
+}
