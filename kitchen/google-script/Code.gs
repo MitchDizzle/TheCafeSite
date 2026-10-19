@@ -214,9 +214,18 @@ function pcAction_(b) {
     }
     // A reservation as the PC has it now, with an email to the customer
     // when asked: confirm, decline, cancel or change.
+    //
+    // Google loses this script's reply now and then after it has run, so
+    // the PC sends the same change again until it gets one. `op` names the
+    // change: one already done answers as it did the first time and emails
+    // nobody twice.
     if (b.action === "save") {
       const want = b.reservation || {};
       if (!want.id) return { ok: false, message: "No id." };
+      const cache = CacheService.getScriptCache();
+      const opKey = b.op ? "op-" + String(b.op).slice(0, 60) : "";
+      const before = opKey && cache.get(opKey);
+      if (before) return JSON.parse(before);
       const now = stamp_();
       let r = rows.find((x) => x.id === want.id);
       if (!r) r = { id: want.id, source: want.source || "front", received: now, row: sh.getLastRow() + 1 };
@@ -233,7 +242,9 @@ function pcAction_(b) {
         if (emailed && b.email !== "decline" && b.email !== "cancel") r.confirmEmailed = now;
       }
       sh.getRange(r.row, 1, 1, COLS.length).setValues([COLS.map((c) => (r[c] === undefined ? "" : r[c]))]);
-      return { ok: true, emailed };
+      const answer = { ok: true, emailed };
+      if (opKey) cache.put(opKey, JSON.stringify(answer), 21600); // 6 hours, the most it keeps
+      return answer;
     }
     return { ok: false, message: "Unknown action." };
   } finally {

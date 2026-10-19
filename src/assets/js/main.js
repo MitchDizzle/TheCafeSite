@@ -145,8 +145,17 @@
        Same checks as the script (kitchen/google-script/Code.gs), so a
        refusal there is rare: today or later, within maxAheadDays, Monday to
        Friday (Central time, the cafe's). Sent as a plain form post with
-       _js=1, which makes the script answer in JSON ({ ok, message }); a
-       refusal shows its message and leaves the form filled in. */
+       _js=1, which makes the script answer in JSON.
+
+       Google runs the script on that post and answers with a redirect to a
+       second address that hands over the script's reply. That second step
+       loses the reply about one time in three (2026-10-19), after the
+       request is saved, so following it would tell a customer "not sent"
+       for a request that went through. So the redirect itself is the
+       answer: getting one means Google took the request. A script error
+       comes back as a page instead and shows the error message. The
+       script's own refusals ({ ok: false }) can't be read this way, which is
+       why this form checks everything the script checks first. */
 
     document.querySelectorAll('form[data-reserve]').forEach(function (form) {
         var dateEl = form.querySelector('[name="date"]');
@@ -185,7 +194,8 @@
 
             var body = new URLSearchParams(new FormData(form));
             body.set('_js', '1');
-            fetch(form.action, { method: 'POST', body: body }).then(function (response) {
+            fetch(form.action, { method: 'POST', body: body, redirect: 'manual' }).then(function (response) {
+                if (response.type === 'opaqueredirect') return { ok: true };
                 if (!response.ok) throw new Error('Request service returned ' + response.status);
                 return response.json();
             }).then(function (result) {

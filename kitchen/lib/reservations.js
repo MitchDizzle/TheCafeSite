@@ -92,19 +92,42 @@ function clean(input) {
 
 // ---------------------------------------------------------------- Google
 
+// One call to the script. Google runs it on the POST and answers with a
+// redirect to a second address that hands over the reply; that second step
+// loses the reply about one time in three (2026-10-19), after the script
+// has run. So the redirect is followed here by hand, and a lost reply is
+// tried again: up to TRIES times, a few seconds apart. That's safe because
+// pull and ack can be repeated, and a save carries its `op`, which the
+// script answers from memory the second time instead of doing (and
+// emailing) it again.
+const TRIES = 4;
 async function callScript(body) {
-  const res = await fetch(scriptUrl(), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key: cfg.reservationsKey, ...body }),
-    signal: AbortSignal.timeout(30000),
-  });
-  if (!res.ok) throw new Error(`Google answered ${res.status}`);
-  const json = await res.json().catch(() => {
-    throw new Error("Google's answer wasn't readable (is the script deployed to Anyone?)");
-  });
-  if (!json.ok) throw new Error(json.message || "Google refused it");
-  return json;
+  let last;
+  for (let i = 0; i < TRIES; i++) {
+    if (i) await new Promise((r) => setTimeout(r, 2000 * i));
+    try {
+      const post = await fetch(scriptUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: cfg.reservationsKey, ...body }),
+        redirect: "manual",
+        signal: AbortSignal.timeout(30000),
+      });
+      let res = post;
+      if (post.status >= 300 && post.status < 400 && post.headers.get("location")) {
+        res = await fetch(post.headers.get("location"), { redirect: "manual", signal: AbortSignal.timeout(30000) });
+      }
+      if (res.status === 401 || res.status === 403) throw Object.assign(new Error("Google wants a sign-in: deploy the script to Anyone, executed as Me"), { final: true });
+      const json = await res.json().catch(() => null);
+      if (!json) throw new Error(`Google's answer got lost on the way (${res.status})`);
+      if (!json.ok) throw Object.assign(new Error(json.message || "Google refused it"), { final: true });
+      return json;
+    } catch (err) {
+      last = err;
+      if (err.final) break;
+    }
+  }
+  throw last;
 }
 
 function syncFailed(err) {
@@ -145,6 +168,7 @@ async function pushOne(r) {
   try {
     const { emailed } = await callScript({
       action: "save",
+      op: r.sync.op,
       email: r.sync.email || "",
       reservation: { id: r.id, status: r.status, date: r.date, time: r.time, party: r.party, name: r.name, phone: r.phone, email: r.email, notes: r.notes, source: r.source },
     });
@@ -185,7 +209,9 @@ function startReservations() {
 // email: true to email the customer about it (when they gave an address).
 function queue(r, kind, email) {
   if (!google()) return;
-  r.sync = { email: email && r.email ? kind : "", since: new Date().toISOString() };
+  // op names this change for the script, so sending it again never
+  // emails twice (see callScript).
+  r.sync = { email: email && r.email ? kind : "", since: new Date().toISOString(), op: `${r.id}-${crypto.randomBytes(6).toString("hex")}` };
 }
 
 // What the front page says after a change.
@@ -313,7 +339,7 @@ function reservationsLine() {
   if (!scriptUrl()) return "reservationsKey is set, but the website has no reservations.formUrl yet.";
   const when = syncStatus.at ? new Date(syncStatus.at).toLocaleTimeString() : "not yet";
   const waiting = book.list.filter((r) => r.sync).length;
-  return syncStatus.error ? `Google: failed at ${when}: ${syncStatus.error}${waiting ? ` (${waiting} change(s) waiting)` : ""}.`
+  return syncStatus.error ? `Google: failed at ${when}: ${syncStatus.error.replace(/\.$/, "")}${waiting ? ` (${waiting} change(s) waiting)` : ""}.`
     : `Google: last checked ${when}${waiting ? `, ${waiting} change(s) waiting` : ""}.`;
 }
 
