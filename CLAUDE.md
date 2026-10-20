@@ -57,6 +57,7 @@ Write `&` as a literal in front matter, never `&amp;` — Nunjucks escapes these
 - `inlineSvg` — inlines an SVG's markup so page CSS can color it. An `<img>` is a separate document, so an SVG with no `fill` of its own renders **black** inside one; `assets/thecafe.svg` is outlined with no fill and must be inlined to pick up a color.
 
 ## Conventions
+- **`STYLE.md` is the style guide**: voice, wording, colour, type, logo, sizes, posts, print and photos in one place. Keep it in step when a rule below or in the code changes.
 - Palette: cream `#FAF7F2`, teal `#2C5E70` / `#1F4552`, accent red `#C0392F` / `#A02F26`, mint `#8ED9D4`, `--text-dark #22323A`. Teal and teal-dark are **grounds only** (hero, footer, overlay); red on teal is 1.3:1, never put one on the other. Red accent carries every interactive element. Playfair Display headings, Lato body, via Google Fonts.
 - Images lazy-loaded; respect `prefers-reduced-motion`; keep pages accessible (this audience skews older).
 - Live site: `https://lvcafetogo.com` (canonical/og:url/sitemap use this host). Internal links are root-absolute and extensionless (`/about`) — `src/.htaccess` rewrites them to the real files.
