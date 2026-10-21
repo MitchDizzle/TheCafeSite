@@ -5,7 +5,7 @@ const { MOCK, MUTE, cfg } = require("./config");
 const { fetchOrders } = require("./square");
 const { live } = require("./live");
 const { bumped, offBoard, handedOff, canceled, keepOnFront, autoOff, readySince, state, saveState } = require("./state");
-const { toTicket, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
+const { toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
 const { withMockStates } = require("./square-status");
 const { statsToday, recordHistory } = require("./stats");
 const { DEMO_MINUTES, isDemo, mockOrders, demoOrders } = require("./mock");
@@ -81,6 +81,7 @@ async function pollOnce() {
         );
       }
     }
+    markSameTable(live.all);
     live.lastOkAt = new Date().toISOString();
     if (live.lastError) console.log("Square connection restored");
     live.lastError = null;

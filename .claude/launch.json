@@ -4,8 +4,22 @@
     {
       "name": "thecafe",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["start"],
+      "runtimeArgs": [
+        "start"
+      ],
       "port": 8080
+    },
+    {
+      "name": "kitchen-mock",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "kitchen/server.js"
+      ],
+      "env": {
+        "KITCHEN_MOCK": "1",
+        "KITCHEN_DEV": "1"
+      },
+      "port": 8090
     }
   ]
 }

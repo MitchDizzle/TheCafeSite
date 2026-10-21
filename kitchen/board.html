@@ -311,6 +311,19 @@
     font-weight: 900;
   }
   .test-tag { background: #DDE3E6; color: #1A1A1A; }
+  /* One of two or more orders rung under the same table number: send them
+     out together. Beside the name, so it reads as part of "Table 5". */
+  .table-tag {
+    display: inline-block;
+    padding: 0 0.45rem;
+    margin-left: 0.5rem;
+    border-radius: 0.3rem;
+    background: #fff;
+    color: #1A1A1A;
+    font-size: 0.9em;
+    font-weight: 900;
+    white-space: nowrap;
+  }
 
   /* A flash around the edge of the whole screen when an order arrives, for
      the same reason: something visible from anywhere in the kitchen. */
@@ -659,7 +672,7 @@
           <header>
             <span class="key">${slots[t.id] || ""}</span>
             <span class="who">
-              <span class="name">${esc(label(t))}</span>
+              <span class="name">${esc(label(t))}${t.tableOf ? `<span class="table-tag">${t.tableOf.n} of ${t.tableOf.of}</span>` : ""}</span>
               <span class="kind">${t.demo ? '<span class="demo-tag">DEMO</span>' : ""}<span class="fresh-tag">NEW</span>${t.test ? '<span class="test-tag">TEST</span>' : ""}${t.unpaid ? '<span class="unpaid-tag">NOT PAID</span>' : ""}${t.toGo ? '<span class="dining">TO GO</span>' : '<span class="dining here">FOR HERE</span>'}${esc(kindLabel(t))}</span>
             </span>
             <span class="timer"></span>

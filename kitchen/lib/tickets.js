@@ -309,4 +309,32 @@ function orderDetail(o) {
   return parts.join(" · ");
 }
 
-module.exports = { NOT_FOOD, itemName, isOnline, toTicket, hiddenReason, waitUntil, frontHiddenReason, readyAt, orderDetail };
+// Two or more orders rung under one table number: the counter rings people
+// sitting together as separate orders, for speed. Each gets tableOf
+// { n, of } ("1 of 2", in the order they were rung), so the kitchen sends
+// them out together. Orders count as one table when each was rung within
+// SAME_TABLE_MINUTES of the one before: a number handed out again later in
+// the day starts a new group. An order canceled at the front doesn't count.
+const SAME_TABLE_MINUTES = 15;
+function markSameTable(list) {
+  const byTable = new Map();
+  for (const t of list) {
+    delete t.tableOf;
+    if (!t.table || canceled[t.id]) continue;
+    if (!byTable.has(t.table)) byTable.set(t.table, []);
+    byTable.get(t.table).push(t);
+  }
+  for (const group of byTable.values()) {
+    group.sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+    let run = [];
+    const close = () => { if (run.length > 1) run.forEach((t, i) => { t.tableOf = { n: i + 1, of: run.length }; }); };
+    for (const t of group) {
+      const prev = run[run.length - 1];
+      if (prev && Date.parse(t.createdAt) - Date.parse(prev.createdAt) > SAME_TABLE_MINUTES * 6e4) { close(); run = []; }
+      run.push(t);
+    }
+    close();
+  }
+}
+
+module.exports = { NOT_FOOD, itemName, isOnline, toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt, orderDetail };

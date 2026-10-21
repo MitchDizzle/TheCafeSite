@@ -392,7 +392,7 @@
     return `
       <article class="order ${ready ? "ready" : "cooking"}${o.unpaid ? " unpaid" : ""}${o.demo ? " demo" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
         <header>
-          <span><span class="name">${esc(label(o))}</span><span class="kind">${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${o.test ? '<span class="test-tag">TEST</span>' : ""}${esc(kindLabel(o))}${diningHtml(o)}</span></span>
+          <span><span class="name">${esc(label(o))}${o.tableOf ? ` <span class="dining here">${o.tableOf.n} of ${o.tableOf.of}</span>` : ""}</span><span class="kind">${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${o.test ? '<span class="test-tag">TEST</span>' : ""}${esc(kindLabel(o))}${diningHtml(o)}</span></span>
           <span class="status" data-status></span>
         </header>
         ${o.unpaid ? `<div class="section unpaid-band">Not paid${o.due ? `: $${o.due.toFixed(2)} due` : ""}

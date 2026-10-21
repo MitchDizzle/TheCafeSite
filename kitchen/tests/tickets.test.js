@@ -8,7 +8,7 @@ const assert = require("node:assert/strict");
 const board = require("./board.js");
 
 const { toTicket, isOnline, hiddenReason, frontHiddenReason, readyAt, minutesFromNow } = board;
-const { waitUntil } = require("../lib/tickets");
+const { waitUntil, markSameTable } = require("../lib/tickets");
 
 const li = (quantity, name, extra = {}) => ({ quantity: String(quantity), name, ...extra });
 
@@ -395,4 +395,12 @@ test("yesterday's open order greets nobody", () => {
 test("/check's one line about what Square sent", () => {
   assert.equal(board.orderDetail(counter({ state: "OPEN", tenders: [], net_amount_due_money: { amount: 1200 } })),
     "source: Square Point of Sale · order OPEN · fulfillment PICKUP COMPLETED · schedule ASAP · no payment · still due 12.00");
+});
+
+test("orders rung under one table number are tagged 1 of 2, 2 of 2; the number later in the day is a new table", () => {
+  const at = (id, min, name = "5") => toTicket(counter({ id, ticket_name: name, created_at: minutesFromNow(min) })).ticket;
+  const list = [at("B0000000002", -50), at("A0000000001", -52), at("C0000000003", -5), at("D0000000004", -51, "6"), at("E0000000005", -51, "Pat")];
+  markSameTable(list);
+  const tag = Object.fromEntries(list.map((t) => [t.id, t.tableOf ? `${t.tableOf.n}/${t.tableOf.of}` : null]));
+  assert.deepEqual(tag, { A0000000001: "1/2", B0000000002: "2/2", C0000000003: null, D0000000004: null, E0000000005: null });
 });

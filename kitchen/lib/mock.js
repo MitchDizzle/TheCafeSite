@@ -165,6 +165,13 @@ function mockOrders() {
     });
   }
   orders.push(mockSplitOrder(ago(3)));
+  // The rest of table 7, rung as its own order: both are tagged 1 of 2, 2 of 2.
+  orders.push({
+    id: "MOCKTABLE70011", state: "COMPLETED", created_at: ago(2), ticket_name: "7",
+    source: { name: "Square Point of Sale" }, tenders: [{ id: "TBL71234", type: "CARD" }],
+    line_items: [li(1, "Grilled Cheese", { variation_name: "Regular" })],
+    fulfillments: [{ uid: "F1", type: "IN_STORE", state: "COMPLETED" }],
+  });
   // As Square sends them since 2026-10-12: a Square Online pickup named
   // "Ordering Profile - Web", and a DoorDash delivery with its courier time.
   orders.push({
