@@ -187,6 +187,32 @@
   }
   .more[hidden] { display: none; }
 
+  /* WAIT UNTIL: orders that go on the board later (a pickup or phone order
+     due in more than 15 min, a DoorDash order waiting for its Dasher),
+     along the bottom, small and dim, so nobody starts them early. No key:
+     they can't be cleared until they're up. */
+  .waiting {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    gap: 0.8rem;
+    align-items: stretch;
+    padding: 0.6rem 1.25rem;
+    background: var(--teal-dark);
+    border-top: 0.15rem solid #9FB7BF;
+    overflow: hidden;
+  }
+  .waiting[hidden] { display: none; }
+  .waiting .w-head { flex: none; align-self: center; font-size: 1.1rem; font-weight: 800; letter-spacing: 0.08em; color: #9FB7BF; }
+  .waiting .w-card { flex: 0 1 22rem; min-width: 14rem; padding: 0.45rem 0.8rem; border-radius: 0.4rem; background: #2E5562; color: var(--cream); }
+  .waiting .w-until { font-size: 1.25rem; font-weight: 800; }
+  .waiting .w-until small { font-weight: 600; font-size: 0.95rem; color: #CFE0E4; margin-left: 0.35rem; }
+  .waiting .w-who { font-size: 1.1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .waiting .w-who span { font-weight: 400; color: #CFE0E4; margin-left: 0.4rem; }
+  .waiting .w-items { font-size: 1rem; color: #CFE0E4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
   /* A problem (Square or the program lost) is red; test mode and the demo
      are the practice purple. Neither is amber, which means time. */
   .alert {
@@ -463,6 +489,7 @@
   <div class="alert" id="alert" hidden></div>
   <main class="board" id="board"></main>
   <div class="more" id="more" hidden></div>
+  <section class="waiting" id="waiting" hidden aria-label="Waiting: on the board later"></section>
   <div class="edge-flash" id="edge" aria-hidden="true"></div>
 
   <div class="scrim" id="scrim" hidden>
@@ -659,6 +686,24 @@
     showMore();
   }
 
+  // ---- the WAIT UNTIL row
+  const waitingEl = document.getElementById("waiting");
+  let lastWaiting = "";
+  function renderWaiting(list) {
+    const json = JSON.stringify(list.map((t) => [t.id, t.waitUntil, t.holdUntil, t.items.length]));
+    if (json === lastWaiting) return;
+    lastWaiting = json;
+    waitingEl.hidden = !list.length;
+    waitingEl.innerHTML = list.length ? `<span class="w-head">WAIT<br>UNTIL</span>` + list.map((t) => `
+      <div class="w-card">
+        <div class="w-until">${esc(clock(t.waitUntil))}${t.holdUntil ? "<small>or a Dasher</small>" : t.dueAt ? `<small>due ${esc(clock(t.dueAt))}</small>` : ""}</div>
+        <div class="w-who">${esc(label(t))}${(kindLabel(t) || "Counter") !== label(t) ? `<span>${esc(kindLabel(t) || "Counter")}</span>` : ""}</div>
+        <div class="w-items">${t.items.map((it) => `${it.qty} ${esc(it.name)}`).join(" · ")}</div>
+      </div>`).join("") : "";
+    board.style.paddingBottom = list.length ? `calc(${waitingEl.offsetHeight}px + 2rem)` : "";
+    showMore();
+  }
+
   const edgeEl = document.getElementById("edge");
   function flashEdge() {
     edgeEl.classList.remove("go");
@@ -694,9 +739,11 @@
   function showMore() {
     // Counts tickets that are cut off, not just ones wholly off screen: a
     // ticket whose last item is hidden is as easy to get wrong as a missing one.
+    const floor = waitingEl.hidden ? window.innerHeight : waitingEl.getBoundingClientRect().top;
     const below = [...board.querySelectorAll(".ticket")].filter(
-      (c) => c.getBoundingClientRect().bottom > window.innerHeight + 2
+      (c) => c.getBoundingClientRect().bottom > floor + 2
     ).length;
+    moreEl.style.bottom = waitingEl.hidden ? "" : `calc(${window.innerHeight - floor}px + 1rem)`;
     moreEl.hidden = !below;
     moreEl.textContent = `▼ ${below} order${below === 1 ? "" : "s"} continue${below === 1 ? "s" : ""} below (press +)`;
   }
@@ -754,6 +801,7 @@
       } else problem(null);
     }
 
+    renderWaiting(data.waiting || []);
     const json = JSON.stringify(data.tickets);
     if (json === lastJson) return;
     lastJson = json;

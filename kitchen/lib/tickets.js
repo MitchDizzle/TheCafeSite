@@ -237,29 +237,47 @@ function onBoardAt(order, { dueAt, doordash, courier }) {
 
 // Today's work only, on both screens: a stale order from yesterday that
 // nobody closed in Square should not greet anyone every morning.
-function outOfWindow(t, now) {
+function outOfWindow(t, now, ahead = cfg.showAheadMinutes) {
   const due = Date.parse(t.dueAt || t.createdAt);
   if (due < startOfToday().getTime()) return "due before today";
-  if (due > now + cfg.showAheadMinutes * 6e4) return "pickup is more than " + cfg.showAheadMinutes + " min away";
+  if (due > now + ahead * 6e4) return "pickup is more than " + ahead + " min away";
   return null;
 }
 
-// null if the ticket belongs on the kitchen board, else why not.
-function hiddenReason(t, now) {
+// Off the kitchen board for good (done, canceled, ready), not just for now.
+function goneReason(t) {
   if (bumped[t.id]) return "cleared with Done";
   if (canceled[t.id]) return "not paid; canceled at the front";
   // A Ready the board wrote itself follows Done/Undo, so Undo still
   // brings the ticket back after Square has been told.
   if (t.squareReady && !markedReady[t.id]) return "front already marked it prepared";
+  return null;
+}
+
+// null if the ticket belongs on the kitchen board, else why not.
+function hiddenReason(t, now) {
+  const gone = goneReason(t);
+  if (gone) return gone;
   if (t.holdUntil && now < Date.parse(t.holdUntil)) return `waiting for a Dasher (on the board by ${new Date(t.holdUntil).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} at the latest)`;
   return outOfWindow(t, now);
 }
 
-// null if the ticket belongs on /front, else why not.
+// When a ticket that's waiting goes on the kitchen board, for the WAIT
+// UNTIL row: a DoorDash order waiting for its Dasher, or one due within
+// waitRowMinutes but not yet showAheadMinutes. null for anything else.
+function waitUntil(t, now) {
+  if (goneReason(t) || !hiddenReason(t, now)) return null;
+  if (t.holdUntil && now < Date.parse(t.holdUntil)) return t.holdUntil;
+  if (outOfWindow(t, now, cfg.waitRowMinutes)) return null;
+  return t.boardAt;
+}
+
+// null if the ticket belongs on /front, else why not. The front sees an
+// order as soon as it's in the WAIT UNTIL row.
 function frontHiddenReason(t, now) {
   if (handedOff[t.id]) return "handed off at the front";
   if (canceled[t.id]) return "not paid; canceled at the front";
-  return outOfWindow(t, now);
+  return outOfWindow(t, now, Math.max(cfg.showAheadMinutes, cfg.waitRowMinutes));
 }
 
 // Ready for the front: the kitchen pressed Done, or the front already marked
@@ -291,4 +309,4 @@ function orderDetail(o) {
   return parts.join(" · ");
 }
 
-module.exports = { NOT_FOOD, itemName, isOnline, toTicket, hiddenReason, frontHiddenReason, readyAt, orderDetail };
+module.exports = { NOT_FOOD, itemName, isOnline, toTicket, hiddenReason, waitUntil, frontHiddenReason, readyAt, orderDetail };

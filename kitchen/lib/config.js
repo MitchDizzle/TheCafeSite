@@ -25,7 +25,13 @@ const DEFAULTS = {
   port: 8090,
   pollSeconds: 5,
   sound: true, // new-order chime and lost-connection alarm
-  showAheadMinutes: 20, // pickup orders appear this long before they're due (60 until 2026-10-21: too early, client)
+  // Pickup orders (and phone orders with a time) go on the kitchen board
+  // this long before they're due: 15 covers big and small orders (client
+  // 2026-10-21; 60 until then, which started the kitchen clock too early).
+  showAheadMinutes: 15,
+  // Before that they wait in the WAIT UNTIL row at the bottom of the board,
+  // from this long before they're due, and the front page has them.
+  waitRowMinutes: 60,
   // DoorDash orders stay off the kitchen board until a Dasher is assigned or
   // this many minutes after they came in, whichever is first (client
   // 2026-10-21: a Dasher can take up to an hour). 0 shows them at once.

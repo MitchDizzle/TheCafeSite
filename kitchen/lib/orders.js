@@ -5,7 +5,7 @@ const { MOCK, MUTE, cfg } = require("./config");
 const { fetchOrders } = require("./square");
 const { live } = require("./live");
 const { bumped, offBoard, handedOff, canceled, keepOnFront, autoOff, readySince, state, saveState } = require("./state");
-const { toTicket, hiddenReason, frontHiddenReason, readyAt } = require("./tickets");
+const { toTicket, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
 const { withMockStates } = require("./square-status");
 const { statsToday, recordHistory } = require("./stats");
 const { DEMO_MINUTES, isDemo, mockOrders, demoOrders } = require("./mock");
@@ -97,7 +97,12 @@ function snapshot() {
   const tickets = live.all
     .filter((t) => !hiddenReason(t, now))
     .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
-  return { tickets, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
+  // The WAIT UNTIL row: what comes on the board next, soonest first.
+  const waiting = live.all
+    .map((t) => ({ ...t, waitUntil: waitUntil(t, now) }))
+    .filter((t) => t.waitUntil)
+    .sort((a, b) => Date.parse(a.waitUntil) - Date.parse(b.waitUntil));
+  return { tickets, waiting, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
     clearedList: undoList(bumped), stats: statsToday(), demo: live.demo, pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
 }
 
