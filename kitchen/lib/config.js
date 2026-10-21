@@ -37,6 +37,9 @@ const DEFAULTS = {
   // Items whose photo and options (flavors) the front can change: Manage ->
   // Desserts. Names as in Square.
   dessertItems: ["Cheesecake", "Dessert Bar"],
+  // ...and every item in this Square category, which is also where a new
+  // dessert made there goes. "" for the items above only.
+  dessertCategory: "Desserts",
   // The item whose sides are set each morning, and its side lists, one per
   // side the plate comes with: each pre-picks the day's side (or Chef's
   // Choice) and lists the sides it can be swapped for. Names as in Square;

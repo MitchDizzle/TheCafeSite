@@ -220,6 +220,7 @@ function mockCatalog() {
     { type: "ITEM", id: "ITEM-Soup of the Day", version: 1, item_data: { name: "Soup of the Day", categories: [{ id: "CAT-Soups & Salads" }], variations: [v("VAR-SC", "Cup", 500), v("VAR-SB", "Bowl", 700)] } },
   ];
   out.push({ type: "CATEGORY", id: "CAT-Specials", category_data: { name: "Lunch Specials" } });
+  out.push({ type: "CATEGORY", id: "CAT-Desserts", category_data: { name: "Desserts" } });
   // Desserts as they are in Square since 2026-10-21: each kind is a
   // variation, counted in stock (mockStock) or not, and the cheesecake's
   // sauce is a list of its own.
@@ -230,11 +231,13 @@ function mockCatalog() {
   };
   const sauce = (id, name, ordinal) => ({ type: "MODIFIER", id, modifier_data: { name, ordinal, modifier_list_id: "LIST-Sauce" } });
   daily.push(
-    { type: "ITEM", id: "ITEM-Cheesecake", version: 1, item_data: { name: "Cheesecake", categories: [{ id: "CAT-Chips & Sweets" }],
+    { type: "ITEM", id: "ITEM-Cheesecake", version: 1, item_data: { name: "Cheesecake", categories: [{ id: "CAT-Desserts" }], channels: ["CH-POS"],
       variations: [kind("VAR-CC-Plain", "Plain", 0, 350), kind("VAR-CC-Pumpkin", "Pumpkin", 1, 350)],
       modifier_list_info: [{ modifier_list_id: "LIST-Sauce", enabled: true, min_selected_modifiers: 0, max_selected_modifiers: 1 }] } },
-    { type: "ITEM", id: "ITEM-Dessert Bar", version: 1, item_data: { name: "Dessert Bar", categories: [{ id: "CAT-Chips & Sweets" }],
+    { type: "ITEM", id: "ITEM-Dessert Bar", version: 1, item_data: { name: "Dessert Bar", categories: [{ id: "CAT-Desserts" }], channels: ["CH-POS", "CH-Online"],
       variations: [kind("VAR-DB-Magic", "Magic Bar", 0, 150), kind("VAR-DB-MM", "M&M Chocolate Rice Crispy Treat", 1, 150)] } },
+    { type: "ITEM", id: "ITEM-Cream Puffs", version: 1, item_data: { name: "Cream Puffs", categories: [{ id: "CAT-Desserts" }], channels: ["CH-POS", "CH-Online"],
+      variations: [v("VAR-CP", "Regular", 300)] } },
     { type: "MODIFIER_LIST", id: "LIST-Sauce", version: 1, modifier_list_data: { name: "Cheesecake Sauce", selection_type: "MULTIPLE",
       modifiers: [sauce("MOD-Caramel", "Caramel", 0), sauce("MOD-Chocolate", "Chocolate", 1)] } },
   );
@@ -245,6 +248,8 @@ function mockCatalog() {
     if (i >= 0) out.splice(i, 1);
     out.push(mockItems.get(item.id));
   }
+  // Items made from the front since (a new dessert).
+  for (const o of mockItems.values()) if (o.type === "ITEM" && !out.some((x) => x.id === o.id)) out.push(o);
   return out;
 }
 

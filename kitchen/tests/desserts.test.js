@@ -50,3 +50,23 @@ test("desserts: nothing changed is nothing saved", async () => {
   const cake = await item("Cheesecake");
   assert.deepEqual(await saveDesserts({ kinds: [{ item: cake.id, counts: [] }], lists: [] }), []);
 });
+
+test("desserts: everything in the Desserts category is listed, one kind shown as itself", async () => {
+  const puffs = await item("Cream Puffs");
+  assert.equal(puffs.price, 3);
+  assert.deepEqual(puffs.kinds.map((k) => k.name), ["Regular"]);
+});
+
+test("desserts: a new dessert at its own price, set up like the one on the most channels", async () => {
+  const { newDessert } = require("../lib/desserts");
+  assert.equal(await newDessert({ name: "  Pecan  Pie ", price: "4.25", count: "3" }), "Pecan Pie");
+  const pie = await item("Pecan Pie");
+  assert.equal(pie.price, 4.25);
+  assert.deepEqual(pie.kinds.map((k) => [k.name, k.count]), [["Regular", 3]]);
+  const { mockItems } = require("../lib/mock");
+  const made = [...mockItems.values()].find((o) => o.item_data && o.item_data.name === "Pecan Pie");
+  assert.deepEqual(made.item_data.channels, ["CH-POS", "CH-Online"]);
+  assert.deepEqual(made.item_data.categories, [{ id: "CAT-Desserts" }]);
+  await assert.rejects(newDessert({ name: "Pecan Pie", price: "4" }), /already an item/);
+  await assert.rejects(newDessert({ name: "Brownie", price: "" }), /price/);
+});

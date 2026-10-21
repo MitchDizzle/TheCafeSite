@@ -10,7 +10,7 @@ const { catalog, loadCatalog } = require("./catalog");
 const { bumped, handedOff, canceled, byHand, keepOnFront, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
 const { poll, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay } = require("./orders");
 const { recordHistoryNow, historyReport } = require("./stats");
-const { dessertItems, saveDesserts, saveDessertPhoto } = require("./desserts");
+const { dessertItems, saveDesserts, saveDessertPhoto, newDessert } = require("./desserts");
 const { RETRY_MINUTES, pullSite, planView, savePlanDays } = require("./specials/plan");
 const { applyToday } = require("./specials/today");
 const { photoSetup, savePhotoPost, savedPhotos, savedPhotoFile, deleteSavedPhotos, clearBackedUpPhotos } = require("./photo-post");
@@ -72,7 +72,7 @@ function isLocal(req) {
 
 // What another device on the wifi may reach: the front page and its own
 // actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-backup"]);
+const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-backup"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -193,8 +193,8 @@ async function handle(req, res) {
     return send(res, 200, frontSnapshot());
   }
   // Desserts, behind the PIN: read (photos, kinds and counts, options), save
-  // kinds and options, and replace a photo.
-  if (req.method === "POST" && /^\/api\/front-dessert(s|s-save|-photo)$/.test(url.pathname)) {
+  // kinds and options, replace a photo, and make a new dessert.
+  if (req.method === "POST" && /^\/api\/front-dessert(s|s-save|-photo|-new)$/.test(url.pathname)) {
     const body = await readBody(req);
     const refused = pinRefusal(body.pin);
     if (refused) return send(res, 200, { ok: false, message: refused });
@@ -204,6 +204,10 @@ async function handle(req, res) {
         await loadCatalog();
         await saveDessertPhoto(body.itemId, body.photo);
         return send(res, 200, { ok: true, message: "Photo saved. Online ordering shows it within a few minutes." });
+      }
+      if (url.pathname === "/api/front-dessert-new") {
+        const name = await newDessert(body);
+        return send(res, 200, { ok: true, message: `${name} is in Square, under Desserts. Online ordering shows it within a minute or so.` });
       }
       await loadCatalog();
       const saved = await saveDesserts({ kinds: body.kinds, lists: body.lists });

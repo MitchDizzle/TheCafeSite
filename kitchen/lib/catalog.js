@@ -141,7 +141,7 @@ async function upsertObject(object) {
     mockItems.set(copy.id, copy);
     return structuredClone(copy);
   }
-  const json = await square("POST", "/catalog/object", { idempotency_key: `kitchen-${object.id}-${Date.now()}`, object });
+  const json = await square("POST", "/catalog/object", { idempotency_key: `kitchen-${String(object.id).replace(/\W/g, "")}-${Date.now()}`, object });
   return json.catalog_object;
 }
 

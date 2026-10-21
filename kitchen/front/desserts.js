@@ -19,8 +19,9 @@
     const money = (n) => (n == null ? "" : ` <small>$${n.toFixed(2)}</small>`);
     const left = (c) => (c === null ? "" : String(c));
     const countBox = (name, value) => `<input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" value="${esc(value)}" placeholder="–" aria-label="${esc(name)}: how many left">`;
-    const kindHtml = (k) => `<div class="m-kind${k.count === 0 ? " out" : ""}" data-kind="${esc(k.id)}" data-was="${left(k.count)}">
-        <span class="m-kind-name">${esc(k.name)}</span>${countBox(k.name, left(k.count))}<button type="button" data-remove>Remove</button>
+    // A dessert of one kind has Square's "Regular": shown as the dessert.
+    const kindHtml = (k, it) => `<div class="m-kind${k.count === 0 ? " out" : ""}" data-kind="${esc(k.id)}" data-was="${left(k.count)}">
+        <span class="m-kind-name">${esc(k.name === "Regular" ? it.name : k.name)}</span>${countBox(k.name, left(k.count))}<button type="button" data-remove>Remove</button>
       </div>`;
     const optHtml = (o) => `<label class="check${o.off ? " off" : ""}"><input type="checkbox" data-opt="${esc(o.id)}"${o.off ? "" : " checked"}><span>${esc(o.name)}</span></label>`;
     const itemHtml = (it) => it.missing
@@ -35,7 +36,7 @@
           <h3>${esc(it.name)}${money(it.price)}</h3>
           <div class="m-kinds" data-kinds="${esc(it.id)}">
             <p class="m-kind-head"><span>Kind</span><span>Left</span></p>
-            ${it.kinds.map(kindHtml).join("")}
+            ${it.kinds.map((k) => kindHtml(k, it)).join("")}
             <div class="m-add m-add-kind"><input type="text" placeholder="New kind, e.g. Turtle" maxlength="60" aria-label="New kind of ${esc(it.name)}"><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="Left" aria-label="How many of the new kind"><button type="button" data-add-kind>Add</button></div>
           </div>
           ${it.lists.map((l) => `<div class="m-list" data-list="${esc(l.id)}">
@@ -48,11 +49,32 @@
     screen({ title: "Desserts", back: true,
       body: `<p class="m-note"><b>Left</b> is how many are in the case. Square counts it down as they sell, at the till and online,
         and shows a kind sold out online at 0. Leave it blank not to count one.
-        <b>Remove</b> a kind once it's gone for good; <b>Add</b> a new one at the same price.
+        <b>Remove</b> a kind once it's gone for good; <b>Add</b> a new one at the same price, or make a <b>new dessert</b> at the bottom for another price.
         Unticked options are hidden from online ordering. A new photo goes to Square straight away.</p>
-        <form id="m-desserts" novalidate>${r.items.map(itemHtml).join("")}</form>`,
+        <form id="m-desserts" novalidate>${r.items.map(itemHtml).join("")}</form>
+        <section class="m-card m-new-dessert">
+          <h3>New dessert</h3>
+          <p class="m-note">At its own price, in Desserts in Square, on the same iPad screens and online. It goes in straight away.</p>
+          <div class="m-new-fields">
+            <label class="m-field">Name<input type="text" id="nd-name" maxlength="60" placeholder="e.g. Brownie"></label>
+            <label class="m-field">Price<span class="m-money">$<input type="text" id="nd-price" inputmode="decimal" maxlength="5" placeholder="3.00"></span></label>
+            <label class="m-field">Left<input type="text" id="nd-count" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="–"></label>
+          </div>
+          <button type="button" class="m-new-btn" id="nd-add">Add to Square</button>
+        </section>`,
       buttons: [{ label: "Save to Square", submit: "m-desserts", kind: "primary" }] });
     const form = document.getElementById("m-desserts");
+    document.getElementById("nd-add").addEventListener("click", async () => {
+      const val = (id) => document.getElementById(id).value.trim();
+      if (!val("nd-name")) return document.getElementById("nd-name").focus();
+      if (!/^\$?\d{0,2}(\.\d{1,2})?$/.test(val("nd-price")) || !val("nd-price")) { document.getElementById("nd-price").focus(); return alert("Price is like 3.00."); }
+      if (!/^\d{0,3}$/.test(val("nd-count"))) { document.getElementById("nd-count").focus(); return alert("Left is a number, or blank."); }
+      const dessert = { pin: Front.pin, name: val("nd-name"), price: val("nd-price"), count: val("nd-count") };
+      busy("Desserts", "Adding to Square…");
+      const r = await postJson("/api/front-dessert-new", dessert);
+      if (!r.ok) return result("Desserts", r);
+      openDesserts();
+    });
     form.addEventListener("change", (e) => {
       const opt = e.target.closest("[data-opt]");
       if (opt) opt.closest(".check").classList.toggle("off", !opt.checked);

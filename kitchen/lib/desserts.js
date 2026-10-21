@@ -10,6 +10,8 @@
 //     from online ordering, kept in Square, one tap to bring back.
 //   - add an option (no price: the sauces cost the same).
 //   - replace the item's photo (what online ordering shows).
+//   - make a new dessert at its own price, in the dessert category, set up
+//     like the dessert already there that's on the most sales channels.
 // Each save reads the item and list fresh and writes them back with
 // Square's version, like Specials.
 const { MOCK, cfg } = require("./config");
@@ -21,7 +23,14 @@ const { mockImages } = require("./mock");
 const plain = (msg) => Object.assign(new Error(msg), { plain: true });
 const cleanName = (raw) => String(raw || "").replace(/\s+/g, " ").trim().slice(0, 60);
 const byOrdinal = (key) => (a, b) => (a[key].ordinal ?? 0) - (b[key].ordinal ?? 0);
-const dessertIds = () => cfg.dessertItems.map((n) => catalog.itemIds.get(n.trim().toLowerCase())).filter(Boolean);
+// cfg.dessertItems, then the rest of cfg.dessertCategory, by name.
+function dessertNames() {
+  const cat = catalog.categories.find((c) => c.name.trim().toLowerCase() === String(cfg.dessertCategory || "").trim().toLowerCase());
+  const names = [...cfg.dessertItems];
+  for (const n of cat ? cat.items : []) if (!names.some((x) => x.trim().toLowerCase() === n.trim().toLowerCase())) names.push(n);
+  return names;
+}
+const dessertIds = () => dessertNames().map((n) => catalog.itemIds.get(n.trim().toLowerCase())).filter(Boolean);
 
 // Counted in stock: Square's own flag, or the location's override of it.
 function tracked(v) {
@@ -38,10 +47,11 @@ function setTracked(v, on) {
 async function dessertItems() {
   await loadCatalog();
   const out = [];
-  for (const name of cfg.dessertItems) {
+  for (const name of dessertNames()) {
     const id = catalog.itemIds.get(name.trim().toLowerCase());
     if (!id) { out.push({ name, missing: true }); continue; }
     const item = await readObject(id);
+    if (item.item_data.is_archived) continue;
     let photo = null;
     const imageId = (item.item_data.image_ids || [])[0];
     if (MOCK) photo = mockImages.get(id) || null;
@@ -185,6 +195,49 @@ async function saveDesserts({ kinds, lists } = {}) {
   return done;
 }
 
+// A new dessert: its own item in Square at its own price, one kind
+// ("Regular", which the ticket leaves off), counted if a count is given.
+// It copies the categories (so it's on the same iPad screens), tax, sales
+// channels and online settings of the dessert on the most channels.
+async function newDessert({ name, price, count } = {}) {
+  await loadCatalog();
+  const clean = cleanName(name);
+  if (!clean) throw plain("Give the new dessert a name.");
+  if (catalog.itemIds.has(clean.toLowerCase())) throw plain(`There's already an item called ${clean} in Square.`);
+  const cents = Math.round(Number(String(price).replace(/^\$/, "")) * 100);
+  if (!Number.isFinite(cents) || cents < 1 || cents > 9999) throw plain("Give it a price, like 3.00.");
+  const left = countOf(count);
+  const models = [];
+  for (const id of dessertIds()) {
+    const o = await readObject(id);
+    if (!o.item_data.is_archived) models.push(o);
+  }
+  if (!models.length) throw plain("There's no dessert in Square to set a new one up like.");
+  const model = models.sort((a, b) => (b.item_data.channels || []).length - (a.item_data.channels || []).length)[0];
+  const md = model.item_data;
+  const where = { present_at_all_locations: model.present_at_all_locations, present_at_location_ids: model.present_at_location_ids };
+  const keep = (o, keys) => Object.fromEntries(keys.filter((k) => o[k] !== undefined).map((k) => [k, o[k]]));
+  const item = await upsertObject({
+    type: "ITEM", id: "#dessert", ...where,
+    item_data: {
+      ...keep(md, ["product_type", "is_taxable", "tax_ids", "channels", "ecom_visibility", "use_location_fulfillment_methods"]),
+      name: clean,
+      categories: (md.categories || []).map((c) => ({ id: c.id })),
+      ...(md.reporting_category ? { reporting_category: { id: md.reporting_category.id } } : {}),
+      skip_modifier_screen: true,
+      variations: [{
+        type: "ITEM_VARIATION", id: "#dessert-regular", ...where,
+        item_variation_data: { item_id: "#dessert", name: "Regular", ordinal: 0, pricing_type: "FIXED_PRICING",
+          price_money: { amount: cents, currency: "USD" }, track_inventory: left !== null },
+      }],
+    },
+  });
+  if (left !== null) await setCounts([{ id: item.item_data.variations[0].id, count: left }]);
+  await loadCatalog();
+  console.log(`New dessert from the front page (${new Date().toLocaleTimeString()}): ${clean}, $${(cents / 100).toFixed(2)}.`);
+  return clean;
+}
+
 // A new photo for a dessert item, as the online menu's picture. The phone
 // has already shrunk it and re-drawn it, which also drops its GPS data.
 async function saveDessertPhoto(itemId, dataUrl) {
@@ -214,4 +267,4 @@ async function saveDessertPhoto(itemId, dataUrl) {
   console.log(`Dessert photo changed from the front page (${new Date().toLocaleTimeString()}): ${item.item_data.name}.`);
 }
 
-module.exports = { dessertItems, saveDesserts, saveDessertPhoto };
+module.exports = { dessertItems, saveDesserts, saveDessertPhoto, newDessert };

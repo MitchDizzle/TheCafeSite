@@ -192,6 +192,11 @@
 .m-kind.gone .m-kind-name::after { content: none; }
 .m-kind.new { background: #FFFBF2; border-radius: 0.35rem; }
 .m-add-kind input:nth-child(2) { flex: 0 0 4.2rem; text-align: center; }
+/* New dessert: name, price, how many, then the button. */
+.m-new-fields { display: grid; grid-template-columns: minmax(0, 1fr) 6.5rem 4.2rem; gap: 0.6rem; align-items: end; }
+.m-new-fields .m-money input { width: 100%; min-width: 0; box-sizing: border-box; }
+.m-new-fields .m-field input { width: 100%; box-sizing: border-box; }
+.m-new-btn { margin-top: 0.7rem; font: inherit; font-weight: 800; padding: 0.5rem 1rem; border: 2px solid var(--teal); border-radius: 0.4rem; background: transparent; color: var(--teal-dark); cursor: pointer; }
 /* Phone width (media queries count rem at 16px, not this page's 17). */
 @media (max-width: 36rem) {
   .m-dessert { grid-template-columns: 1fr; }
