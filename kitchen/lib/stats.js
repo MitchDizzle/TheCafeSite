@@ -10,6 +10,7 @@ const { startOfToday, localDate } = require("./util");
 const { live } = require("./live");
 const { bumped, platesDone, offBoard, state } = require("./state");
 const { NOT_FOOD, itemName, isOnline } = require("./tickets");
+const { mockHistory } = require("./mock");
 
 const BREAKFAST_ENDS = 11; // hour, local time
 
@@ -73,9 +74,10 @@ function dayRecords() {
 // range's (Reports). Same shape either way.
 function summarize(records) {
   const out = { orders: records.length, breakfast: 0, lunch: 0, counter: 0, online: 0, toGo: 0, forHere: 0,
-    kitchenDone: 0, avgMinutes: null, longestMinutes: null, sales: 0, items: [], topItems: [], byHour: {} };
+    kitchenDone: 0, avgMinutes: null, longestMinutes: null, sales: 0, avgTicket: null, items: [], topItems: [], byHour: {} };
   const qty = new Map();
   const times = [];
+  let priced = 0;
   for (const r of records) {
     out[r.meal]++;
     out[r.online ? "online" : "counter"]++;
@@ -83,11 +85,13 @@ function summarize(records) {
     if (r.done) out.kitchenDone++;
     if (r.kitchenMinutes != null) times.push(r.kitchenMinutes);
     out.sales += r.sales || 0;
+    if (r.sales != null) priced++;
     const h = new Date(r.at).getHours();
     out.byHour[h] = (out.byHour[h] || 0) + 1;
     for (const it of r.items) qty.set(it.name, (qty.get(it.name) || 0) + it.qty);
   }
   out.sales = Math.round(out.sales * 100) / 100;
+  if (priced) out.avgTicket = Math.round((out.sales / priced) * 100) / 100;
   if (times.length) {
     out.avgMinutes = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
     out.longestMinutes = Math.round(Math.max(...times));
@@ -120,6 +124,9 @@ try {
   history = JSON.parse(fs.readFileSync(HISTORY_FILE, "utf8"));
   if (!history.days) history.days = {};
 } catch {}
+// Test mode: four made-up weeks before today, so /today and Reports have
+// something to compare with. Only in the test mode's own history file.
+if (MOCK) history.days = { ...mockHistory(localDate()), ...history.days };
 let historyWrittenAt = 0;
 let historyLast = "";
 
@@ -162,4 +169,66 @@ function historyReport(from, to, withOrders) {
   return out;
 }
 
-module.exports = { statsToday, recordHistory, recordHistoryNow, historyReport };
+// ---------------------------------------------------------------- the phone page
+
+// /today, for the owner's phone, on the wifi or away from the shop: today's
+// numbers beside the same weekday before, from the daily history. "By now"
+// counts the orders up to this time of day on both days, so a morning is
+// compared with a morning; a pickup due later today is in today's numbers
+// but not in its "by now". The weeks before are what the history has (a day
+// the board never ran is missing, and then simply isn't compared).
+const COMPARE_WEEKS = 4;
+const minuteOfDay = (iso) => { const d = new Date(iso); return d.getHours() * 60 + d.getMinutes(); };
+const shiftDate = (date, n) => { const d = new Date(`${date}T12:00:00`); d.setDate(d.getDate() + n); return localDate(d); };
+const brief = (records) => { const s = summarize(records); return { orders: s.orders, sales: s.sales, avgTicket: s.avgTicket }; };
+
+function todayView(now = new Date(), records = dayRecords(), days = history.days) {
+  const date = localDate(now);
+  const cut = now.getHours() * 60 + now.getMinutes();
+  const byNow = (rs) => rs.filter((r) => minuteOfDay(r.at) <= cut);
+  const dayOf = (d) => (d !== date && days[d] ? days[d].orders : null);
+  const { items, ...today } = summarize(records);
+  today.items = items.slice(0, 10);
+  const later = records.filter((r) => Date.parse(r.at) > now.getTime());
+
+  // The same weekday in each of the weeks before.
+  const before = [];
+  for (let w = 1; w <= COMPARE_WEEKS; w++) {
+    const d = shiftDate(date, -7 * w);
+    const rs = dayOf(d);
+    if (rs) before.push({ date: d, byNow: brief(byNow(rs)), allDay: brief(rs), byHour: summarize(rs).byHour });
+  }
+  const lastWeek = before[0] && before[0].date === shiftDate(date, -7) ? before[0] : null;
+  // A usual day: the average of the weeks before, from two of them up.
+  const avg = (list, key) => ({
+    orders: Math.round(list.reduce((a, b) => a + b[key].orders, 0) / list.length),
+    sales: Math.round((list.reduce((a, b) => a + b[key].sales, 0) / list.length) * 100) / 100,
+  });
+  const usual = before.length >= 2 ? { weeks: before.length, byNow: avg(before, "byNow"), allDay: avg(before, "allDay") } : null;
+
+  // The week so far (Monday on), by now, against last week's to the same
+  // weekday and time.
+  const monday = shiftDate(date, -((new Date(`${date}T12:00:00`).getDay() + 6) % 7));
+  const weekRecords = (from, to, last) => {
+    const out = [];
+    let found = 0;
+    for (let d = from; d < to; d = shiftDate(d, 1)) {
+      const rs = dayOf(d);
+      if (rs) { out.push(...rs); found++; }
+    }
+    const lastDay = last === date ? records : dayOf(last);
+    if (lastDay) { out.push(...byNow(lastDay)); found++; }
+    return found ? out : null;
+  };
+  const lastWeekRecords = weekRecords(shiftDate(monday, -7), shiftDate(date, -7), shiftDate(date, -7));
+  const week = {
+    from: monday,
+    thisWeek: brief(weekRecords(monday, date, date)),
+    lastWeek: lastWeekRecords ? brief(lastWeekRecords) : null,
+  };
+
+  return { date, at: now.toISOString(), today, byNow: brief(byNow(records)),
+    later: later.length ? brief(later) : null, lastWeek, usual, week };
+}
+
+module.exports = { statsToday, recordHistory, recordHistoryNow, historyReport, todayView, summarize };

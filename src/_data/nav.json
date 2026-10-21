@@ -5,6 +5,7 @@
     { "label": "Menu",     "href": "/menu" },
     { "label": "Catering", "href": "/catering" },
     { "label": "Gallery",  "href": "/gallery" },
+    { "label": "Reserve",  "href": "/reserve" },
     { "label": "Contact",  "href": "/contact", "cta": true }
   ],
 
@@ -13,6 +14,7 @@
     { "label": "Menu",     "href": "/menu" },
     { "label": "Catering", "href": "/catering" },
     { "label": "Gallery",  "href": "/gallery" },
+    { "label": "Reserve a table", "href": "/reserve" },
     { "label": "Contact",  "href": "/contact" },
     { "label": "Privacy",  "href": "/privacy" }
   ]

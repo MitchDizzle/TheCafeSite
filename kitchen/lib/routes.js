@@ -9,7 +9,7 @@ const { live } = require("./live");
 const { catalog, loadCatalog } = require("./catalog");
 const { bump, handedOff, canceled, byHand, keepOnFront, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
 const { poll, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay } = require("./orders");
-const { recordHistoryNow, historyReport } = require("./stats");
+const { recordHistoryNow, historyReport, todayView } = require("./stats");
 const { dessertItems, saveDesserts, saveDessertPhoto, newDessert } = require("./desserts");
 const { RETRY_MINUTES, pullSite, planView, savePlanDays } = require("./specials/plan");
 const { applyToday } = require("./specials/today");
@@ -17,10 +17,12 @@ const { photoSetup, savePhotoPost, savedPhotos, savedPhotoFile, deleteSavedPhoto
 const { backupNow } = require("./backup");
 const { offsiteStatus } = require("./offsite");
 const { checkPage } = require("./check");
+const { syncNow, saveReservation, actOn, markSeated, manageView } = require("./reservations");
 const { power, checkUpdates, boardCheckedIn } = require("./system");
 
 const BOARD_FILE = path.join(DIR, "board.html");
 const FRONT_FILE = path.join(DIR, "front.html");
+const TODAY_FILE = path.join(DIR, "today.html");
 
 function send(res, status, body, type = "application/json; charset=utf-8") {
   res.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
@@ -70,14 +72,15 @@ function isLocal(req) {
   return a === "127.0.0.1" || a === "::1" || a === "::ffff:127.0.0.1";
 }
 
-// What another device on the wifi may reach: the front page and its own
-// actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/api/front", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-backup"]);
+// What another device on the wifi (or the owner's phone over Tailscale) may
+// reach: the front page, the phone page (/today) and their own actions. With frontKey set, it must also carry ?key=<frontKey>.
+const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
 const APP_FILES = {
   "/front.webmanifest": null, // built per request, see below
+  "/today.webmanifest": null,
   "/front-icon-180.png": "icon-180.png",
   "/front-icon-192.png": "icon-192.png",
   "/front-icon-512.png": "icon-512.png",
@@ -96,6 +99,7 @@ const STATIC = {
   "/front/desserts.js": "front/desserts.js",
   "/front/leave-off.js": "front/leave-off.js",
   "/front/saved-photos.js": "front/saved-photos.js",
+  "/front/reservations.js": "front/reservations.js",
 };
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
@@ -139,16 +143,21 @@ async function handle(req, res) {
   if (req.method === "GET" && url.pathname === "/front") {
     return send(res, 200, fs.readFileSync(FRONT_FILE, "utf8"), "text/html; charset=utf-8");
   }
-  // Added to a phone's home screen, /front opens like an app: its own icon,
-  // full screen, no address bar. start_url carries the key when the page
-  // asking for the manifest had the right one, so the icon keeps working
-  // with frontKey set.
-  if (req.method === "GET" && url.pathname === "/front.webmanifest") {
+  // The owner's phone page: the day's numbers on top, then the open orders.
+  if (req.method === "GET" && url.pathname === "/today") {
+    return send(res, 200, fs.readFileSync(TODAY_FILE, "utf8"), "text/html; charset=utf-8");
+  }
+  // Added to a phone's home screen, /front (or /today) opens like an app:
+  // its own icon, full screen, no address bar. start_url carries the key
+  // when the page asking for the manifest had the right one, so the icon
+  // keeps working with frontKey set.
+  if (req.method === "GET" && (url.pathname === "/front.webmanifest" || url.pathname === "/today.webmanifest")) {
     const key = cfg.frontKey && url.searchParams.get("key") === cfg.frontKey ? `?key=${encodeURIComponent(cfg.frontKey)}` : "";
+    const today = url.pathname === "/today.webmanifest";
     return send(res, 200, {
-      name: "The Café · Front",
-      short_name: "Café Front",
-      start_url: `/front${key}`,
+      name: today ? "The Café · Today" : "The Café · Front",
+      short_name: today ? "Café Today" : "Café Front",
+      start_url: `/${today ? "today" : "front"}${key}`,
       scope: "/",
       display: "standalone",
       background_color: "#FAF7F2",
@@ -227,6 +236,38 @@ async function handle(req, res) {
           ? "Square won't take that change to this dessert from here. If it's marked sold out on the iPad, take the mark off there and save again."
           : `Square didn't take it: ${err.message}` });
     }
+  }
+  // Reservations, behind the PIN: the book (Google's new requests fetched
+  // first), a new or changed reservation, and Accept / Decline / Cancel /
+  // Seated and the rest. A change that emails the customer waits for Google
+  // so the front can say whether it went.
+  if (req.method === "POST" && /^\/api\/front-reservation(s|-save|-act)$/.test(url.pathname)) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    try {
+      // Google gets a few seconds to hand over new requests; a slow one
+      // carries on behind the screen (it's checked every 2 minutes anyway).
+      if (url.pathname === "/api/front-reservations") {
+        const done = await Promise.race([syncNow().then(() => true), new Promise((r) => setTimeout(() => r(false), 8000))]);
+        return send(res, 200, { ok: true, ...manageView(), stillChecking: !done });
+      }
+      const done = url.pathname === "/api/front-reservation-save"
+        ? await saveReservation(body.reservation || {}, !!body.email)
+        : { message: await actOn(String(body.id || ""), String(body.act || ""), !!body.email) };
+      return send(res, 200, { ok: true, ...done, ...manageView() });
+    } catch (err) {
+      console.error(`Reservations: ${err.message}`);
+      return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't work: ${err.message}` });
+    }
+  }
+  // Seated, from the band at the top of the front page: no PIN, like
+  // Handed off. Anything else about a reservation is in Manage.
+  if (req.method === "POST" && url.pathname === "/api/reservation-seated") {
+    const { id } = await readBody(req);
+    if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
+    markSeated(id);
+    return send(res, 200, frontSnapshot());
   }
   // Manage's first screen: is the PIN right? (Every action checks it again;
   // this only lets the front say "Wrong PIN" before showing the menu.)
@@ -340,6 +381,13 @@ async function handle(req, res) {
     }
     recordHistoryNow();
     return send(res, 200, { ok: true, ...historyReport(body.from, body.to, !!body.orders) });
+  }
+  // The phone page's numbers, behind the PIN like Reports: sales are the
+  // owner's business, not the counter's.
+  if (req.method === "POST" && url.pathname === "/api/front-today") {
+    const refused = pinRefusal((await readBody(req)).pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    return send(res, 200, { ok: true, ...todayView() });
   }
   if (req.method === "POST" && url.pathname === "/api/unhandoff") {
     const { id } = await readBody(req);

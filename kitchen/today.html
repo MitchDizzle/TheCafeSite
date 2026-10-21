@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Café · Today</title>
+<!-- The owner's phone page: how the day is going (sales, orders, the same
+     weekday before, busiest hours, what's selling), then what's on the board
+     right now. Read-only: nothing here presses Done or Handed off. The
+     numbers are behind the PIN (updatePin); the orders are the front page's.
+     Away from the shop it opens through Tailscale (README, "On the owner's
+     phone, away from the shop"). -->
+<meta name="theme-color" content="#1F4552">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Café Today">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/front-icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/front-icon-192.png">
+<link rel="stylesheet" href="/kitchen.css">
+<style>
+  /* Phone first: one column, the money at the top, big enough to read at a
+     glance. Wider screens just get a wider column. */
+  html { font-size: 16px; }
+  body { background: var(--cream); }
+  .bar {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    padding-top: max(0.6rem, env(safe-area-inset-top));
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    background: var(--teal-dark); color: var(--cream);
+  }
+  .bar h1 { margin: 0; font-size: 1.1rem; }
+  .bar .as-of { margin-left: auto; font-size: 0.85rem; opacity: 0.9; text-align: right; }
+  .bar button, .bar a {
+    font: inherit; font-weight: 700; font-size: 0.9rem;
+    padding: 0.35rem 0.7rem; border: 2px solid var(--cream); border-radius: 0.4rem;
+    background: transparent; color: var(--cream); text-decoration: none; cursor: pointer;
+  }
+  .alert { padding: 0.6rem 1rem; background: var(--amber); color: #1A1A1A; font-weight: 700; }
+  .alert.practice { background: #E7D9F3; color: #3D1A5C; }
+  .alert[hidden] { display: none; }
+  main { max-width: 40rem; margin: 0 auto; padding: 0.8rem max(0.9rem, env(safe-area-inset-right)) max(3rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left)); }
+  h2 { margin: 1.6rem 0 0.5rem; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 0.6rem; padding: 0.9rem 1rem; }
+  .muted { color: var(--muted); }
+  .small { font-size: 0.85rem; }
+
+  /* The headline: sales so far, and how that compares. */
+  .hero .big { font-size: 2.6rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .hero .sub { margin-top: 0.15rem; font-size: 1.05rem; }
+  .delta { display: block; margin: 0.5rem 0 0.2rem; font-weight: 700; }
+  .delta.up { color: var(--green); }
+  .delta.down { color: var(--red-dark); }
+  .delta.same { color: var(--muted); }
+
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-top: 0.6rem; }
+  .tile { background: var(--paper); border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.55rem 0.75rem; }
+  .tile b { display: block; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+  .tile span { color: var(--muted); font-size: 0.85rem; }
+
+  table.cmp { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .cmp th, .cmp td { padding: 0.4rem 0.3rem; text-align: right; border-bottom: 1px solid var(--line); }
+  .cmp th:first-child, .cmp td:first-child { text-align: left; }
+  .cmp thead th { font-size: 0.8rem; color: var(--muted); font-weight: 700; }
+  .cmp tr.me td { font-weight: 800; }
+  .cmp tr.gap td { border-bottom: 0; padding-top: 0.8rem; font-size: 0.8rem; color: var(--muted); font-weight: 700; text-align: left; }
+
+  /* Busiest hours: one row per hour, today's bar with last week's beside it. */
+  .hours { display: grid; grid-template-columns: 3.2rem 1fr; gap: 0.3rem 0.5rem; align-items: center; }
+  .hours .h { font-size: 0.85rem; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .hours .bars { display: grid; gap: 2px; }
+  .hours .bar-row { display: flex; align-items: center; gap: 0.4rem; min-height: 0.9rem; }
+  .hours .fill { height: 0.8rem; border-radius: 0 4px 4px 0; background: var(--teal); min-width: 2px; }
+  .hours .fill.then { height: 0.45rem; background: #A9B5BA; }
+  .hours .n { font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+  .hours .bar-row.then .n { color: var(--muted); }
+  .key { display: flex; gap: 1rem; margin-bottom: 0.6rem; font-size: 0.85rem; color: var(--muted); }
+  .key i { display: inline-block; width: 0.9rem; height: 0.6rem; margin-right: 0.3rem; border-radius: 2px; background: var(--teal); vertical-align: middle; }
+  .key i.then { background: #A9B5BA; height: 0.4rem; }
+
+  ol.top { margin: 0; padding-left: 1.6rem; }
+  ol.top li { padding: 0.15rem 0; }
+  ol.top .q { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* The open orders, as on the front page but compact and read-only. */
+  .orders { display: grid; gap: 0.5rem; }
+  .o { background: var(--paper); border: 1px solid var(--line); border-left: 0.35rem solid var(--teal); border-radius: 0.45rem; padding: 0.5rem 0.75rem; }
+  .o.ready { border-left-color: var(--green); }
+  .o.late { border-left-color: var(--red); }
+  .o.demo { border-style: dashed; }
+  .o .top-line { display: flex; gap: 0.5rem; align-items: baseline; }
+  .o .who { font-weight: 800; overflow-wrap: anywhere; }
+  .o .st { margin-left: auto; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .o.ready .st { color: var(--green); }
+  .o.late .st { color: var(--red-dark); }
+  .o .kind { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .o .what { margin-top: 0.15rem; font-size: 0.92rem; }
+  .tag { display: inline-block; padding: 0 0.35rem; margin-left: 0.3rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 900; vertical-align: 1px; }
+  .tag.unpaid { background: #FBE3E1; color: #7A1F18; }
+  .tag.demo { background: #E7D9F3; color: #5B2A86; }
+
+  /* Reservations: today's tables and the next two weeks', one line each. */
+  .resv { display: grid; gap: 0.1rem; }
+  .resv .day { margin: 0.5rem 0 0.1rem; font-weight: 800; font-size: 0.9rem; color: var(--teal-dark); }
+  .resv .day:first-child { margin-top: 0; }
+  .resv .r { display: grid; grid-template-columns: 4.2rem 1fr; gap: 0.5rem; padding: 0.2rem 0; }
+  .resv .r .t { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .resv .r.seated { color: var(--muted); }
+  .resv .r small { display: block; color: var(--muted); }
+
+  /* The PIN, when this phone doesn't remember it yet. */
+  form.pin { display: grid; gap: 0.6rem; }
+  form.pin input[type=password] { font: inherit; font-size: 1.3rem; padding: 0.5rem 0.7rem; border: 2px solid var(--line); border-radius: 0.4rem; width: 100%; }
+  form.pin .row { display: flex; gap: 0.6rem; align-items: center; }
+  form.pin button { font: inherit; font-weight: 800; padding: 0.55rem 1.2rem; border: 0; border-radius: 0.4rem; background: var(--red); color: #fff; cursor: pointer; }
+  .error { color: var(--red-dark); font-weight: 700; margin: 0; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <h1>Today</h1>
+    <span class="as-of" id="as-of"></span>
+    <button type="button" id="refresh" aria-label="Refresh now">↻</button>
+  </div>
+  <div class="alert" id="alert" hidden></div>
+  <main>
+    <section id="lock" class="card" hidden>
+      <form class="pin" id="pin-form">
+        <label for="pin"><b>Enter the PIN</b> to see the day's numbers (the Manage PIN).</label>
+        <input id="pin" type="password" inputmode="numeric" autocomplete="off">
+        <p class="error" id="pin-msg" hidden></p>
+        <div class="row">
+          <label><input type="checkbox" id="pin-keep" checked> Remember on this phone</label>
+          <span style="flex:1"></span>
+          <button type="submit">Show</button>
+        </div>
+      </form>
+    </section>
+
+    <div id="numbers" hidden>
+      <section class="card hero" aria-live="polite">
+        <div class="muted small">Sales so far</div>
+        <div class="big" id="sales"></div>
+        <div class="sub" id="hero-sub"></div>
+        <span class="delta" id="hero-delta"></span>
+        <div class="muted small" id="later" hidden></div>
+      </section>
+      <div class="tiles" id="tiles"></div>
+
+      <h2 id="cmp-h">Compared with</h2>
+      <div class="card"><table class="cmp" id="cmp"></table></div>
+
+      <h2>Busiest hours</h2>
+      <div class="card">
+        <div class="key" id="hours-key"></div>
+        <div class="hours" id="hours"></div>
+      </div>
+
+      <h2>Most ordered today</h2>
+      <div class="card" id="top"></div>
+    </div>
+
+    <h2>Reservations</h2>
+    <div class="card resv" id="resv"><p class="muted">Reading…</p></div>
+
+    <h2>On the board now <span id="board-count"></span></h2>
+    <div class="orders" id="orders"><p class="muted">Reading…</p></div>
+
+    <p class="muted small" style="margin-top:2rem">From the kitchen board's own count: each order's total in Square, tax included, once it's paid (online orders when they're placed). Canceled, test and demo orders aren't counted. Square's Dashboard has the official sales.
+      <br><a href="#" id="front-link">The front page</a> · <a href="#" id="forget" hidden>Forget the PIN here</a></p>
+  </main>
+
+<script>
+(() => {
+  const ORDERS_MS = 5000; // the board itself checks Square every 5 s
+  const NUMBERS_MS = 30000;
+  const key = new URLSearchParams(location.search).get("key");
+  const api = (p) => (key ? `${p}?key=${encodeURIComponent(key)}` : p);
+  document.head.appendChild(Object.assign(document.createElement("link"), { rel: "manifest", href: api("/today.webmanifest") }));
+  document.getElementById("front-link").href = api("/front");
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const money = (n) => (n == null ? "–" : `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+  const fmtTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const weekday = (date) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short" });
+  const dayName = (date) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const hourName = (h) => `${h % 12 || 12}${h < 12 ? "am" : "pm"}`;
+  const mins = (ms) => Math.max(0, Math.floor(ms / 6e4));
+
+  // The same PIN the front page remembers (same address, same storage), so
+  // "Remember on this device" there opens this page straight away too.
+  const savedPin = {
+    get() { try { return localStorage.getItem("front-pin") || ""; } catch { return ""; } },
+    set(v) { try { v ? localStorage.setItem("front-pin", v) : localStorage.removeItem("front-pin"); } catch {} },
+  };
+  let pin = savedPin.get();
+
+  async function postJson(path, body) {
+    try {
+      const res = await fetch(api(path), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      return await res.json();
+    } catch {
+      return { ok: false, offline: true, message: "Can't reach the kitchen PC." };
+    }
+  }
+
+  // ---- the PIN
+  function showLock(message) {
+    $("lock").hidden = false;
+    $("numbers").hidden = true;
+    $("pin-msg").hidden = !message;
+    $("pin-msg").textContent = message || "";
+  }
+  $("pin-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    pin = $("pin").value;
+    const r = await loadNumbers();
+    if (r && r.ok && $("pin-keep").checked) savedPin.set(pin);
+  });
+  $("forget").addEventListener("click", (e) => {
+    e.preventDefault();
+    savedPin.set("");
+    pin = "";
+    showLock();
+  });
+
+  // ---- the numbers
+  // How today compares, in words and an arrow, never colour alone.
+  function delta(now, then, what, isMoney) {
+    if (then == null) return { cls: "same", text: "" };
+    const diff = Math.round((now - then) * 100) / 100;
+    const pct = then ? Math.round((diff / then) * 100) : null;
+    if (Math.abs(diff) < (isMoney ? 0.5 : 1)) return { cls: "same", text: `= Same as ${what}` };
+    const amount = isMoney ? money(Math.abs(diff)) : Math.abs(diff);
+    return { cls: diff > 0 ? "up" : "down", text: `${diff > 0 ? "▲" : "▼"} ${amount}${pct != null ? ` (${Math.abs(pct)}%)` : ""} ${diff > 0 ? "ahead of" : "behind"} ${what}` };
+  }
+
+  function renderNumbers(v) {
+    $("lock").hidden = true;
+    $("numbers").hidden = false;
+    $("forget").hidden = !savedPin.get();
+    const t = v.today;
+    const day = weekday(v.date);
+    // The headline is up to now, like what it's compared with; pickups
+    // already booked for later today are said apart.
+    const n = v.byNow;
+    $("sales").textContent = money(n.sales);
+    $("hero-sub").textContent = `${n.orders} order${n.orders === 1 ? "" : "s"} · ${money(n.avgTicket)} average ticket`;
+    $("later").hidden = !v.later;
+    if (v.later) $("later").textContent = `+ ${v.later.orders} pickup${v.later.orders === 1 ? "" : "s"} due later today (${money(v.later.sales)})`;
+    const ref = v.lastWeek ? [v.lastWeek.byNow, `last ${day} by now`] : v.usual ? [v.usual.byNow, `a usual ${day} by now`] : null;
+    const d = ref ? delta(v.byNow.sales, ref[0].sales, ref[1], true) : { cls: "same", text: "Nothing to compare with yet: the history has no earlier " + day + "." };
+    $("hero-delta").className = `delta ${d.cls}`;
+    $("hero-delta").textContent = d.text;
+
+    const tile = (b, label) => `<div class="tile"><b>${b}</b><span>${label}</span></div>`;
+    const m = (n) => (n != null ? `${n} min` : "–");
+    $("tiles").innerHTML = [
+      tile(`${t.breakfast} / ${t.lunch}`, `breakfast / lunch${v.later ? ", with those due later" : ""}`),
+      tile(`${t.counter} / ${t.online}`, "counter / online"),
+      tile(`${t.toGo} / ${t.forHere}`, "to go / for here"),
+      tile(`${m(t.avgMinutes)}`, `avg in the kitchen${t.longestMinutes != null ? `, longest ${t.longestMinutes}` : ""}`),
+    ].join("");
+
+    // Today by now beside the same weekday before; then whole days, then the week.
+    const row = (label, b, me) => `<tr${me ? ' class="me"' : ""}><td>${label}</td><td>${b ? b.orders : "–"}</td><td>${b ? money(b.sales) : "–"}</td></tr>`;
+    const rows = [`<thead><tr><th></th><th>Orders</th><th>Sales</th></tr></thead><tbody>`,
+      `<tr class="gap"><td colspan="3">Up to ${fmtTime(v.at)}</td></tr>`,
+      row(`Today`, v.byNow, true),
+      v.lastWeek ? row(`Last ${day} (${dayName(v.lastWeek.date).replace(/^\w+, /, "")})`, v.lastWeek.byNow) : "",
+      v.usual ? row(`Usual ${day} <span class="muted small">(${v.usual.weeks} wk avg)</span>`, v.usual.byNow) : "",
+    ];
+    if (v.lastWeek || v.usual) {
+      rows.push(`<tr class="gap"><td colspan="3">The whole day</td></tr>`,
+        v.lastWeek ? row(`Last ${day}`, v.lastWeek.allDay) : "",
+        v.usual ? row(`Usual ${day}`, v.usual.allDay) : "");
+    }
+    rows.push(`<tr class="gap"><td colspan="3">The week so far (from ${weekday(v.week.from)}), up to ${day} ${fmtTime(v.at)}</td></tr>`,
+      row("This week", v.week.thisWeek, true), row("Last week", v.week.lastWeek), "</tbody>");
+    $("cmp").innerHTML = rows.join("");
+    if (!v.lastWeek && !v.usual) $("cmp-h").textContent = `Compared with (no earlier ${day} in the history yet)`;
+    else $("cmp-h").textContent = "Compared with";
+
+    // Busiest hours: today's orders per hour, last week's same day beside.
+    const then = v.lastWeek ? v.lastWeek.byHour : {};
+    const hours = [...new Set([...Object.keys(t.byHour), ...Object.keys(then)].map(Number))].sort((a, b) => a - b);
+    const max = Math.max(1, ...hours.map((h) => Math.max(t.byHour[h] || 0, then[h] || 0)));
+    $("hours-key").innerHTML = `<span><i></i>Today</span>${v.lastWeek ? `<span><i class="then"></i>Last ${day}</span>` : ""}`;
+    $("hours").innerHTML = hours.length ? hours.map((h) => {
+      const a = t.byHour[h] || 0, b = then[h] || 0;
+      return `<div class="h">${hourName(h)}</div><div class="bars">
+        <div class="bar-row" title="Today ${hourName(h)}: ${a} orders"><span class="fill" style="width:${(a / max) * 85}%"></span><span class="n">${a}</span></div>
+        ${v.lastWeek ? `<div class="bar-row then" title="Last ${day} ${hourName(h)}: ${b} orders"><span class="fill then" style="width:${(b / max) * 85}%"></span><span class="n">${b}</span></div>` : ""}
+      </div>`;
+    }).join("") : `<p class="muted">No orders yet.</p>`;
+
+    $("top").innerHTML = t.items.length
+      ? `<ol class="top">${t.items.map((i) => `<li>${esc(i.name)} <span class="q">×${i.qty}</span></li>`).join("")}</ol>`
+      : `<p class="muted" style="margin:0">Nothing yet.</p>`;
+  }
+
+  let numbersTimer = null;
+  async function loadNumbers() {
+    clearTimeout(numbersTimer);
+    if (!pin) { showLock(); return null; }
+    const r = await postJson("/api/front-today", { pin });
+    if (r.ok) renderNumbers(r);
+    else if (r.offline) { /* the orders' alert says so; keep what's shown */ }
+    else {
+      // Wrong (or changed) PIN: forget it here and ask, without retrying,
+      // so a stale PIN never locks Manage out for the counter.
+      if (/wrong pin/i.test(r.message || "")) { savedPin.set(""); pin = ""; }
+      showLock(r.message);
+      return r;
+    }
+    if (!document.hidden) numbersTimer = setTimeout(loadNumbers, NUMBERS_MS);
+    return r;
+  }
+
+  // ---- the open orders (the front page's, read-only)
+  const kindLabel = (o) => {
+    if (o.kind === "COUNTER") return o.dueAt ? `Counter · due ${fmtTime(o.dueAt)}` : "Counter";
+    const k = o.kind === "PICKUP" && (!o.source || /square online|ordering profile/i.test(o.source)) ? "Online" : (o.source || o.kind);
+    return o.dueAt ? `${k} · due ${fmtTime(o.dueAt)}` : k;
+  };
+  function orderHtml(o, now) {
+    let st, late = false;
+    if (o.readyAt) { const m = mins(now - Date.parse(o.readyAt)); st = m ? `Ready ${m} min` : "Ready now"; }
+    else if (o.dueAt) { const u = Date.parse(o.dueAt) - now; late = u < 0; st = late ? `${mins(-u)} min late` : `Due in ${mins(u)} min`; }
+    else { const m = mins(now - Date.parse(o.createdAt)); late = m > 15; st = `Cooking ${m} min`; }
+    const items = [...o.items, ...o.front].map((it) => `${it.qty > 1 ? `${it.qty}× ` : ""}${esc(it.name)}`).join(", ");
+    return `<div class="o${o.readyAt ? " ready" : late ? " late" : ""}${o.demo ? " demo" : ""}">
+      <div class="top-line"><span class="who">${esc(o.label || o.name || `#${o.shortId}`)}${o.unpaid ? '<span class="tag unpaid">NOT PAID</span>' : ""}${o.demo ? '<span class="tag demo">DEMO</span>' : ""}</span><span class="st">${st}</span></div>
+      <div class="kind">${esc(kindLabel(o))}</div>
+      <div class="what">${items || '<span class="muted">Nothing from the kitchen</span>'}</div>
+    </div>`;
+  }
+
+  // Today's tables and the next two weeks', from the same answer as the
+  // orders. Taken and answered on the front page (Manage -> Reservations).
+  const clockWords = (t) => { const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`; };
+  function renderResv(rv) {
+    if (!rv) return;
+    const line = (r) => `<div class="r${r.phase === "seated" ? " seated" : ""}"><span class="t">${clockWords(r.time)}</span>
+      <span><b>${esc(r.name)}</b> · ${r.party} ${r.party === 1 ? "person" : "people"}${r.phase === "seated" ? " · seated" : ""}${r.notes ? `<small>${esc(r.notes)}</small>` : ""}</span></div>`;
+    const days = new Map();
+    for (const r of rv.upcoming) days.set(r.date, [...(days.get(r.date) || []), r]);
+    const html = [
+      rv.today.length ? `<p class="day">Today</p>${rv.today.map(line).join("")}` : "",
+      ...[...days].map(([d, rs]) => `<p class="day">${esc(dayName(d))}</p>${rs.map(line).join("")}`),
+      rv.requests ? `<p class="day" style="color:var(--red-dark)">${rv.requests} request${rv.requests === 1 ? "" : "s"} from the website to answer (front page, Manage &rarr; Reservations)</p>` : "",
+    ].join("");
+    $("resv").innerHTML = html || `<p class="muted">No tables booked for the next two weeks.</p>`;
+  }
+
+  let ordersTimer = null;
+  let lastFront = null;
+  function renderOrders() {
+    if (!lastFront) return;
+    renderResv(lastFront.reservations);
+    const list = lastFront.orders;
+    const ready = list.filter((o) => o.readyAt).length;
+    $("board-count").textContent = list.length ? `· ${list.length - ready} cooking, ${ready} ready` : "";
+    $("orders").innerHTML = list.length ? list.map((o) => orderHtml(o, Date.now())).join("") : `<p class="muted">Nothing open.</p>`;
+  }
+  async function loadOrders() {
+    clearTimeout(ordersTimer);
+    const alertEl = $("alert");
+    try {
+      const res = await fetch(api("/api/front"), { cache: "no-store" });
+      if (!res.ok) throw new Error(String(res.status));
+      const data = await res.json();
+      lastFront = data;
+      const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000;
+      alertEl.classList.toggle("practice", !!data.mock && !data.error && !stale);
+      alertEl.hidden = !(data.mock || data.error || stale);
+      alertEl.textContent = data.mock ? "TEST MODE: made-up orders and history, not from Square."
+        : data.lastOkAt ? `The kitchen PC can't reach Square. As of ${fmtTime(data.lastOkAt)}; newer orders may be missing.`
+        : "The kitchen PC is connecting to Square…";
+      $("as-of").textContent = `Updated ${fmtTime(new Date().toISOString())}`;
+      renderOrders();
+    } catch {
+      alertEl.hidden = false;
+      alertEl.classList.remove("practice");
+      alertEl.textContent = "Can't reach the kitchen PC. Away from the shop, is Tailscale on? Is the board running?";
+    } finally {
+      if (!document.hidden) ordersTimer = setTimeout(loadOrders, ORDERS_MS);
+    }
+  }
+
+  // Nothing is fetched while the phone is locked or the app is in the
+  // background; it catches up the moment it's opened again.
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) { loadOrders(); loadNumbers(); }
+  });
+  $("refresh").addEventListener("click", () => { loadOrders(); loadNumbers(); });
+  setInterval(renderOrders, 15000); // the minutes on each order
+
+  loadOrders();
+  loadNumbers();
+})();
+</script>
+</body>
+</html>

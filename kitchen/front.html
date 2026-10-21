@@ -244,6 +244,20 @@
     cursor: pointer;
   }
   .cancel-unpaid:hover { background: #FBE3E1; }
+  /* Reservations: today's tables, under the bar. One coming up (within
+     reservationAheadMinutes) gets its own row with Seated; amber from 15
+     minutes before its time to the end of the hold, as amber means time. */
+  .resv { display: grid; gap: 0.45rem; padding: 0.6rem 1.2rem; background: #E3EEF1; border-bottom: 1px solid var(--line); }
+  .resv[hidden] { display: none; }
+  .resv-item { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.9rem; padding: 0.5rem 0.8rem; background: var(--paper); border: 2px solid var(--teal); border-radius: 0.5rem; }
+  .resv-item.now { border-color: var(--amber); background: #FFF7E6; }
+  .resv-item .who { font-size: 1.15rem; font-weight: 800; }
+  .resv-item .notes { color: var(--muted); }
+  .resv-item .when { margin-left: auto; font-weight: 800; color: var(--teal-dark); white-space: nowrap; }
+  .resv-item.now .when { color: #8A5A0B; }
+  .resv-item button { font: inherit; font-weight: 800; padding: 0.35rem 0.9rem; border: 2px solid var(--teal); border-radius: 0.4rem; background: var(--teal); color: var(--cream); cursor: pointer; }
+  .resv-line { margin: 0; color: var(--teal-dark); font-size: 0.95rem; }
+  .resv-line button { font: inherit; font-weight: 800; padding: 0.2rem 0.6rem; border: 2px solid var(--red); border-radius: 0.4rem; background: var(--paper); color: var(--red-dark); cursor: pointer; }
   .test-tag { display: inline-block; padding: 0 0.4rem; margin-right: 0.4rem; border-radius: 0.25rem; background: #DDE3E6; color: var(--text); font-weight: 900; }
 </style>
 </head>
@@ -261,6 +275,7 @@
     <span class="clock" id="clock"></span>
   </div>
   <div class="alert" id="alert" hidden></div>
+  <section class="resv" id="resv" aria-label="Reservations today" hidden></section>
   <main>
     <h2>Ready <span class="h-note" id="auto-note"></span></h2>
     <div class="list" id="ready"></div>
@@ -470,6 +485,7 @@
       ? `· clears itself after ${data.autoHandoffMinutes} min` : "";
     if (!undoMenu.hidden) renderUndoMenu();
     renderStats(data.stats);
+    renderResv(data.reservations);
 
     const json = JSON.stringify(data.orders);
     if (json === lastJson) return;
@@ -575,6 +591,42 @@
     if (e.key === "Escape") openUndoMenu(false);
   });
 
+  // ---- Reservations: today's tables at the top. The ones coming up get a
+  // row each with Seated (no PIN, like Handed off); the rest of today is one
+  // line, and the website's requests waiting for an answer another.
+  const resvEl = document.getElementById("resv");
+  let resvHtml = "";
+  const clockWords = (t) => { const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`; };
+  function renderResv(rv) {
+    if (!rv) { resvEl.hidden = true; return; }
+    const now = Date.now();
+    const close = rv.today.filter((r) => ["soon", "now", "held"].includes(r.phase));
+    const later = rv.today.filter((r) => r.phase === "later");
+    const when = (r) => {
+      const m = Math.round((Date.parse(r.at) - now) / 6e4);
+      if (r.phase === "held") return `held till ${fmtTime(r.heldUntil)}`;
+      return m > 0 ? `in ${m} min` : "due now";
+    };
+    const html = [
+      ...close.map((r) => `<div class="resv-item${r.phase === "soon" ? "" : " now"}" data-resv="${esc(r.id)}">
+        <span class="who">Table for ${r.party} · ${esc(r.name)} · ${clockWords(r.time)}</span>
+        ${r.notes ? `<span class="notes">${esc(r.notes)}</span>` : ""}
+        <span class="when">${when(r)}</span>
+        <button type="button" data-seated>Seated</button></div>`),
+      later.length ? `<p class="resv-line">${close.length ? "Later today" : "Tables today"}: ${later.map((r) => `${clockWords(r.time)} ${esc(r.name)} (${r.party})`).join(" · ")}</p>` : "",
+      rv.requests ? `<p class="resv-line"><button type="button" data-resv-requests>${rv.requests} table request${rv.requests === 1 ? "" : "s"} from the website to answer</button></p>` : "",
+    ].join("");
+    resvEl.hidden = !html;
+    if (html !== resvHtml) resvEl.innerHTML = resvHtml = html;
+  }
+  resvEl.addEventListener("click", (e) => {
+    if (e.target.closest("[data-resv-requests]")) return openManage("reservations");
+    const id = e.target.closest("[data-seated]") && e.target.closest("[data-resv]").dataset.resv;
+    if (!id) return;
+    e.target.closest("[data-resv]").remove();
+    post("/api/reservation-seated", { id }).catch(() => {});
+  });
+
   // ---- today's numbers (breakfast / lunch split by the 11am cutoff)
   function renderStats(st) {
     const el = document.getElementById("today");
@@ -646,8 +698,8 @@
       buttons: [{ label: "Back to Manage", act: "menu" }, { label: "Done", act: "close", kind: "primary" }] });
   }
 
-  // What the Manage jobs in front/*.js (Specials, Photo post, Reports,
-  // Desserts, Saved photos, Leave off kitchen tickets) share with this page. Each file is
+  // What the Manage jobs in front/*.js (Specials, Reservations, Photo post,
+  // Reports, Desserts, Saved photos, Leave off kitchen tickets) share with this page. Each file is
   // loaded after this script and registers its menu row's job in tools
   // (and any of its own buttons in acts) under the row's data-act name.
   const listWords = (a) => (a.length < 2 ? a.join("") : `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`);
@@ -670,6 +722,7 @@
     else if (to === "reset") openReset();
     else if (to === "update") runUpdate();
     else if (to === "backup") runBackup();
+    else if (to === "today") location.href = api("/today");
     else if (to === "do-reset") runReset();
     // The jobs in front/*.js, and their own buttons (Photo post's, Reports' CSVs).
     else if (Front.tools[to]) Front.tools[to]();
@@ -679,7 +732,10 @@
     if (e.key === "Escape" && !scrim.hidden) closeManage();
   });
 
-  // ---- 1. The PIN
+  // ---- 1. The PIN. `then` is a job to go straight to after it (the
+  // reservations band's requests button); otherwise the menu.
+  let then = null;
+  const afterUnlock = () => { const t = then; then = null; return t && Front.tools[t] ? Front.tools[t]() : showMenu(); };
   function showLock(message) {
     screen({ title: "Manage", back: false,
       body: `<form id="m-lock" class="m-lock">
@@ -697,18 +753,20 @@
       if (!r.ok) return showLock(r.message);
       pinValue = pin.value;
       if (document.getElementById("pin-keep").checked) savedPin.set(pinValue);
-      showMenu();
+      afterUnlock();
     });
   }
-  document.getElementById("manage").addEventListener("click", async () => {
+  async function openManage(to) {
+    then = to || null;
     if (!pinValue) pinValue = savedPin.get();
     if (!pinValue) return showLock();
     busy("Manage", "Checking…");
     const r = await postJson("/api/front-unlock", { pin: pinValue });
-    if (r.ok) return showMenu();
+    if (r.ok) return afterUnlock();
     if (/wrong pin/i.test(r.message || "")) { savedPin.set(""); pinValue = ""; }
     showLock(r.message);
-  });
+  }
+  document.getElementById("manage").addEventListener("click", () => openManage());
 
   // ---- 2. The menu, grouped by how often each job comes up (2026-10-09):
   // the daily ones first, the rest under them.
@@ -719,11 +777,13 @@
       body: `<div class="m-menu">
         <h3 class="m-group">Every day</h3>
         ${row("plan", "Specials", "Today's and the days ahead. Each day goes into Square by itself that morning.")}
+        ${row("reservations", "Reservations", "Tables booked ahead: take one by phone, and accept the website's requests.")}
         ${row("photo", "Photo post", "Take a photo of the special or any item and make its Facebook picture here.")}
         ${row("desserts", "Desserts", "What's in, how many are left, and the photo online ordering shows.")}
         <h3 class="m-group">Now and then</h3>
         ${row("saved", "Saved photos", "The photos Photo post kept on the kitchen PC. Delete test shots, or move them all to GitHub.")}
         ${row("report", "Reports", "Orders, sales, kitchen times and items for any range of days.")}
+        ${row("today", "Today on the phone", "Sales so far against last week, busiest hours, what's selling, and the open orders. Add it to your home screen.")}
         ${row("skip", "Leave off kitchen tickets", "Items and categories that go on the front's list instead.")}
         ${row("backup", "Back up now", "Copy the orders, specials plan and photos to the backup now. Sales carry on.")}
         ${row("update", "Check for updates", "Install a new version of the board, if there is one.")}
@@ -769,6 +829,7 @@
 })();
 </script>
 <script src="/front/specials.js"></script>
+<script src="/front/reservations.js"></script>
 <script src="/front/photo-post.js"></script>
 <script src="/front/reports.js"></script>
 <script src="/front/desserts.js"></script>

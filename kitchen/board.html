@@ -225,6 +225,20 @@
   }
   .alert[hidden] { display: none; }
 
+  /* Reservations: a table coming up (within reservationAheadMinutes) is a
+     cream row under the bar, big enough to read from the line; amber from
+     15 minutes before its time to the end of the hold, as amber means time.
+     The rest of today's tables are one quiet line. Seated is pressed on the
+     front page; the row goes then, or when the hold runs out. */
+  .resv { display: grid; gap: 0.35rem; padding: 0.45rem 1.25rem; background: var(--teal); }
+  .resv[hidden] { display: none; }
+  .resv-item { display: flex; align-items: baseline; gap: 1.2rem; padding: 0.35rem 0.9rem; border-radius: 0.4rem; background: var(--cream); color: var(--text); font-size: 1.35rem; }
+  .resv-item.now { background: var(--amber); color: #1A1A1A; }
+  .resv-item b { font-size: 1.5rem; }
+  .resv-item .notes { color: inherit; opacity: 0.8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .resv-item .when { margin-left: auto; font-weight: 800; white-space: nowrap; }
+  .resv-line { margin: 0; color: var(--cream); font-size: 1.1rem; }
+
   .board {
     display: grid;
     /* Four across at 1920 wide, kept for the cooks who don't see well
@@ -234,6 +248,19 @@
     gap: 1rem;
     align-items: start;
     padding: 1rem 1.25rem 2rem;
+  }
+  /* A number whose ticket was cleared keeps its place on the board, so
+     nobody else's ticket moves into it (client 2026-10-19). The next new
+     order fills it. Faint, so it never reads as an order. */
+  .slot-free {
+    display: grid;
+    place-items: center;
+    height: 4rem;
+    border: 0.15rem dashed #3E5961;
+    border-radius: 0.5rem;
+    color: #5F7880;
+    font-size: 1.6rem;
+    font-weight: 900;
   }
   .empty {
     grid-column: 1 / -1;
@@ -501,6 +528,7 @@
     </div>
   </div>
   <div class="alert" id="alert" hidden></div>
+  <section class="resv" id="resv" aria-label="Reservations today" hidden></section>
   <main class="board" id="board"></main>
   <div class="more" id="more" hidden></div>
   <section class="waiting" id="waiting" hidden aria-label="Waiting: on the board later"></section>
@@ -557,11 +585,12 @@
   let stats = null; // the day so far, from the server
   let demo = null; // { startedAt, until } while practice orders are showing
 
-  // STABLE NUMBERS. A ticket keeps its number key from the moment it
-  // arrives until it's done: when 1 is cleared, 2 stays 2 and slides over.
-  // A cook working on 2 who looks back must still see 2 on it, and pressing
-  // 2 must still clear it. A new order takes the lowest free number, so
-  // numbers can be out of order on screen, but never change under anyone.
+  // STABLE NUMBERS AND PLACES. A ticket keeps its number key from the
+  // moment it arrives until it's done, and the number is its place on the
+  // board: when 2 is cleared, 1 and 3 stay exactly where they are and 2's
+  // spot sits empty (client 2026-10-19). A cook working on 3 who looks back
+  // must find it where it was, with 3 on it, and pressing 3 must still clear
+  // it. A new order takes the lowest free number, and so the first gap.
   // Remembered on this screen, so a reload keeps them.
   let slots = {};
   try { slots = JSON.parse(localStorage.getItem("kb-slots") || "{}"); } catch {}
@@ -678,7 +707,16 @@
         <p class="empty-keys keys"><b>1</b>–<b>9</b> done &nbsp; <b>⌫</b> or <b>0</b> undo &nbsp; <b>+</b> <b>−</b> scroll &nbsp; <b>⏎</b> check Square now</p></div>`;
     } else {
       assignSlots();
-      board.innerHTML = tickets.map((t) => `
+      // Numbered tickets in their number's place, a gap for each free number
+      // before the last one used, then any without a number (more than nine).
+      const bySlot = new Map(tickets.filter((t) => slots[t.id]).map((t) => [slots[t.id], t]));
+      const top = Math.max(0, ...bySlot.keys());
+      const cells = [];
+      for (let n = 1; n <= top; n++) cells.push(bySlot.get(n) || n);
+      for (const t of tickets) if (!slots[t.id]) cells.push(t);
+      board.innerHTML = cells.map((t) => typeof t === "number"
+        ? `<div class="slot-free" aria-hidden="true">${t}</div>`
+        : `
         <article class="ticket${fresh.has(t.id) ? " new" : ""}${t.demo ? " demo" : ""}" data-id="${esc(t.id)}">
           <header>
             <span class="key">${slots[t.id] || ""}</span>
@@ -795,6 +833,28 @@
     alertEl.textContent = text;
   }
 
+  // Reservations under the bar (see .resv above).
+  const resvEl = document.getElementById("resv");
+  let resvHtml = "";
+  const clockWords = (t) => { const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`; };
+  function renderResv(rv) {
+    if (!rv) { resvEl.hidden = true; return; }
+    const now = Date.now();
+    const close = rv.today.filter((r) => ["soon", "now", "held"].includes(r.phase));
+    const later = rv.today.filter((r) => r.phase === "later");
+    const when = (r) => {
+      if (r.phase === "held") return `here? held till ${fmtTime(r.heldUntil)}`;
+      const m = Math.round((Date.parse(r.at) - now) / 6e4);
+      return m > 0 ? `in ${m} min` : "due now";
+    };
+    const html = close.map((r) => `<div class="resv-item${r.phase === "soon" ? "" : " now"}">
+        <b>Table for ${r.party}</b><span>${esc(r.name)} · ${clockWords(r.time)}</span>
+        ${r.notes ? `<span class="notes">${esc(r.notes)}</span>` : ""}<span class="when">${when(r)}</span></div>`).join("")
+      + (later.length ? `<p class="resv-line">${close.length ? "Later today" : "Tables today"}: ${later.map((r) => `${clockWords(r.time)} ${esc(r.name)} (${r.party})`).join(" · ")}</p>` : "");
+    resvEl.hidden = !html;
+    if (html !== resvHtml) resvEl.innerHTML = resvHtml = html;
+  }
+
   function apply(data) {
     serverSound = data.sound !== false;
     renderSound();
@@ -808,6 +868,7 @@
     renderCount();
     demo = data.demo || null;
     renderUndo();
+    renderResv(data.reservations);
 
     // Status banner: Square unreachable, or the last good poll is stale.
     const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000;
@@ -875,7 +936,7 @@
     clearedList = [{ id, label: name, main: t.items[0] ? t.items[0].name : "", at: new Date().toISOString() }, ...clearedList.filter((c) => c.id !== id)];
     renderUndo();
     // Change it right away so the screen feels instant; the server confirms.
-    if (plates) tickets = [...tickets.filter((x) => x.id !== id), { ...t, platesDone: new Date().toISOString() }];
+    if (plates) tickets = tickets.map((x) => (x.id === id ? { ...t, platesDone: new Date().toISOString() } : x));
     else tickets = tickets.filter((x) => x.id !== id);
     lastJson = "";
     render(new Set());

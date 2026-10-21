@@ -1,0 +1,105 @@
+---
+layout: layouts/page.njk
+title: "Reserve a Table | The Café"
+description: "Reserve a table at The Café in Leavenworth, KS, for two or twenty. Send a request online or call, and we'll confirm."
+ogDescription: "Reserve a table at The Café in Leavenworth, KS. Send a request online or call, and we'll confirm."
+pageCss: "/assets/css/reserve.css"
+---
+<!-- Table requests (client 2026-10-19: any party size; everyone still orders
+     and pays at the counter). A REQUEST, not a booking: the cafe accepts it
+     on the kitchen PC's front page (Manage -> Reservations), which emails the
+     customer if they gave an address; otherwise the cafe calls or texts.
+     Sent to the Google Apps Script in site.reservations.formUrl
+     (kitchen/google-script/Code.gs), which checks the same things as this
+     form: keep the hold time, seating times and days in step with it.
+     Without the URL the page offers the phone number only. -->
+
+        <section class="section" aria-labelledby="reserve-heading">
+            <div class="container">
+                <h1 id="reserve-heading">Reserve a table</h1>
+                <p style="margin-top: 0.75rem; max-width: 55ch;">
+                    Coming in with the family, the office or the whole team? Let us know when, and we&rsquo;ll have a table ready.
+                </p>
+
+                <div class="call-strip">
+                    <p><strong>We hold your table for {{ site.reservations.holdMinutes }} minutes</strong> after your time.
+                    When you arrive, check in at the counter. Everyone orders and pays at the counter, so each person can pay on their own.</p>
+                    <p style="margin-top: 0.5rem;">Rather call? <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a>, {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}.</p>
+                </div>
+
+                {%- if site.reservations.formUrl %}
+                <!-- main.js sends this in place and shows the script's answer (a
+                     refusal says why, and the form stays filled in). Without
+                     JavaScript the browser goes to the script's own thank-you page. -->
+                <form action="{{ site.reservations.formUrl }}" method="POST" novalidate
+                      data-reserve
+                      data-max-ahead="{{ site.reservations.maxAheadDays }}"
+                      data-success="Thank you! We got your request. We'll call or email to confirm your table.">
+
+                    <!-- honeypot: people never see or fill this. Not called "website":
+                         browsers and password managers autofill a field by that name,
+                         and a filled trap drops the request without a word (2026-10-19). -->
+                    <input type="text" name="hp_x7" tabindex="-1" autocomplete="off"
+                           style="position:absolute; left:-9999px;" aria-hidden="true">
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label for="date">Date <span style="color:var(--accent-dark)">*</span></label>
+                            <input type="date" id="date" name="date" required aria-describedby="date-hint">
+                            <small class="form-hint" id="date-hint">{{ site.opening.hoursDays }}</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="time">Time <span style="color:var(--accent-dark)">*</span></label>
+                            <select id="time" name="time" required>
+                                <option value="">Pick a time</option>
+                                {%- for s in slots %}
+                                <option value="{{ s.value }}">{{ s.label }}</option>
+                                {%- endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="party">How Many People <span style="color:var(--accent-dark)">*</span></label>
+                            <input type="number" id="party" name="party" min="1" max="80" inputmode="numeric" required placeholder="e.g. 6">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name">Name <span style="color:var(--accent-dark)">*</span></label>
+                            <input type="text" id="name" name="name" autocomplete="name" maxlength="60" required placeholder="Jane Smith">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone <span style="color:var(--accent-dark)">*</span></label>
+                            <input type="tel" id="phone" name="phone" autocomplete="tel" required placeholder="(555) 000-0000">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" autocomplete="email" maxlength="100" placeholder="Optional" aria-describedby="email-hint">
+                            <small class="form-hint" id="email-hint">For your confirmation and a reminder the day before.</small>
+                        </div>
+
+                        <div class="form-group form-group--full">
+                            <label for="notes">Anything We Should Know?</label>
+                            <textarea id="notes" name="notes" maxlength="400" placeholder="A high chair, a birthday, a wheelchair, or anything else that helps us get ready."></textarea>
+                        </div>
+
+                        <div class="form-group form-group--full form-submit">
+                            <button type="submit" class="btn btn-primary">Send Request</button>
+                            <p class="form-privacy" style="margin-top:0.6rem;">
+                                This is a request: we&rsquo;ll call or email to confirm. We only use your details for your reservation.
+                                See our <a href="/privacy">privacy policy</a>.
+                            </p>
+                        </div>
+
+                    </div>
+                </form>
+                {%- else %}
+                <p class="reserve-call">
+                    To reserve a table, call us at <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a>.
+                </p>
+                {%- endif %}
+            </div>
+        </section>

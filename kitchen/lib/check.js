@@ -9,6 +9,7 @@ const { live } = require("./live");
 const { skipSummary } = require("./state");
 const { backupStatus } = require("./backup");
 const { offsiteStatus, repoUrl } = require("./offsite");
+const { reservationsLine } = require("./reservations");
 const { itemName, hiddenReason, orderDetail } = require("./tickets");
 
 const FRONT_URL = `http://${os.hostname().toLowerCase()}:${cfg.port}/front${cfg.frontKey ? "?key=" + encodeURIComponent(cfg.frontKey) : ""}`;
@@ -89,6 +90,7 @@ ${status}
 <p>Kitchen skips: ${esc(skipSummary())}. Square catalog:
 ${catalog.error ? `<b style="color:#A02F26">${esc(catalog.error)}</b> (skipping whole categories needs it)` : catalog.loadedAt ? `${catalog.categories.length} categories, read at ${esc(new Date(catalog.loadedAt).toLocaleTimeString())}` : "not read yet"}.</p>
 <p>Backup: ${backupLine()}</p>
+<p>Reservations: ${esc(reservationsLine())}</p>
 ${cfg.notes.length ? `<h2>config.json</h2><ul>${cfg.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : "<p>config.json: no problems found.</p>"}
 <p>${rows.length} order(s) came back from Square. Refresh to update.</p>
 <table><tr><th>Created</th><th>Order</th><th>Board type</th><th>From Square</th><th>Items</th><th>Board</th></tr>

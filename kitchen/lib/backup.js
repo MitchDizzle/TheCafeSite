@@ -1,6 +1,6 @@
 // The nightly backup of data\: stats-history.json is the only copy of the
-// kitchen times, so it is copied, with the plan and state.json beside it,
-// into a folder per day:
+// kitchen times, so it is copied, with the plan, state.json and the
+// reservations beside it, into a folder per day:
 //   - data\backups\<date>\ on this PC, always: a bad write or a deleted
 //     file can be put back from yesterday's;
 //   - <backupDir>\<date>\ too, when config.json names one off this PC's
@@ -19,7 +19,7 @@ const { DATA, MOCK, DEV, cfg } = require("./config");
 const { localDate } = require("./util");
 const { offsiteStatus, pushOffsite } = require("./offsite");
 
-const FILES = ["stats-history.json", "specials-plan.json", "state.json"];
+const FILES = ["stats-history.json", "specials-plan.json", "state.json", "reservations.json"];
 const BACKUP_HOUR = 14; // 2pm, closing time: the PC may be off by 3
 const KEEP_DAYS = 30;
 const LOCAL = path.join(DATA, "backups");

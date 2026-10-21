@@ -192,7 +192,48 @@ function mockOrders() {
     fulfillments: [{ uid: "f1", type: "DELIVERY", state: "PROPOSED", delivery_details: { schedule_type: "ASAP", courier_pickup_at: at(8), courier_provider_name: "DoorDash", managed_delivery: true } }],
     line_items: [li(1, "Fried Potatoes"), li(1, "Biscuit & Gravy", { variation_name: "Full" })],
   });
+  // Each order's total as Square would have it, tax included, for the
+  // day's sales.
+  for (const o of orders) if (!o.total_money) o.total_money = { amount: mockTotal(o.line_items), currency: "USD" };
   return orders;
+}
+
+// Made-up prices in cents, by item name; anything else is $9.
+const MOCK_PRICES = { "Iced Tea / Fountain Drink": 250, Coffee: 200, Chips: 150, "Chocolate Chip Cookie": 150, "Kids Side": 200,
+  "Soup of the Day": 600, "Sandwich Tray": 6500, "Grilled Cheese": 650, "Fried Potatoes": 400, "Bottle Juice": 250 };
+const mockTotal = (lines) => Math.round(lines.reduce((sum, li) => sum + (MOCK_PRICES[li.name] || 900) * (Number(li.quantity) || 1), 0) * 1.09);
+
+// Test mode's history (stats.js): four weeks of made-up open days before
+// today, in the daily history's own shape, the same every run for a date,
+// so /today and Reports have something to compare with.
+function mockHistory(today) {
+  const menu = ["Big Breakfast", "Breakfast Burrito", "Breakfast Sandwich", "Turkey Club", "Reuben", "Cheeseburger",
+    "Lunch Special", "Soup of the Day", "Chef Salad", "Philly Steak Sandwich", "Grilled Cheese", "Iced Tea / Fountain Drink"];
+  const hours = [7, 7, 8, 8, 8, 9, 9, 10, 11, 11, 12, 12, 12, 12, 13, 13]; // busier at 8 and noon
+  const days = {};
+  for (let back = 1; back <= 28; back++) {
+    const d = new Date(`${today}T12:00:00`);
+    d.setDate(d.getDate() - back);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    let seed = [...date].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+    const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+    const pick = (a) => a[Math.floor(rand() * a.length)];
+    const orders = [];
+    const n = 35 + Math.floor(rand() * 25);
+    for (let i = 0; i < n; i++) {
+      const at = new Date(d);
+      at.setHours(pick(hours), Math.floor(rand() * 60), 0, 0);
+      const online = rand() < 0.15;
+      const items = Array.from({ length: 1 + Math.floor(rand() * 2.5) }, () => ({ name: pick(menu), variation: null, qty: 1 }));
+      orders.push({ id: `MOCKHIST-${date}-${i}`, at: at.toISOString(), meal: at.getHours() < 11 ? "breakfast" : "lunch", online,
+        toGo: online || rand() < 0.55, paid: true, sales: mockTotal(items.map((it) => ({ name: it.name, quantity: "1" }))) / 100,
+        items, done: true, kitchenMinutes: online ? null : Math.round((4 + rand() * 11) * 10) / 10 });
+    }
+    orders.sort((a, b) => a.at.localeCompare(b.at));
+    days[date] = { savedAt: d.toISOString(), orders };
+  }
+  return days;
 }
 
 // Test mode's stand-in for the Square catalog, by item name: enough to try
@@ -295,4 +336,4 @@ function demoOrders(start) {
   return orders;
 }
 
-module.exports = { DEMO_PREFIX, DEMO_MINUTES, isDemo, mockItems, mockImages, mockStock, nextMockId, mockOrders, mockCatalog, demoOrders };
+module.exports = { DEMO_PREFIX, DEMO_MINUTES, isDemo, mockItems, mockImages, mockStock, nextMockId, mockOrders, mockCatalog, demoOrders, mockHistory };

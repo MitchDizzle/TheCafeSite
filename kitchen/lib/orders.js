@@ -9,6 +9,7 @@ const { toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, rea
 const { withMockStates } = require("./square-status");
 const { statsToday, recordHistory } = require("./stats");
 const { DEMO_MINUTES, isDemo, mockOrders, demoOrders } = require("./mock");
+const { screenView } = require("./reservations");
 
 // Everything cleared that could come back, newest first: what Undo offers.
 // Kept on the server, so Undo still works after the page or PC restarts.
@@ -99,18 +100,18 @@ async function pollOnce() {
 
 function snapshot() {
   const now = Date.now();
-  // A ticket whose plates are out goes last: its to-go part isn't urgent.
   const tickets = live.all
     .filter((t) => !hiddenReason(t, now))
     .map((t) => ({ ...t, platesDone: platesDone[t.id] || null }))
-    .sort((a, b) => !!a.platesDone - !!b.platesDone || Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
+    .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
   // The WAIT UNTIL row: what comes on the board next, soonest first.
   const waiting = live.all
     .map((t) => ({ ...t, waitUntil: waitUntil(t, now) }))
     .filter((t) => t.waitUntil)
     .sort((a, b) => Date.parse(a.waitUntil) - Date.parse(b.waitUntil));
   return { tickets, waiting, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
-    clearedList: boardCleared(), stats: statsToday(), demo: live.demo, pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
+    clearedList: boardCleared(), stats: statsToday(), demo: live.demo, pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling,
+    reservations: screenView() };
 }
 
 // A ready order nobody pressed Handed off for clears itself off the front
@@ -157,7 +158,8 @@ function frontSnapshot() {
     });
   return { orders, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, lastHandedOff: lastHandedOff(),
     handedOffList: undoList(handedOff).map((h) => ({ ...h, auto: autoOff.has(h.id) })), stats: statsToday(), demo: live.demo,
-    updatePin: !!cfg.updatePin, pollSeconds: cfg.pollSeconds, autoHandoffMinutes: cfg.autoHandoffMinutes };
+    updatePin: !!cfg.updatePin, pollSeconds: cfg.pollSeconds, autoHandoffMinutes: cfg.autoHandoffMinutes,
+    reservations: screenView() };
 }
 
 // ---------------------------------------------------------------- demo

@@ -54,6 +54,8 @@
  *   specials/         the plan, and the day's names, prices, sides,
  *                     descriptions and photos in Square
  *   desserts.js, photo-post.js   Manage -> Desserts and Photo post
+ *   reservations.js   Manage -> Reservations, the website's table requests
+ *                     (through google-script/Code.gs), the screens' list
  *   mock.js           test mode's and the demo's made-up orders
  *   check.js          /check, and the front page's addresses
  *   system.js         power menu, updates, watchdog
@@ -74,6 +76,7 @@ const { toTicket, isOnline, hiddenReason, frontHiddenReason, readyAt, orderDetai
 const { FRONT_URL, frontAddresses } = require("./lib/check");
 const { startWatchdog } = require("./lib/system");
 const { startBackups } = require("./lib/backup");
+const { startReservations } = require("./lib/reservations");
 const { handle } = require("./lib/routes");
 
 function start() {
@@ -115,6 +118,7 @@ function start() {
     setInterval(applyToday, 6e4);
     setInterval(syncSquare, 2000);
     startBackups();
+    startReservations();
   });
 }
 

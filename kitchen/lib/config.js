@@ -111,11 +111,22 @@ const DEFAULTS = {
   // (lib/offsite.js), as "git@github.com:<owner>/<repo>.git" or its web
   // address. "" = not pushed anywhere.
   backupRepo: "",
+  // Reservations (lib/reservations.js): the key setup() in
+  // google-script/Code.gs prints, which lets this PC read the website's
+  // table requests and save the book to the cafe's Google Sheet. "" = the
+  // book stays on this PC and nothing is emailed. The script's address comes
+  // from the website (reservations.formUrl in src/_data/site.json);
+  // reservationsUrl overrides it.
+  reservationsKey: "",
+  reservationsUrl: "",
+  // A table booked for today shows on the board and at the top of the front
+  // page from this many minutes before its time.
+  reservationAheadMinutes: 90,
 };
 
 // Settings that are the cafe's own and have no meaningful default: never
 // flagged as "differs from the default".
-const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems", "openDays", "autoHandoffMinutes", "backupDir", "backupRepo"]);
+const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems", "openDays", "autoHandoffMinutes", "backupDir", "backupRepo", "reservationsKey", "reservationsUrl"]);
 
 // What's worth knowing about config.json, in plain words. Written to the
 // program window at startup and shown on /check.

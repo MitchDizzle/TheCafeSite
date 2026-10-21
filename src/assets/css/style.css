@@ -417,6 +417,15 @@ p { max-width: 65ch; }
     outline: none;
 }
 
+/* main.js hides a sent form's fields (and the status line until it has
+   something to say) with the hidden attribute. Each page's own
+   `.form-grid { display: grid }` would otherwise win and leave the form,
+   its button still saying "Sending…", on screen above the thank-you. */
+.form-grid[hidden],
+.form-status[hidden] {
+    display: none;
+}
+
 .form-status--error {
     font-weight: 400;
     color: var(--accent-dark);
