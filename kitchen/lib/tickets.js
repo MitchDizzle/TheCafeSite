@@ -161,6 +161,13 @@ function toTicket(order) {
   const wanted = !online && !table ? timeInName(ticketName, order.created_at) : null;
   const test = /^test\b/i.test(ticketName);
   if (wanted) dueAt = wanted.at;
+  // DoorDash writes "Courier Name: ..." into the order's note once a Dasher
+  // has taken it (seen 2026-10-21). Until then, and for no more than
+  // dasherWaitMinutes, the kitchen doesn't see it: food made the minute it
+  // comes in can sit for most of an hour waiting for a Dasher.
+  const doordash = online && /doordash/i.test(`${(order.source && order.source.name) || ""} ${(f && f.delivery_details && f.delivery_details.courier_provider_name) || ""}`);
+  const courier = doordash ? ((/Courier Name:\s*([^\r\n]+)/i.exec((details && details.note) || "") || [])[1] || "").trim() || null : null;
+  const boardAt = onBoardAt(order, { dueAt, doordash, courier });
   // To go or for here. The Restaurants POS records the dining option as the
   // fulfillment: "To Go" is PICKUP, "For Here" is IN_STORE. To Go is the
   // POS default, so a table number wins: someone sitting down with a number
@@ -193,6 +200,11 @@ function toTicket(order) {
     source: (order.source && order.source.name) || null,
     createdAt: order.created_at,
     dueAt,
+    // When it goes on the kitchen board, which the kitchen time counts
+    // from; holdUntil is that time while a DoorDash order waits for a Dasher.
+    boardAt,
+    holdUntil: doordash && !courier && Date.parse(boardAt) > Date.now() ? boardAt : null,
+    courier,
     items,
     front,
     // Marked ready in Order Manager: the customer has been texted.
@@ -203,6 +215,24 @@ function toTicket(order) {
     note: (details && details.note) || null,
     detail: orderDetail(order),
   } };
+}
+
+// When an order goes on the kitchen board: a DoorDash order when its
+// Dasher is first seen or dasherWaitMinutes after it came in, whichever is
+// first; one due later (a pickup, a time in the name) showAheadMinutes
+// before it's due; anything else as it's rung up.
+const courierSeen = new Map(); // order id -> when the board first saw its Dasher
+function onBoardAt(order, { dueAt, doordash, courier }) {
+  const created = Date.parse(order.created_at);
+  let at = created;
+  if (doordash) {
+    at = created + cfg.dasherWaitMinutes * 6e4;
+    if (courier) {
+      if (!courierSeen.has(order.id)) courierSeen.set(order.id, Date.now());
+      at = Math.min(at, courierSeen.get(order.id));
+    }
+  } else if (dueAt) at = Date.parse(dueAt) - cfg.showAheadMinutes * 6e4;
+  return new Date(Math.max(created, at)).toISOString();
 }
 
 // Today's work only, on both screens: a stale order from yesterday that
@@ -221,6 +251,7 @@ function hiddenReason(t, now) {
   // A Ready the board wrote itself follows Done/Undo, so Undo still
   // brings the ticket back after Square has been told.
   if (t.squareReady && !markedReady[t.id]) return "front already marked it prepared";
+  if (t.holdUntil && now < Date.parse(t.holdUntil)) return `waiting for a Dasher (on the board by ${new Date(t.holdUntil).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} at the latest)`;
   return outOfWindow(t, now);
 }
 

@@ -37,12 +37,14 @@ function dayRecords() {
     if (!food.length) continue;
     const online = isOnline(o, f);
     const t = tickets.get(o.id);
-    // Time in the kitchen: rung up to Done, counter orders only. A pickup's
-    // order time can be hours before it's started, so it would skew this.
-    // Time a ticket sat cleared before an Undo doesn't count.
+    // Time in the kitchen: from when it went on the kitchen board to Done,
+    // so a pickup ordered hours ahead or a DoorDash order waiting for its
+    // Dasher counts only its time on the board (counter orders only until
+    // 2026-10-21, timed from when they were rung). Time a ticket sat
+    // cleared before an Undo doesn't count.
     let kitchenMinutes = null;
-    if (t && !online && bumped[o.id]) {
-      const m = (Date.parse(bumped[o.id]) - Date.parse(o.created_at) - ((offBoard[o.id] && offBoard[o.id].ms) || 0)) / 6e4;
+    if (t && bumped[o.id]) {
+      const m = (Date.parse(bumped[o.id]) - Date.parse(t.boardAt || o.created_at) - ((offBoard[o.id] && offBoard[o.id].ms) || 0)) / 6e4;
       if (m >= 0 && m < 240) kitchenMinutes = Math.round(m * 10) / 10;
     }
     out.push({

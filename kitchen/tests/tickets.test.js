@@ -341,13 +341,39 @@ test("Handed off clears the front only; Canceled clears both", () => {
   assert.equal(frontHiddenReason(t, Date.now()), "not paid; canceled at the front");
 });
 
-test("a pickup shows from an hour before it's due", () => {
-  const soon = ticketOf(online({}, { pickup_details: { pickup_at: minutesFromNow(30) } }));
-  const later = ticketOf(online({}, { pickup_details: { pickup_at: minutesFromNow(90) } }));
-  assert.equal(board.cfg.showAheadMinutes, 60);
+test("a pickup shows from 20 minutes before it's due, and is timed from then", () => {
+  const soon = ticketOf(online({}, { pickup_details: { pickup_at: minutesFromNow(15) } }));
+  const later = ticketOf(online({}, { pickup_details: { pickup_at: minutesFromNow(60) } }));
+  assert.equal(board.cfg.showAheadMinutes, 20);
   assert.equal(hiddenReason(soon, Date.now()), null);
-  assert.equal(hiddenReason(later, Date.now()), "pickup is more than 60 min away");
-  assert.equal(frontHiddenReason(later, Date.now()), "pickup is more than 60 min away");
+  assert.equal(hiddenReason(later, Date.now()), "pickup is more than 20 min away");
+  assert.equal(frontHiddenReason(later, Date.now()), "pickup is more than 20 min away");
+  assert.equal(later.boardAt, new Date(Date.parse(later.dueAt) - 20 * 6e4).toISOString());
+});
+
+test("a phone order for later goes on the board 20 minutes before its time", () => {
+  const rung = new Date(); rung.setHours(12, 0, 0, 0);
+  const t = ticketOf(counter({ ticket_name: "Mike 1:30", created_at: rung.toISOString() }));
+  const due = new Date(rung); due.setHours(13, 30);
+  assert.equal(t.dueAt, due.toISOString());
+  assert.equal(t.boardAt, new Date(due.getTime() - 20 * 6e4).toISOString());
+});
+
+test("DoorDash: off the kitchen board until a Dasher is assigned or 15 minutes", () => {
+  const waiting = ticketOf(doordash({ created_at: minutesFromNow(-5) }));
+  assert.equal(waiting.courier, null);
+  assert.ok(waiting.holdUntil);
+  assert.match(hiddenReason(waiting, Date.now()), /^waiting for a Dasher/);
+  assert.equal(frontHiddenReason(waiting, Date.now()), null, "the front still sees it");
+  const old = ticketOf(doordash({ id: "DOORDASHOLD", created_at: minutesFromNow(-16) }));
+  assert.equal(old.holdUntil, null);
+  assert.equal(hiddenReason(old, Date.now()), null);
+  const dashed = doordash({ id: "DOORDASHED", created_at: minutesFromNow(-3) });
+  dashed.fulfillments[0].delivery_details.note = "Courier Name: Sam\r\nCourier Phone Number: +15555550100";
+  const t = ticketOf(dashed);
+  assert.equal(t.courier, "Sam");
+  assert.equal(t.holdUntil, null);
+  assert.equal(hiddenReason(t, Date.now()), null);
 });
 
 test("yesterday's open order greets nobody", () => {

@@ -218,9 +218,14 @@ async function handle(req, res) {
       console.error(`Desserts: ${err.message}`);
       if (err.plain) return send(res, 200, { ok: false, message: err.message });
       const conflict = /409|VERSION_MISMATCH|version/i.test(err.message);
+      // A kind marked sold out on the iPad: Square won't let another program
+      // touch that item until the iPad takes the mark off.
+      const soldOut = /may not be changed in place/i.test(err.message);
       return send(res, 200, { ok: false, message: conflict
         ? "Someone changed that in Square a moment ago. Open Desserts again."
-        : `Square didn't take it: ${err.message}` });
+        : soldOut
+          ? "Something on that dessert is marked sold out on the iPad, so Square won't take a change to it from here. Take the sold-out mark off on the iPad, then save again."
+          : `Square didn't take it: ${err.message}` });
     }
   }
   // Manage's first screen: is the PIN right? (Every action checks it again;

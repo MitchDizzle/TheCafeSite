@@ -25,7 +25,11 @@ const DEFAULTS = {
   port: 8090,
   pollSeconds: 5,
   sound: true, // new-order chime and lost-connection alarm
-  showAheadMinutes: 60, // pickup orders appear this long before they're due
+  showAheadMinutes: 20, // pickup orders appear this long before they're due (60 until 2026-10-21: too early, client)
+  // DoorDash orders stay off the kitchen board until a Dasher is assigned or
+  // this many minutes after they came in, whichever is first (client
+  // 2026-10-21: a Dasher can take up to an hour). 0 shows them at once.
+  dasherWaitMinutes: 15,
   openLookbackDays: 14, // how far back to look for pre-ordered pickups
   skipItems: [], // the skip list to start from; after that it's edited live on /front (Manage)
   frontOnNetwork: true, // serve /front to other devices on the wifi; false = this PC only
