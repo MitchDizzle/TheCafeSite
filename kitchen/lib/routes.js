@@ -224,7 +224,7 @@ async function handle(req, res) {
       return send(res, 200, { ok: false, message: conflict
         ? "Someone changed that in Square a moment ago. Open Desserts again."
         : soldOut
-          ? "Something on that dessert is marked sold out on the iPad, so Square won't take a change to it from here. Take the sold-out mark off on the iPad, then save again."
+          ? "Square won't take that change to this dessert from here. If it's marked sold out on the iPad, take the mark off there and save again."
           : `Square didn't take it: ${err.message}` });
     }
   }

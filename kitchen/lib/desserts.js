@@ -122,9 +122,15 @@ async function saveKinds(changes) {
     // Counting on or off, and the new kinds, are changes to the item.
     const vars = (item.item_data.variations ||= []);
     let changed = false;
+    // Square won't let another program change a kind's own setting for the
+    // cafe's location (seen 2026-10-21: "may not be changed in place"), so
+    // that one is switched in Square once; its count is still saved.
+    const inSquare = [];
     for (const c of counts) {
       const v = vars.find((x) => x.id === c.id);
-      if (tracked(v) !== (c.count !== null)) { setTracked(v, c.count !== null); changed = true; }
+      if (tracked(v) === (c.count !== null)) continue;
+      if ((v.item_variation_data.location_overrides || []).some((o) => o.track_inventory != null)) inSquare.push(v.item_variation_data.name);
+      else { setTracked(v, c.count !== null); changed = true; }
     }
     const names = new Set(vars.map((v) => v.item_variation_data.name.trim().toLowerCase()));
     const fresh = [];
@@ -150,6 +156,7 @@ async function saveKinds(changes) {
     }
     await setCounts(stock);
     if (fresh.length) said.push(`added ${fresh.map((a) => a.name).join(", ")}`);
+    if (inSquare.length) said.push(`turn Track stock on or off for ${inSquare.join(", ")} in Square once (item, then Stock): the board can't`);
     if (said.length || stock.length || changed) done.push(said.length ? `${name} (${said.join("; ")})` : name);
   }
   return done;
