@@ -404,3 +404,26 @@ test("orders rung under one table number are tagged 1 of 2, 2 of 2; the number l
   const tag = Object.fromEntries(list.map((t) => [t.id, t.tableOf ? `${t.tableOf.n}/${t.tableOf.of}` : null]));
   assert.deepEqual(tag, { A0000000001: "1/2", B0000000002: "2/2", C0000000003: null, D0000000004: null, E0000000005: null });
 });
+
+test("a For Here ticket with items to go takes two Dones: plates first, then the to-go part; Undo steps back one", () => {
+  const { bump, unbump } = require("../lib/state");
+  const t = toTicket(counter({
+    id: "SPLITPLATES0001", ticket_name: "7",
+    line_items: [li(1, "Cheeseburger", { uid: "L1" }), li(1, "Lunch Special", { uid: "L2" })],
+    fulfillments: [
+      { uid: "F1", type: "IN_STORE", state: "COMPLETED", line_item_application: "ENTRY_LIST", entries: [{ line_item_uid: "L1" }] },
+      { uid: "F2", type: "PICKUP", state: "COMPLETED", line_item_application: "ENTRY_LIST", entries: [{ line_item_uid: "L2" }] },
+    ],
+  })).ticket;
+  const hasToGo = t.items.some((it) => it.toGo);
+  assert.ok(hasToGo);
+  bump(t.id, hasToGo);
+  assert.ok(board.platesDone[t.id]);
+  assert.equal(hiddenReason(t, Date.now()), null); // still on the board
+  bump(t.id, hasToGo);
+  assert.ok(board.bumped[t.id]);
+  unbump(t.id);
+  assert.ok(!board.bumped[t.id] && board.platesDone[t.id]);
+  unbump(t.id);
+  assert.ok(!board.platesDone[t.id]);
+});

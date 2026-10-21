@@ -435,6 +435,9 @@
       if (o.readyAt) {
         const m = mins(now - Date.parse(o.readyAt));
         text = m ? `Ready ${m} min` : "Ready now";
+      } else if (o.platesDone) {
+        // The kitchen has sent the plates; the to-go part comes later.
+        text = `Plates out ${fmtTime(o.platesDone)} · to go cooking`;
       } else if (o.holdUntil && now < Date.parse(o.holdUntil)) {
         text = `Waiting for a Dasher · kitchen by ${fmtTime(o.holdUntil)}`;
       } else if (o.dueAt) {

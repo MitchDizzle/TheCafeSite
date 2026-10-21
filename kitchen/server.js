@@ -69,7 +69,7 @@ const { SITE_MINUTES, pullSite, plan } = require("./lib/specials/plan");
 const { applyToday } = require("./lib/specials/today");
 const { sideSlots, swapsFor, specialSideOptions, leaveOffOptions } = require("./lib/specials/sides");
 const { dayDescription } = require("./lib/specials/descriptions");
-const { setSkip, bumped, canceled, handedOff, markedReady } = require("./lib/state");
+const { setSkip, bumped, platesDone, canceled, handedOff, markedReady } = require("./lib/state");
 const { toTicket, isOnline, hiddenReason, frontHiddenReason, readyAt, orderDetail } = require("./lib/tickets");
 const { FRONT_URL, frontAddresses } = require("./lib/check");
 const { startWatchdog } = require("./lib/system");
@@ -125,5 +125,5 @@ if (require.main === module) start();
 // tickets, and the state they read.
 module.exports = {
   cfg, toTicket, isOnline, hiddenReason, frontHiddenReason, readyAt, orderDetail, setSkip, loadCatalog,
-  sideSlots, swapsFor, specialSideOptions, leaveOffOptions, dayDescription, plan, bumped, canceled, handedOff, markedReady,
+  sideSlots, swapsFor, specialSideOptions, leaveOffOptions, dayDescription, plan, bumped, platesDone, canceled, handedOff, markedReady,
 };

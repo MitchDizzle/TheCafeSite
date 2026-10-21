@@ -596,6 +596,8 @@
 
   // ---- timers: recomputed every second without re-rendering the cards
   function age(t, now) {
+    // Plates out, the to-go part still to make: not timed, it comes later.
+    if (t.platesDone) return { cls: "later", text: "To go", sub: `plates out ${clock(t.platesDone)}` };
     if (t.dueAt) {
       const until = Date.parse(t.dueAt) - now;
       // The time it's due, not a countdown: a countdown looked just like a
@@ -687,7 +689,7 @@
             <span class="timer"></span>
           </header>
           <ul class="items">
-            ${t.items.map((it, i) => `${it.toGo && !(t.items[i - 1] || {}).toGo ? '<li class="togo-split"><span class="dining">TO GO</span> make these to go</li>' : ""}
+            ${(t.platesDone ? t.items.filter((it) => it.toGo) : t.items).map((it, i, list) => `${it.toGo && !(list[i - 1] || {}).toGo ? `<li class="togo-split"><span class="dining">TO GO</span> ${t.platesDone ? "plates are out; these to go" : "make these to go"}</li>` : ""}
               <li>
                 <span class="qty${it.qty > 1 ? " many" : ""}">${it.qty}</span>
                 <div>
@@ -699,7 +701,7 @@
               </li>`).join("")}
           </ul>
           ${t.note ? noteHtml(t.note) : ""}
-          <button class="done" type="button">Done</button>
+          <button class="done" type="button">${!t.platesDone && t.items.some((it) => it.toGo) ? "Plates done" : "Done"}</button>
         </article>`).join("");
     }
     renderCount();
@@ -865,11 +867,16 @@
   function bump(id) {
     const t = tickets.find((x) => x.id === id);
     if (!t) return;
-    lastCleared = { id, label: label(t) };
-    clearedList = [{ id, label: label(t), main: t.items[0] ? t.items[0].name : "", at: new Date().toISOString() }, ...clearedList];
+    // A For Here ticket with items to go: the first Done is the plates,
+    // and the ticket stays with just the to-go part (the server does the same).
+    const plates = !t.platesDone && t.items.some((it) => it.toGo);
+    const name = plates ? `${label(t)} plates` : label(t);
+    lastCleared = { id, label: name };
+    clearedList = [{ id, label: name, main: t.items[0] ? t.items[0].name : "", at: new Date().toISOString() }, ...clearedList.filter((c) => c.id !== id)];
     renderUndo();
-    // Remove right away so the screen feels instant; the server confirms.
-    tickets = tickets.filter((x) => x.id !== id);
+    // Change it right away so the screen feels instant; the server confirms.
+    if (plates) tickets = [...tickets.filter((x) => x.id !== id), { ...t, platesDone: new Date().toISOString() }];
+    else tickets = tickets.filter((x) => x.id !== id);
     lastJson = "";
     render(new Set());
     post("/api/bump", id).catch(() => {});

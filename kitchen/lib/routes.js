@@ -7,7 +7,7 @@ const { DIR, DEV, cfg } = require("./config");
 const { localDate, dayWords } = require("./util");
 const { live } = require("./live");
 const { catalog, loadCatalog } = require("./catalog");
-const { bumped, handedOff, canceled, byHand, keepOnFront, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
+const { bump, handedOff, canceled, byHand, keepOnFront, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
 const { poll, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay } = require("./orders");
 const { recordHistoryNow, historyReport } = require("./stats");
 const { dessertItems, saveDesserts, saveDessertPhoto, newDessert } = require("./desserts");
@@ -446,7 +446,10 @@ async function handle(req, res) {
   if (req.method === "POST" && (url.pathname === "/api/bump" || url.pathname === "/api/unbump")) {
     const { id } = await readBody(req);
     if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
-    if (url.pathname === "/api/bump") bumped[id] = new Date().toISOString();
+    if (url.pathname === "/api/bump") {
+      const t = live.all.find((x) => x.id === id);
+      bump(id, !!t && t.items.some((it) => it.toGo));
+    }
     else unbump(id);
     saveState();
     return send(res, 200, snapshot());

@@ -4,7 +4,7 @@
 const { MOCK, MUTE, cfg } = require("./config");
 const { fetchOrders } = require("./square");
 const { live } = require("./live");
-const { bumped, offBoard, handedOff, canceled, keepOnFront, autoOff, readySince, state, saveState } = require("./state");
+const { bumped, platesDone, offBoard, handedOff, canceled, keepOnFront, autoOff, readySince, state, saveState } = require("./state");
 const { toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
 const { withMockStates } = require("./square-status");
 const { statsToday, recordHistory } = require("./stats");
@@ -14,7 +14,7 @@ const { DEMO_MINUTES, isDemo, mockOrders, demoOrders } = require("./mock");
 // Kept on the server, so Undo still works after the page or PC restarts.
 // `main` is the first thing on the order, so a list of them can be told
 // apart ("#4F2A · Cheeseburger"). Nothing from before a Reset for the day.
-function undoList(map) {
+function undoList(map, plates) {
   const byId = new Map(live.all.map((t) => [t.id, t]));
   const floor = state.undoFloor ? Date.parse(state.undoFloor) : 0;
   return Object.keys(map)
@@ -24,13 +24,17 @@ function undoList(map) {
     .map((id) => {
       const t = byId.get(id);
       const first = t.items[0] || t.front[0];
-      return { id, label: t.label, main: first ? first.name : "", at: map[id] };
+      return { id, label: plates && !bumped[id] ? `${t.label} plates` : t.label, main: first ? first.name : "", at: map[id] };
     });
 }
 
+// What Done cleared on the board: whole tickets, and the plates of a
+// ticket whose to-go part is still on it.
+const boardCleared = () => undoList({ ...platesDone, ...bumped }, true);
+
 // The most recently bumped ticket that could come back: what Undo restores.
 function lastCleared() {
-  return undoList(bumped)[0] || null;
+  return boardCleared()[0] || null;
 }
 
 // The most recent hand-off that could come back: what Undo on /front restores.
@@ -95,16 +99,18 @@ async function pollOnce() {
 
 function snapshot() {
   const now = Date.now();
+  // A ticket whose plates are out goes last: its to-go part isn't urgent.
   const tickets = live.all
     .filter((t) => !hiddenReason(t, now))
-    .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
+    .map((t) => ({ ...t, platesDone: platesDone[t.id] || null }))
+    .sort((a, b) => !!a.platesDone - !!b.platesDone || Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
   // The WAIT UNTIL row: what comes on the board next, soonest first.
   const waiting = live.all
     .map((t) => ({ ...t, waitUntil: waitUntil(t, now) }))
     .filter((t) => t.waitUntil)
     .sort((a, b) => Date.parse(a.waitUntil) - Date.parse(b.waitUntil));
   return { tickets, waiting, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
-    clearedList: undoList(bumped), stats: statsToday(), demo: live.demo, pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
+    clearedList: boardCleared(), stats: statsToday(), demo: live.demo, pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling };
 }
 
 // A ready order nobody pressed Handed off for clears itself off the front
@@ -143,7 +149,7 @@ function frontSnapshot() {
   const now = Date.now();
   const orders = live.all
     .filter((t) => !frontHiddenReason(t, now))
-    .map((t) => ({ ...t, readyAt: readyAt(t), autoSquare: !!cfg.squareStatus && !t.demo }))
+    .map((t) => ({ ...t, readyAt: readyAt(t), platesDone: platesDone[t.id] || null, autoSquare: !!cfg.squareStatus && !t.demo }))
     .sort((a, b) => {
       if (!!a.readyAt !== !!b.readyAt) return a.readyAt ? -1 : 1;
       if (a.readyAt) return Date.parse(a.readyAt) - Date.parse(b.readyAt);
@@ -164,7 +170,7 @@ function startDemo() {
 
 function endDemo() {
   live.demo = null;
-  for (const map of [bumped, offBoard, handedOff, canceled]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
+  for (const map of [bumped, platesDone, offBoard, handedOff, canceled]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
   console.log(`Demo ended (${new Date().toLocaleTimeString()}).`);
 }
 

@@ -12,18 +12,38 @@ const { isDemo } = require("./mock");
 const STATE_FILE = path.join(DATA, MOCK ? "state-mock.json" : "state.json");
 
 const bumped = {}; // orderId -> ISO time a cook pressed Done (kitchen board)
+// orderId -> ISO time of the first Done on a For Here ticket with items to
+// go: the plates are out, the to-go part is made later. The ticket stays on
+// the board with just the to-go items until a second Done (bumped). Its
+// kitchen time stops here, so a bag made later doesn't count against it.
+const platesDone = {};
 // orderId -> { ms, at }: how long a ticket sat cleared before Undo brought it
 // back, and when. Taken off its kitchen time, so a ticket undone and Done
 // again counts only its time on the board, not the gap, in the stats.
 const offBoard = {};
 
-// Undo on the board: back on the screen, with the time it spent cleared kept
-// out of the stats.
+// Done on the board. A For Here ticket with items to go takes two: the
+// first for the plates, the second for the to-go part.
+function bump(id, hasToGo) {
+  const now = new Date().toISOString();
+  if (hasToGo && !bumped[id] && !platesDone[id]) platesDone[id] = now;
+  else bumped[id] = now;
+}
+
+// Undo on the board, one step back: a cleared ticket back on the screen,
+// with the time it spent cleared kept out of the stats (only until its
+// plates were out: the stats stop there), or a ticket whose plates were
+// out back to the whole order.
 function unbump(id) {
-  if (!bumped[id]) return;
+  if (!bumped[id]) {
+    delete platesDone[id];
+    return;
+  }
   const now = Date.now();
-  const gap = Math.max(0, now - Date.parse(bumped[id]));
-  offBoard[id] = { ms: ((offBoard[id] && offBoard[id].ms) || 0) + gap, at: new Date(now).toISOString() };
+  if (!platesDone[id]) {
+    const gap = Math.max(0, now - Date.parse(bumped[id]));
+    offBoard[id] = { ms: ((offBoard[id] && offBoard[id].ms) || 0) + gap, at: new Date(now).toISOString() };
+  }
   delete bumped[id];
 }
 
@@ -62,6 +82,7 @@ function loadState() {
     const saved = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
     Object.assign(bumped, saved.bumped || {});
     Object.assign(offBoard, saved.offBoard || {});
+    Object.assign(platesDone, saved.platesDone || {});
     Object.assign(handedOff, saved.handedOff || {});
     Object.assign(canceled, saved.canceled || {});
     Object.assign(keepOnFront, saved.keepOnFront || {});
@@ -82,7 +103,7 @@ function loadState() {
 function saveState() {
   // Three days is plenty; nothing older can reappear on either screen anyway.
   const cutoff = Date.now() - 3 * 864e5;
-  for (const map of [bumped, handedOff, canceled, keepOnFront, markedReady, byHand, markedDone]) {
+  for (const map of [bumped, platesDone, handedOff, canceled, keepOnFront, markedReady, byHand, markedDone]) {
     for (const [id, at] of Object.entries(map)) {
       if (Date.parse(at) < cutoff) delete map[id];
     }
@@ -90,7 +111,7 @@ function saveState() {
   for (const [id, o] of Object.entries(offBoard)) if (Date.parse(o.at) < cutoff) delete offBoard[id];
   // Demo tickets are practice: never written down, gone when the demo ends.
   const real = (map) => Object.fromEntries(Object.entries(map).filter(([id]) => !isDemo(id)));
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), handedOff: real(handedOff), canceled: real(canceled), keepOnFront: real(keepOnFront), markedReady: real(markedReady), byHand: real(byHand), markedDone: real(markedDone), skip: state.skipEdited ? state.skip : undefined, undoFloor: state.undoFloor, statsFloor: state.statsFloor }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), platesDone: real(platesDone), handedOff: real(handedOff), canceled: real(canceled), keepOnFront: real(keepOnFront), markedReady: real(markedReady), byHand: real(byHand), markedDone: real(markedDone), skip: state.skipEdited ? state.skip : undefined, undoFloor: state.undoFloor, statsFloor: state.statsFloor }, null, 2));
 }
 
 loadState();
@@ -109,6 +130,6 @@ setSkip(state.skip);
 const skipSummary = () => [...state.skip.categories.map((c) => `all of ${c}`), ...state.skip.items].join(", ") || "nothing";
 
 module.exports = {
-  bumped, offBoard, handedOff, canceled, keepOnFront, markedReady, byHand, markedDone, autoOff, readySince,
-  state, unbump, saveState, setSkip, skipSets, skipSummary,
+  bumped, platesDone, offBoard, handedOff, canceled, keepOnFront, markedReady, byHand, markedDone, autoOff, readySince,
+  state, bump, unbump, saveState, setSkip, skipSets, skipSummary,
 };

@@ -8,7 +8,7 @@ const path = require("path");
 const { DATA, MOCK } = require("./config");
 const { startOfToday, localDate } = require("./util");
 const { live } = require("./live");
-const { bumped, offBoard, state } = require("./state");
+const { bumped, platesDone, offBoard, state } = require("./state");
 const { NOT_FOOD, itemName, isOnline } = require("./tickets");
 
 const BREAKFAST_ENDS = 11; // hour, local time
@@ -41,10 +41,12 @@ function dayRecords() {
     // so a pickup ordered hours ahead or a DoorDash order waiting for its
     // Dasher counts only its time on the board (counter orders only until
     // 2026-10-21, timed from when they were rung). Time a ticket sat
-    // cleared before an Undo doesn't count.
+    // cleared before an Undo doesn't count. A For Here ticket with items to
+    // go is timed to its plates (the first Done): the bag comes later.
     let kitchenMinutes = null;
-    if (t && bumped[o.id]) {
-      const m = (Date.parse(bumped[o.id]) - Date.parse(t.boardAt || o.created_at) - ((offBoard[o.id] && offBoard[o.id].ms) || 0)) / 6e4;
+    const doneAt = platesDone[o.id] || bumped[o.id];
+    if (t && doneAt) {
+      const m = (Date.parse(doneAt) - Date.parse(t.boardAt || o.created_at) - ((offBoard[o.id] && offBoard[o.id].ms) || 0)) / 6e4;
       if (m >= 0 && m < 240) kitchenMinutes = Math.round(m * 10) / 10;
     }
     out.push({
@@ -60,7 +62,7 @@ function dayRecords() {
         variation: li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
         qty: Number(li.quantity) || 1,
       })),
-      done: !!bumped[o.id],
+      done: !!(bumped[o.id] || platesDone[o.id]),
       kitchenMinutes,
     });
   }
