@@ -31,6 +31,7 @@
   .bar-left, .bar-right { display: flex; align-items: center; gap: 1rem; min-width: 0; }
   .bar-right { justify-content: flex-end; gap: 0.6rem; }
   .bar .count { font-size: 1.4rem; font-weight: 700; white-space: nowrap; }
+  .bar .count .today { opacity: 0.8; }
   .bar .clock { font-size: 2.2rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
   .icon-btn {
@@ -661,6 +662,14 @@
   }
   const noteHtml = (n) => `<div class="note${ALLERGY.test(n) ? " allergy" : ""}">${esc(n)}</div>`;
 
+  // Top bar: what's on the board now, and today's orders so far (the same
+  // count as Settings' "orders today").
+  function renderCount() {
+    const n = tickets.length;
+    const today = stats ? stats.orders : 0;
+    document.getElementById("count").innerHTML = [n ? `${n} open` : "", today ? `<span class="today">${today} today</span>` : ""].filter(Boolean).join(" · ");
+  }
+
   function render(fresh) {
     if (!tickets.length) {
       board.innerHTML = `<div class="empty"><p>No open orders</p>
@@ -693,8 +702,7 @@
           <button class="done" type="button">Done</button>
         </article>`).join("");
     }
-    const n = tickets.length;
-    document.getElementById("count").textContent = n ? `${n} open` : "";
+    renderCount();
     tick();
     showMore();
   }
@@ -795,6 +803,7 @@
     lastCleared = data.lastCleared;
     clearedList = data.clearedList || [];
     stats = data.stats || null;
+    renderCount();
     demo = data.demo || null;
     renderUndo();
 
