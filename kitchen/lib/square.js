@@ -75,4 +75,4 @@ async function fetchOrders() {
   return [...open, ...completed];
 }
 
-module.exports = { API, SQUARE_VERSION, square, locations, fetchOrders };
+module.exports = { API, SQUARE_VERSION, square, locations, resolveLocations, fetchOrders };

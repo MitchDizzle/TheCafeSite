@@ -133,6 +133,10 @@ async function upsertObject(object) {
       m.id = real(m.id);
       m.modifier_data.modifier_list_id = copy.id;
     }
+    for (const v of (copy.item_data && copy.item_data.variations) || []) {
+      v.id = real(v.id);
+      v.item_variation_data.item_id = copy.id;
+    }
     copy.version += 1;
     mockItems.set(copy.id, copy);
     return structuredClone(copy);
@@ -141,4 +145,21 @@ async function upsertObject(object) {
   return json.catalog_object;
 }
 
-module.exports = { CATALOG_MINUTES, catalog, loadCatalog, readItem, writeItem, readObject, writeObject, modifierListsByName, upsertObject };
+// Delete objects inside an item or a list (a dessert's variation, a list's
+// option). Square keeps past sales under their names.
+async function deleteObjects(ids) {
+  if (!ids.length) return;
+  if (MOCK) {
+    for (const o of mockItems.values()) {
+      const d = o.item_data || o.modifier_list_data;
+      const key = o.item_data ? "variations" : "modifiers";
+      if (!d || !d[key]) continue;
+      const kept = d[key].filter((x) => !ids.includes(x.id));
+      if (kept.length !== d[key].length) { d[key] = kept; o.version += 1; }
+    }
+    return;
+  }
+  await square("POST", "/catalog/batch-delete", { object_ids: ids });
+}
+
+module.exports = { CATALOG_MINUTES, deleteObjects, catalog, loadCatalog, readItem, writeItem, readObject, writeObject, modifierListsByName, upsertObject };

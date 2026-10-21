@@ -12,6 +12,9 @@ const isDemo = (id) => String(id).startsWith(DEMO_PREFIX);
 
 const mockItems = new Map(); // test mode's stand-in for Square's copy
 const mockImages = new Map(); // test mode: item id -> data URL
+// Test mode's stock counts: variation id -> how many are left.
+const mockStock = new Map();
+const mockStockStart = { "VAR-CC-Plain": 6, "VAR-CC-Pumpkin": 8 };
 // Test mode's ids for what Square would number: new lists, options, images.
 let mockNextId = 1;
 const nextMockId = () => mockNextId++;
@@ -217,15 +220,25 @@ function mockCatalog() {
     { type: "ITEM", id: "ITEM-Soup of the Day", version: 1, item_data: { name: "Soup of the Day", categories: [{ id: "CAT-Soups & Salads" }], variations: [v("VAR-SC", "Cup", 500), v("VAR-SB", "Bowl", 700)] } },
   ];
   out.push({ type: "CATEGORY", id: "CAT-Specials", category_data: { name: "Lunch Specials" } });
-  const flavor = (id, name, ordinal) => ({ type: "MODIFIER", id, modifier_data: { name, ordinal, modifier_list_id: "LIST-Flavors" } });
+  // Desserts as they are in Square since 2026-10-21: each kind is a
+  // variation, counted in stock (mockStock) or not, and the cheesecake's
+  // sauce is a list of its own.
+  const kind = (id, name, ordinal, price) => {
+    const o = v(id, name, price);
+    Object.assign(o.item_variation_data, { ordinal, track_inventory: id in mockStockStart });
+    return o;
+  };
+  const sauce = (id, name, ordinal) => ({ type: "MODIFIER", id, modifier_data: { name, ordinal, modifier_list_id: "LIST-Sauce" } });
   daily.push(
     { type: "ITEM", id: "ITEM-Cheesecake", version: 1, item_data: { name: "Cheesecake", categories: [{ id: "CAT-Chips & Sweets" }],
-      variations: [v("VAR-CC", "Regular", 350)], modifier_list_info: [{ modifier_list_id: "LIST-Flavors", enabled: true }] } },
+      variations: [kind("VAR-CC-Plain", "Plain", 0, 350), kind("VAR-CC-Pumpkin", "Pumpkin", 1, 350)],
+      modifier_list_info: [{ modifier_list_id: "LIST-Sauce", enabled: true, min_selected_modifiers: 0, max_selected_modifiers: 1 }] } },
     { type: "ITEM", id: "ITEM-Dessert Bar", version: 1, item_data: { name: "Dessert Bar", categories: [{ id: "CAT-Chips & Sweets" }],
-      variations: [v("VAR-DB", "Regular", 150)] } },
-    { type: "MODIFIER_LIST", id: "LIST-Flavors", version: 1, modifier_list_data: { name: "Cheesecake Flavors", selection_type: "MULTIPLE",
-      modifiers: [flavor("MOD-Plain", "Plain", 0), flavor("MOD-Caramel", "Caramel", 1), flavor("MOD-Pumpkin", "Pumpkin", 2)] } },
+      variations: [kind("VAR-DB-Magic", "Magic Bar", 0, 150), kind("VAR-DB-MM", "M&M Chocolate Rice Crispy Treat", 1, 150)] } },
+    { type: "MODIFIER_LIST", id: "LIST-Sauce", version: 1, modifier_list_data: { name: "Cheesecake Sauce", selection_type: "MULTIPLE",
+      modifiers: [sauce("MOD-Caramel", "Caramel", 0), sauce("MOD-Chocolate", "Chocolate", 1)] } },
   );
+  for (const [id, n] of Object.entries(mockStockStart)) if (!mockStock.has(id)) mockStock.set(id, n);
   for (const item of daily) {
     if (!mockItems.has(item.id)) mockItems.set(item.id, item);
     const i = out.findIndex((o) => o.id === item.id);
@@ -270,4 +283,4 @@ function demoOrders(start) {
   return orders;
 }
 
-module.exports = { DEMO_PREFIX, DEMO_MINUTES, isDemo, mockItems, mockImages, nextMockId, mockOrders, mockCatalog, demoOrders };
+module.exports = { DEMO_PREFIX, DEMO_MINUTES, isDemo, mockItems, mockImages, mockStock, nextMockId, mockOrders, mockCatalog, demoOrders };

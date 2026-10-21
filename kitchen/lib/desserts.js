@@ -1,16 +1,39 @@
-// Manage -> Desserts: for each item in cfg.dessertItems, its photo and the
-// options in its modifier lists (cheesecake flavors). The front can:
-//   - turn an option off or on. Off is Square's hidden_online: gone from
-//     online ordering, kept in Square, one tap to bring back. Square lets
-//     only the iPad itself mark an option sold out at the till.
-//   - add an option (no price: the flavors cost the same).
+// Manage -> Desserts: for each item in cfg.dessertItems, its photo, its
+// kinds and the options in its modifier lists (the cheesecake's sauce).
+// Each kind is a variation of the item (Cheesecake: Plain, Pumpkin), so the
+// iPad asks which and the ticket says it. The front can:
+//   - set how many of a kind are left. Square then counts it down as it
+//     sells, at the till and online, and online ordering shows it sold out
+//     at 0. Blank stops counting it (always available).
+//   - add a kind (at the item's price) or remove one that's gone for good.
+//   - turn a list's option off or on. Off is Square's hidden_online: gone
+//     from online ordering, kept in Square, one tap to bring back.
+//   - add an option (no price: the sauces cost the same).
 //   - replace the item's photo (what online ordering shows).
-// Each save reads the list fresh and writes it back with Square's version,
-// like Specials.
+// Each save reads the item and list fresh and writes them back with
+// Square's version, like Specials.
 const { MOCK, cfg } = require("./config");
 const { API, SQUARE_VERSION } = require("./square");
-const { catalog, loadCatalog, readObject, writeObject } = require("./catalog");
+const { catalog, loadCatalog, readObject, writeObject, upsertObject, deleteObjects } = require("./catalog");
+const { readCounts, setCounts } = require("./inventory");
 const { mockImages } = require("./mock");
+
+const plain = (msg) => Object.assign(new Error(msg), { plain: true });
+const cleanName = (raw) => String(raw || "").replace(/\s+/g, " ").trim().slice(0, 60);
+const byOrdinal = (key) => (a, b) => (a[key].ordinal ?? 0) - (b[key].ordinal ?? 0);
+const dessertIds = () => cfg.dessertItems.map((n) => catalog.itemIds.get(n.trim().toLowerCase())).filter(Boolean);
+
+// Counted in stock: Square's own flag, or the location's override of it.
+function tracked(v) {
+  const d = v.item_variation_data;
+  const o = (d.location_overrides || []).find((x) => x.track_inventory != null);
+  return o ? !!o.track_inventory : !!d.track_inventory;
+}
+function setTracked(v, on) {
+  const d = v.item_variation_data;
+  d.track_inventory = on;
+  for (const o of d.location_overrides || []) if (o.track_inventory != null) o.track_inventory = on;
+}
 
 async function dessertItems() {
   await loadCatalog();
@@ -25,6 +48,10 @@ async function dessertItems() {
     else if (imageId) {
       try { photo = (await readObject(imageId)).image_data.url || null; } catch { photo = null; }
     }
+    const variations = [...(item.item_data.variations || [])].sort(byOrdinal("item_variation_data"));
+    const counts = await readCounts(variations.filter(tracked).map((v) => v.id));
+    const kinds = variations.map((v) => ({ id: v.id, name: v.item_variation_data.name, count: tracked(v) ? counts.get(v.id) : null }));
+    const price = variations.map((v) => (v.item_variation_data.price_money || {}).amount).find((a) => a != null);
     const lists = [];
     for (const info of item.item_data.modifier_list_info || []) {
       if (info.enabled === false) continue;
@@ -34,11 +61,11 @@ async function dessertItems() {
         id: list.id,
         name: d.name,
         options: [...(d.modifiers || [])]
-          .sort((a, b) => (a.modifier_data.ordinal ?? 0) - (b.modifier_data.ordinal ?? 0))
+          .sort(byOrdinal("modifier_data"))
           .map((m) => ({ id: m.id, name: m.modifier_data.name, off: !!m.modifier_data.hidden_online })),
       });
     }
-    out.push({ id, name: item.item_data.name, photo, lists });
+    out.push({ id, name: item.item_data.name, photo, price: price == null ? null : price / 100, kinds, lists });
   }
   return out;
 }
@@ -46,33 +73,97 @@ async function dessertItems() {
 // The lists the dessert items use: the only lists this may write.
 async function dessertListIds() {
   const ids = new Set();
-  for (const name of cfg.dessertItems) {
-    const id = catalog.itemIds.get(name.trim().toLowerCase());
-    if (!id) continue;
+  for (const id of dessertIds()) {
     for (const info of (await readObject(id)).item_data.modifier_list_info || []) ids.add(info.modifier_list_id);
   }
   return ids;
 }
 
-// changes: [{ id: listId, options: [{ id, off }], add: ["Turtle"] }]
-async function saveDesserts(changes) {
+// A count from the page: a whole number 0-999, or null (not counted).
+function countOf(raw) {
+  if (raw === null || raw === undefined || raw === "") return null;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 0 || n > 999) throw plain("A count is a whole number from 0 to 999, or blank.");
+  return n;
+}
+
+// kinds: [{ item, counts: [{ id, count }], remove: [id], add: [{ name, count }] }]
+// Only what was changed on the page comes in, so a count Square has
+// lowered since the page opened (a sale) is never put back up.
+async function saveKinds(changes) {
+  const allowed = new Set(dessertIds());
+  const done = [];
+  for (const ch of changes || []) {
+    if (!allowed.has(ch.item)) throw plain("That isn't a dessert item.");
+    let item = await readObject(ch.item);
+    const name = item.item_data.name;
+    const has = (id) => (item.item_data.variations || []).some((v) => v.id === id);
+    const remove = (ch.remove || []).map(String).filter(has);
+    const counts = (ch.counts || []).map((c) => ({ id: String(c.id), count: countOf(c.count) })).filter((c) => !remove.includes(c.id));
+    const adds = (ch.add || []).map((a) => ({ name: cleanName(a.name), count: countOf(a.count) })).filter((a) => a.name);
+    for (const c of counts) if (!has(c.id)) throw plain(`${name} changed in Square; open Desserts again.`);
+    if ((item.item_data.variations || []).length - remove.length + adds.length < 1) throw plain(`${name} needs at least one kind: add the new one before removing the last.`);
+    const said = [];
+    if (remove.length) {
+      await deleteObjects(remove);
+      item = await readObject(ch.item);
+      said.push(`removed ${remove.length}`);
+    }
+    // Counting on or off, and the new kinds, are changes to the item.
+    const vars = (item.item_data.variations ||= []);
+    let changed = false;
+    for (const c of counts) {
+      const v = vars.find((x) => x.id === c.id);
+      if (tracked(v) !== (c.count !== null)) { setTracked(v, c.count !== null); changed = true; }
+    }
+    const names = new Set(vars.map((v) => v.item_variation_data.name.trim().toLowerCase()));
+    const fresh = [];
+    for (const a of adds) if (!names.has(a.name.toLowerCase())) { names.add(a.name.toLowerCase()); fresh.push(a); }
+    const model = vars[0];
+    let next = Math.max(-1, ...vars.map((v) => v.item_variation_data.ordinal ?? 0)) + 1;
+    for (const a of fresh) {
+      const md = model.item_variation_data;
+      vars.push({
+        type: "ITEM_VARIATION", id: `#new-${next}`,
+        present_at_all_locations: model.present_at_all_locations, present_at_location_ids: model.present_at_location_ids,
+        item_variation_data: { item_id: item.id, name: a.name, ordinal: next++, pricing_type: md.pricing_type || "FIXED_PRICING",
+          ...(md.price_money ? { price_money: md.price_money } : {}), track_inventory: a.count !== null },
+      });
+      changed = true;
+    }
+    if (changed) item = await upsertObject(item);
+    // Then the counts, now that every kind has its real id.
+    const stock = counts.filter((c) => c.count !== null);
+    for (const a of fresh) {
+      const v = item.item_data.variations.find((x) => x.item_variation_data.name.trim().toLowerCase() === a.name.toLowerCase());
+      if (v && a.count !== null) stock.push({ id: v.id, count: a.count });
+    }
+    await setCounts(stock);
+    if (fresh.length) said.push(`added ${fresh.map((a) => a.name).join(", ")}`);
+    if (said.length || stock.length || changed) done.push(said.length ? `${name} (${said.join("; ")})` : name);
+  }
+  return done;
+}
+
+// lists: [{ id: listId, options: [{ id, off }], add: ["Strawberry"] }]
+async function saveLists(changes) {
   const allowed = await dessertListIds();
   const done = [];
   for (const ch of changes || []) {
-    if (!allowed.has(ch.id)) throw Object.assign(new Error("That list isn't on a dessert item."), { plain: true });
+    if (!allowed.has(ch.id)) throw plain("That list isn't on a dessert item.");
     const list = await readObject(ch.id);
     const d = list.modifier_list_data;
     const mods = (d.modifiers ||= []);
     let changed = false;
     for (const oc of ch.options || []) {
       const m = mods.find((x) => x.id === oc.id);
-      if (!m) throw Object.assign(new Error(`${d.name} changed in Square; open Desserts again.`), { plain: true });
+      if (!m) throw plain(`${d.name} changed in Square; open Desserts again.`);
       if (!!m.modifier_data.hidden_online !== !!oc.off) { m.modifier_data.hidden_online = !!oc.off; changed = true; }
     }
     const names = new Set(mods.map((m) => m.modifier_data.name.trim().toLowerCase()));
     let next = Math.max(-1, ...mods.map((m) => m.modifier_data.ordinal ?? 0)) + 1;
     for (const raw of ch.add || []) {
-      const name = String(raw).replace(/\s+/g, " ").trim().slice(0, 60);
+      const name = cleanName(raw);
       if (!name || names.has(name.toLowerCase())) continue;
       names.add(name.toLowerCase());
       const where = { present_at_all_locations: list.present_at_all_locations, present_at_location_ids: list.present_at_location_ids };
@@ -84,6 +175,12 @@ async function saveDesserts(changes) {
       done.push(d.name);
     }
   }
+  return done;
+}
+
+async function saveDesserts({ kinds, lists } = {}) {
+  await loadCatalog();
+  const done = [...(await saveKinds(kinds)), ...(await saveLists(lists))];
   if (done.length) console.log(`Desserts changed from the front page (${new Date().toLocaleTimeString()}): ${done.join(", ")}.`);
   return done;
 }
@@ -91,12 +188,11 @@ async function saveDesserts(changes) {
 // A new photo for a dessert item, as the online menu's picture. The phone
 // has already shrunk it and re-drawn it, which also drops its GPS data.
 async function saveDessertPhoto(itemId, dataUrl) {
-  const allowed = cfg.dessertItems.map((n) => catalog.itemIds.get(n.trim().toLowerCase()));
-  if (!allowed.includes(itemId)) throw Object.assign(new Error("That item isn't on the Desserts list."), { plain: true });
+  if (!dessertIds().includes(itemId)) throw plain("That item isn't on the Desserts list.");
   const m = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
-  if (!m) throw Object.assign(new Error("That photo didn't come through. Try again."), { plain: true });
+  if (!m) throw plain("That photo didn't come through. Try again.");
   const bytes = Buffer.from(m[1], "base64");
-  if (bytes.length > 5 * 1024 * 1024) throw Object.assign(new Error("That photo is too big."), { plain: true });
+  if (bytes.length > 5 * 1024 * 1024) throw plain("That photo is too big.");
   if (MOCK) { mockImages.set(itemId, dataUrl); return; }
   const item = await readObject(itemId);
   const form = new FormData();

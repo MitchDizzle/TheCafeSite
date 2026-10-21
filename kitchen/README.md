@@ -351,10 +351,13 @@ A day the board never ran is missing; Square's own reports still have its sales.
 
 ## Desserts (Manage on the front page)
 
-For the items in `dessertItems` in `config.json` (default: Cheesecake, Dessert Bar; names exactly as in Square): the item's photo and the options in its modifier lists, such as the cheesecake flavors. Works on a phone on the cafe wifi.
+For the items in `dessertItems` in `config.json` (default: Cheesecake, Dessert Bar; names exactly as in Square): the item's photo, its **kinds** and how many of each are left, and the options in its modifier lists, such as the cheesecake's sauce. Works on a phone on the cafe wifi.
 
-- **Untick an option** to hide it from online ordering (Square's "hidden online"). It stays in Square, and ticking it again brings it back. Square doesn't let other programs mark something sold out at the till; do that on the iPad.
-- **Add** puts a new option on the list, at no extra charge; it's created in Square when you press Save.
+Each kind is a **variation** of the item in Square (since 2026-10-21): Cheesecake is Plain and Pumpkin, Dessert Bar is Magic Bar and M&M Chocolate Rice Crispy Treat. The iPad asks which when the item is rung up, the ticket says it, and Square's reports count each kind. The Caramel or Chocolate sauce for a plain cheesecake is its own list, Cheesecake Sauce (pick one or none, no charge); Square can't show a list for one variation only, so it is on the item.
+
+- **Left** is how many are in the case. Saving it turns on Square's stock count for that kind: Square counts it down as they sell, at the till and online, and online ordering shows it sold out at 0. Leave it **blank** to stop counting a kind (always available). Only a number you changed is sent, so a sale made while the screen was open isn't counted back in.
+- **Remove** takes a kind off for good once it's gone (it is deleted in Square; past sales keep its name). An item keeps at least one kind. **Add** puts in a new kind at the item's price, with how many there are.
+- **Untick an option** to hide it from online ordering (Square's "hidden online"). It stays in Square, and ticking it again brings it back. **Add** under a list puts a new option on it, at no extra charge.
 - **Change photo** opens the phone's camera or photo library. The phone shrinks the picture and re-draws it before uploading, which also strips the GPS location phones save in photos. It becomes the item's main picture in Square, the one online ordering shows.
 
 Like Specials, every save reads fresh from Square first, so a change made in the Dashboard meanwhile is never overwritten.

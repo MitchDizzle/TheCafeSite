@@ -192,8 +192,8 @@ async function handle(req, res) {
     console.log(`Front page: unpaid order ...${id.slice(-4)} canceled (${new Date().toLocaleTimeString()}).`);
     return send(res, 200, frontSnapshot());
   }
-  // Desserts, behind the PIN: read (photos and options), save options, and
-  // replace a photo.
+  // Desserts, behind the PIN: read (photos, kinds and counts, options), save
+  // kinds and options, and replace a photo.
   if (req.method === "POST" && /^\/api\/front-dessert(s|s-save|-photo)$/.test(url.pathname)) {
     const body = await readBody(req);
     const refused = pinRefusal(body.pin);
@@ -206,7 +206,7 @@ async function handle(req, res) {
         return send(res, 200, { ok: true, message: "Photo saved. Online ordering shows it within a few minutes." });
       }
       await loadCatalog();
-      const saved = await saveDesserts(body.lists);
+      const saved = await saveDesserts({ kinds: body.kinds, lists: body.lists });
       return send(res, 200, { ok: true, message: saved.length
         ? `Saved in Square: ${saved.join(", ")}. Online ordering updates within a minute or so.`
         : "Nothing changed." });
