@@ -81,7 +81,11 @@ const DEFAULTS = {
   itemPhotos: true,
   // The picture on a day the dish has no photo yet (or nothing is planned),
   // per item, relative to this folder. The studio's square-placeholder pieces.
-  photoPlaceholders: { "Lunch Special": "placeholders/lunch-special.png", "Soup of the Day": "placeholders/soup-of-the-day.png" },
+  // An item left out shows nothing of ours on those days. Lunch Special's is
+  // left out (client 2026-10-23): Square has one picture per item for every
+  // channel, so it went to DoorDash too, and a "Today's Lunch Special" card
+  // isn't wanted there. Its file stays in placeholders/ to put back here.
+  photoPlaceholders: { "Soup of the Day": "placeholders/soup-of-the-day.png" },
   // Tell Square what the kitchen and the front did, for online and delivery
   // orders (counter sales are finished in Square when they're paid): Done
   // on the board marks the order Ready in Square readyDelaySeconds later

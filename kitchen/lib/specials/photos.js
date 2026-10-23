@@ -8,8 +8,9 @@
 //     photo (the same `file`), so it counts once.
 // A dish photographed more than once rotates: each day it's served shows the
 // next (photoTurn). A dish with no photo yet, or a day with nothing planned,
-// shows the item's placeholder (photoPlaceholders: "Today's Lunch Special"
-// over a covered plate). A picture put on the item in the Dashboard is never
+// shows the item's placeholder (photoPlaceholders: "Soup of the Day" over a
+// bowl), or none of ours: Lunch Special has none since 2026-10-23, as Square's
+// picture goes to DoorDash too. A picture put on the item in the Dashboard is never
 // removed; it sits behind ours. Each picture is uploaded to Square once and
 // its image id kept (squareImages), by its contents, so a changed
 // placeholder goes up again.
