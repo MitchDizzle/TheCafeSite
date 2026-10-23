@@ -388,7 +388,7 @@
       const note = it.note ? `<div class="note${ALLERGY.test(it.note) ? " allergy" : ""}">${esc(it.note)}</div>` : "";
       const got = isFront && ticks[orderId] && ticks[orderId][i];
       return `${split}<li${isFront ? ` data-tick="${i}"${got ? ' class="got"' : ""}` : ""}>
-        ${isFront ? '<span class="box" aria-hidden="true"></span>' : ""}<span class="qty${it.qty > 1 ? " many" : ""}">${it.qty}</span>
+        ${isFront ? '<span class="box" aria-hidden="true"></span>' : ""}<span class="qty${it.qty > 1 ? " many" : ""}">${it.qty > 1 ? `${it.qty}×` : it.qty}</span>
         <div><div class="item-name">${esc(it.name)}</div>${subs}${note}</div>
       </li>`;
     }).join("")}</ul>`;

@@ -13,7 +13,7 @@ const { mockItems, mockCatalog, nextMockId } = require("./mock");
 // today can be picked without a restart.
 const CATALOG_MINUTES = 10;
 // The same object for as long as the program runs: loadCatalog fills it in.
-const catalog = { byVariation: new Map(), byName: new Map(), itemIds: new Map(), categories: [], menuItems: [], loadedAt: null, error: null };
+const catalog = { byVariation: new Map(), byName: new Map(), firstVariation: new Map(), itemIds: new Map(), categories: [], menuItems: [], loadedAt: null, error: null };
 
 function buildCatalog(objects) {
   // Ordinary categories only. The Restaurants POS also keeps MENU categories
@@ -24,6 +24,10 @@ function buildCatalog(objects) {
     .map((o) => [o.id, (o.category_data || {}).name || ""]));
   const byVariation = new Map();
   const byName = new Map();
+  // item name (lower case) -> its first variation's name: what the POS rings
+  // when nobody picks one (Beef on a burger, Chicken on the Cordon Bleu), so
+  // the board can flag the other one.
+  const firstVariation = new Map();
   const itemIds = new Map(); // item name (lower case) -> catalog id, for Specials
   const members = new Map(); // category name -> item names
   const menuItems = []; // for Photo post: what each item is called, says and costs in Square
@@ -44,7 +48,11 @@ function buildCatalog(objects) {
       price: fixed.length ? Math.min(...fixed) / 100 : null,
       sizes: fixed.length > 1,
     });
+    const first = [...(d.variations || [])]
+      .sort((a, b) => ((a.item_variation_data || {}).ordinal ?? 0) - ((b.item_variation_data || {}).ordinal ?? 0))[0];
+    entry.firstVariation = first ? (first.item_variation_data || {}).name || null : null;
     for (const v of d.variations || []) byVariation.set(v.id, entry);
+    if (entry.firstVariation) firstVariation.set(entry.name.trim().toLowerCase(), entry.firstVariation);
     byName.set(entry.name.trim().toLowerCase(), cats);
     itemIds.set(entry.name.trim().toLowerCase(), o.id);
     for (const c of cats.length ? cats : ["(No category)"]) {
@@ -56,7 +64,7 @@ function buildCatalog(objects) {
     .map(([name, items]) => ({ name, items: [...items].sort((a, b) => a.localeCompare(b)) }))
     .sort((a, b) => (a.name === "(No category)") - (b.name === "(No category)") || a.name.localeCompare(b.name));
   menuItems.sort((a, b) => (a.category || "~").localeCompare(b.category || "~") || a.name.localeCompare(b.name));
-  return { byVariation, byName, itemIds, categories, menuItems };
+  return { byVariation, byName, firstVariation, itemIds, categories, menuItems };
 }
 
 async function loadCatalog() {

@@ -405,7 +405,7 @@
   .items { list-style: none; margin: 0; padding: 0.4rem 0.75rem 0.2rem; }
   .items > li {
     display: grid;
-    grid-template-columns: 2.4rem 1fr;
+    grid-template-columns: 3.2rem 1fr;
     padding: 0.45rem 0;
     border-bottom: 1px solid #E3DDD3;
   }
@@ -424,9 +424,29 @@
   }
   .items > li.togo-split .dining { background: var(--teal-dark); color: var(--cream); margin: 0; }
   .qty { font-size: 1.4rem; font-weight: 800; }
-  .qty.many { color: var(--red-dark); }
+  /* More than one of an item: "2×" in a red block, hard to miss. */
+  .qty.many {
+    justify-self: start;
+    align-self: start;
+    padding: 0 0.3rem;
+    border-radius: 0.3rem;
+    background: var(--red-dark);
+    color: #fff;
+  }
   .item { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
   .variation { font-size: 1.1rem; color: var(--teal-dark); font-weight: 700; }
+  /* Not the usual meat (chicken on a burger, beef on the Cordon Bleu). */
+  .variation.swap {
+    display: inline-block;
+    margin-top: 0.15rem;
+    padding: 0.05rem 0.45rem;
+    border-radius: 0.3rem;
+    background: var(--red-dark);
+    color: #fff;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+  }
+  .variation.swap small { font-size: 0.85rem; font-weight: 700; text-transform: none; opacity: 0.9; }
   .mods { margin: 0.15rem 0 0; padding: 0; list-style: none; font-size: 1.1rem; font-weight: 600; }
   .mods li::before { content: "– "; color: var(--muted); }
   .mods li.neg { color: var(--red-dark); font-weight: 700; }
@@ -729,10 +749,10 @@
           <ul class="items">
             ${(t.platesDone ? t.items.filter((it) => it.toGo) : t.items).map((it, i, list) => `${it.toGo && !(list[i - 1] || {}).toGo ? `<li class="togo-split"><span class="dining">TO GO</span> ${t.platesDone ? "plates are out; these to go" : "make these to go"}</li>` : ""}
               <li>
-                <span class="qty${it.qty > 1 ? " many" : ""}">${it.qty}</span>
+                <span class="qty${it.qty > 1 ? " many" : ""}">${it.qty > 1 ? `${it.qty}×` : it.qty}</span>
                 <div>
                   <div class="item">${esc(it.name)}</div>
-                  ${it.variation ? `<div class="variation">${esc(it.variation)}</div>` : ""}
+                  ${it.variation ? it.insteadOf ? `<div class="variation swap">${esc(it.variation)} <small>not ${esc(it.insteadOf.toLowerCase())}</small></div>` : `<div class="variation">${esc(it.variation)}</div>` : ""}
                   ${it.mods.length ? `<ul class="mods">${it.mods.map((m) => `<li${modClass(m)}>${esc(m)}</li>`).join("")}</ul>` : ""}
                   ${it.note ? noteHtml(it.note) : ""}
                 </div>
@@ -759,7 +779,7 @@
       <div class="w-card">
         <div class="w-until">${esc(clock(t.waitUntil))}${t.holdUntil ? "<small>or a Dasher</small>" : t.dueAt ? `<small>due ${esc(clock(t.dueAt))}</small>` : ""}</div>
         <div class="w-who">${esc(label(t))}${(kindLabel(t) || "Counter") !== label(t) ? `<span>${esc(kindLabel(t) || "Counter")}</span>` : ""}</div>
-        <div class="w-items">${t.items.map((it) => `${it.qty} ${esc(it.name)}`).join(" · ")}</div>
+        <div class="w-items">${t.items.map((it) => `${it.qty > 1 ? `${it.qty}×` : it.qty} ${esc(it.name)}${it.insteadOf ? ` (${esc(it.variation)})` : ""}`).join(" · ")}</div>
       </div>`).join("") : "";
     board.style.paddingBottom = list.length ? `calc(${waitingEl.offsetHeight}px + 2rem)` : "";
     showMore();

@@ -141,7 +141,12 @@ for i in cats["hot_sandwiches"]["items"]:
             d = d + "."  # already says "on rye"
         else:
             d = (d + ". " if d else "") + kaiser
-        add(i["name"], H, [("Beef", i["price"]), ("Chicken", i["price"])], d)
+        # The usual meat first: it's what the POS rings unless someone picks
+        # the other, and the kitchen board flags whichever isn't first.
+        meats = ["Beef", "Chicken"]
+        if i.get("defaultMeat") == "Chicken":
+            meats.reverse()
+        add(i["name"], H, [(m, i["price"]) for m in meats], d)
     else:
         d = i.get("description", "")
         bread = i.get("defaultBread")

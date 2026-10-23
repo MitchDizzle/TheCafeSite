@@ -161,6 +161,27 @@ test("a split order is a For Here ticket with the to-go items last", () => {
   assert.equal(t.items[2].variation, "Meatloaf");
 });
 
+test("the meat that isn't the item's first variation is flagged", () => {
+  const { catalog } = require("../lib/catalog");
+  const saved = catalog.firstVariation;
+  catalog.firstVariation = new Map([["cheeseburger", "Beef"], ["cordon bleu burger", "Chicken"]]);
+  try {
+    const t = ticketOf(counter({ line_items: [
+      li(1, "Cheeseburger", { variation_name: "Beef" }),
+      li(2, "Cheeseburger", { variation_name: "Chicken" }),
+      li(1, "Cordon Bleu Burger", { variation_name: "Chicken" }),
+      li(1, "Cordon Bleu Burger", { variation_name: "Beef" }),
+      li(1, "Soup of the Day", { variation_name: "Bowl" }),
+    ] }));
+    assert.deepEqual(t.items.map((it) => it.insteadOf), [null, "Beef", null, "Chicken", null]);
+    catalog.firstVariation = new Map();
+    const unknown = ticketOf(counter({ line_items: [li(1, "Navajo Burger", { variation_name: "Chicken" }), li(1, "Hamburger", { variation_name: "Beef" })] }));
+    assert.deepEqual(unknown.items.map((it) => it.insteadOf), ["Beef", null], "no catalog: chicken is the one flagged");
+  } finally {
+    catalog.firstVariation = saved;
+  }
+});
+
 test("a To Go modifier marks that item to go on a For Here ticket, and isn't printed", () => {
   const t = ticketOf(counter({
     fulfillments: [{ type: "IN_STORE", state: "COMPLETED" }],

@@ -88,7 +88,10 @@ function mockOrders() {
       created_at: at(-9),
       ticket_name: "Bob",
       fulfillments: [{ type: "PICKUP", state: "COMPLETED", pickup_details: { schedule_type: "ASAP" } }],
-      line_items: [li(1, "Cheeseburger", { modifiers: [{ name: "Add bacon" }, { name: "No onion" }, { name: "Ketchup packet", quantity: "2" }] })],
+      line_items: [
+        li(2, "Cheeseburger", { variation_name: "Chicken", modifiers: [{ name: "Add bacon" }, { name: "No onion" }, { name: "Ketchup packet", quantity: "2" }] }),
+        li(1, "Cordon Bleu Burger", { variation_name: "Beef" }),
+      ],
     },
     {
       id: "MOCKCOUNTER0004",
@@ -267,6 +270,13 @@ function mockCatalog() {
     { type: "ITEM", id: "ITEM-Special Side", version: 1, item_data: { name: "Special Side", categories: [{ id: "CAT-Specials" }], variations: [v("VAR-SS", "Regular", 200)] } },
     { type: "ITEM", id: "ITEM-Soup of the Day", version: 1, item_data: { name: "Soup of the Day", categories: [{ id: "CAT-Soups & Salads" }], variations: [v("VAR-SC", "Cup", 500), v("VAR-SB", "Bowl", 700)] } },
   ];
+  // The burgers' meats: Beef first, but Chicken first on the Cordon Bleu
+  // (the board flags the one that isn't first).
+  for (const o of out) {
+    const name = o.item_data && o.item_data.name;
+    if (name === "Cheeseburger") o.item_data.variations = [v("VAR-CB-Beef", "Beef", 850), v("VAR-CB-Chicken", "Chicken", 850)];
+    if (name === "Cordon Bleu Burger") o.item_data.variations = [v("VAR-CBB-Chicken", "Chicken", 1000), v("VAR-CBB-Beef", "Beef", 1000)];
+  }
   out.push({ type: "CATEGORY", id: "CAT-Specials", category_data: { name: "Lunch Specials" } });
   out.push({ type: "CATEGORY", id: "CAT-Desserts", category_data: { name: "Desserts" } });
   // Desserts as they are in Square since 2026-10-21: each kind is a

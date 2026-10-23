@@ -44,6 +44,21 @@ function categoriesOf(li) {
   return catalog.byName.get(itemName(li).trim().toLowerCase()) || [];
 }
 
+// Beef or chicken on a burger: the item's first variation in Square is what
+// it usually comes with (Beef, or Chicken on the Cordon Bleu), and the other
+// one is flagged on the ticket so the cook doesn't grab the usual patty.
+// Returns the usual meat when this line isn't it, else null. With no catalog
+// to ask, Chicken is the one flagged: beef is the usual on all but one.
+const MEAT = /^(beef|chicken)$/i;
+function meatSwap(li) {
+  const v = (li.variation_name || "").trim();
+  if (!MEAT.test(v)) return null;
+  const hit = li.catalog_object_id && catalog.byVariation.get(li.catalog_object_id);
+  const usual = (hit && hit.firstVariation) || catalog.firstVariation.get(itemName(li).trim().toLowerCase())
+    || (/^chicken$/i.test(v) ? "Beef" : null);
+  return usual && MEAT.test(usual) && usual.toLowerCase() !== v.toLowerCase() ? usual : null;
+}
+
 // On the skip list by name, or in a skipped category.
 function isSkipped(li) {
   if (skipSets.items.has(itemName(li).trim().toLowerCase())) return true;
@@ -108,6 +123,8 @@ function toTicket(order) {
     name: itemName(li),
     variation:
       li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
+    // Not the usual meat: the usual one's name (the board highlights it).
+    insteadOf: meatSwap(li),
     // An online order's packets stay on its items: the kitchen bags it all.
     mods: (li.modifiers || []).filter((m) => !(isPacket(m) && !online) && !isToGoMod(m)).map((m) =>
       Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name

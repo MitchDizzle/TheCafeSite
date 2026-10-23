@@ -154,7 +154,7 @@
     {
       "id": "hot_sandwiches",
       "name": "Hot Sandwiches",
-      "_note_or_chicken": "Chicken instead of beef is said ONCE, as the category's `callout` (on its own line, client 2026-10-09: easier to see), and as `boardNote` for /menu-board, which prints no notes and has room only for the shorter line. Not as '… or Chicken' on every row: every row used to carry it, and the client asked 2026-10-08 to take it out of the names so the menu reads less crowded. In Square each burger is still one item with Beef / Chicken variations at the same price (scripts/square-catalog.py, `beef_or_chicken`), so the kitchen ticket says which.",
+      "_note_or_chicken": "Chicken instead of beef is said ONCE, as the category's `callout` (on its own line, client 2026-10-09: easier to see), and as `boardNote` for /menu-board, which prints no notes and has room only for the shorter line. Not as '… or Chicken' on every row: every row used to carry it, and the client asked 2026-10-08 to take it out of the names so the menu reads less crowded. In Square each burger is still one item with Beef / Chicken variations at the same price (scripts/square-catalog.py, `beef_or_chicken`), so the kitchen ticket says which. The FIRST variation is the usual meat — Beef, except where an item sets `defaultMeat` (the Cordon Bleu is usually chicken, client 2026-10-23) — and the kitchen board highlights the other one. Data only; prints nowhere.",
       "note": "Off the griddle, with choice of bread. Burgers come on a Kaiser roll with lettuce, tomato, pickle & onion.",
       "callout": "Chicken instead of beef on any burger or the Patty Melt.",
       "boardNote": "Chicken instead of beef on any burger",
@@ -191,6 +191,7 @@
           "name": "Cordon Bleu Burger",
           "description": "Ham & Swiss cheese",
           "defaultBread": "Kaiser",
+          "defaultMeat": "Chicken",
           "price": 10.00
         },
         {
