@@ -6,12 +6,14 @@
 
     LAID OUT LIKE THE FACEBOOK POST (client 2026-10-18: the soups in a block
     at the foot were small and hard to read). Each day reads across: the day,
-    the plate with its sides, then that day's soup in its own ruled cell
-    under a "Soup" label. What is true of every plate is said once, as two
-    tags under the heading: the price (specials.price) with the drink, and
-    the soup's Cup / Bowl price from menu.json (the soup is sold
-    separately). A day that costs something else shows its price beside the
-    plate. The Deli Salads box at the foot is what "choice of side" means
+    the plate with its sides, then that day's soup. Two columns, each with
+    its own price at its head: "Lunch Special / $10, drink included"
+    (specials.price) over the plates and "Soup / Cup $5 · Bowl $7" (menu.json)
+    over the soups, with a solid rule between them from the heads to the
+    last row, so no one reads the soup as part of the special (client
+    2026-10-23, as on the post). Until then the two prices were tags under
+    the heading and each soup had a small "Soup" label. A day that costs
+    something else shows its price beside the plate. The Deli Salads box at the foot is what "choice of side" means
     and what can be swapped in on any special, as on the post. -#}
 {%- set week = specials.days | latestWeek %}
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
@@ -32,15 +34,23 @@
         <p class="p-label sign-heading-sub ink-accent">{{ range }} &middot; from 11am</p>
     </div>
 
-    <div class="sw-tags">
-        {%- if specials.price %}
-        <p class="sw-tag sw-tag--plate">Every special {{ specials.price | money | replace(".00", "") }}{% if specials.includesDrink %}, drink included{% endif %}</p>
-        {%- elif specials.includesDrink %}
-        <p class="sw-tag sw-tag--plate">Every special includes a drink</p>
-        {%- endif %}
-        {%- if soup and soup.items %}
-        <p class="sw-tag sw-tag--soup">Soup {% for i in soup.items %}{% if not loop.first %} &middot; {% endif %}{{ i.name }} {{ i.price | money }}{% endfor %}</p>
-        {%- endif %}
+    <div class="sw-grid">
+    <div class="sw-cols">
+        <span></span>
+        <div>
+            <p class="p-label sw-col-label ink-teal">Lunch Special</p>
+            {%- if specials.price %}
+            <p class="sw-col-price ink-accent">{{ specials.price | money | replace(".00", "") }}{% if specials.includesDrink %}, drink included{% endif %}</p>
+            {%- elif specials.includesDrink %}
+            <p class="sw-col-price ink-accent">Drink included</p>
+            {%- endif %}
+        </div>
+        <div class="sw-col--soup">
+            <p class="p-label sw-col-label ink-teal">Soup</p>
+            {%- if soup and soup.items %}
+            <p class="sw-col-price ink-teal">{% for i in soup.items %}{% if not loop.first %} &middot; {% endif %}{{ i.name }} {{ i.price | money | replace(".00", "") }}{% endfor %}</p>
+            {%- endif %}
+        </div>
     </div>
 
     <ul class="sw-days">
@@ -55,18 +65,19 @@
                 {%- endif %}
             </div>
             <div class="sw-soup">
-                <p class="p-label sw-soup-label ink-accent">Soup</p>
                 <p class="sw-soup-name ink-teal">{{ d.soup or "&mdash;" | safe }}</p>
             </div>
         </li>
         {%- endfor %}
     </ul>
+    </div>
 
     <div class="sign-spacer"></div>
     {%- if deli %}
     <section class="sw-choice">
         <p class="p-display sw-choice-title ink-teal">Sides</p>
-        <p class="sw-choice-note">Pick one on a &ldquo;choice of side&rdquo; day, or swap them for the sides on any special</p>
+        {#- One short line (2026-10-23), as on the post. -#}
+        <p class="sw-choice-note">{% if week | selectattr("anySide") | length %}Pick one with &ldquo;choice of side,&rdquo; or swap one in on any special{% else %}Swap one in for the sides on any special{% endif %}</p>
         <ul class="sw-choices">
             {%- for c in deli.choices %}
             <li>{{ c }}</li>
