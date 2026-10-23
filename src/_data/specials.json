@@ -147,6 +147,47 @@
         "Potatoes",
         "Green Beans"
       ]
+    },
+    {
+      "date": "2026-10-26",
+      "soup": "Chicken Dumpling",
+      "special": "Spaghetti & Meatballs",
+      "sides": [
+        "Tossed Salad",
+        "Garlic Bread"
+      ]
+    },
+    {
+      "date": "2026-10-27",
+      "soup": "Broccoli Cheese",
+      "special": "Pork Tenderloin Sandwich",
+      "sides": [
+        "Twice Baked Potato Casserole"
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "soup": "Ham & Beans",
+      "special": "Chicken Fried Chicken",
+      "sides": [
+        "Mashed Potatoes & White Gravy",
+        "Green Beans"
+      ]
+    },
+    {
+      "date": "2026-10-29",
+      "soup": "Chili",
+      "special": "Cheesy Steak Sandwich",
+      "anySide": true
+    },
+    {
+      "date": "2026-10-30",
+      "soup": "Potato Cheese",
+      "special": "BBQ Ribs",
+      "sides": [
+        "Mac & Cheese",
+        "Baked Beans"
+      ]
     }
   ]
 }
