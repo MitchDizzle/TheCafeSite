@@ -30,16 +30,24 @@ studioOrder: 22
     light body sits better beside real food photos when the post carries
     several images.
 
-    WHAT IS SAID ONCE, AT THE TOP. The drink is part of every plate
+    TWO COLUMNS, EACH WITH ITS OWN PRICE. The drink is part of every plate
     (specials.includesDrink) and the soup is sold separately at one Cup /
-    Bowl price (from menu.json), so both are said once, as two tags above
-    the table, rather than on every row (client 2026-10-09: soup prices at
-    the top, like the drink).
+    Bowl price (from menu.json), so each is said once, at the head of its
+    own column: "Lunch Special / $10, drink included" over the plates and
+    "Soup / Cup $5 · Bowl $7" over the soups, with a solid rule between the
+    two columns from the heads to the last row. The rule and the separate
+    prices are there so no one reads the soup as part of the special
+    (client 2026-10-23). Until then they were two tags above the table
+    (client 2026-10-09: soup prices at the top, like the drink), and each
+    soup had its own small "Soup" label.
 
-    THE SOUP SITS IN ITS DAY'S ROW, in its own right-hand cell under a
-    "Soup" label, so a day reads across: plate, then soup. Until 2026-10-09
-    the soups had a box of their own under the table; that box now lists
-    the choice of side instead.
+    THE SOUP SITS IN ITS DAY'S ROW, so a day reads across: plate, then
+    soup. Until 2026-10-09 the soups had a box of their own under the
+    table; that box now lists the choice of side instead.
+
+    THE KICKER says "Lunch Specials", not "This Week's": the post goes up
+    the week before, so "this week" was wrong on the day it was posted
+    (2026-10-23). The dates under it say which week.
 
     THE SIDES are the Deli Salads row's `choices` in menu.json, listed
     once under the week, every week: they are what "with choice of side"
@@ -66,7 +74,7 @@ studioOrder: 22
         <div class="wordmark wordmark--light wordmark--hero wk-wordmark">
             {% inlineSvg "/assets/thecafe.svg", "", site.name %}
         </div>
-        <p class="p-display-italic wk-kicker">This Week&rsquo;s Lunch Specials</p>
+        <p class="p-display-italic wk-kicker">Lunch Specials</p>
         {#- The town on the range line (client 2026-10-10): Facebook shows the
             post to people well outside Leavenworth, and nothing else near the
             top said where the cafe is. -#}
@@ -75,15 +83,23 @@ studioOrder: 22
 
     <div class="wk-body">
         <p class="p-label wk-served">Starting at 11am</p>
-        <div class="wk-tags">
-            {%- if specials.price %}
-            <p class="wk-tag wk-tag--drink">Every special {{ specials.price | money | replace(".00", "") }}{% if specials.includesDrink %}, drink included{% endif %}</p>
-            {%- elif specials.includesDrink %}
-            <p class="wk-tag wk-tag--drink">Every special includes a drink</p>
-            {%- endif %}
-            {%- if soupCat and soupCat.items %}
-            <p class="wk-tag wk-tag--soup">Soup {% for s in soupCat.items %}{% if not loop.first %} <span class="dot">&middot;</span> {% endif %}{{ s.name }} {{ s.price | money }}{% endfor %}</p>
-            {%- endif %}
+        <div class="wk-grid">
+        <div class="wk-cols">
+            <span></span>
+            <div class="wk-col">
+                <p class="p-label wk-col-label">Lunch Special</p>
+                {%- if specials.price %}
+                <p class="wk-col-price wk-col-price--special">{{ specials.price | money | replace(".00", "") }}{% if specials.includesDrink %}, drink included{% endif %}</p>
+                {%- elif specials.includesDrink %}
+                <p class="wk-col-price wk-col-price--special">Drink included</p>
+                {%- endif %}
+            </div>
+            <div class="wk-col wk-col--soup">
+                <p class="p-label wk-col-label">Soup</p>
+                {%- if soupCat and soupCat.items %}
+                <p class="wk-col-price">{% for s in soupCat.items %}{% if not loop.first %} <span class="dot">&middot;</span> {% endif %}{{ s.name }} {{ s.price | money | replace(".00", "") }}{% endfor %}</p>
+                {%- endif %}
+            </div>
         </div>
 
         <div class="wk-table">
@@ -99,18 +115,20 @@ studioOrder: 22
                 </div>
                 {%- if d.soup %}
                 <div class="wk-soup-cell">
-                    <p class="p-label wk-soup-label">Soup</p>
                     <p class="wk-soup-name">{{ d.soup }}</p>
                 </div>
                 {%- endif %}
             </div>
             {%- endfor %}
         </div>
+        </div>
 
         {%- if deli %}
         <section class="wk-choice">
             <p class="p-display wk-choice-title">Sides</p>
-            <p class="p-body wk-choice-note">Pick one on a &ldquo;choice of side&rdquo; day, or swap them for the sides on any special</p>
+            {#- One short line (2026-10-23); the caption keeps the longer wording.
+                The "choice of side" half only on a week that has such a day. -#}
+            <p class="p-body wk-choice-note">{% if week | selectattr("anySide") | length %}Pick one with &ldquo;choice of side,&rdquo; or swap one in on any special{% else %}Swap one in for the sides on any special{% endif %}</p>
             <ul class="wk-choices">
                 {%- for c in deli.choices %}
                 <li>{{ c }}</li>

@@ -67,31 +67,66 @@
     text-indent: 0.18em;
 }
 
-/* Said once, above the plates, because each is true of every day: the
-   drink comes with every special, the soup is one price all week. Ruled
-   rather than filled; the drink red, the soup teal, so they read as two
-   different things. */
-.wk-tags {
+/* The columns: day | lunch special | soup. Their widths are shared by the
+   heads and the rows, and the rule between the special and the soup sits
+   in the middle of the gap between them. */
+.wk-grid {
+    --day-w: 110px;
+    --soup-w: 260px;
+    --col-gap: 24px;
+    flex: 1;
     display: flex;
-    justify-content: center;
-    gap: 16px;
-    margin-top: 14px;
+    flex-direction: column;
+    position: relative;
+    margin-top: 12px;
 }
 
-.wk-tag {
-    padding: 8px 24px;
-    border: 3px solid var(--accent);
-    border-radius: 999px;
+/* The solid rule between the plates and the soups, from the column heads to
+   the last row, so the soup never reads as part of the special (client
+   2026-10-23). */
+.wk-grid::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: calc(var(--soup-w) + var(--col-gap) / 2 - 1.5px);
+    width: 3px;
+    background: var(--teal);
+}
+
+/* The column heads, each with its own price: the special's (and the drink)
+   in red over the plates, the soup's in teal over the soups, so the two
+   prices read as two different things. */
+.wk-cols {
+    display: grid;
+    grid-template-columns: var(--day-w) 1fr var(--soup-w);
+    column-gap: var(--col-gap);
+    align-items: end;
+    padding-bottom: 10px;
+}
+
+.wk-col-label {
+    font-size: 22px;
+    color: var(--teal);
+}
+
+.wk-col-price {
     font-family: 'Lato', sans-serif;
     font-weight: 900;
-    font-size: 26px;
-    color: var(--accent);
+    font-size: 28px;
+    line-height: 1.2;
+    color: var(--teal-dark);
+    margin-top: 2px;
     white-space: nowrap;
 }
 
-.wk-tag--soup {
-    border-color: var(--teal);
-    color: var(--teal-dark);
+.wk-col-price--special {
+    color: var(--accent);
+}
+
+.wk-col--soup,
+.wk-soup-cell {
+    padding-left: 6px;
 }
 
 /* One full-width row per day — day | lunch special | soup — so a row's rule runs
@@ -102,14 +137,13 @@
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-    margin-top: 14px;
     border-top: 3px solid var(--accent);
 }
 
 .wk-row {
     display: grid;
-    grid-template-columns: 120px 1fr 220px;
-    column-gap: 20px;
+    grid-template-columns: var(--day-w) 1fr var(--soup-w);
+    column-gap: var(--col-gap);
     align-items: baseline;
     padding: 9px 0;
     border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.14);
@@ -147,26 +181,16 @@
     margin-top: 4px;
 }
 
-/* The day's soup, in its row's right-hand cell: a small "Soup" label so
-   it never reads as part of the plate (it is sold separately; the tag up
-   top says so with the price). */
+/* The day's soup, in its row's right-hand cell, past the rule. */
 .wk-soup-cell {
     align-self: center;
-    border-left: 1px solid rgba(var(--text-dark-rgb), 0.14);
-    padding-left: 20px;
-}
-
-.wk-soup-label {
-    font-size: 18px;
-    color: var(--accent);
 }
 
 .wk-soup-name {
-    font-size: 26px;
+    font-size: 30px;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.15;
     color: var(--teal-dark);
-    margin-top: 2px;
 }
 
 /* ── Choice of side ───────────────────────────────────────
@@ -186,7 +210,7 @@
 }
 
 .wk-choice-note {
-    font-size: 23px;
+    font-size: 25px;
     font-style: italic;
     line-height: 1.25;
 }
@@ -199,7 +223,7 @@
     column-gap: 26px;
     row-gap: 2px;
     margin-top: 6px;
-    font-size: 25px;
+    font-size: 27px;
     font-weight: 700;
     color: var(--text-dark);
 }

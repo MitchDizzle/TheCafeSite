@@ -106,7 +106,7 @@ Both fonts come from Google Fonts.
 | Role | Font | Notes |
 |---|---|---|
 | Headings, item names, day names | **Playfair Display** 700 | `.p-display` |
-| Kickers ("This Week's Lunch Specials") | Playfair Display *italic* 400 | `.p-display-italic` |
+| Kickers ("Lunch Specials") | Playfair Display *italic* 400 | `.p-display-italic` |
 | Body text | **Lato** 400 (300 on the website) | `.p-body` |
 | Small labels ("SOUP", the date line) | Lato 700, CAPITALS, spaced 0.18em | `.p-label` |
 | Eyebrows | Lato 300, CAPITALS, spaced 0.3em | `.p-eyebrow` |
