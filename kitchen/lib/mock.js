@@ -90,7 +90,7 @@ function mockOrders() {
       fulfillments: [{ type: "PICKUP", state: "COMPLETED", pickup_details: { schedule_type: "ASAP" } }],
       line_items: [
         li(2, "Cheeseburger", { variation_name: "Chicken", modifiers: [{ name: "Add bacon" }, { name: "No onion" }, { name: "Ketchup packet", quantity: "2" }] }),
-        li(1, "Cordon Bleu Burger", { variation_name: "Beef" }),
+        li(1, "Cordon Bleu Sandwich", { variation_name: "Beef" }),
       ],
     },
     {
@@ -247,7 +247,7 @@ function mockCatalog() {
     "Chips & Sweets": ["Chips", "Chocolate Chip Cookie"],
     Breakfast: ["Big Breakfast", "Breakfast Burrito", "Breakfast Sandwich"],
     Sandwiches: ["Turkey Club", "Reuben", "BLT", "Patty Melt", "Chicken Salad Croissant", "Build Your Own", "Grilled Cheese",
-      "Cheeseburger", "Philly Steak Sandwich", "Clubhouse Wrap", "Reuben Sandwich", "BLT Sandwich", "Cordon Bleu Burger"],
+      "Cheeseburger", "Philly Steak Sandwich", "Clubhouse Wrap", "Reuben Sandwich", "BLT Sandwich", "Cordon Bleu Sandwich"],
     "Soups & Salads": ["Soup of the Day", "Chef Salad"],
     Kids: ["Kids Meal", "Kids Side"],
     Catering: ["Sandwich Tray"],
@@ -275,7 +275,7 @@ function mockCatalog() {
   for (const o of out) {
     const name = o.item_data && o.item_data.name;
     if (name === "Cheeseburger") o.item_data.variations = [v("VAR-CB-Beef", "Beef", 850), v("VAR-CB-Chicken", "Chicken", 850)];
-    if (name === "Cordon Bleu Burger") o.item_data.variations = [v("VAR-CBB-Chicken", "Chicken", 1000), v("VAR-CBB-Beef", "Beef", 1000)];
+    if (name === "Cordon Bleu Sandwich") o.item_data.variations = [v("VAR-CBB-Chicken", "Chicken", 1000), v("VAR-CBB-Beef", "Beef", 1000)];
   }
   out.push({ type: "CATEGORY", id: "CAT-Specials", category_data: { name: "Lunch Specials" } });
   out.push({ type: "CATEGORY", id: "CAT-Desserts", category_data: { name: "Desserts" } });
@@ -338,7 +338,7 @@ function demoOrders(start) {
     ["Hank", [li(1, "Kids Meal", { modifiers: [{ name: "Chicken Strips" }, { name: "Mac & Cheese" }] }), li(1, "Grilled Cheese")]],
     ["Jo", [li(1, "BLT Sandwich", { modifiers: [{ name: "Mayo packet" }] }), li(1, "Iced Tea / Fountain Drink", { variation_name: "Iced Tea" })]],
     ["Al", [li(1, "Breakfast Sandwich", { modifiers: [{ name: "Sausage" }, { name: "Biscuit" }] })]],
-    ["Pat", [li(1, "Cordon Bleu Burger", { variation_name: "Chicken", modifiers: [{ name: "Gluten-free bun" }] })]],
+    ["Pat", [li(1, "Cordon Bleu Sandwich", { variation_name: "Chicken", modifiers: [{ name: "Gluten-free bun" }] })]],
     ["Vic", [li(2, "Soup of the Day", { variation_name: "Bowl" })]],
   ];
   const arrived = Math.min(later.length, Math.floor((Date.now() - start) / 60000));

@@ -133,7 +133,7 @@ kaiser = "On a Kaiser roll with lettuce, tomato, pickle & onion."
 # Made with beef or chicken at the same price (the category note says so):
 # one Square item each, with Beef / Chicken variations.
 beef_or_chicken = {"Hamburger", "Cheeseburger", "Navajo Burger", "Bacon Cheese Burger",
-                   "Mushroom Swiss Burger", "Cordon Bleu Burger", "Patty Melt"}
+                   "Mushroom Swiss Burger", "Cordon Bleu Sandwich", "Patty Melt"}
 for i in cats["hot_sandwiches"]["items"]:
     if i["name"] in beef_or_chicken:
         d = i.get("description", "")

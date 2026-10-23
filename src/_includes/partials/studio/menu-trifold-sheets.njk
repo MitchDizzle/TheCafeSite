@@ -83,7 +83,7 @@
         {%- for item in c.items %}
         <li class="menu-item">
             <div class="menu-item-head">
-                <span class="menu-item-name p-body">{{ item.name }}
+                <span class="menu-item-name p-body">{{ item.printName or item.name }}
                     {{- dietMarks(item) -}}
                 </span>
                 {#- No leader and no price on the head row of an item priced by
