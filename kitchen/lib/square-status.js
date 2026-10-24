@@ -9,7 +9,10 @@
 //     stays Ready (the text has gone).
 //   - Handed off pressed on the front page (by a person, not the 10-minute
 //     auto-clear, which skips these orders): picked up (COMPLETED), after
-//     the same delay, so the front's Undo can catch a wrong tap.
+//     the same delay, so the front's Undo can catch a wrong tap. The order
+//     itself is then closed (COMPLETED) too, if it's paid: Square doesn't
+//     close it when its fulfillment completes, and an order left OPEN is
+//     missed by the sales reports (TASKS KB-20, 2026-10-23).
 // A fulfillment only moves forward one state at a time, PROPOSED ->
 // RESERVED -> PREPARED -> COMPLETED, each step read fresh from Square for
 // its version. A failure is logged and tried again a minute later, five
@@ -22,6 +25,7 @@ const { bumped, markedReady, byHand, markedDone, saveState } = require("./state"
 const FLOW = ["PROPOSED", "RESERVED", "PREPARED", "COMPLETED"];
 const markTries = {}; // orderId -> { n, at, error } (not saved)
 const mockStates = new Map(); // test mode: orderId -> the state the board set
+const mockClosed = new Set(); // test mode: orders the board closed
 let syncing = false;
 
 function withMockStates(orders) {
@@ -29,8 +33,8 @@ function withMockStates(orders) {
     const state = mockStates.get(o.id);
     if (state && o.fulfillments && o.fulfillments[0]) {
       o.fulfillments[0].state = state;
-      if (state === "COMPLETED") o.state = "COMPLETED";
     }
+    if (mockClosed.has(o.id)) o.state = "COMPLETED";
   }
   return orders;
 }
@@ -53,7 +57,10 @@ async function moveFulfillment(id, target) {
     if (!f) throw new Error("it has no pickup or delivery step in Square");
     const at = FLOW.indexOf(f.state);
     if (at < 0) throw new Error(`Square has it as ${f.state.toLowerCase()}`);
-    if (at >= want) return f.state;
+    if (at >= want) {
+      if (target === "COMPLETED") await closeOrder(order);
+      return f.state;
+    }
     const next = FLOW[at + 1];
     if (MOCK) { mockStates.set(id, next); live.rawOrders.get(id).fulfillments[0].state = next; continue; }
     await square("PUT", `/orders/${encodeURIComponent(id)}`, {
@@ -62,6 +69,23 @@ async function moveFulfillment(id, target) {
     });
   }
   return target;
+}
+
+// Closes a picked-up order in Square. Only an OPEN order with nothing left to
+// pay: Square refuses to close one that isn't paid, and DoorDash closes its
+// own deliveries, so those are already COMPLETED by now.
+async function closeOrder(order) {
+  if (order.state !== "OPEN") return;
+  const due = (order.net_amount_due_money && order.net_amount_due_money.amount) || 0;
+  if (due > 0) {
+    console.log(`${new Date().toLocaleTimeString()}  order ...${order.id.slice(-4)}: picked up, but left open in Square: $${(due / 100).toFixed(2)} still to pay.`);
+    return;
+  }
+  if (MOCK) { mockClosed.add(order.id); live.rawOrders.get(order.id).state = "COMPLETED"; return; }
+  await square("PUT", `/orders/${encodeURIComponent(order.id)}`, {
+    idempotency_key: `kitchen-${order.id}-closed`,
+    order: { location_id: order.location_id, version: order.version, state: "COMPLETED" },
+  });
 }
 
 async function mark(t, target, map, words) {
@@ -100,4 +124,4 @@ async function syncSquare() {
   }
 }
 
-module.exports = { withMockStates, syncSquare };
+module.exports = { withMockStates, syncSquare, moveFulfillment };
