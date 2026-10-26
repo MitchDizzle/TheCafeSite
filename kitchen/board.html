@@ -1239,25 +1239,52 @@
   });
 
   // ---- new-order chime (Chrome is launched with autoplay allowed; the
-  // first tap anywhere also unlocks audio, in case it wasn't)
+  // first tap anywhere also unlocks audio, in case it wasn't). A service-bell
+  // tune, not a blip (Mitch 2026-10-26: it has to be recognised over a busy
+  // kitchen): four rising bell notes, ding-ding-ding-DING, played twice,
+  // about 2.5 seconds in all. Each note is a bell, not a pure tone: the note,
+  // a softer inharmonic overtone (2.76×, what makes a bell sound like a bell)
+  // and a triangle wave under it, which carries better through small speakers
+  // and kitchen noise. A compressor keeps the stacked notes from clipping.
   let audio;
+  function bell(t0, freq, peak, ring) {
+    const out = audio.createGain();
+    out.gain.setValueAtTime(0.0001, t0);
+    out.gain.exponentialRampToValueAtTime(peak, t0 + 0.01);
+    out.gain.exponentialRampToValueAtTime(0.0001, t0 + ring);
+    out.connect(chimeBus());
+    for (const [type, mult, level] of [["sine", 1, 1], ["triangle", 1, 0.5], ["sine", 2.76, 0.25]]) {
+      const o = audio.createOscillator();
+      const g = audio.createGain();
+      o.type = type;
+      o.frequency.value = freq * mult;
+      g.gain.value = level;
+      o.connect(g).connect(out);
+      o.start(t0);
+      o.stop(t0 + ring + 0.05);
+    }
+  }
+  let bus;
+  function chimeBus() {
+    if (!bus) {
+      bus = audio.createDynamicsCompressor();
+      bus.threshold.value = -12;
+      bus.ratio.value = 6;
+      bus.connect(audio.destination);
+    }
+    return bus;
+  }
   function chime() {
     if (!soundOn) return;
     try {
       audio = audio || new AudioContext();
       if (audio.state === "suspended") audio.resume();
-      [880, 1175].forEach((freq, i) => {
-        const o = audio.createOscillator();
-        const g = audio.createGain();
-        const t0 = audio.currentTime + i * 0.22;
-        o.frequency.value = freq;
-        g.gain.setValueAtTime(0.0001, t0);
-        g.gain.exponentialRampToValueAtTime(0.4, t0 + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.35);
-        o.connect(g).connect(audio.destination);
-        o.start(t0);
-        o.stop(t0 + 0.4);
-      });
+      const start = audio.currentTime + 0.05;
+      // E5, G#5, B5, then E6 held longer: an E major arpeggio.
+      const tune = [[659, 0, 0.6], [831, 0.16, 0.6], [988, 0.32, 0.6], [1319, 0.48, 1.0]];
+      for (const round of [0, 1.25]) {
+        for (const [freq, at, ring] of tune) bell(start + round + at, freq, 0.5, ring);
+      }
     } catch {}
   }
   // A low falling tone when the board loses Square or its own program,
