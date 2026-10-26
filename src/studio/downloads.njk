@@ -152,6 +152,14 @@ permalink: "/studio/downloads/index.html"
     {%- if weekly.length %}
     <section class="dl-section dl-section--week">
         <h2 class="dl-section-title">This week{% if range %} <span class="dl-section-range">{{ range }}</span>{% endif %}</h2>
+        {#- Facebook keeps putting an old weekly post back into people's feeds
+            whenever someone comments on it (Mitch 2026-10-26), so the routine
+            ends by marking last week's post as over. -#}
+        <p class="dl-note">
+            After posting: edit <strong>last week's</strong> specials post and put
+            <strong>Outdated. Thank You</strong> at the top of its caption &mdash;
+            Facebook keeps showing old posts to people when someone comments.
+        </p>
         <ul class="dl-list">
             {%- for e in weekly %}{{ dlItem(e.piece, null, true) }}{% endfor %}
         </ul>

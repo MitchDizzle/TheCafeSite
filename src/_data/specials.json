@@ -1,7 +1,7 @@
 {
   "_note": "The daily specials, a day per entry, written a week ahead. This file is the contract: /menu's 'Today's special' box, the weekly Facebook post (src/studio/fb-weekly-specials.njk, with its caption), the counter sign, and /specials.json are all built from it. /specials.json is what the kitchen PC reads (kitchen/README.md, Specials): each morning it puts that day's plate and soup into Square by itself. Change the shape and all of them change.",
   "_note_fields": "`date` is YYYY-MM-DD and is the ONLY date — weekday names and 'October 5' are computed from it, so a day can never be labelled wrong. `soup` is the soup of the day (it starts at 11am; prices are Cup/Bowl on the menu). `special` is the plate and `sides` what comes with it. `price` on a day is that plate's price when it isn't the usual one (the top-level `price`); see _note_price. `photo` is reserved for later — a path under /assets/ once there are food photos; nothing reads it yet.",
-  "_note_weeks": "ADD next week; don't replace this one. Next week goes in a week ahead (for the Facebook post) while this week is still on /menu, so the file holds both side by side. /menu lists one week at a time by the visitor's date; the Facebook post, its caption and the counter sign show the NEWEST week in the file (the latestWeek filter). Delete a week once it's over, or leave it: a past day is never shown.",
+  "_note_weeks": "ADD next week; don't replace this one. Next week goes in a week ahead (for the Facebook post) while this week is still on /menu, so the file holds both side by side. /menu lists one week at a time by the visitor's date; the Facebook post, its caption and the counter sign show the NEWEST week in the file (the latestWeek filter). Delete a week once it's over (copy it to SPECIALS-HISTORY.md in the private CafeWork repo first), or leave it: a past day is never shown.",
   "_note_kitchen": "The kitchen PC reads /specials.json every half hour and never changes today once it has put today into Square (first thing when it starts, or at midnight), an earlier day, or a day set on its own front page (Manage > Specials) from it. So adding next week, or fixing a later day here, can't disturb today's specials in Square; a change to tomorrow made here before the PC starts goes in, but fixing TODAY once the cafe is open has to be done on the front page. The one exception is today's `sides`: a fix here reaches Square's side lists within half an hour or at the kitchen PC's Check for updates (client 2026-10-19).",
   "_note_expiry": "Nothing here expires by itself, and nothing has to: /menu picks today's entry in the visitor's browser on Central time and shows nothing at all on a day that is not listed — weekends, and every day after the last one. An old week left in place is therefore hidden, never shown.",
   "_note_any_side": "`anySide: true` on a day means the plate comes with the customer's choice of any Deli Salad (the `choices` of that row in menu.json, cottage cheese among them; not chips or fruit), included in the price, picked in Square from Lunch Special's Side 1 list (Chef's Choice unless the customer picks); every piece then says 'with choice of side' instead of naming sides, and the weekly post lists the choices once, under the week. The same sides can be swapped in for the set sides on any other special (client 2026-10-09); that is done at the counter, so the post says so but nothing here records it. Not every special has it: a day with set sides (Chicken Fried Chicken with mashed potatoes, white gravy and green beans) lists them in `sides` and leaves anySide off. Don't set both. The kitchen also picks a side of its own for an anySide day from what's in the shop (client 2026-10-14), usually decided only the day before: once it is known, swap that day's anySide for `sides: ['<that side>']` (Cheesy Potatoes on 2026-10-15), so Square has it picked already and the customer can still swap it for a Deli Salad or the soup. The words are built in one place, the specialSides filter (src/_lib/specials-caption.js).",
@@ -15,139 +15,6 @@
   "_note_price": "`price` here, at the top of the file, is what EVERY lunch special costs unless its day sets its own `price` (client 2026-10-12: $10 unless otherwise described). The kitchen PC puts it into Square with the day's plate each morning, so this file is now where the price is set: change it here, not on the till. The weekly Facebook post shows it once at the top, and a day's own price beside that plate. The soup's Cup / Bowl prices stay in menu.json.",
   "price": 10,
   "days": [
-    {
-      "date": "2026-10-05",
-      "soup": "Chicken Dumpling",
-      "special": "BBQ Ribs",
-      "sides": [
-        "Baked Beans",
-        "Mac & Cheese"
-      ]
-    },
-    {
-      "date": "2026-10-06",
-      "soup": "Cauliflower Cheese",
-      "special": "Chicken Enchilada Casserole",
-      "sides": [
-        "Rice & Beans"
-      ]
-    },
-    {
-      "date": "2026-10-07",
-      "soup": "Beef Noodle",
-      "special": "Pork Tenderloin on a Bun",
-      "sides": [
-        "Oven Baked Potatoes"
-      ]
-    },
-    {
-      "date": "2026-10-08",
-      "soup": "Ham & Beans",
-      "special": "Chicken Parm Sandwich",
-      "sides": [
-        "Cheesy Potatoes"
-      ]
-    },
-    {
-      "date": "2026-10-09",
-      "soup": "Baked Potato Soup",
-      "special": "Meatloaf",
-      "sides": [
-        "Mashed Potatoes & Brown Gravy",
-        "Green Beans"
-      ]
-    },
-    {
-      "date": "2026-10-12",
-      "soup": "Chicken Pot Pie",
-      "special": "Lasagna",
-      "sides": [
-        "Tossed Salad or Cooked Broccoli",
-        "Breadstick"
-      ]
-    },
-    {
-      "date": "2026-10-13",
-      "soup": "Broccoli Cheese",
-      "special": "French Dip on a Hoagie",
-      "anySide": true,
-      "extraSides": [
-        "Oven Browned Potatoes"
-      ]
-    },
-    {
-      "date": "2026-10-14",
-      "soup": "Italian Wedding",
-      "special": "Chicken Fried Chicken",
-      "sides": [
-        "Mashed Potatoes & White Gravy",
-        "Corn"
-      ]
-    },
-    {
-      "date": "2026-10-15",
-      "soup": "Turkey Chili",
-      "special": "Sausage & Kraut",
-      "sides": [
-        "Cheesy Potatoes"
-      ]
-    },
-    {
-      "date": "2026-10-16",
-      "soup": "French Onion",
-      "special": "Meatloaf",
-      "sides": [
-        "Mashed Potatoes & Brown Gravy",
-        "Green Beans"
-      ]
-    },
-    {
-      "date": "2026-10-19",
-      "soup": "Chicken Noodle",
-      "special": "Ham Steak",
-      "sides": [
-        "Sweet Potatoes",
-        "Peas & Carrots"
-      ]
-    },
-    {
-      "date": "2026-10-20",
-      "soup": "Beef Vegetable",
-      "special": "Chicken Bacon Avocado Wrap",
-      "sides": [
-        "Cheesy Potatoes"
-      ],
-      "leaveOff": [
-        "Bacon"
-      ]
-    },
-    {
-      "date": "2026-10-21",
-      "soup": "Tomato",
-      "special": "Hot Beef Sandwich",
-      "sides": [
-        "Mashed Potatoes & Brown Gravy",
-        "Corn"
-      ]
-    },
-    {
-      "date": "2026-10-22",
-      "soup": "Corn Chowder",
-      "special": "Hawaiian Chicken",
-      "sides": [
-        "Wild Rice",
-        "Broccoli"
-      ]
-    },
-    {
-      "date": "2026-10-23",
-      "soup": "Cheesy Potato",
-      "special": "Cabbage Roll",
-      "sides": [
-        "Potatoes",
-        "Green Beans"
-      ]
-    },
     {
       "date": "2026-10-26",
       "soup": "Chicken Dumpling",
