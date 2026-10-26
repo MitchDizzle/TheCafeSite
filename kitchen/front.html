@@ -677,6 +677,7 @@
   // One screen: a header (Back, title, close), a body, and a footer whose
   // buttons are given as [{ label, act, kind }]. kind: "primary" | "danger".
   function screen({ title, back, body, buttons = [] }) {
+    forgetPhotos();
     dialog.innerHTML = `
       <header class="m-head">
         ${back ? `<button type="button" class="m-back" data-go="menu">‹ Back</button>` : `<span></span>`}
@@ -698,13 +699,51 @@
       buttons: [{ label: "Back to Manage", act: "menu" }, { label: "Done", act: "close", kind: "primary" }] });
   }
 
+  // Any kept photo's thumbnail (Saved photos, Specials' photo picker): each
+  // <img data-photo="<id>"> under root is fetched once it scrolls into view
+  // (one inside a closed <details> waits until it's opened), by POST so the
+  // PIN stays out of addresses. Let go of when the next screen opens.
+  let photoUrls = [];
+  let photoWatch = null;
+  function forgetPhotos() {
+    if (photoWatch) photoWatch.disconnect();
+    photoWatch = null;
+    for (const u of photoUrls) URL.revokeObjectURL(u);
+    photoUrls = [];
+  }
+  async function loadPhoto(img) {
+    try {
+      const res = await fetch(api("/api/front-photo-file"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: pinValue, id: img.dataset.photo }),
+      });
+      if (!res.ok || !/image/.test(res.headers.get("Content-Type") || "")) throw new Error();
+      const u = URL.createObjectURL(await res.blob());
+      photoUrls.push(u);
+      img.src = u;
+    } catch {
+      img.replaceWith(Object.assign(document.createElement("div"), { className: "m-nophoto", textContent: "No picture" }));
+    }
+  }
+  function photoThumbs(root) {
+    if (!photoWatch) photoWatch = new IntersectionObserver((seen) => {
+      for (const e of seen) {
+        if (!e.isIntersecting) continue;
+        photoWatch.unobserve(e.target);
+        loadPhoto(e.target);
+      }
+    }, { rootMargin: "200px" });
+    for (const img of root.querySelectorAll("img[data-photo]:not([src])")) photoWatch.observe(img);
+  }
+
   // What the Manage jobs in front/*.js (Specials, Reservations, Photo post,
   // Reports, Desserts, Saved photos, Leave off kitchen tickets) share with this page. Each file is
   // loaded after this script and registers its menu row's job in tools
   // (and any of its own buttons in acts) under the row's data-act name.
   const listWords = (a) => (a.length < 2 ? a.join("") : `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`);
   window.Front = {
-    esc, fmtTime, postJson, screen, busy, result, dialog, listWords, api,
+    esc, fmtTime, postJson, screen, busy, result, dialog, listWords, api, photoThumbs,
     get pin() { return pinValue; },
     rerender() { lastJson = ""; }, // the next poll redraws the orders
     tools: {},

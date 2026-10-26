@@ -14,6 +14,7 @@ const { dessertItems, saveDesserts, saveDessertPhoto, newDessert } = require("./
 const { RETRY_MINUTES, pullSite, planView, savePlanDays } = require("./specials/plan");
 const { applyToday } = require("./specials/today");
 const { photoSetup, savePhotoPost, savedPhotos, savedPhotoFile, deleteSavedPhotos, clearBackedUpPhotos } = require("./photo-post");
+const { allPhotos, photoFile } = require("./specials/photos");
 const { backupNow } = require("./backup");
 const { offsiteStatus } = require("./offsite");
 const { checkPage } = require("./check");
@@ -74,7 +75,7 @@ function isLocal(req) {
 
 // What another device on the wifi (or the owner's phone over Tailscale) may
 // reach: the front page, the phone page (/today) and their own actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated"]);
+const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -305,13 +306,13 @@ async function handle(req, res) {
     try {
       if (url.pathname === "/api/front-plan") {
         await pullSite(); // so the website's latest is what's shown
-        return send(res, 200, { ok: true, ...(await planView()) });
+        return send(res, 200, { ok: true, ...(await planView()), photos: allPhotos() });
       }
-      const saved = savePlanDays(body.days, body.notes);
-      const dates = [...new Set([...saved.days, ...saved.notes])].sort();
+      const saved = savePlanDays(body.days, body.notes, body.photos, new Set(allPhotos().map((p) => p.id)));
+      const dates = [...new Set([...saved.days, ...saved.notes, ...saved.photos])].sort();
       if (!dates.length) return send(res, 200, { ok: true, message: "Nothing changed." });
       let message = `Saved: ${dates.map(dayWords).join(", ")}.`;
-      if (saved.days.includes(localDate())) {
+      if (saved.days.includes(localDate()) || saved.photos.includes(localDate())) {
         const r = await applyToday();
         message += r && r.error ? ` Today's didn't go into Square yet (${r.error}); the board tries again in ${RETRY_MINUTES} minutes.`
           : " Today's is in Square now.";
@@ -346,7 +347,11 @@ async function handle(req, res) {
     const refused = pinRefusal(body.pin);
     if (refused) return send(res, 200, { ok: false, message: refused });
     try {
-      if (url.pathname === "/api/front-saved-photos") return send(res, 200, { ok: true, photos: savedPhotos(), backup: !!cfg.backupRepo });
+      // `others`: every other photo the board can use (the website's, the
+      // GitHub backup's), shown but never deleted from here.
+      if (url.pathname === "/api/front-saved-photos") {
+        return send(res, 200, { ok: true, photos: savedPhotos(), others: allPhotos().filter((p) => p.from !== "pc"), backup: !!cfg.backupRepo });
+      }
       if (url.pathname === "/api/front-saved-photos-clear") {
         console.log(`Move to GitHub from the front page (${new Date().toLocaleTimeString()}).`);
         const b = await backupNow();
@@ -367,6 +372,19 @@ async function handle(req, res) {
     } catch (err) {
       console.error(`Saved photos: ${err.message}`);
       return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't work: ${err.message}` });
+    }
+  }
+  // Any kept photo's picture by its id, behind the PIN: Saved photos' and
+  // Specials' thumbnails.
+  if (req.method === "POST" && url.pathname === "/api/front-photo-file") {
+    const body = await readBody(req);
+    if (pinRefusal(body.pin)) return send(res, 403, { ok: false });
+    try {
+      const f = photoFile(body.id);
+      return f ? res.writeHead(200, { "Content-Type": f.type, "Cache-Control": "no-store" }).end(f.bytes) : send(res, 404, { ok: false });
+    } catch (err) {
+      console.error(`Photo: ${err.message}`);
+      return send(res, 404, { ok: false });
     }
   }
   // Reports, behind the PIN: the saved daily history for a date range.

@@ -1,7 +1,9 @@
 // Manage -> Saved photos: what Photo post kept on the kitchen PC (its
 // "Keep the photo on the kitchen PC for the website"), newest first, so
 // test shots can be deleted, and the rest moved off the PC to the GitHub
-// backup. Loaded by front.html after its own script,
+// backup. Below them, every other photo the board can use for a special or
+// a menu item (the website's, the GitHub backup's), to look at only, and a
+// search over all of them by name (Mitch 2026-10-26). Loaded by front.html after its own script,
 // which shares its helpers as window.Front (see "Manage" there).
 (() => {
   const { esc, postJson, screen, busy, result } = Front;
@@ -41,22 +43,53 @@
     busy(TITLE, "Reading the kitchen PC's photos…");
     const r = await postJson("/api/front-saved-photos", { pin: Front.pin });
     if (!r.ok) return result(TITLE, r);
-    if (!r.photos.length) return result(TITLE, { ok: true, message: "No photos are kept on the kitchen PC." });
+    const others = r.others || [];
+    if (!r.photos.length && !others.length) return result(TITLE, { ok: true, message: "No photos are kept on the kitchen PC." });
     const date = (d) => (d ? new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : "");
+    const kind = (p) => (p.special ? "special" : p.item ? "menu" : "");
+    const where = { website: "On the website", github: "In the GitHub backup" };
+    const groups = ["website", "github"].map((from) => ({ from, list: others.filter((p) => p.from === from) })).filter((g) => g.list.length);
     screen({ title: TITLE, back: true,
-      body: `<p class="m-note">Tick the ones to delete (test shots, retakes), then Delete ticked. They go from the kitchen PC for good.
-        Photos already on the website aren't touched.</p>
-        <form id="m-saved" class="sp-grid">
-          ${r.photos.map((p) => `<label class="sp-card">
-            <img alt="" data-name="${esc(p.saved)}">
-            <b>${esc(p.title || "(no name)")}</b>
-            <small>${esc(date(p.date))}${p.special ? " · special" : ""}</small>
-            <span class="check"><input type="checkbox" name="del" value="${esc(p.saved)}"><span>Delete</span></span>
-          </label>`).join("")}
+      body: `<label class="m-field">Find a photo
+          <input type="search" id="m-saved-find" placeholder="e.g. ribs" autocomplete="off"></label>
+        <p class="m-note" id="m-saved-none" hidden>No photo by that name.</p>
+        <form id="m-saved">
+          ${r.photos.length ? `<section class="sp-group">
+            <h3>Kept by Photo post</h3>
+            <p class="m-note">Tick the ones to delete (test shots, retakes), then Delete ticked. They go from the kitchen PC for good.
+              Photos already on the website aren't touched.</p>
+            <div class="sp-grid">${r.photos.map((p) => `<label class="sp-card" data-find="${esc((p.title || "").toLowerCase())}">
+              <img alt="" data-name="${esc(p.saved)}">
+              <b>${esc(p.title || "(no name)")}</b>
+              <small>${esc(date(p.date))}${p.special ? " · special" : ""}</small>
+              <span class="check"><input type="checkbox" name="del" value="${esc(p.saved)}"><span>Delete</span></span>
+            </label>`).join("")}</div>
+          </section>` : ""}
+          ${groups.map((g) => `<section class="sp-group">
+            <h3>${where[g.from]} <small>${g.list.length}</small></h3>
+            <div class="sp-grid">${g.list.map((p) => `<div class="sp-card sp-card--view" data-find="${esc(`${p.title} ${p.item || ""}`.toLowerCase())}">
+              <img alt="" data-photo="${esc(p.id)}">
+              <b>${esc(p.title)}</b>
+              <small>${esc(date(p.date))}${kind(p) ? ` · ${kind(p)}` : ""}</small>
+            </div>`).join("")}</div>
+          </section>`).join("")}
         </form>`,
-      buttons: [r.backup ? { label: "Move all to GitHub", act: "saved-move" } : null,
-        { label: "Delete ticked", submit: "m-saved", kind: "danger" }].filter(Boolean) });
+      buttons: [r.backup && r.photos.length ? { label: "Move all to GitHub", act: "saved-move" } : null,
+        r.photos.length ? { label: "Delete ticked", submit: "m-saved", kind: "danger" } : null].filter(Boolean) });
     const form = document.getElementById("m-saved");
+    // Find: every card whose name has the words typed, in any order.
+    document.getElementById("m-saved-find").addEventListener("input", (e) => {
+      const words = e.target.value.toLowerCase().split(/\s+/).filter(Boolean);
+      let shown = 0;
+      for (const card of form.querySelectorAll(".sp-card")) {
+        const hit = words.every((w) => card.dataset.find.includes(w));
+        card.hidden = !hit;
+        if (hit) shown++;
+      }
+      for (const sec of form.querySelectorAll(".sp-group")) sec.hidden = !sec.querySelector(".sp-card:not([hidden])");
+      document.getElementById("m-saved-none").hidden = shown > 0;
+    });
+    Front.photoThumbs(form);
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const names = [...form.querySelectorAll("input[name=del]:checked")].map((x) => x.value);

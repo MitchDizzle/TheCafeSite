@@ -36,6 +36,9 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // squareImages: { "<photo path>#<content hash>": "<Square image id>" }, each picture uploaded once
 // itemPhotoApplied: { "<menu item, lower case>": "<photo path>" }, the photo last put on it (applyItemPhotos)
 // photoTurn: { "<dish>": { date, n } }, which of a dish's photos is next
+// photoPick: { "YYYY-MM-DD": { "<dailyItems name>": "<photo id>" | "none" } }, the photo picked
+//            in Specials for that day (applyPhotos), instead of the dish's next one. Kept
+//            apart from `days` like the notes, so picking one leaves a website day the website's.
 // swapSides: the sides any side can be swapped for, as the website last listed them
 // extraSides: { "YYYY-MM-DD": [...] }, sides added to the swap list that day only (the
 //            website's day `extraSides`). Kept apart from `days`, so the website can add
@@ -46,7 +49,7 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // soupSide: a cup of the day's soup can be picked as a side, as the website last said
 // includesDrink: every lunch special includes a drink, as the website last said
 // site:    the last read of the website, for the front to show
-const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, swapSides: [], extraSides: {}, leaveOff: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
+const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, swapSides: [], extraSides: {}, leaveOff: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
 try {
   Object.assign(plan, JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")));
 } catch {}
@@ -54,7 +57,7 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.photoPick, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
 }
 
@@ -212,7 +215,7 @@ async function planView() {
     items: items.filter((it) => !it.missing).map(({ key, name, variations }) => ({ key, name, sizes: variations.map((v) => ({ size: v.size, price: v.price })) })),
     live: Object.fromEntries(items.filter((it) => !it.missing).map((it) => [it.key, it.today])),
     missing: items.filter((it) => it.missing).map((it) => it.name),
-    days: dates.map((date) => ({ date, plan: plan.days[date] || null, note: plan.notes[date] || null, applied: plan.applied[date] || null })),
+    days: dates.map((date) => ({ date, plan: plan.days[date] || null, note: plan.notes[date] || null, photoPick: plan.photoPick[date] || {}, applied: plan.applied[date] || null })),
     site: { url: cfg.specialsUrl, ...plan.site },
   };
 }
@@ -225,10 +228,12 @@ const checkDate = (date, today) => {
 
 // changes: { "YYYY-MM-DD": { items: { "<dailyItems name>": { today, prices: { "<size>": "10.50" } } }, sides, anySide } }
 // notes:   { "YYYY-MM-DD": { description } }
+// photos:  { "YYYY-MM-DD": { "<dailyItems name>": "<photo id>" | "none" | "" } } ("" = the usual)
+// photoIds: every kept photo's id (allPhotos), to check a picked one against
 // Only the days the front changed. A day left with nothing in it is taken off
 // the plan (if the website lists it, its copy comes back on the next read).
 // Everything is checked before anything is kept. Returns the dates of each.
-function savePlanDays(changes, notes) {
+function savePlanDays(changes, notes, photos, photoIds = new Set()) {
   const today = localDate();
   const next = {};
   for (const [date, change] of Object.entries(changes || {})) {
@@ -261,6 +266,27 @@ function savePlanDays(changes, notes) {
     checkDate(date, today);
     words[date] = String((note && note.description) ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
   }
+  // A photo picked for a day's item: none, the usual, or a kept photo.
+  const picks = {};
+  for (const [date, byItem] of Object.entries(photos || {})) {
+    checkDate(date, today);
+    picks[date] = {};
+    for (const [name, raw] of Object.entries(byItem || {})) {
+      if (!cfg.dailyItems.includes(name)) throw Object.assign(new Error(`"${name}" isn't on the specials list.`), { plain: true });
+      const id = String(raw ?? "");
+      if (id && id !== "none" && !photoIds.has(id)) throw Object.assign(new Error("A picked photo isn't on the kitchen PC any more. Open Specials again."), { plain: true });
+      picks[date][name] = id;
+    }
+  }
+  for (const [date, byItem] of Object.entries(picks)) {
+    const keep = { ...(plan.photoPick[date] || {}) };
+    for (const [name, id] of Object.entries(byItem)) {
+      if (id) keep[name] = id;
+      else delete keep[name];
+    }
+    if (Object.keys(keep).length) plan.photoPick[date] = keep;
+    else delete plan.photoPick[date];
+  }
   for (const [date, day] of Object.entries(next)) {
     if (day) plan.days[date] = day;
     else delete plan.days[date];
@@ -272,8 +298,9 @@ function savePlanDays(changes, notes) {
   savePlan();
   const days = Object.keys(next).sort();
   const noted = Object.keys(words).sort();
-  if (days.length || noted.length) console.log(`Specials changed from the front page (${new Date().toLocaleTimeString()}): ${[...new Set([...days, ...noted])].sort().join(", ")}.`);
-  return { days, notes: noted };
+  const picked = Object.keys(picks).sort();
+  if (days.length || noted.length || picked.length) console.log(`Specials changed from the front page (${new Date().toLocaleTimeString()}): ${[...new Set([...days, ...noted, ...picked])].sort().join(", ")}.`);
+  return { days, notes: noted, photos: picked };
 }
 
 module.exports = { SITE_MINUTES, RETRY_MINUTES, plan, savePlan, siteFieldFor, pullSite, planView, savePlanDays };

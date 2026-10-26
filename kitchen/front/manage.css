@@ -215,6 +215,23 @@
 .sp-card .check input { width: 1.2rem; height: 1.2rem; }
 .sp-card:has(input:checked) { border-color: var(--red-dark); background: #FDF1EF; }
 .sp-card:has(input:checked) img { opacity: 0.6; }
+/* Saved photos' groups and search, and the view-only cards (website, GitHub). */
+.sp-group { margin: 0 0 1.1rem; }
+.sp-group h3 { margin: 0.6rem 0 0.5rem; font-size: 1.05rem; }
+.sp-group h3 small { color: var(--muted); font-weight: 400; margin-left: 0.3rem; }
+.sp-card[hidden], .sp-group[hidden] { display: none; }
+.sp-card--view { cursor: default; }
+/* Specials: a day's Photo, folded, opening onto the picker. Its radio is the
+   whole card; only the red outline shows which one is picked. */
+.d-photo { margin: 0.4rem 0 0; border: 1px solid var(--line); border-radius: 0.45rem; }
+.d-photo > summary { cursor: pointer; padding: 0.45rem 0.7rem; font-weight: 700; color: var(--teal-dark); }
+.d-photo-now { font-weight: 400; color: var(--muted); margin-left: 0.4rem; }
+.d-photo-body { padding: 0 0.7rem 0.7rem; }
+.d-photo-find { width: 100%; box-sizing: border-box; font: inherit; font-size: 1.05rem; padding: 0.4rem 0.6rem; margin: 0 0 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
+.d-photo .sp-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+.d-photo .sp-card { position: relative; }
+.d-photo .sp-card:has(input:checked) img { opacity: 1; }
+.d-photo .sp-card:has(input:focus-visible) { outline: 3px solid var(--teal); outline-offset: 2px; }
 
 /* Leave off kitchen tickets: Square's categories, each with its items. */
 .skip-cat { border: 1px solid var(--line); border-radius: 0.45rem; margin: 0 0 0.5rem; }

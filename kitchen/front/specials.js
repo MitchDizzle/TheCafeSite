@@ -13,6 +13,11 @@
   // Dashboard isn't saved over by an old plan. The words for the photo are
   // kept apart from the day, so writing them doesn't stop the website
   // updating it.
+  // Each item also has its Photo: the picture online ordering and DoorDash
+  // show that day. The usual is the dish's own photo (taking turns when there
+  // are several); any photo kept can be picked instead, or none (Mitch
+  // 2026-10-26). Saved apart from the day too, like the words.
+  const dishKey = (s) => String(s || "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
   async function openPlan() {
     busy("Specials", "Reading the specials and Square…");
     const r = await postJson("/api/front-plan", { pin: Front.pin });
@@ -49,6 +54,46 @@
           placeholder="e.g. Mashed potatoes & gravy, green beans"${any ? " disabled" : ""}>
       </fieldset>`;
     };
+    const photos = r.photos || [];
+    const byId = new Map(photos.map((p) => [p.id, p]));
+    const shortDate = (d) => (d ? words(d, { month: "short", day: "numeric" }) : "");
+    const dishPhotos = (name) => photos.filter((p) => p.special && name && dishKey(p.title) === dishKey(name));
+    // What the folded Photo row says: the pick, or what the usual will be.
+    const photoNow = (pick, name) => {
+      if (pick === "none") return "No photo";
+      if (pick && byId.has(pick)) return `${byId.get(pick).title}, ${shortDate(byId.get(pick).date)}`;
+      const n = dishPhotos(name).length;
+      return n ? `The usual: ${n} photo${n === 1 ? "" : "s"} of ${name}${n > 1 ? ", taking turns" : ""}` : name ? `The usual: no photo of ${name} yet` : "The usual";
+    };
+    const photoHtml = (d, it) => {
+      const pick = (d.photoPick || {})[it.key] || "";
+      return `<details class="d-photo" data-key="${esc(it.key)}" data-pick="${esc(pick)}">
+        <summary>Photo <span class="d-photo-now">${esc(photoNow(pick, (d.plan && d.plan.items[it.key] || {}).today))}</span></summary>
+        <div class="d-photo-body"></div>
+      </details>`;
+    };
+    // The picker, drawn the first time a Photo row is opened: the dish's own
+    // photos first, then the other specials', then the rest, with a search.
+    const fillPicker = (box) => {
+      const day = box.closest(".m-day");
+      const name = day.querySelector(`.d-item[data-key="${CSS.escape(box.dataset.key)}"] [data-field="today"]`).value.trim();
+      const own = new Set(dishPhotos(name).map((p) => p.id));
+      const order = (p) => (own.has(p.id) ? 0 : p.special ? 1 : 2);
+      const list = [...photos].sort((a, b) => order(a) - order(b));
+      const group = `ph|${day.dataset.date}|${box.dataset.key}`;
+      const radio = (value) => `<input type="radio" name="${esc(group)}" value="${esc(value)}"${box.dataset.pick === value ? " checked" : ""}>`;
+      box.querySelector(".d-photo-body").innerHTML = `
+        <p class="m-note">The picture online ordering and DoorDash show that day.</p>
+        <input type="search" class="d-photo-find" placeholder="Find a photo, e.g. ribs" aria-label="Find a photo" autocomplete="off">
+        <div class="sp-grid">
+          <label class="sp-card" data-find="">${radio("")}<div class="m-nophoto">Usual</div><b>The usual</b><small>${esc(photoNow("", name).replace(/^The usual: /, ""))}</small></label>
+          <label class="sp-card" data-find="">${radio("none")}<div class="m-nophoto">None</div><b>No photo</b><small>none of ours that day</small></label>
+          ${list.map((p) => `<label class="sp-card" data-find="${esc(`${p.title} ${p.item || ""}`.toLowerCase())}">${radio(p.id)}
+            <img alt="" data-photo="${esc(p.id)}"><b>${esc(p.title)}</b>
+            <small>${esc(shortDate(p.date))}${own.has(p.id) ? " · this dish" : p.special ? " · special" : ""}</small></label>`).join("")}
+        </div>`;
+      Front.photoThumbs(box);
+    };
     const dayHtml = (d) => {
       const plan = d.plan;
       const isToday = d.date === r.today;
@@ -71,6 +116,7 @@
                 <input type="text" data-field="today" value="${esc(name)}" maxlength="60" autocomplete="off"
                   placeholder="${/soup/i.test(it.key) ? "e.g. Chicken Dumpling" : isSalad(it.key) ? "e.g. Cobb" : "e.g. Meatloaf"}"></label>
               ${isPlate(it.key) ? sidesHtml(plan, d.date) : ""}
+              ${photos.length ? photoHtml(d, it) : ""}
             </div>`;
           }).join("")}
           <label class="m-field">Words under the photo, for Photo post
@@ -120,12 +166,43 @@
       return { items, sides, anySide: any };
     };
     const readWords = (day) => (day.querySelector('[data-field="desc"]').value || "").trim();
+    const readPicks = (day) => Object.fromEntries([...day.querySelectorAll(".d-photo")].map((box) => [box.dataset.key, box.dataset.pick]));
+    const beforePicks = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(readPicks(day))]));
     const before = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(read(day))]));
     const beforeWords = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, readWords(day)]));
     const mark = (day) => day.classList.toggle("edited",
-      JSON.stringify(read(day)) !== before.get(day.dataset.date) || readWords(day) !== beforeWords.get(day.dataset.date));
-    form.addEventListener("input", (e) => mark(e.target.closest(".m-day")));
+      JSON.stringify(read(day)) !== before.get(day.dataset.date) || readWords(day) !== beforeWords.get(day.dataset.date)
+      || JSON.stringify(readPicks(day)) !== beforePicks.get(day.dataset.date));
+    form.addEventListener("toggle", (e) => {
+      if (e.target.matches(".d-photo") && e.target.open && !e.target.querySelector(".d-photo-body").childElementCount) fillPicker(e.target);
+    }, true);
+    form.addEventListener("input", (e) => {
+      // Find a photo: every card whose name has the words typed.
+      if (e.target.matches(".d-photo-find")) {
+        const want = e.target.value.toLowerCase().split(/\s+/).filter(Boolean);
+        for (const card of e.target.closest(".d-photo").querySelectorAll(".sp-card[data-find]")) {
+          card.hidden = want.length > 0 && (!card.dataset.find || !want.every((w) => card.dataset.find.includes(w)));
+        }
+        return;
+      }
+      // A dish renamed: its usual photos change, so the picker is drawn again.
+      const box = e.target.matches('[data-field="today"]') && e.target.closest(".d-item").querySelector(".d-photo");
+      if (box) {
+        box.querySelector(".d-photo-now").textContent = photoNow(box.dataset.pick, e.target.value.trim());
+        box.querySelector(".d-photo-body").innerHTML = "";
+        box.open = false;
+      }
+      mark(e.target.closest(".m-day"));
+    });
     form.addEventListener("change", (e) => {
+      if (e.target.type === "radio" && e.target.name.startsWith("ph|")) {
+        const box = e.target.closest(".d-photo");
+        const day = box.closest(".m-day");
+        box.dataset.pick = e.target.value;
+        const name = day.querySelector(`.d-item[data-key="${CSS.escape(box.dataset.key)}"] [data-field="today"]`).value.trim();
+        box.querySelector(".d-photo-now").textContent = photoNow(e.target.value, name);
+        return mark(day);
+      }
       if (e.target.type !== "radio") return;
       const day = e.target.closest(".m-day");
       day.querySelector('[data-field="sides"]').disabled = e.target.value === "any";
@@ -137,20 +214,29 @@
       for (const input of day.querySelectorAll('input[type="text"], textarea')) input.value = "";
       const set = day.querySelector('input[type="radio"][value="set"]');
       if (set) { set.checked = true; day.querySelector('[data-field="sides"]').disabled = false; }
+      for (const box of day.querySelectorAll(".d-photo")) {
+        box.dataset.pick = "";
+        box.querySelector(".d-photo-now").textContent = photoNow("", "");
+        box.querySelector(".d-photo-body").innerHTML = "";
+        box.open = false;
+      }
       mark(day);
     });
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const days = {};
       const notes = {};
+      const picks = {};
       for (const day of form.querySelectorAll(".m-day")) {
+        const pickNow = readPicks(day);
+        if (JSON.stringify(pickNow) !== beforePicks.get(day.dataset.date)) picks[day.dataset.date] = pickNow;
         const now = read(day);
         if (JSON.stringify(now) !== before.get(day.dataset.date)) days[day.dataset.date] = now;
         const text = readWords(day);
         if (text !== beforeWords.get(day.dataset.date)) notes[day.dataset.date] = { description: text };
       }
       busy("Specials", "Saving…");
-      result("Specials", await postJson("/api/front-plan-save", { pin: Front.pin, days, notes }));
+      result("Specials", await postJson("/api/front-plan-save", { pin: Front.pin, days, notes, photos: picks }));
     });
   }
 

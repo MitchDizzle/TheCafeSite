@@ -7,7 +7,8 @@
 //     not moved to the website yet. One already on the website is the same
 //     photo (the same `file`), so it counts once.
 // A dish photographed more than once rotates: each day it's served shows the
-// next (photoTurn). A dish with no photo yet, or a day with nothing planned,
+// next (photoTurn), unless Specials picked one for that day (photoPick: any
+// photo kept, of that dish or not, or none at all). A dish with no photo yet, or a day with nothing planned,
 // shows the item's placeholder (photoPlaceholders: "Soup of the Day" over a
 // bowl), or none of ours: Lunch Special has none since 2026-10-23, as Square's
 // picture goes to DoorDash too. A picture put on the item in the Dashboard is never
@@ -35,7 +36,11 @@ const { plan, savePlan, RETRY_MINUTES } = require("./plan");
 const dishKey = (s) => String(s || "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
 
 // Every photo kept, from the website and from Photo post, as
-// { title, item, special, date, path }, oldest first. One already on the
+// { id, from, title, item, special, date, path }, oldest first. `id` is the
+// photo's website address (`file`), or for one Photo post kept without one its
+// `saved` name, so a photo keeps its id when it moves to the website. `from`
+// says where it is: "website" (src/), "pc" (Photo post's folder) or "github"
+// (moved to the backup). One already on the
 // website is the same photo (the same `file`), so it counts once. One moved
 // off this PC (Saved photos -> Move all to GitHub, listed under `cleared`) is
 // read from the backup's copy in data\offsite\photos.
@@ -44,26 +49,50 @@ function keptPhotos() {
   const read = (file) => { try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch { return {}; } };
   for (const p of read(path.join(DIR, "..", "src", "_data", "photos.json")).photos || []) {
     const where = p.file && path.join(DIR, "..", "src", ...String(p.file).split("/").filter(Boolean));
-    if (p.title && where && fs.existsSync(where)) byFile.set(p.file, { title: p.title, item: p.item || null, special: !!p.special, date: p.date || "", path: where });
+    if (p.title && where && fs.existsSync(where)) byFile.set(p.file, { id: p.file, from: "website", title: p.title, item: p.item || null, special: !!p.special, date: p.date || "", path: where });
   }
   const mine = read(path.join(PHOTO_DIR, "photos.json"));
   for (const p of [...(mine.photos || []), ...(mine.cleared || [])]) {
     const key = p.file || p.saved;
     if (!p.title || !p.saved || byFile.has(key)) continue;
-    const where = [path.join(PHOTO_DIR, path.basename(p.saved)), path.join(REPO, "photos", path.basename(p.saved))].find((f) => fs.existsSync(f));
-    if (where) byFile.set(key, { title: p.title, item: p.item || null, special: !!p.special, date: p.date || "", path: where });
+    const here = path.join(PHOTO_DIR, path.basename(p.saved));
+    const where = [here, path.join(REPO, "photos", path.basename(p.saved))].find((f) => fs.existsSync(f));
+    if (where) byFile.set(key, { id: key, from: where === here ? "pc" : "github", title: p.title, item: p.item || null, special: !!p.special, date: p.date || "", path: where });
   }
   return [...byFile.values()].sort((a, b) => a.date.localeCompare(b.date) || a.path.localeCompare(b.path));
 }
 
 const dishPhotos = () => keptPhotos().filter((p) => p.special);
 
-// Today's photo for each daily item: { "<item name>": path | null }. Moves a
-// dish's turn on the first time it's asked on a new day.
+// Every photo kept, newest first, for Saved photos and Specials' photo
+// picker: no paths, only what the phone shows.
+function allPhotos() {
+  return keptPhotos().reverse().map(({ id, from, title, item, special, date }) => ({ id, from, title, item, special, date }));
+}
+
+// One kept photo's picture, by its id, for the phone's thumbnails: the
+// website's small copy when there is one. Only ids in the list are ever read,
+// never a path from the phone.
+function photoFile(id) {
+  const p = keptPhotos().find((x) => x.id === String(id || ""));
+  if (!p) return null;
+  const small = path.join(path.dirname(p.path), "thumbs", path.basename(p.path));
+  const file = p.from === "website" && fs.existsSync(small) ? small : p.path;
+  return { bytes: fs.readFileSync(file), type: /\.png$/i.test(file) ? "image/png" : "image/jpeg" };
+}
+
+// Today's photo for each daily item: { "<item name>": path | null }. A photo
+// picked for the day in Specials comes first (a picked photo that has since
+// been deleted falls back to the usual). Otherwise moves a dish's turn on the
+// first time it's asked on a new day.
 function dayPhotos(today, day) {
   const all = dishPhotos();
+  const picks = (plan.photoPick && plan.photoPick[today]) || {};
   const out = {};
   for (const name of cfg.dailyItems) {
+    if (picks[name] === "none") { out[name] = null; continue; }
+    const picked = picks[name] && keptPhotos().find((p) => p.id === picks[name]);
+    if (picked) { out[name] = picked.path; continue; }
     const what = day && day.items[name] && dishKey(day.items[name].today);
     const mine = what ? all.filter((p) => dishKey(p.title) === what) : [];
     if (!mine.length) { out[name] = placeholderFor(name); continue; }
@@ -196,4 +225,4 @@ async function applyItemPhotosOnce() {
   if (done.length) console.log(`Menu photos put in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}.`);
 }
 
-module.exports = { applyPhotos, applyItemPhotos };
+module.exports = { applyPhotos, applyItemPhotos, allPhotos, photoFile, dayPhotos };
