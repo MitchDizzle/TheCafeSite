@@ -229,7 +229,7 @@ test("a whole skipped category covers its items, from Square's catalog", async (
 
 test("a counter sale of only skipped items shows nowhere", () => {
   board.setSkip({ items: ["Chips"], categories: [] });
-  assert.equal(toTicket(counter({ line_items: [li(1, "Chips")] })).reason, "every item is on the skip list (or a gift card)");
+  assert.equal(toTicket(counter({ line_items: [li(1, "Chips")] })).reason, "every item is on the skip list (or a gift card or keypad amount)");
 });
 
 test("an online order goes to the kitchen whole: skipped items and packets too", () => {
@@ -249,11 +249,13 @@ test("an online order of only skipped items goes to the kitchen like any other",
   assert.equal(readyAt(t), null, "ready once the kitchen presses Done");
 });
 
-test("gift cards never go on a ticket; keypad amounts do, under their note", () => {
-  assert.equal(toTicket(counter({ line_items: [li(1, "eGift Card", { item_type: "GIFT_CARD" })] })).reason,
-    "every item is on the skip list (or a gift card)");
-  const t = ticketOf(counter({ line_items: [{ quantity: "1", note: "Brisket plate", item_type: "CUSTOM_AMOUNT" }, { quantity: "1" }] }));
-  assert.deepEqual(t.items.map((it) => [it.name, it.note]), [["Brisket plate", null], ["Custom amount", null]]);
+test("gift cards and keypad amounts never go on a ticket", () => {
+  const nowhere = "every item is on the skip list (or a gift card or keypad amount)";
+  assert.equal(toTicket(counter({ line_items: [li(1, "eGift Card", { item_type: "GIFT_CARD" })] })).reason, nowhere);
+  assert.equal(toTicket(counter({ line_items: [{ quantity: "1", note: "Brisket plate", item_type: "CUSTOM_AMOUNT" }] })).reason, nowhere);
+  const t = ticketOf(counter({ line_items: [li(1, "Reuben"), { quantity: "1", item_type: "CUSTOM_AMOUNT" }] }));
+  assert.deepEqual(t.items.map((it) => it.name), ["Reuben"]);
+  assert.deepEqual(t.front, []);
 });
 
 test("an item's own note and the order's note are kept", () => {

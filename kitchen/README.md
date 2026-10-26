@@ -16,7 +16,7 @@ Not part of the website. Nothing in this folder is built or uploaded.
 - **What a ticket is called:** the customer's name if one was typed. A ticket name that is just a number is a **table number**: it shows as **Table 5** and counts as **FOR HERE**, even if the dining option was left on To Go. Two or more orders rung under the same table number within 15 minutes of each other (people sitting together, rung separately) are tagged **1 of 2**, **2 of 2** beside the name on both screens, so they go out together; the same number later in the day is a new table. With no name, a paid order shows its receipt number (`#` and four letters, the start of the payment's id); compare one against a printed receipt before relying on it.
 - **A time in the ticket name** (a phone order for later: "Mike 1:00", "Sue 11:30am", "Bob 1pm") makes it due then, like an online pickup: the board shows **Due 1:00**, the front "Counter · due 1:00 PM", the ticket is called just **Mike**, and it goes on the board 15 minutes before (in the WAIT UNTIL row from an hour before). It needs a colon or am/pm ("Mike 2" is just a name). Without am/pm it's the next one after it was rung: "1:00" rung at 12:33 is 1pm.
 - A ticket named **TEST** (or starting with it) is marked TEST and left out of the day's numbers.
-- Amounts typed on the POS keypad show too, under the note typed with them (or "Custom amount"), in case a special or an off-menu plate gets rung up that way.
+- Amounts typed on the POS keypad (custom amounts) never show, on either screen or in the day's numbers; an order that is only a keypad amount is no ticket. A special or off-menu plate has to be rung up as an item to reach the kitchen.
 
 Header colors (amber and red mean time and nothing else on the board):
 

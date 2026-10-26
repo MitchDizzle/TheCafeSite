@@ -11,9 +11,10 @@ const { bumped, canceled, handedOff, markedReady, skipSets } = require("./state"
 // customer) is finished for the kitchen but not for the front: the bag is
 // still on the counter waiting for the customer.
 const GONE_FULFILLMENT = new Set(["COMPLETED", "CANCELED", "FAILED"]);
-// Keypad (custom amount) sales DO show: staff may ring a special or an
-// off-menu plate that way, and a missed ticket is worse than an extra one.
-const NOT_FOOD = new Set(["GIFT_CARD"]);
+// Gift cards and keypad (custom amount) sales show nowhere, not on either
+// screen nor in the day's numbers: a keypad amount is a payment, not a
+// plate (client 2026-10-26; it showed until then).
+const NOT_FOOD = new Set(["GIFT_CARD", "CUSTOM_AMOUNT"]);
 
 const itemName = (li) => li.name || li.note || "Custom amount";
 const TO_GO_TYPES = /^(PICKUP|DELIVERY|SHIPMENT)$/;
@@ -156,7 +157,7 @@ function toTicket(order) {
   // A counter sale of only drinks or chips is handed over as it's rung up;
   // it belongs on neither screen.
   if (!items.length) {
-    return { reason: "every item is on the skip list (or a gift card)" };
+    return { reason: "every item is on the skip list (or a gift card or keypad amount)" };
   }
 
   const details = f && (f.pickup_details || f.delivery_details || f.shipment_details);
