@@ -2,7 +2,8 @@
    Receipt logos for Square — three sizes Square asks for.
    Pieces: src/studio/receipt-logo-full.njk (1280 × 648),
            receipt-logo-small.njk (400 × 400),
-           receipt-logo-print.njk (800 × 400, black and white).
+           receipt-logo-print.njk (400 × 200, black and white;
+           drawn at 800 × 400).
    ============================================================ */
 
 .rlogo {
@@ -27,6 +28,19 @@
 /* Printed: black on solid white, every pixel one or the other. */
 .rlogo--print {
     background: #fff;
+}
+
+/* And the offcut round it white too: exported at half size, the page can
+   land half a pixel off, and a row of piece.css's dark offcut came out along
+   the top of the PNG as grey (2026-10-26). */
+.piece-body:has(.rlogo--print) {
+    background: #fff;
+}
+
+/* The small logo is exported at half size too, so its offcut is its own
+   ground, or the same row comes out grey across the teal. */
+.piece-body:has(.rlogo--small) {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
 }
 
 .rlogo--print .rlogo-mark {

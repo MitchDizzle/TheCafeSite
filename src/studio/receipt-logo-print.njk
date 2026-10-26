@@ -1,6 +1,6 @@
 ---
 layout: layouts/piece.njk
-title: "The Café — Printed receipt logo (800 × 400)"
+title: "The Café — Printed receipt logo (400 × 200)"
 canvasW: "800px"
 canvasH: "400px"
 pageCss: "/assets/css/studio/receipt-logo.css"
@@ -8,10 +8,15 @@ pageCss: "/assets/css/studio/receipt-logo.css"
 tags: studio
 studioTitle: "Receipt logo — printed"
 studioCategory: "Square"
-studioSize: "800 × 400 px · pure black and white"
-studioNote: "For the paper receipt printer. Square wants at least 400 × 200 and strictly black and white: no grey, no color, and no transparency (a transparent background prints as a black block). This is black ink on solid white with edge smoothing switched off, so every pixel is one or the other."
+studioSize: "400 × 200 px · pure black and white"
+studioNote: "For the paper receipt printer. Square prints a logo at most 400 × 200 and wants at least 200 × 200, strictly black and white: no grey, no color, and no transparency (a transparent background prints as a black block). This is black ink on solid white with edge smoothing switched off, so every pixel is one or the other."
 studioW: 800
 studioH: 400
+# Drawn at 800 × 400 and exported at half, 400 × 200: the most Square prints
+# (a taller upload is refused, 2026-10-26), and headless Chrome won't open a
+# window under about 500px wide. crispEdges keeps it pure black and white at
+# the smaller size too; check the PNG has only two colours after any change.
+studioExportScale: 0.5
 studioOrder: 62
 ---
 {#- The solid one-colour wordmark (.wordmark--ink), not the outlined one: on
