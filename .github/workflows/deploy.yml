@@ -9,6 +9,15 @@ on:
     paths-ignore:
       - 'kitchen/**'
 
+# One deploy at a time. A push runs once, for its newest commit, however many
+# commits it carries. Pushes close together queue rather than overlap on the
+# FTP upload, and a queued one is replaced by a newer one, so only the latest
+# is built. A running deploy is never cancelled: that could leave the site
+# half uploaded.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
