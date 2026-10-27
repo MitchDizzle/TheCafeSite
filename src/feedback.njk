@@ -1,0 +1,115 @@
+---
+layout: layouts/page.njk
+title: "Our Feedback | The Café"
+description: "What customers tell The Café in Leavenworth, KS: every survey card and web survey summed up, good and bad, what people asked for, and what we changed."
+ogDescription: "Every survey The Café in Leavenworth has had, summed up: the ratings, what customers asked for, and what we changed."
+pageCss: "/assets/css/feedback.css"
+---
+{#- ===========================================================
+    /feedback — every customer survey, summed up, good and bad
+    (client 2026-10-27; CONTACT-PLAN.md in CafeWork, RV-2).
+
+    Nothing here is typed by hand except feedback.json:
+      the totals, months, quotes   src/_data/feedbackStats.json, made by
+                                   the kitchen PC (Manage -> Survey -> For
+                                   the website) and replaced whole
+      what people asked for,       src/_data/feedback.json, written by hand
+      "You said, we did"           from the comments, as counted themes
+    feedback.11tydata.js builds this page only once there is a survey, and
+    the footer links it only then.
+
+    The rules: every answer is in the totals, the Okay and Poor ones too
+    (a page of only the good ones is what the FTC's 2024 reviews rule bars,
+    and people trust it less). A customer's words only with the survey's
+    share box ticked, with a first name and initial at most. No staff names.
+    No star-rating markup: Google doesn't show stars for reviews a business
+    publishes about itself, and the markup for them risks a penalty.
+    =========================================================== -#}
+{%- set s = feedbackStats %}
+{%- macro pct(n, of) %}{{ ((n / of) * 100) | round | int if of else 0 }}%{% endmacro %}
+{%- macro monthName(m) %}{{ ["January","February","March","April","May","June","July","August","September","October","November","December"][(m.slice(5, 7) | int) - 1] }} {{ m.slice(0, 4) }}{% endmacro %}
+
+<section class="section" aria-labelledby="feedback-heading">
+    <div class="container feedback">
+        <h1 id="feedback-heading">Our feedback</h1>
+        <p class="feedback-lede">
+            Every survey our customers have filled in since {{ s.since | dayDate("monthDay") if s.since else "we started asking" }},
+            on paper at the counter or on our website: <strong>{{ s.total }} so far</strong>, good and bad, all counted here.
+            We read every one.
+        </p>
+
+        <h2 class="feedback-h">How we're doing</h2>
+        <ul class="ratings" role="list">
+            {%- for q in s.ratings %}
+            {%- set great = q.counts[0][1] %}{% set good = q.counts[1][1] %}
+            <li class="rating">
+                <p class="rating-head">
+                    <span class="rating-name">{{ q.label }}</span>
+                    <span class="rating-sum">{{ pct(great + good, q.answered) }} Great or Good</span>
+                </p>
+                <div class="bar" aria-hidden="true">
+                    {%- for pair in q.counts %}{% if pair[1] %}<span class="bar-{{ pair[0] | lower }}" style="flex-grow: {{ pair[1] }};"></span>{% endif %}{% endfor %}
+                </div>
+                <p class="rating-counts">
+                    {%- for pair in q.counts %}<span class="key key-{{ pair[0] | lower }}">{{ pair[0] }} {{ pair[1] }}</span>{% endfor %}
+                    <span class="rating-of">of {{ q.answered }} who answered</span>
+                </p>
+            </li>
+            {%- endfor %}
+        </ul>
+
+        {%- if s.months.length > 1 %}
+        <h2 class="feedback-h">Month by month</h2>
+        <p class="feedback-note">The share who rated each one Great.</p>
+        <div class="months-wrap">
+            <table class="months">
+                <thead><tr><th scope="col">Month</th><th scope="col">Surveys</th>{% for q in s.ratings %}{% set known = survey.ratings | where("name", q.name) %}<th scope="col">{{ known[0].short if known.length else q.label }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                    {%- for m in s.months | reverse %}
+                    <tr><th scope="row">{{ monthName(m.month) }}</th><td>{{ m.total }}</td>{% for q in m.ratings %}<td>{{ pct(q.counts[0][1], q.answered) if q.answered else "–" }}</td>{% endfor %}</tr>
+                    {%- endfor %}
+                </tbody>
+            </table>
+        </div>
+        {%- endif %}
+
+        {%- if feedback.changes.length %}
+        <h2 class="feedback-h">You said, we did</h2>
+        <ul class="changes" role="list">
+            {%- for c in feedback.changes %}
+            <li><p class="said">{{ c.said }}</p><p class="did">{{ c.did }}</p></li>
+            {%- endfor %}
+        </ul>
+        {%- endif %}
+
+        {%- if feedback.asked.length %}
+        <h2 class="feedback-h">What you've asked for</h2>
+        <ul class="asked" role="list">
+            {%- for a in feedback.asked %}
+            <li><span>{{ a.label }}</span><span class="asked-n">{{ a.count }}</span></li>
+            {%- endfor %}
+        </ul>
+        {%- endif %}
+
+        {%- if s.quotes.length %}
+        <h2 class="feedback-h">In your words</h2>
+        <p class="feedback-note">From customers who said we could share them.</p>
+        <ul class="quotes" role="list">
+            {%- for q in s.quotes %}
+            <li>
+                <blockquote><p>{{ q.text }}</p></blockquote>
+                <p class="quote-who">{{ q.name or "A customer" }}, {{ q.date | dayDate("monthDay") }}</p>
+            </li>
+            {%- endfor %}
+        </ul>
+        {%- endif %}
+
+        <div class="feedback-cta">
+            <a class="btn btn-primary" href="/survey">Tell us how we did</a>
+            {%- if site.reviews.googleUrl %}
+            <a class="btn btn-outline" href="{{ site.reviews.googleUrl }}" rel="noopener">Leave a Google review</a>
+            {%- endif %}
+        </div>
+        <p class="feedback-note">Last updated {{ s.updated | dayDate("monthDay") }}.</p>
+    </div>
+</section>

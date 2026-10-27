@@ -1,0 +1,5 @@
+{
+  "_note": "The hand-written half of /feedback (the counts are in feedbackStats.json, from the kitchen PC). `asked`: what customers asked for, grouped into themes and counted from the survey's 'add to the menu' and 'bring you in more often' answers, e.g. { \"label\": \"More soups\", \"count\": 9 }. `changes`: 'You said, we did', from the 'do better' answers: { \"said\": \"Long wait at noon\", \"did\": \"What changed, or 'Working on it'\", \"date\": \"2026-11-02\" }. Never a customer's words here (those only go in as permitted quotes) and never a staff name. Empty lists simply don't show.",
+  "asked": [],
+  "changes": []
+}

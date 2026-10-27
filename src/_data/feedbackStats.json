@@ -1,0 +1,17 @@
+{
+  "_note": "Made by the kitchen PC: Manage -> Survey -> For the website. Replace this whole file with a new one from there; don't edit it by hand. Counts only, plus the comments customers ticked may be shared (first name and initial at most). While total is 0 the /feedback page isn't built and isn't linked.",
+  "updated": null,
+  "since": null,
+  "scale": [
+    "Great",
+    "Good",
+    "Okay",
+    "Poor"
+  ],
+  "total": 0,
+  "cards": 0,
+  "web": 0,
+  "ratings": [],
+  "months": [],
+  "quotes": []
+}

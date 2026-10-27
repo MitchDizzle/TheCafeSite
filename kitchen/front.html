@@ -738,7 +738,7 @@
   }
 
   // What the Manage jobs in front/*.js (Specials, Reservations, Photo post,
-  // Reports, Desserts, Saved photos, Leave off kitchen tickets) share with this page. Each file is
+  // Reports, Survey, Desserts, Saved photos, Leave off kitchen tickets) share with this page. Each file is
   // loaded after this script and registers its menu row's job in tools
   // (and any of its own buttons in acts) under the row's data-act name.
   const listWords = (a) => (a.length < 2 ? a.join("") : `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`);
@@ -822,6 +822,7 @@
         <h3 class="m-group">Now and then</h3>
         ${row("saved", "Saved photos", "The photos Photo post kept on the kitchen PC. Delete test shots, or move them all to GitHub.")}
         ${row("report", "Reports", "Orders, sales, kitchen times and items for any range of days.")}
+        ${row("survey", "Survey", "The customer survey's answers, cards and website: import a typed-up sheet, read the comments, and make the summary for the website.")}
         ${row("today", "Today on the phone", "Sales so far against last week, busiest hours, what's selling, and the open orders. Add it to your home screen.")}
         ${row("skip", "Leave off kitchen tickets", "Items and categories that go on the front's list instead.")}
         ${row("backup", "Back up now", "Copy the orders, specials plan and photos to the backup now. Sales carry on.")}
@@ -871,6 +872,7 @@
 <script src="/front/reservations.js"></script>
 <script src="/front/photo-post.js"></script>
 <script src="/front/reports.js"></script>
+<script src="/front/survey.js"></script>
 <script src="/front/desserts.js"></script>
 <script src="/front/leave-off.js"></script>
 <script src="/front/saved-photos.js"></script>

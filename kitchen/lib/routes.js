@@ -10,6 +10,7 @@ const { catalog, loadCatalog, modifierListsByName } = require("./catalog");
 const { bump, handedOff, canceled, byHand, keepOnFront, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
 const { poll, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay } = require("./orders");
 const { recordHistoryNow, historyReport, todayView } = require("./stats");
+const surveys = require("./surveys");
 const { dessertItems, saveDesserts, saveDessertPhoto, newDessert } = require("./desserts");
 const { RETRY_MINUTES, pullSite, planView, savePlanDays } = require("./specials/plan");
 const { applyToday } = require("./specials/today");
@@ -75,7 +76,7 @@ function isLocal(req) {
 
 // What another device on the wifi (or the owner's phone over Tailscale) may
 // reach: the front page, the phone page (/today) and their own actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated"]);
+const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -97,6 +98,7 @@ const STATIC = {
   "/front/specials.js": "front/specials.js",
   "/front/photo-post.js": "front/photo-post.js",
   "/front/reports.js": "front/reports.js",
+  "/front/survey.js": "front/survey.js",
   "/front/desserts.js": "front/desserts.js",
   "/front/leave-off.js": "front/leave-off.js",
   "/front/saved-photos.js": "front/saved-photos.js",
@@ -406,6 +408,35 @@ async function handle(req, res) {
     }
     recordHistoryNow();
     return send(res, 200, { ok: true, ...historyReport(body.from, body.to, !!body.orders) });
+  }
+  // Manage -> Survey, behind the PIN: the answers for a range, importing a
+  // sheet (preview first), taking an import back out, and the summary for
+  // the website's /feedback page (lib/surveys.js).
+  if (req.method === "POST" && url.pathname.startsWith("/api/front-survey")) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    try {
+      if (url.pathname === "/api/front-survey") {
+        const day = /^\d{4}-\d{2}-\d{2}$/;
+        if (!day.test(body.from || "") || !day.test(body.to || "") || body.from > body.to) {
+          return send(res, 200, { ok: false, message: "Pick a start date on or before the end date." });
+        }
+        return send(res, 200, { ok: true, ...surveys.surveyReport(body.from, body.to) });
+      }
+      if (url.pathname === "/api/front-survey-import") {
+        const r = surveys.importSheet({ text: body.text, xlsx: body.xlsx, file: body.file, date: body.date, source: body.source, preview: !!body.preview });
+        if (r.ok && !body.preview) console.log(`Survey: ${r.added} answer(s) imported from ${body.file || "a pasted sheet"}`);
+        return send(res, 200, r);
+      }
+      if (url.pathname === "/api/front-survey-remove") {
+        const n = surveys.removeImport(String(body.batch || ""));
+        return send(res, 200, { ok: true, message: `Took out ${n} answer${n === 1 ? "" : "s"}.` });
+      }
+      if (url.pathname === "/api/front-survey-website") return send(res, 200, { ok: true, stats: surveys.websiteStats() });
+    } catch (err) {
+      return send(res, 200, { ok: false, message: `Couldn't read that: ${err.message}` });
+    }
   }
   // The phone page's numbers, behind the PIN like Reports: sales are the
   // owner's business, not the counter's.

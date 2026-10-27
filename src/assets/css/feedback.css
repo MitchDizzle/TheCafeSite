@@ -1,0 +1,156 @@
+/* ============================================================
+   /feedback — every customer survey summed up (feedback.njk).
+
+   Each rating is a bar split Great / Good / Okay / Poor with the counts
+   written underneath, so the colours are a picture of the numbers, never
+   the only way to read them. Great and Good are the cafe's teal and mint;
+   Okay a warm grey; Poor coral, distinct from the red that marks every
+   button and link. Big type for this audience; one column on a phone.
+   ============================================================ */
+
+.feedback { max-width: 48rem; }
+
+.feedback-lede {
+    margin-top: 0.75rem;
+    font-size: 1.15rem;
+}
+
+.feedback-h { margin-top: 2.6rem; }
+
+.feedback-note {
+    margin-top: 0.4rem;
+    color: rgba(var(--text-dark-rgb), 0.75);
+}
+
+/* ── The ratings ─────────────────────────────────────────── */
+
+.ratings {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1.4rem;
+}
+
+.rating-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.rating-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.rating-sum { font-weight: 700; }
+
+.bar {
+    display: flex;
+    height: 1.1rem;
+    margin-top: 0.45rem;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(var(--text-dark-rgb), 0.08);
+}
+
+.bar span { flex-basis: 0; }
+.bar-great, .key-great::before { background: var(--teal); }
+.bar-good, .key-good::before { background: var(--mint); }
+.bar-okay, .key-okay::before { background: #D6CEC2; }
+.bar-poor, .key-poor::before { background: var(--coral); }
+
+.rating-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1rem;
+    margin-top: 0.45rem;
+    font-size: 0.98rem;
+}
+
+.key::before {
+    content: "";
+    display: inline-block;
+    width: 0.7rem;
+    height: 0.7rem;
+    margin-right: 0.35rem;
+    border-radius: 50%;
+}
+
+.rating-of { color: rgba(var(--text-dark-rgb), 0.7); }
+
+/* ── Month by month ──────────────────────────────────────── */
+
+.months-wrap { overflow-x: auto; margin-top: 0.8rem; }
+
+.months {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+}
+
+.months th, .months td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.15);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.months th:first-child { text-align: left; }
+.months thead th { font-size: 0.9rem; }
+
+/* ── You said, we did · What you've asked for · Quotes ───── */
+
+.changes, .asked, .quotes {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+}
+
+.changes li {
+    padding: 0.9rem 0;
+    border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.15);
+}
+
+.said { font-weight: 700; }
+.said::before { content: "You said: "; font-weight: 400; }
+.did { margin-top: 0.25rem; }
+.did::before { content: "We did: "; font-weight: 700; color: var(--teal); }
+
+.asked li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid rgba(var(--text-dark-rgb), 0.15);
+    font-size: 1.05rem;
+}
+
+.asked-n { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.quotes { display: grid; gap: 1.2rem; }
+
+.quotes blockquote {
+    margin: 0;
+    padding-left: 1rem;
+    border-left: 4px solid var(--mint);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-style: italic;
+}
+
+.quote-who {
+    margin-top: 0.3rem;
+    padding-left: 1.25rem;
+    color: rgba(var(--text-dark-rgb), 0.75);
+}
+
+.feedback-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 2.6rem;
+}

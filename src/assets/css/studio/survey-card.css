@@ -97,7 +97,7 @@
 /* ── Pick-one and write-in questions ─────────────────────── */
 
 .card-q {
-    margin-top: 0.15in;
+    margin-top: 0.12in;
 }
 
 .card-label {
@@ -120,10 +120,30 @@
     white-space: nowrap;
 }
 
+/* 0.31in: still more than college ruling, and with the share box under
+   the reply line the card is full to its foot. */
 .card-lines span {
     display: block;
-    height: 0.34in;
+    height: 0.31in;
     border-bottom: 0.01in solid #000;
+}
+
+/* The box that lets a comment go on the website: a square to tick, not a
+   circle, so it doesn't read as one more "circle one". */
+.card-share {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.07in;
+    margin-top: 0.08in;
+    font-size: 0.13in;
+    font-weight: 700;
+}
+
+.box {
+    flex: none;
+    width: 0.16in;
+    height: 0.16in;
+    border: 0.014in solid #000;
 }
 
 .card-foot {

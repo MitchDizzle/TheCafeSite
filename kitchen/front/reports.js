@@ -123,6 +123,7 @@
     ]);
   }
 
+  Front.ranges = ranges; // Survey offers the same
   Front.tools.report = () => openReport();
   Front.acts["csv-days"] = () => csv("days");
   Front.acts["csv-orders"] = () => csv("orders");

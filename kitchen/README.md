@@ -269,11 +269,12 @@ Everything the board makes on this PC is in `data\`. Before 2026-10-13 these sat
 | `specials-plan.json` | Specials: the days ahead, the words for each day's photo, and which days are in Square already. |
 | `stats-history.json` | Every day's orders and numbers, for Reports. Never deleted, and **the only copy of the kitchen times**. |
 | `reservations.json` | Reservations: every table booked or asked for, with names and phone numbers. |
+| `surveys.json` | The customer survey's answers (Manage → Survey). Ratings and comments; a first name only where the customer said a comment may be shared; never contact details. Backed up here and to `backupDir`, **not** to the GitHub backup. |
 | `photos\` | Photo post: the photos and finished posts kept for the website, with `photos.json`. |
 | `backups\` | The daily copies, below. |
 | `offsite\`, `backup-key` | Backup to GitHub, below: the repo's clone and this PC's key for it. |
 
-**Backups.** When the board starts, again at 2pm (closing) if it's still on, and whenever **Manage → Back up now** is pressed, it copies `stats-history.json`, `specials-plan.json`, `state.json` and `reservations.json` into `data\backups\<date>\`, keeping the last 30 days. That covers a bad write or a deleted file, not a dead PC. For that, set **`backupDir`** in `config.json` to a folder off this PC's drive: a USB stick left plugged in (`"backupDir": "E:\\Kitchen backup"`, with two backslashes), a OneDrive folder on the Kitchen account, or a share on another PC. The same dated copies go there, plus every Photo post photo (`photos\`). If it can't be reached (the stick is out), the program window says so and the board carries on. `/check` shows when each place was last written.
+**Backups.** When the board starts, again at 2pm (closing) if it's still on, and whenever **Manage → Back up now** is pressed, it copies `stats-history.json`, `specials-plan.json`, `state.json`, `reservations.json` and `surveys.json` into `data\backups\<date>\`, keeping the last 30 days. That covers a bad write or a deleted file, not a dead PC. For that, set **`backupDir`** in `config.json` to a folder off this PC's drive: a USB stick left plugged in (`"backupDir": "E:\\Kitchen backup"`, with two backslashes), a OneDrive folder on the Kitchen account, or a share on another PC. The same dated copies go there, plus every Photo post photo (`photos\`). If it can't be reached (the stick is out), the program window says so and the board carries on. `/check` shows when each place was last written.
 
 **Backup to GitHub (the copy off this PC).** Set **`backupRepo`** in `config.json` to a private GitHub repo and the same backup is pushed there each time: one file per day of history (`history\<date>.json`), the plan, `state.json` and the Photo post photos, with every earlier version kept by git. It can be read from any computer, and Claude can read it for reports. The PC never signs in to GitHub; it makes its own key, which can write to that one repo only:
 
@@ -425,6 +426,14 @@ Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo
 - **Every order (CSV):** one row per order, with its items.
 
 A day the board never ran is missing; Square's own reports still have its sales. Sales are Square's Net sales (see `/today` above); tips are on their own line (with how many orders had one), and "collected" beside them is what customers paid, tax and tips in, which is what the board counted as sales until 2026-10-27. The CSVs have both. It's the only place the kitchen times exist, so it's copied every day; set `backupDir` to keep a copy off the PC (see "The data folder and backups").
+
+## Survey (Manage on the front page)
+
+The customer survey's answers, from the paper cards and the website's `/survey`, kept on the kitchen PC (`data\surveys.json`) and summed up for any range of days (client 2026-10-27).
+
+- **Import a sheet:** an Excel file (.xlsx), a CSV, or rows copied from a spreadsheet and pasted in. One row per survey, the questions as headings in the first row. The headings are matched to the website's questions (`src/_data/survey.json`) by their name (`food`) or their wording (`The food`), so a sheet typed up from the cards needs no set order; `CafeWork/survey-sheet-template.csv` and `survey-sheet-brief.md` are the sheet to hand to whoever types them up. A `Date` column is used if there is one (2026-10-14, 10/14/2026 or Excel's own dates); otherwise every row goes on the day picked. **Check it** shows how each column was read, how many surveys were found, how many are already in (the same sheet imported twice adds nothing), and any rating it couldn't read, before anything is saved. Phone and email columns are always left out; a name is kept, as "Linda K.", only on a row whose share box was ticked.
+- **The report:** surveys in the range (cards and website), each rating as Great / Good / Okay / Poor with its share, how people heard of the cafe, and every comment, newest first, marked where the customer said it may be shared. The last imports are listed under it, each with **Take out** for a sheet read wrongly.
+- **For the website** saves `feedbackStats.json`: every survey ever imported, summed up (totals, each rating, month by month) plus the comments customers said may be shared. Nothing else: no names but those, no contact details, no other comments, and not how they heard of the cafe. Put it in the website as `src/_data/feedbackStats.json`, build and upload: the public **`/feedback`** page is built from it (and isn't built at all, or linked, while it has no surveys). The themes and "You said, we did" on that page are written by hand in `src/_data/feedback.json`.
 
 ## Desserts (Manage on the front page)
 

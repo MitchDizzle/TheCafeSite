@@ -281,3 +281,14 @@
   .rv-row { grid-template-columns: 4rem 1fr; }
   .rv-row-acts { grid-column: 2; justify-content: flex-start; }
 }
+
+/* ── Survey (front/survey.js) ── */
+.sv-table td small { display: block; color: var(--muted); font-size: 0.75rem; }
+.sv-comments, .sv-imports, .sv-cols { list-style: none; margin: 0; padding: 0; }
+.sv-comments li { padding: 0.55rem 0; border-bottom: 1px solid var(--line); }
+.sv-meta { display: block; color: var(--muted); font-size: 0.8rem; margin-bottom: 0.15rem; }
+.sv-ok { color: var(--teal); }
+.sv-imports li { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.35rem 0; border-bottom: 1px solid var(--line); }
+.sv-cols li { padding: 0.15rem 0; }
+.sv-imports .m-mini { font: inherit; font-size: 0.88rem; font-weight: 700; padding: 0.3rem 0.65rem; border: 1.5px solid var(--red); border-radius: 999px; background: transparent; color: var(--red-dark); cursor: pointer; }
+#sv-preview .m-btn { margin-top: 0.6rem; }

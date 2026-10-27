@@ -11,7 +11,10 @@
         </address>
         <ul class="footer__links" role="list">
             {%- for item in nav.footer %}
+            {#- /feedback is only built once there are surveys (feedbackStats.json) #}
+            {%- if not item.needsFeedback or feedbackStats.total %}
             <li><a href="{{ item.href }}">{{ item.label }}</a></li>
+            {%- endif %}
             {%- endfor %}
         </ul>
         {# Year is filled in by main.js rather than at build time, so a site

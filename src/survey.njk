@@ -13,7 +13,11 @@ noindex: true
      card, so the paper and the page always ask the same thing. Answers go
      by email through Formspree (site.survey.formUrl); every question is
      optional, so a half-finished survey still sends what it has. Name and
-     contact are asked for only if the customer wants a reply. -->
+     contact are asked for only if the customer wants a reply. The share box
+     (survey.share) is what lets a comment go on the public /feedback page,
+     with the first name at most; without it only the totals do. After
+     sending, the [data-after-success] block shows: a Google review link
+     (site.reviews.googleUrl) and /feedback, each only once it exists. -->
 
         <section class="section" aria-labelledby="survey-heading">
             <div class="container survey">
@@ -61,6 +65,11 @@ noindex: true
                         </div>
                         {%- endfor %}
 
+                        <label class="share-check">
+                            <input type="checkbox" name="{{ survey.share.name }}" value="yes">
+                            <span>{{ survey.share.label }} <small>({{ survey.share.note }})</small></span>
+                        </label>
+
                         <fieldset class="reply">
                             <legend>Want us to get back to you? <span class="optional">(optional)</span></legend>
                             <div class="reply-fields">
@@ -78,12 +87,25 @@ noindex: true
                         <div class="form-submit">
                             <button type="submit" class="btn btn-primary">Send</button>
                             <p class="form-privacy">
-                                We only use your answers to improve the cafe, and your contact details only to reply.
+                                We use your answers to improve the cafe and share only the totals, plus your comments if you tick the box.
+                                Your contact details are only for replying.
                                 See our <a href="/privacy">privacy policy</a>.
                             </p>
                         </div>
 
                     </div>
+
+                    {%- if site.reviews.googleUrl or feedbackStats.total %}
+                    <div class="survey-after" data-after-success hidden>
+                        {%- if site.reviews.googleUrl %}
+                        <p>Enjoyed your visit? A Google review helps a small cafe more than anything.</p>
+                        <a class="btn btn-primary" href="{{ site.reviews.googleUrl }}" rel="noopener">Leave a Google review</a>
+                        {%- endif %}
+                        {%- if feedbackStats.total %}
+                        <p><a href="/feedback">See what everyone has told us</a></p>
+                        {%- endif %}
+                    </div>
+                    {%- endif %}
                 </form>
             </div>
         </section>

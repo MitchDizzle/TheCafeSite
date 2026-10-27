@@ -222,6 +222,7 @@
                     throw err;
                 }
                 form.querySelectorAll('.form-grid').forEach(function (el) { el.hidden = true; });
+                form.querySelectorAll('[data-after-success]').forEach(function (el) { el.hidden = false; });
                 status.textContent = form.getAttribute('data-success');
                 status.hidden = false;
                 status.focus();

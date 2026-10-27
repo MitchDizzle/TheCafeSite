@@ -16,6 +16,7 @@
     { "label": "Gallery",  "href": "/gallery" },
     { "label": "Reserve a table", "href": "/reserve" },
     { "label": "Contact",  "href": "/contact" },
+    { "label": "Our feedback", "href": "/feedback", "needsFeedback": true },
     { "label": "Privacy",  "href": "/privacy" }
   ]
 }
