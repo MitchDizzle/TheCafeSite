@@ -170,7 +170,7 @@
     <h2>On the board now <span id="board-count"></span></h2>
     <div class="orders" id="orders"><p class="muted">Reading…</p></div>
 
-    <p class="muted small" style="margin-top:2rem">From the kitchen board's own count: Square's Net sales (after discounts, without tax or tips), on the day an order is made (Square counts the day it's paid). Refunds aren't taken off. Canceled, test and demo orders aren't counted. Square's Dashboard has the official sales.
+    <p class="muted small" style="margin-top:2rem">From the kitchen board's own count: Square's Net sales (after discounts, without tax or tips), on the day an order is made (Square counts the day it's paid). Refunds aren't taken off. Tips are on top, for the whole day so far. Canceled, test and demo orders aren't counted. Square's Dashboard has the official sales.
       <br><a href="#" id="front-link">The front page</a> · <a href="#" id="forget" hidden>Forget the PIN here</a></p>
   </main>
 
@@ -250,7 +250,7 @@
     // already booked for later today are said apart.
     const n = v.byNow;
     $("sales").textContent = money(n.sales);
-    $("hero-sub").textContent = `${n.orders} order${n.orders === 1 ? "" : "s"} · ${money(n.avgTicket)} average ticket`;
+    $("hero-sub").textContent = `${n.orders} order${n.orders === 1 ? "" : "s"} · ${money(n.avgTicket)} average ticket · ${money(t.tips)} in tips`;
     $("later").hidden = !v.later;
     if (v.later) $("later").textContent = `+ ${v.later.orders} pickup${v.later.orders === 1 ? "" : "s"} due later today (${money(v.later.sales)})`;
     const ref = v.lastWeek ? [v.lastWeek.byNow, `last ${day} by now`] : v.usual ? [v.usual.byNow, `a usual ${day} by now`] : null;

@@ -184,7 +184,7 @@ Settings in `config.json`, both optional:
 
 How the day is going, for the owner's phone, at the shop or away from it: `http://<kitchen PC name>:8090/today`, or **Manage → Today on the phone** on the front page. Read-only: nothing on it presses Done or Handed off.
 
-- **At the top, behind the PIN** (the Manage PIN; sales are the owner's business, not the counter's): net sales so far with the order count and average ticket, and how that compares with **last week's same day by this time** ("▲ $45 (12%) ahead of last Mon by now"). Pickups already booked for later today are listed apart, so a morning is compared with a morning.
+- **At the top, behind the PIN** (the Manage PIN; sales are the owner's business, not the counter's): net sales so far with the order count, average ticket and the day's tips, and how that compares with **last week's same day by this time** ("▲ $45 (12%) ahead of last Mon by now"). Pickups already booked for later today are listed apart, so a morning is compared with a morning.
 - **The day's split:** breakfast / lunch, counter / online, to go / for here, and time in the kitchen.
 - **Compared with:** today, last week's same day and a usual one (the average of up to four of them) up to this time, then those days' whole-day totals, then this week so far against last week's to the same day and time. A day the board never ran is missing from the history, so it isn't compared; the first weeks after this update show less.
 - **Busiest hours:** orders per hour today, last week's same day beside each.
@@ -424,7 +424,7 @@ Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo
 - **Days (CSV):** one row per day.
 - **Every order (CSV):** one row per order, with its items.
 
-A day the board never ran is missing; Square's own reports still have its sales. Sales are Square's Net sales (see `/today` above); "collected" beside them is what customers paid, tax and tips in, which is what the board counted as sales until 2026-10-27. The CSVs have both. It's the only place the kitchen times exist, so it's copied every day; set `backupDir` to keep a copy off the PC (see "The data folder and backups").
+A day the board never ran is missing; Square's own reports still have its sales. Sales are Square's Net sales (see `/today` above); tips are on their own line (with how many orders had one), and "collected" beside them is what customers paid, tax and tips in, which is what the board counted as sales until 2026-10-27. The CSVs have both. It's the only place the kitchen times exist, so it's copied every day; set `backupDir` to keep a copy off the PC (see "The data folder and backups").
 
 ## Desserts (Manage on the front page)
 

@@ -66,6 +66,7 @@
         ${cell(t.orders, `orders (${n} day${n === 1 ? "" : "s"})`)}
         ${cell(Math.round(t.orders / n), "a day on average")}
         ${cell(money(t.sales), "net sales")}
+        ${cell(money(t.tips), `tips (${t.tipped} order${t.tipped === 1 ? "" : "s"})`)}
         ${cell(money(t.collected), "collected, tax and tips in")}
         ${cell(`${t.breakfast} / ${t.lunch}`, "breakfast / lunch")}
         ${cell(`${t.counter} / ${t.online}`, "counter / online")}
@@ -75,8 +76,8 @@
       </div>
       <p class="r-h">By day</p>
       <div class="r-table-wrap"><table class="r-table">
-        <thead><tr><th>Day</th><th>Orders</th><th>Sales</th><th>Bkfst</th><th>Lunch</th><th>Online</th><th>Avg</th></tr></thead>
-        <tbody>${r.days.map((d) => `<tr><td>${esc(dayName(d.date))}</td><td>${d.orders}</td><td>${money(d.sales)}</td>
+        <thead><tr><th>Day</th><th>Orders</th><th>Sales</th><th>Tips</th><th>Bkfst</th><th>Lunch</th><th>Online</th><th>Avg</th></tr></thead>
+        <tbody>${r.days.map((d) => `<tr><td>${esc(dayName(d.date))}</td><td>${d.orders}</td><td>${money(d.sales)}</td><td>${money(d.tips)}</td>
           <td>${d.breakfast}</td><td>${d.lunch}</td><td>${d.online}</td><td>${minsText(d.avgMinutes)}</td></tr>`).join("")}</tbody>
       </table></div>
       ${t.bySize ? `<p class="r-h">Time in the kitchen by order size</p>
@@ -106,8 +107,8 @@
     const { from, to } = report;
     if (kind === "days") {
       saveCsv(`cafe-days-${from}-to-${to}.csv`, [
-        ["date", "orders", "net_sales", "collected", "breakfast", "lunch", "counter", "online", "to_go", "for_here", "kitchen_done", "avg_kitchen_min", "longest_kitchen_min", "top_items"],
-        ...report.days.map((d) => [d.date, d.orders, d.sales.toFixed(2), d.collected.toFixed(2), d.breakfast, d.lunch, d.counter, d.online, d.toGo, d.forHere,
+        ["date", "orders", "net_sales", "tips", "collected", "breakfast", "lunch", "counter", "online", "to_go", "for_here", "kitchen_done", "avg_kitchen_min", "longest_kitchen_min", "top_items"],
+        ...report.days.map((d) => [d.date, d.orders, d.sales.toFixed(2), d.tips.toFixed(2), d.collected.toFixed(2), d.breakfast, d.lunch, d.counter, d.online, d.toGo, d.forHere,
           d.kitchenDone, d.avgMinutes, d.longestMinutes, d.topItems.map((i) => `${i.name} x${i.qty}`).join("; ")]),
       ]);
       return;
@@ -115,9 +116,9 @@
     const r = await postJson("/api/front-report", { pin: Front.pin, from, to, orders: true });
     if (!r.ok) return;
     saveCsv(`cafe-orders-${from}-to-${to}.csv`, [
-      ["date", "time", "meal", "where", "to_go", "paid", "net_sales", "collected", "kitchen_items", "kitchen_min", "items"],
+      ["date", "time", "meal", "where", "to_go", "paid", "net_sales", "tip", "collected", "kitchen_items", "kitchen_min", "items"],
       ...r.orders.map((o) => [o.date, new Date(o.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), o.meal,
-        o.online ? "online" : "counter", o.toGo ? "yes" : "no", o.paid ? "yes" : "no", o.net != null ? o.net.toFixed(2) : "", o.sales != null ? o.sales.toFixed(2) : "",
+        o.online ? "online" : "counter", o.toGo ? "yes" : "no", o.paid ? "yes" : "no", o.net != null ? o.net.toFixed(2) : "", o.tip != null ? o.tip.toFixed(2) : "", o.sales != null ? o.sales.toFixed(2) : "",
         o.kitchenItems, o.kitchenMinutes, o.items.map((i) => `${i.qty} ${i.name}${i.variation ? ` (${i.variation})` : ""}`).join("; ")]),
     ]);
   }

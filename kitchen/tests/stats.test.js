@@ -71,7 +71,9 @@ test("sales are Square's Net sales: items after discounts, no tax, tip or gift c
   };
   assert.equal(netSales(order), 13.5);
   // A day saved before the board kept Net sales counts its total until filled in.
-  const s = summarize([rec("2026-10-20", 8, 0, 28.3, { net: 13.5 }), rec("2026-10-20", 9, 0, 10)]);
+  const s = summarize([rec("2026-10-20", 8, 0, 28.3, { net: 13.5, tip: 3 }), rec("2026-10-20", 9, 0, 10)]);
   assert.equal(s.sales, 23.5);
   assert.equal(s.collected, 38.3);
+  assert.equal(s.tips, 3);
+  assert.equal(s.tipped, 1);
 });

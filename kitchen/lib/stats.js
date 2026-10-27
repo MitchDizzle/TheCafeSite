@@ -62,6 +62,7 @@ function dayRecords() {
       // What the customer paid, tax and tip in, and Square's Net sales.
       sales: o.total_money && o.total_money.amount != null ? o.total_money.amount / 100 : null,
       net,
+      tip: tipOf(o),
       items: food.map((li) => ({
         name: itemName(li),
         variation: li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
@@ -89,6 +90,8 @@ function netSales(o) {
   return Math.round(cents) / 100;
 }
 
+const tipOf = (o) => ((o.total_tip_money && o.total_tip_money.amount) || 0) / 100;
+
 // A day's order, as sales: Net sales, or its total for an order saved
 // before the board kept Net sales and not yet filled in (fillNet).
 const netOf = (r) => (r.net != null ? r.net : r.sales != null ? r.sales : 0);
@@ -97,7 +100,7 @@ const netOf = (r) => (r.net != null ? r.net : r.sales != null ? r.sales : 0);
 // range's (Reports). Same shape either way.
 function summarize(records) {
   const out = { orders: records.length, breakfast: 0, lunch: 0, counter: 0, online: 0, toGo: 0, forHere: 0,
-    kitchenDone: 0, avgMinutes: null, longestMinutes: null, sales: 0, collected: 0, avgTicket: null, items: [], topItems: [], byHour: {} };
+    kitchenDone: 0, avgMinutes: null, longestMinutes: null, sales: 0, collected: 0, tips: 0, tipped: 0, avgTicket: null, items: [], topItems: [], byHour: {} };
   const qty = new Map();
   const times = [];
   const bySize = lead.SIZES.map(() => []);
@@ -114,6 +117,7 @@ function summarize(records) {
     }
     out.sales += netOf(r);
     out.collected += r.sales || 0;
+    if (r.tip) { out.tips += r.tip; out.tipped++; }
     if (r.sales != null) priced++;
     const h = new Date(r.at).getHours();
     out.byHour[h] = (out.byHour[h] || 0) + 1;
@@ -121,6 +125,7 @@ function summarize(records) {
   }
   out.sales = Math.round(out.sales * 100) / 100;
   out.collected = Math.round(out.collected * 100) / 100;
+  out.tips = Math.round(out.tips * 100) / 100;
   if (priced) out.avgTicket = Math.round((out.sales / priced) * 100) / 100;
   if (times.length) {
     out.avgMinutes = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
@@ -176,25 +181,25 @@ function writeHistory() {
   fs.renameSync(HISTORY_FILE + ".tmp", HISTORY_FILE);
 }
 
-// Days saved before the board kept Net sales (2026-10-27) get it from
+// Days saved before the board kept Net sales and tips (2026-10-27) get them from
 // Square once, by order id, a hundred orders a call, so Reports and /today
 // compare like with like. Runs at start; an order Square can't find keeps
 // its total.
 async function fillNet() {
   const { square, resolveLocations } = require("./square");
   const todo = new Map();
-  for (const day of Object.values(history.days)) for (const r of day.orders) if (r.net === undefined && r.id) todo.set(r.id, r);
+  for (const day of Object.values(history.days)) for (const r of day.orders) if ((r.net === undefined || r.tip === undefined) && r.id) todo.set(r.id, r);
   if (!todo.size) return;
   const ids = [...todo.keys()];
   const [location_id] = await resolveLocations();
   let filled = 0;
   for (let i = 0; i < ids.length; i += 100) {
     const { orders = [] } = await square("POST", "/orders/batch-retrieve", { location_id, order_ids: ids.slice(i, i + 100) });
-    for (const o of orders) { todo.get(o.id).net = netSales(o); filled++; }
+    for (const o of orders) Object.assign(todo.get(o.id), { net: netSales(o), tip: tipOf(o) }), filled++;
   }
-  for (const r of todo.values()) if (r.net === undefined) r.net = null;
+  for (const r of todo.values()) if (r.net === undefined) Object.assign(r, { net: null, tip: null });
   writeHistory();
-  console.log(`Stats history: Net sales filled in for ${filled} earlier order(s)`);
+  console.log(`Stats history: Net sales and tips filled in for ${filled} earlier order(s)`);
 }
 if (!MOCK) setTimeout(() => fillNet().catch((err) => console.error(`Stats history: ${err.message}`)), 10000).unref();
 
