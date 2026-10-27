@@ -116,6 +116,11 @@
 .d-sides .check input { width: 1.2rem; height: 1.2rem; }
 .d-sides input[type="text"] { font: inherit; font-size: 1.05rem; color: var(--text); padding: 0.4rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
 .d-sides input[type="text"]:disabled { background: #F1ECE3; color: var(--muted); }
+.d-lists { display: grid; gap: 0.3rem; margin-top: 0.4rem; }
+.d-lists > summary { cursor: pointer; font-weight: 700; color: var(--teal-dark); padding: 0.25rem 0; }
+.d-lists > summary small { font-weight: 400; color: var(--muted); margin-left: 0.4rem; }
+.d-lists .check { margin: 0; font-size: 1.05rem; }
+.d-lists .check input { width: 1.2rem; height: 1.2rem; }
 .d-prices > summary { cursor: pointer; font-weight: 700; color: var(--teal-dark); padding: 0.25rem 0; }
 .d-prices > summary small { font-weight: 400; color: var(--muted); margin-left: 0.4rem; }
 .d-price-item { margin-top: 0.6rem; }

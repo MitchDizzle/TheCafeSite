@@ -46,10 +46,17 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // leaveOff: { "YYYY-MM-DD": [...] }, what can be left off that day's plate ("Bacon": a "No
 //            Bacon" option on Lunch Special), the website's day `leaveOff`. Kept apart
 //            from `days` like extraSides, and read the same way, even for today.
+// dayLists: { "YYYY-MM-DD": ["Add", "Toppings"] }, Square's own modifier lists to switch on
+//            on Lunch Special that day (a sandwich's Add and Toppings, client 2026-10-27),
+//            picked in Specials. Kept apart from `days` like the photo picks.
+// dishLists: { "<dish>": [...] }, the lists last picked for a dish, used on a day it's
+//            served with nothing picked for that day, so a sandwich gets its lists by itself.
+// listsUsed: every list ever picked: the board switches these off on a day without them,
+//            and leaves every other list on the item alone (Dressing).
 // soupSide: a cup of the day's soup can be picked as a side, as the website last said
 // includesDrink: every lunch special includes a drink, as the website last said
 // site:    the last read of the website, for the front to show
-const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, swapSides: [], extraSides: {}, leaveOff: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
+const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, dayLists: {}, dishLists: {}, listsUsed: [], swapSides: [], extraSides: {}, leaveOff: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
 try {
   Object.assign(plan, JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")));
 } catch {}
@@ -57,8 +64,24 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.photoPick, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.photoPick, plan.dayLists, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
+}
+
+// The plate's dish on a day ("Pork Tenderloin Sandwich"), as dishLists keys it.
+const dishKey = (s) => String(s || "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
+const plateOf = (day) => {
+  const it = day && day.items && day.items[cfg.sideItem];
+  return (it && it.today) || "";
+};
+
+// The lists on Lunch Special on `date`: picked for that day, else the ones
+// last picked for its dish. { lists, from: "day" | "dish" | null }.
+function listsFor(date, day = plan.days[date]) {
+  if (Array.isArray(plan.dayLists[date])) return { lists: plan.dayLists[date], from: "day" };
+  const dish = dishKey(plateOf(day));
+  if (dish && Array.isArray(plan.dishLists[dish])) return { lists: plan.dishLists[dish], from: "dish" };
+  return { lists: [], from: null };
 }
 
 // A price from the website as the plan keeps it ("10.00"), or "" when it
@@ -200,7 +223,7 @@ async function pullSite() {
 // (plus any other day something is planned for), with Square's own sizes and
 // prices for the price boxes, and today's names as Square has them now
 // (`live`), so the front shows what's really on the till.
-async function planView() {
+async function planView(squareLists = []) {
   const items = await dailyItems();
   const dates = [];
   for (let i = 0; i < PLAN_DAYS; i++) {
@@ -215,7 +238,9 @@ async function planView() {
     items: items.filter((it) => !it.missing).map(({ key, name, variations }) => ({ key, name, sizes: variations.map((v) => ({ size: v.size, price: v.price })) })),
     live: Object.fromEntries(items.filter((it) => !it.missing).map((it) => [it.key, it.today])),
     missing: items.filter((it) => it.missing).map((it) => it.name),
-    days: dates.map((date) => ({ date, plan: plan.days[date] || null, note: plan.notes[date] || null, photoPick: plan.photoPick[date] || {}, applied: plan.applied[date] || null })),
+    days: dates.map((date) => ({ date, plan: plan.days[date] || null, note: plan.notes[date] || null, photoPick: plan.photoPick[date] || {}, lists: listsFor(date), applied: plan.applied[date] || null })),
+    // Square's modifier lists that can go on the plate, but not the board's own (the sides, Leave Off).
+    squareLists,
     site: { url: cfg.specialsUrl, ...plan.site },
   };
 }
@@ -229,11 +254,12 @@ const checkDate = (date, today) => {
 // changes: { "YYYY-MM-DD": { items: { "<dailyItems name>": { today, prices: { "<size>": "10.50" } } }, sides, anySide } }
 // notes:   { "YYYY-MM-DD": { description } }
 // photos:  { "YYYY-MM-DD": { "<dailyItems name>": "<photo id>" | "none" | "" } } ("" = the usual)
+// lists:   { "YYYY-MM-DD": ["Add", "Toppings"] }, Square's lists on Lunch Special that day
 // photoIds: every kept photo's id (allPhotos), to check a picked one against
 // Only the days the front changed. A day left with nothing in it is taken off
 // the plan (if the website lists it, its copy comes back on the next read).
 // Everything is checked before anything is kept. Returns the dates of each.
-function savePlanDays(changes, notes, photos, photoIds = new Set()) {
+function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}) {
   const today = localDate();
   const next = {};
   for (const [date, change] of Object.entries(changes || {})) {
@@ -287,9 +313,22 @@ function savePlanDays(changes, notes, photos, photoIds = new Set()) {
     if (Object.keys(keep).length) plan.photoPick[date] = keep;
     else delete plan.photoPick[date];
   }
+  // Square's lists for the plate: kept for the day and remembered for its
+  // dish, so the next time that sandwich is on they go on by themselves.
+  const listed = {};
+  for (const [date, raw] of Object.entries(lists || {})) {
+    checkDate(date, today);
+    listed[date] = [...new Set((Array.isArray(raw) ? raw : []).map(cleanText).filter(Boolean))].slice(0, 8);
+  }
   for (const [date, day] of Object.entries(next)) {
     if (day) plan.days[date] = day;
     else delete plan.days[date];
+  }
+  for (const [date, names] of Object.entries(listed)) {
+    plan.dayLists[date] = names;
+    const dish = dishKey(plateOf(plan.days[date]));
+    if (dish) plan.dishLists[dish] = names;
+    plan.listsUsed = [...new Set([...plan.listsUsed, ...names])];
   }
   for (const [date, description] of Object.entries(words)) {
     if (description) plan.notes[date] = { description };
@@ -299,8 +338,9 @@ function savePlanDays(changes, notes, photos, photoIds = new Set()) {
   const days = Object.keys(next).sort();
   const noted = Object.keys(words).sort();
   const picked = Object.keys(picks).sort();
-  if (days.length || noted.length || picked.length) console.log(`Specials changed from the front page (${new Date().toLocaleTimeString()}): ${[...new Set([...days, ...noted, ...picked])].sort().join(", ")}.`);
-  return { days, notes: noted, photos: picked };
+  const withLists = Object.keys(listed).sort();
+  if (days.length || noted.length || picked.length || withLists.length) console.log(`Specials changed from the front page (${new Date().toLocaleTimeString()}): ${[...new Set([...days, ...noted, ...picked, ...withLists])].sort().join(", ")}.`);
+  return { days, notes: noted, photos: picked, lists: withLists };
 }
 
-module.exports = { SITE_MINUTES, RETRY_MINUTES, plan, savePlan, siteFieldFor, pullSite, planView, savePlanDays };
+module.exports = { SITE_MINUTES, RETRY_MINUTES, plan, savePlan, siteFieldFor, pullSite, planView, savePlanDays, listsFor };

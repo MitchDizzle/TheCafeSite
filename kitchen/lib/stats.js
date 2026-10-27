@@ -11,6 +11,7 @@ const { live } = require("./live");
 const { bumped, platesDone, offBoard, state } = require("./state");
 const { NOT_FOOD, itemName, isOnline } = require("./tickets");
 const { mockHistory } = require("./mock");
+const lead = require("./lead");
 
 const BREAKFAST_ENDS = 11; // hour, local time
 
@@ -64,6 +65,9 @@ function dayRecords() {
         qty: Number(li.quantity) || 1,
       })),
       done: !!(bumped[o.id] || platesDone[o.id]),
+      // What the kitchen made (5 x a wrap is 5; drinks and chips at the
+      // front aren't), for the time by order size (lib/lead.js).
+      kitchenItems: t ? t.items.reduce((n, it) => n + it.qty, 0) : null,
       kitchenMinutes,
     });
   }
@@ -77,13 +81,18 @@ function summarize(records) {
     kitchenDone: 0, avgMinutes: null, longestMinutes: null, sales: 0, avgTicket: null, items: [], topItems: [], byHour: {} };
   const qty = new Map();
   const times = [];
+  const bySize = lead.SIZES.map(() => []);
   let priced = 0;
   for (const r of records) {
     out[r.meal]++;
     out[r.online ? "online" : "counter"]++;
     out[r.toGo ? "toGo" : "forHere"]++;
     if (r.done) out.kitchenDone++;
-    if (r.kitchenMinutes != null) times.push(r.kitchenMinutes);
+    if (r.kitchenMinutes != null) {
+      times.push(r.kitchenMinutes);
+      const n = lead.itemsOf(r);
+      if (n > 0) bySize[lead.sizeOf(n)].push(r.kitchenMinutes);
+    }
     out.sales += r.sales || 0;
     if (r.sales != null) priced++;
     const h = new Date(r.at).getHours();
@@ -98,6 +107,14 @@ function summarize(records) {
   }
   out.items = [...qty].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, n]) => ({ name, qty: n }));
   out.topItems = out.items.slice(0, 5);
+  // Time in the kitchen by order size, so a big order doesn't make a day
+  // look slow: median and average for each size.
+  out.bySize = lead.SIZES.map((s, i) => {
+    const list = bySize[i];
+    const med = lead.median(list);
+    return { label: s.label, orders: list.length, medianMinutes: med == null ? null : Math.round(med),
+      avgMinutes: list.length ? Math.round(list.reduce((a, b) => a + b, 0) / list.length) : null };
+  });
   return out;
 }
 
@@ -127,10 +144,12 @@ try {
 // Test mode: four made-up weeks before today, so /today and Reports have
 // something to compare with. Only in the test mode's own history file.
 if (MOCK) history.days = { ...mockHistory(localDate()), ...history.days };
+lead.learn(history.days, localDate());
 let historyWrittenAt = 0;
 let historyLast = "";
 
 function recordHistory() {
+  if (lead.learnedOn() !== localDate()) lead.learn(history.days, localDate());
   if (Date.now() - historyWrittenAt < HISTORY_SECONDS * 1000) return;
   const records = dayRecords();
   if (!records.length) return;
@@ -164,7 +183,7 @@ function historyReport(from, to, withOrders) {
   const dates = Object.keys(history.days).filter((d) => d >= from && d <= to).sort();
   const days = dates.map((date) => ({ date, ...summarize(history.days[date].orders) }));
   const records = dates.flatMap((d) => history.days[d].orders);
-  const out = { from, to, first: Object.keys(history.days).sort()[0] || null, days, total: summarize(records) };
+  const out = { from, to, first: Object.keys(history.days).sort()[0] || null, days, total: summarize(records), lead: lead.leadTable() };
   if (withOrders) out.orders = dates.flatMap((date) => history.days[date].orders.map((r) => ({ date, ...r })));
   return out;
 }

@@ -29,6 +29,9 @@ const DEFAULTS = {
   // this long before they're due: 15 covers big and small orders (client
   // 2026-10-21; 60 until then, which started the kitchen clock too early).
   showAheadMinutes: 15,
+  // A bigger order goes on sooner: its size's usual kitchen time from the
+  // history, plus this (lib/lead.js, client 2026-10-27).
+  leadBufferMinutes: 5,
   // Before that they wait in the WAIT UNTIL row at the bottom of the board,
   // from this long before they're due, and the front page has them.
   waitRowMinutes: 60,

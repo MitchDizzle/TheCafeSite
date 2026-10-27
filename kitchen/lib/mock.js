@@ -298,6 +298,11 @@ function mockCatalog() {
       variations: [v("VAR-CP", "Regular", 300)] } },
     { type: "MODIFIER_LIST", id: "LIST-Sauce", version: 1, modifier_list_data: { name: "Cheesecake Sauce", selection_type: "MULTIPLE",
       modifiers: [sauce("MOD-Caramel", "Caramel", 0), sauce("MOD-Chocolate", "Chocolate", 1)] } },
+    // A sandwich's own lists, for Specials' "Also on the plate in Square".
+    { type: "MODIFIER_LIST", id: "LIST-Add", version: 1, modifier_list_data: { name: "Add", selection_type: "MULTIPLE",
+      modifiers: [{ type: "MODIFIER", id: "MOD-Add-Bacon", modifier_data: { name: "Bacon", ordinal: 0, modifier_list_id: "LIST-Add", price_money: { amount: 150, currency: "USD" } } }] } },
+    { type: "MODIFIER_LIST", id: "LIST-Toppings", version: 1, modifier_list_data: { name: "Toppings", selection_type: "MULTIPLE",
+      modifiers: [{ type: "MODIFIER", id: "MOD-Top-Onion", modifier_data: { name: "Onion", ordinal: 0, modifier_list_id: "LIST-Toppings" } }] } },
   );
   for (const [id, n] of Object.entries(mockStockStart)) if (!mockStock.has(id)) mockStock.set(id, n);
   for (const item of daily) {

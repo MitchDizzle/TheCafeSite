@@ -4,6 +4,7 @@
 const { cfg } = require("./config");
 const { startOfToday } = require("./util");
 const { catalog } = require("./catalog");
+const { leadMinutes } = require("./lead");
 const { bumped, canceled, handedOff, markedReady, skipSets } = require("./state");
 
 // An online order the front has picked up, canceled or failed is finished
@@ -198,7 +199,9 @@ function toTicket(order) {
   // comes in can sit for most of an hour waiting for a Dasher.
   const doordash = online && /doordash/i.test(`${(order.source && order.source.name) || ""} ${(f && f.delivery_details && f.delivery_details.courier_provider_name) || ""}`);
   const courier = doordash ? ((/Courier Name:\s*([^\r\n]+)/i.exec((details && details.note) || "") || [])[1] || "").trim() || null : null;
-  const boardAt = onBoardAt(order, { dueAt, doordash, courier });
+  // How far ahead of its due time it goes on: more for a bigger order.
+  const leadMins = dueAt && !doordash ? leadMinutes(items.reduce((n, it) => n + it.qty, 0)) : null;
+  const boardAt = onBoardAt(order, { dueAt, doordash, courier, leadMins });
   // To go or for here. The Restaurants POS records the dining option as the
   // fulfillment: "To Go" is PICKUP, "For Here" is IN_STORE. To Go is the
   // POS default, so a table number wins: someone sitting down with a number
@@ -234,6 +237,7 @@ function toTicket(order) {
     // When it goes on the kitchen board, which the kitchen time counts
     // from; holdUntil is that time while a DoorDash order waits for a Dasher.
     boardAt,
+    leadMinutes: leadMins,
     holdUntil: doordash && !courier && Date.parse(boardAt) > Date.now() ? boardAt : null,
     courier,
     items,
@@ -250,10 +254,11 @@ function toTicket(order) {
 
 // When an order goes on the kitchen board: a DoorDash order when its
 // Dasher is first seen or dasherWaitMinutes after it came in, whichever is
-// first; one due later (a pickup, a time in the name) showAheadMinutes
-// before it's due; anything else as it's rung up.
+// first; one due later (a pickup, a time in the name) its leadMinutes
+// before it's due (showAheadMinutes, or more for a big order: lib/lead.js);
+// anything else as it's rung up.
 const courierSeen = new Map(); // order id -> when the board first saw its Dasher
-function onBoardAt(order, { dueAt, doordash, courier }) {
+function onBoardAt(order, { dueAt, doordash, courier, leadMins }) {
   const created = Date.parse(order.created_at);
   let at = created;
   if (doordash) {
@@ -262,13 +267,13 @@ function onBoardAt(order, { dueAt, doordash, courier }) {
       if (!courierSeen.has(order.id)) courierSeen.set(order.id, Date.now());
       at = Math.min(at, courierSeen.get(order.id));
     }
-  } else if (dueAt) at = Date.parse(dueAt) - cfg.showAheadMinutes * 6e4;
+  } else if (dueAt) at = Date.parse(dueAt) - (leadMins || cfg.showAheadMinutes) * 6e4;
   return new Date(Math.max(created, at)).toISOString();
 }
 
 // Today's work only, on both screens: a stale order from yesterday that
 // nobody closed in Square should not greet anyone every morning.
-function outOfWindow(t, now, ahead = cfg.showAheadMinutes) {
+function outOfWindow(t, now, ahead = t.leadMinutes || cfg.showAheadMinutes) {
   const due = Date.parse(t.dueAt || t.createdAt);
   if (due < startOfToday().getTime()) return "due before today";
   if (due > now + ahead * 6e4) return "pickup is more than " + ahead + " min away";
@@ -299,7 +304,7 @@ function hiddenReason(t, now) {
 function waitUntil(t, now) {
   if (goneReason(t) || !hiddenReason(t, now)) return null;
   if (t.holdUntil && now < Date.parse(t.holdUntil)) return t.holdUntil;
-  if (outOfWindow(t, now, cfg.waitRowMinutes)) return null;
+  if (outOfWindow(t, now, Math.max(cfg.waitRowMinutes, t.leadMinutes || 0))) return null;
   return t.boardAt;
 }
 
@@ -308,7 +313,7 @@ function waitUntil(t, now) {
 function frontHiddenReason(t, now) {
   if (handedOff[t.id]) return "handed off at the front";
   if (canceled[t.id]) return "not paid; canceled at the front";
-  return outOfWindow(t, now, Math.max(cfg.showAheadMinutes, cfg.waitRowMinutes));
+  return outOfWindow(t, now, Math.max(cfg.showAheadMinutes, cfg.waitRowMinutes, t.leadMinutes || 0));
 }
 
 // Ready for the front: the kitchen pressed Done, or the front already marked

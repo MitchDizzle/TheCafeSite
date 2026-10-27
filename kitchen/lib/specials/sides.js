@@ -27,7 +27,7 @@ const { MOCK, cfg } = require("../config");
 const { cleanText } = require("../util");
 const { square } = require("../square");
 const { catalog, loadCatalog, readObject, modifierListsByName, upsertObject } = require("../catalog");
-const { plan, savePlan, RETRY_MINUTES } = require("./plan");
+const { plan, savePlan, RETRY_MINUTES, listsFor } = require("./plan");
 
 const CHEFS_CHOICE = "Chef's Choice";
 // The item's own word that an option is picked already (on_by_default before
@@ -223,6 +223,42 @@ async function saveLeaveOff(options) {
   return options.length ? `${name}: ${options.join(", ")}` : `${name}: off`;
 }
 
+// Square's own lists (Add, Toppings) on cfg.sideItem today, picked in
+// Specials (client 2026-10-27: a sandwich special wants them, and online
+// ordering only shows what's on the item). Each list stays as it was made in
+// Square (its options, prices, how many can be picked); the board only
+// switches it on or off on the item, after the sides. A list never picked in
+// Specials (plan.listsUsed) is left alone. Returns words for the log, or null.
+async function saveExtraLists(names) {
+  const managed = [...new Set([...plan.listsUsed, ...names])];
+  if (!managed.length) return null;
+  await loadCatalog();
+  const itemId = catalog.itemIds.get(cfg.sideItem.trim().toLowerCase());
+  if (!itemId) return null;
+  const lists = await modifierListsByName();
+  const want = new Set(names.map((n) => n.trim().toLowerCase()));
+  const fresh = await readObject(itemId);
+  const infos = (fresh.item_data.modifier_list_info ||= []);
+  const before = JSON.stringify(infos);
+  const missing = [];
+  for (const name of managed) {
+    const key = name.trim().toLowerCase();
+    const list = lists.get(key);
+    if (!list) { if (want.has(key)) missing.push(name); continue; }
+    let info = infos.find((x) => x.modifier_list_id === list.id);
+    if (!info) {
+      if (!want.has(key)) continue;
+      info = { modifier_list_id: list.id };
+      infos.push(info);
+    }
+    info.enabled = want.has(key);
+  }
+  infos.forEach((x, ordinal) => { x.ordinal = ordinal; });
+  if (JSON.stringify(infos) !== before) await upsertObject(fresh);
+  if (missing.length) console.log(`Not in Square, so not on ${cfg.sideItem}: ${missing.join(", ")}.`);
+  return `${names.length ? names.join(", ") : "no extra lists"} on ${cfg.sideItem}`;
+}
+
 // Put today's sides into Square, the way applySpecials does the names:
 // once, retried after a failure, redone when the day's sides or the swap
 // sides change. A board that has never set sides leaves Square alone on a
@@ -233,18 +269,19 @@ async function applySides(today, day) {
   const swaps = swapsFor(today, day);
   const special = cfg.specialSideItem ? specialSideOptions(day) : [];
   const offs = cfg.leaveOffList ? leaveOffOptions(today) : [];
+  const extra = listsFor(today, day).lists;
   // `v`: bumped when the way the lists are written changes, so today's are
   // rewritten after an update (2: required, 2026-10-13; 3: the Special Side
   // too, 2026-10-15; 4: Leave Off, 2026-10-18; 5: the pick marked on the
-  // option too, 2026-10-19).
-  const sig = JSON.stringify({ v: 5, slots, swaps, special, offs });
+  // option too, 2026-10-19; 6: Square's own lists, 2026-10-27).
+  const sig = JSON.stringify({ v: 6, slots, swaps, special, offs, extra });
   const last = plan.sidesApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
-  if (!slots.length && !offs.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;
+  if (!slots.length && !offs.length && !extra.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;
   try {
     const done = await saveSides(slots, swaps);
     const side = [cfg.specialSideItem ? await saveSpecialSide(special) : null,
-      cfg.leaveOffList ? await saveLeaveOff(offs) : null].filter(Boolean).join("; ");
+      cfg.leaveOffList ? await saveLeaveOff(offs) : null, await saveExtraLists(extra)].filter(Boolean).join("; ");
     plan.sidesApplied[today] = { sig, at: new Date().toISOString() };
     console.log(done.length
       ? `Today's sides put on ${cfg.sideItem} in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}${side ? `; ${side}` : ""}.`

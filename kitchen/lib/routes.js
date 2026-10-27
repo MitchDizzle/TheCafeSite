@@ -6,7 +6,7 @@ const path = require("path");
 const { DIR, DEV, cfg } = require("./config");
 const { localDate, dayWords } = require("./util");
 const { live } = require("./live");
-const { catalog, loadCatalog } = require("./catalog");
+const { catalog, loadCatalog, modifierListsByName } = require("./catalog");
 const { bump, handedOff, canceled, byHand, keepOnFront, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
 const { poll, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay } = require("./orders");
 const { recordHistoryNow, historyReport, todayView } = require("./stats");
@@ -306,13 +306,20 @@ async function handle(req, res) {
     try {
       if (url.pathname === "/api/front-plan") {
         await pullSite(); // so the website's latest is what's shown
-        return send(res, 200, { ok: true, ...(await planView()), photos: allPhotos() });
+        // Square's lists for the plate's picker, but not the board's own.
+        const own = new Set([...cfg.sideLists, cfg.leaveOffList, cfg.specialSideList].filter(Boolean).map((n) => n.trim().toLowerCase()));
+        let squareLists = [];
+        try {
+          squareLists = [...(await modifierListsByName()).values()].map((l) => String(l.modifier_list_data.name || "").trim())
+            .filter((n) => n && !own.has(n.toLowerCase())).sort((a, b) => a.localeCompare(b));
+        } catch (err) { console.error(`Specials, Square's lists: ${err.message}`); }
+        return send(res, 200, { ok: true, ...(await planView(squareLists)), photos: allPhotos() });
       }
-      const saved = savePlanDays(body.days, body.notes, body.photos, new Set(allPhotos().map((p) => p.id)));
-      const dates = [...new Set([...saved.days, ...saved.notes, ...saved.photos])].sort();
+      const saved = savePlanDays(body.days, body.notes, body.photos, new Set(allPhotos().map((p) => p.id)), body.lists);
+      const dates = [...new Set([...saved.days, ...saved.notes, ...saved.photos, ...saved.lists])].sort();
       if (!dates.length) return send(res, 200, { ok: true, message: "Nothing changed." });
       let message = `Saved: ${dates.map(dayWords).join(", ")}.`;
-      if (saved.days.includes(localDate()) || saved.photos.includes(localDate())) {
+      if (saved.days.includes(localDate()) || saved.photos.includes(localDate()) || saved.lists.includes(localDate())) {
         const r = await applyToday();
         message += r && r.error ? ` Today's didn't go into Square yet (${r.error}); the board tries again in ${RETRY_MINUTES} minutes.`
           : " Today's is in Square now.";

@@ -78,6 +78,13 @@
         <tbody>${r.days.map((d) => `<tr><td>${esc(dayName(d.date))}</td><td>${d.orders}</td><td>${money(d.sales)}</td>
           <td>${d.breakfast}</td><td>${d.lunch}</td><td>${d.online}</td><td>${minsText(d.avgMinutes)}</td></tr>`).join("")}</tbody>
       </table></div>
+      ${t.bySize ? `<p class="r-h">Time in the kitchen by order size</p>
+      <div class="r-table-wrap"><table class="r-table">
+        <thead><tr><th>Size</th><th>Orders</th><th>Middle</th><th>Avg</th>${r.lead ? "<th>Starts ahead</th>" : ""}</tr></thead>
+        <tbody>${t.bySize.map((s, i) => `<tr><td>${esc(s.label)}</td><td>${s.orders}</td><td>${minsText(s.medianMinutes)}</td><td>${minsText(s.avgMinutes)}</td>
+          ${r.lead ? `<td>${minsText(r.lead[i].ahead)}</td>` : ""}</tr>`).join("")}</tbody>
+      </table></div>
+      <p class="m-note">Items are what the kitchen makes (5 wraps is 5). Middle is the median: half the orders were quicker. Starts ahead is how long before it's due a pickup or a phone order with a time goes on the board now, from the last 8 weeks.</p>` : ""}
       <p class="r-h">Items ordered</p>
       <ol class="r-items">${t.items.slice(0, 30).map((i) => `<li>${esc(i.name)} ×${i.qty}</li>`).join("")}</ol>
       ${t.items.length > 30 ? `<p class="m-note">And ${t.items.length - 30} more: they're all in the CSV.</p>` : ""}
@@ -107,10 +114,10 @@
     const r = await postJson("/api/front-report", { pin: Front.pin, from, to, orders: true });
     if (!r.ok) return;
     saveCsv(`cafe-orders-${from}-to-${to}.csv`, [
-      ["date", "time", "meal", "where", "to_go", "paid", "sales", "kitchen_min", "items"],
+      ["date", "time", "meal", "where", "to_go", "paid", "sales", "kitchen_items", "kitchen_min", "items"],
       ...r.orders.map((o) => [o.date, new Date(o.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), o.meal,
         o.online ? "online" : "counter", o.toGo ? "yes" : "no", o.paid ? "yes" : "no", o.sales != null ? o.sales.toFixed(2) : "",
-        o.kitchenMinutes, o.items.map((i) => `${i.qty} ${i.name}${i.variation ? ` (${i.variation})` : ""}`).join("; ")]),
+        o.kitchenItems, o.kitchenMinutes, o.items.map((i) => `${i.qty} ${i.name}${i.variation ? ` (${i.variation})` : ""}`).join("; ")]),
     ]);
   }
 

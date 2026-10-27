@@ -54,6 +54,20 @@
           placeholder="e.g. Mashed potatoes & gravy, green beans"${any ? " disabled" : ""}>
       </fieldset>`;
     };
+    // Square's own lists (Add, Toppings) to switch on on the plate that day,
+    // for a sandwich special (client 2026-10-27). Ticked for a dish once, they
+    // come back by themselves the next time it's on.
+    const listsHtml = (d) => {
+      const names = r.squareLists || [];
+      if (!names.length) return "";
+      const on = new Set(((d.lists && d.lists.lists) || []).map((n) => n.toLowerCase()));
+      const shown = [...names, ...((d.lists && d.lists.lists) || []).filter((n) => !names.some((x) => x.toLowerCase() === n.toLowerCase()))];
+      return `<details class="d-lists"${on.size ? " open" : ""}>
+        <summary>Also on the plate in Square <small>${on.size ? esc([...shown].filter((n) => on.has(n.toLowerCase())).join(", ")) : "none"}${d.lists && d.lists.from === "dish" ? " · as last time for this dish" : ""}</small></summary>
+        <p class="m-note">Square's own lists, as they are in Square: online ordering and the till show them on the plate that day. Ticked for a dish, they come back the next time it's on.</p>
+        ${shown.map((n) => `<label class="check"><input type="checkbox" data-list="${esc(n)}"${on.has(n.toLowerCase()) ? " checked" : ""}><span>${esc(n)}</span></label>`).join("")}
+      </details>`;
+    };
     const photos = r.photos || [];
     const byId = new Map(photos.map((p) => [p.id, p]));
     const shortDate = (d) => (d ? words(d, { month: "short", day: "numeric" }) : "");
@@ -115,7 +129,7 @@
               <label class="m-field">${esc(it.name)}
                 <input type="text" data-field="today" value="${esc(name)}" maxlength="60" autocomplete="off"
                   placeholder="${/soup/i.test(it.key) ? "e.g. Chicken Dumpling" : isSalad(it.key) ? "e.g. Cobb" : "e.g. Meatloaf"}"></label>
-              ${isPlate(it.key) ? sidesHtml(plan, d.date) : ""}
+              ${isPlate(it.key) ? sidesHtml(plan, d.date) + listsHtml(d) : ""}
               ${photos.length ? photoHtml(d, it) : ""}
             </div>`;
           }).join("")}
@@ -166,13 +180,16 @@
       return { items, sides, anySide: any };
     };
     const readWords = (day) => (day.querySelector('[data-field="desc"]').value || "").trim();
+    const readLists = (day) => [...day.querySelectorAll("[data-list]:checked")].map((el) => el.dataset.list);
+    const beforeLists = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(readLists(day))]));
     const readPicks = (day) => Object.fromEntries([...day.querySelectorAll(".d-photo")].map((box) => [box.dataset.key, box.dataset.pick]));
     const beforePicks = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(readPicks(day))]));
     const before = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(read(day))]));
     const beforeWords = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, readWords(day)]));
     const mark = (day) => day.classList.toggle("edited",
       JSON.stringify(read(day)) !== before.get(day.dataset.date) || readWords(day) !== beforeWords.get(day.dataset.date)
-      || JSON.stringify(readPicks(day)) !== beforePicks.get(day.dataset.date));
+      || JSON.stringify(readPicks(day)) !== beforePicks.get(day.dataset.date)
+      || JSON.stringify(readLists(day)) !== beforeLists.get(day.dataset.date));
     form.addEventListener("toggle", (e) => {
       if (e.target.matches(".d-photo") && e.target.open && !e.target.querySelector(".d-photo-body").childElementCount) fillPicker(e.target);
     }, true);
@@ -203,6 +220,7 @@
         box.querySelector(".d-photo-now").textContent = photoNow(e.target.value, name);
         return mark(day);
       }
+      if (e.target.matches("[data-list]")) return mark(e.target.closest(".m-day"));
       if (e.target.type !== "radio") return;
       const day = e.target.closest(".m-day");
       day.querySelector('[data-field="sides"]').disabled = e.target.value === "any";
@@ -227,7 +245,10 @@
       const days = {};
       const notes = {};
       const picks = {};
+      const lists = {};
       for (const day of form.querySelectorAll(".m-day")) {
+        const listNow = readLists(day);
+        if (JSON.stringify(listNow) !== beforeLists.get(day.dataset.date)) lists[day.dataset.date] = listNow;
         const pickNow = readPicks(day);
         if (JSON.stringify(pickNow) !== beforePicks.get(day.dataset.date)) picks[day.dataset.date] = pickNow;
         const now = read(day);
@@ -236,7 +257,7 @@
         if (text !== beforeWords.get(day.dataset.date)) notes[day.dataset.date] = { description: text };
       }
       busy("Specials", "Saving…");
-      result("Specials", await postJson("/api/front-plan-save", { pin: Front.pin, days, notes, photos: picks }));
+      result("Specials", await postJson("/api/front-plan-save", { pin: Front.pin, days, notes, photos: picks, lists }));
     });
   }
 
