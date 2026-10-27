@@ -82,6 +82,18 @@
     for (const c of chars) { ctx.fillText(c, at, y); at += ctx.measureText(c).width + spacing; }
   }
 
+  // Where each photo goes in the top square: the whole square for one, two
+  // halves side by side with a cream line between for two (two kinds of one
+  // item, Mitch 2026-10-27: the regular and chocolate cream puffs).
+  const GAP = 8;
+  function frames(n) {
+    if (n < 2) return [{ x: 0, y: 0, w: 1080, h: 1080 }];
+    const w = (1080 - GAP) / 2;
+    return [{ x: 0, y: 0, w, h: 1080 }, { x: w + GAP, y: 0, w, h: 1080 }];
+  }
+  // A photo's scale in its frame: covering it at zoom 1.
+  const scaleIn = (s, f) => Math.max(f.w / s.img.width, f.h / s.img.height) * s.zoom;
+
   function drawPost(canvas, pp) {
     const ctx = canvas.getContext("2d");
     const W = 1080, PHOTO = 1080, BAND = 1088, H = 1250;
@@ -89,19 +101,43 @@
     ctx.fillStyle = INK.tealDark;
     ctx.fillRect(0, 0, W, H);
 
-    // The photo, filling the square, moved and zoomed as dragged.
-    if (pp.img) {
-      const { width: w, height: h } = pp.img;
-      const sc = (PHOTO / Math.min(w, h)) * pp.zoom;
-      const dw = w * sc, dh = h * sc;
-      const x = Math.min(0, Math.max(PHOTO - dw, PHOTO / 2 - pp.cx * dw));
-      const y = Math.min(0, Math.max(PHOTO - dh, PHOTO / 2 - pp.cy * dh));
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, 0, PHOTO, PHOTO);
-      ctx.clip();
-      ctx.drawImage(pp.img, x, y, dw, dh);
-      ctx.restore();
+    // The photos, each filling its frame, moved and zoomed as dragged.
+    if (pp.shots.length) {
+      ctx.fillStyle = INK.cream;
+      ctx.fillRect(0, 0, PHOTO, PHOTO);
+      const fr = frames(pp.shots.length);
+      pp.shots.forEach((s, i) => {
+        const f = fr[i];
+        const sc = scaleIn(s, f);
+        const dw = s.img.width * sc, dh = s.img.height * sc;
+        const x = f.x + Math.min(0, Math.max(f.w - dw, f.w / 2 - s.cx * dw));
+        const y = f.y + Math.min(0, Math.max(f.h - dh, f.h / 2 - s.cy * dh));
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(f.x, f.y, f.w, f.h);
+        ctx.clip();
+        ctx.drawImage(s.img, x, y, dw, dh);
+        ctx.restore();
+      });
+      // Each half's own name ("Chocolate") on a teal tab at its foot.
+      if (pp.shots.length > 1) {
+        pp.shots.forEach((s, i) => {
+          const label = (s.label || "").trim();
+          if (!label) return;
+          const f = fr[i];
+          ctx.font = `italic 900 40px ${SERIF}`;
+          const tw = Math.min(ctx.measureText(label).width, f.w - 80);
+          const bw = tw + 48, bh = 64;
+          const bx = f.x + (f.w - bw) / 2, by = f.y + f.h - bh - 36;
+          ctx.fillStyle = "rgba(31, 69, 82, 0.9)";
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, 32); else ctx.rect(bx, by, bw, bh);
+          ctx.fill();
+          ctx.fillStyle = INK.cream;
+          ctx.textAlign = "center";
+          ctx.fillText(label, f.x + f.w / 2, by + 45, f.w - 80);
+        });
+      }
     } else {
       ctx.fillStyle = INK.teal;
       ctx.fillRect(0, 0, PHOTO, PHOTO);
@@ -224,7 +260,9 @@
     ]);
     if (!r.ok) return result("Photo post", r);
     SITE = r.site;
-    pp = { setup: r, fontsOk, img: null, photo: null, zoom: 1, cx: 0.5, cy: 0.5, keep: true, choice: "", title: "", kicker: "", desc: "", drink: false, special: false, price: null, sizes: false, item: null };
+    // shots: one photo, or two side by side. Only the first is kept for the
+    // website and Square; the second is in the post only.
+    pp = { setup: r, fontsOk, shots: [], keep: true, choice: "", title: "", kicker: "", desc: "", drink: false, special: false, price: null, sizes: false, item: null };
     const t = r.today;
     choosePhotoSubject(t.special ? "special" : t.soup ? "soup" : "other");
     showPhotoEditor();
@@ -259,11 +297,21 @@
       if (!groups.has(g)) groups.set(g, []);
       groups.get(g).push(opt(`item:${i}`, it.name));
     });
+    const two = pp.shots.length > 1;
+    const fileBtn = (i, label) => `<label class="pp-photo-btn">${label}<input type="file" accept="image/*" data-shot="${i}" class="pp-file"></label>`;
+    const shotFields = pp.shots.map((s, i) => `<div class="pp-shot">
+        ${two ? `<p class="pp-shot-head">${i ? "Right photo" : "Left photo (the one kept for Square and the website)"}</p>
+        <label class="m-field">Name on it<input type="text" class="pp-label" data-shot="${i}" value="${esc(s.label)}" maxlength="24" placeholder="${i ? "Chocolate" : "Regular"}"></label>` : ""}
+        <label class="m-field">Zoom (drag the picture to move it)<input type="range" class="pp-zoom" data-shot="${i}" min="1" max="3" step="0.01" value="${s.zoom}"></label>
+      </div>`).join("");
     screen({ title: "Photo post", back: true,
       body: `<div class="pp">
-        <label class="pp-photo-btn">${pp.img ? "Take or choose another photo" : "📷 Take or choose a photo"}<input type="file" accept="image/*" id="pp-file"></label>
+        ${fileBtn(0, pp.shots.length ? (two ? "Change the left photo" : "Take or choose another photo") : "📷 Take or choose a photo")}
         <canvas id="pp-canvas" class="pp-canvas" width="1080" height="1250" aria-label="The post as it will look"></canvas>
-        ${pp.img ? `<label class="m-field">Zoom (drag the picture to move it)<input type="range" id="pp-zoom" min="1" max="3" step="0.01" value="${pp.zoom}"></label>` : ""}
+        ${shotFields}
+        ${pp.shots.length === 1 ? fileBtn(1, "＋ Add a second photo, side by side (two kinds)") : ""}
+        ${two ? `${fileBtn(1, "Change the right photo")}
+        <div class="pp-two-btns"><button type="button" class="m-btn" id="pp-swap">Swap them</button><button type="button" class="m-btn" id="pp-one">Back to one photo</button></div>` : ""}
         ${pp.fontsOk ? "" : `<p class="m-error">The post's fonts didn't load (is the internet down?), so this uses plain ones. Open Photo post again once it's back.</p>`}
         <label class="m-field">What's in the photo
           <select id="pp-what">
@@ -288,7 +336,8 @@
       if (id === "pp-title") pp.title = e.target.value;
       else if (id === "pp-kicker") pp.kicker = e.target.value;
       else if (id === "pp-desc") pp.desc = e.target.value;
-      else if (id === "pp-zoom") pp.zoom = Number(e.target.value);
+      else if (e.target.classList.contains("pp-zoom")) pp.shots[e.target.dataset.shot].zoom = Number(e.target.value);
+      else if (e.target.classList.contains("pp-label")) pp.shots[e.target.dataset.shot].label = e.target.value;
       else return;
       redraw();
     });
@@ -297,31 +346,49 @@
       if (id === "pp-drink") { pp.drink = e.target.checked; redraw(); }
       else if (id === "pp-keep") pp.keep = e.target.checked;
       else if (id === "pp-what") { choosePhotoSubject(e.target.value); showPhotoEditor(); }
-      else if (id === "pp-file" && e.target.files[0]) {
+      else if (e.target.classList.contains("pp-file") && e.target.files[0]) {
         const label = e.target.closest("label");
         label.firstChild.textContent = "Reading the photo…";
         try {
-          await readPhoto(e.target.files[0]);
+          const i = Number(e.target.dataset.shot);
+          const shot = await readPhoto(e.target.files[0]);
+          shot.label = pp.shots[i] ? pp.shots[i].label : "";
+          pp.shots[i] = shot;
+          pp.keptPost = null;
           showPhotoEditor();
         } catch {
           label.firstChild.textContent = "Couldn't read that photo. Try another.";
         }
       }
     });
-    // Drag to move the photo: the drag in screen pixels, scaled to the canvas.
+    box.addEventListener("click", (e) => {
+      if (e.target.id === "pp-swap") pp.shots.reverse();
+      else if (e.target.id === "pp-one") pp.shots.length = 1;
+      else return;
+      pp.keptPost = null;
+      showPhotoEditor();
+    });
+    // Drag to move a photo: the one under the finger, the drag in screen
+    // pixels scaled to the canvas.
     let drag = null;
     canvas.addEventListener("pointerdown", (e) => {
-      if (!pp.img) return;
-      drag = { x: e.clientX, y: e.clientY, cx: pp.cx, cy: pp.cy };
+      if (!pp.shots.length) return;
+      const k = canvas.width / canvas.clientWidth;
+      const px = (e.clientX - canvas.getBoundingClientRect().left) * k;
+      const fr = frames(pp.shots.length);
+      const i = pp.shots.length > 1 && px > fr[1].x ? 1 : 0;
+      drag = { i, x: e.clientX, y: e.clientY, cx: pp.shots[i].cx, cy: pp.shots[i].cy };
       canvas.setPointerCapture(e.pointerId);
     });
     canvas.addEventListener("pointermove", (e) => {
       if (!drag) return;
       const k = canvas.width / canvas.clientWidth;
-      const sc = (1080 / Math.min(pp.img.width, pp.img.height)) * pp.zoom;
-      const clamp = (v, size) => { const half = 540 / (size * sc); return Math.min(1 - half, Math.max(half, v)); };
-      pp.cx = clamp(drag.cx - ((e.clientX - drag.x) * k) / (pp.img.width * sc), pp.img.width);
-      pp.cy = clamp(drag.cy - ((e.clientY - drag.y) * k) / (pp.img.height * sc), pp.img.height);
+      const s = pp.shots[drag.i];
+      const f = frames(pp.shots.length)[drag.i];
+      const sc = scaleIn(s, f);
+      const clamp = (v, size, frame) => { const half = frame / 2 / (size * sc); return Math.min(1 - half, Math.max(half, v)); };
+      s.cx = clamp(drag.cx - ((e.clientX - drag.x) * k) / (s.img.width * sc), s.img.width, f.w);
+      s.cy = clamp(drag.cy - ((e.clientY - drag.y) * k) / (s.img.height * sc), s.img.height, f.h);
       redraw();
     });
     const end = () => { drag = null; };
@@ -338,13 +405,11 @@
     c.width = Math.round(bitmap.width * scale);
     c.height = Math.round(bitmap.height * scale);
     c.getContext("2d").drawImage(bitmap, 0, 0, c.width, c.height);
-    pp.img = c;
-    pp.photo = c.toDataURL("image/jpeg", 0.85);
-    Object.assign(pp, { zoom: 1, cx: 0.5, cy: 0.5 });
+    return { img: c, photo: c.toDataURL("image/jpeg", 0.85), zoom: 1, cx: 0.5, cy: 0.5, label: "" };
   }
 
   async function makePhotoPost() {
-    if (!pp.img) return alert("Take or choose a photo first.");
+    if (!pp.shots.length) return alert("Take or choose a photo first.");
     if (!pp.title.trim()) return alert("The post needs a name.");
     const canvas = document.createElement("canvas");
     canvas.width = 1080;
@@ -385,7 +450,8 @@
     });
     if (pp.keep && !pp.keptPost) {
       pp.keptPost = post;
-      const r = await postJson("/api/front-photo-save", { pin: Front.pin, photo: pp.photo, post,
+      // The first (left) photo only: it's what Square and the website show.
+      const r = await postJson("/api/front-photo-save", { pin: Front.pin, photo: pp.shots[0].photo, post,
         meta: { title: pp.title, item: pp.item, special: pp.special, includesDrink: pp.special && pp.drink, description: pp.desc, kicker: pp.kicker } });
       const el = document.getElementById("pp-kept");
       if (el) { el.textContent = r.ok ? `✓ ${r.message}` : r.message; el.className = r.ok ? "m-note" : "m-error"; }

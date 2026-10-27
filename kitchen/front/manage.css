@@ -130,6 +130,9 @@
 .pp-canvas { width: 100%; max-width: 30rem; height: auto; justify-self: center; border-radius: 0.4rem; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); touch-action: none; cursor: grab; }
 .pp-photo-btn { display: block; text-align: center; font-weight: 800; font-size: 1.1rem; padding: 0.8rem; border: 2px dashed var(--teal); border-radius: 0.55rem; color: var(--teal-dark); cursor: pointer; }
 .pp-photo-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.pp-shot { display: grid; gap: 0.5rem; }
+.pp-shot-head { margin: 0.3rem 0 0; font-weight: 800; color: var(--teal-dark); }
+.pp-two-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 .m-field select, .m-field textarea { font: inherit; font-size: 1.05rem; color: var(--text); padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; background: var(--paper); }
 .m-field textarea { resize: vertical; }
 .m-field input[type="range"] { padding: 0; border: 0; }
