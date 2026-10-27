@@ -3,15 +3,19 @@
 const path = require("path");
 const { execFile, spawn } = require("child_process");
 const { DIR, MOCK, DEV } = require("./config");
+const startlog = require("./startlog");
 
 // Runs a step of start-kitchen.bat ("window", "close", or none for the full
 // start). Verbatim, because start's empty "" window title must reach cmd
 // as-is; Node's own quoting would turn it into \"\". Started through
 // `start` so the batch file is not a child of this process: "close" and the
 // full start end this program's window, and taskkill /T would take the
-// batch file with it.
+// batch file with it. Through `cmd /c`, so its window closes when it's done:
+// `start` on a batch file alone runs it in `cmd /k`, which stays open, and
+// every update and watchdog reopen left one more window behind (client
+// 2026-10-27). cmd /c strips the outer pair of ""..."".
 function startBatch(step) {
-  spawn("cmd.exe", ["/c", `start "" /min "${path.join(DIR, "start-kitchen.bat")}"${step ? ` ${step}` : ""}`], {
+  spawn("cmd.exe", ["/c", `start "" /min cmd /c ""${path.join(DIR, "start-kitchen.bat")}"${step ? ` ${step}` : ""}"`], {
     cwd: DIR,
     detached: true,
     stdio: "ignore",
@@ -55,19 +59,24 @@ function git(args) {
   );
 }
 
-async function checkUpdates() {
+async function checkUpdates(from) {
   // A development copy is updated with git by hand. Updating it from here
   // would pull over work in progress.
   if (DEV) return { ok: true, message: "Development copy: it doesn't update itself. Use git." };
   let branch, behind;
+  const t0 = Date.now();
+  const secs = () => `${((Date.now() - t0) / 1000).toFixed(1)} s`;
+  startlog.note(`update check from ${from || "the board"}`);
   try {
     branch = await git(["rev-parse", "--abbrev-ref", "HEAD"]);
     await git(["fetch", "origin", branch]);
     behind = Number(await git(["rev-list", "--count", `HEAD..origin/${branch}`]));
   } catch (err) {
     console.error(`Update check: ${err.message}`);
+    startlog.note(`update check failed after ${secs()}: ${err.message.split(/\r?\n/)[0]}`);
     return { ok: false, message: "Couldn't check for updates. Is the internet up, and is git installed?" };
   }
+  startlog.note(`update check: ${behind} new on ${branch}, asking GitHub took ${secs()}`);
   if (!behind) return { ok: true, message: "The board is up to date." };
   const n = `${behind} update${behind === 1 ? "" : "s"}`;
   if (MOCK) return { ok: true, message: `Test mode: ${n} found. Run start-kitchen.bat to install them.` };
@@ -100,6 +109,7 @@ const startWatchdog = () => setInterval(() => {
   const now = Date.now();
   if (now - boardSeen < WATCHDOG_QUIET_MS || now - boardReopened < WATCHDOG_RETRY_MS) return;
   boardReopened = now;
+  startlog.note("watchdog: the board stopped checking in, reopening it");
   console.log(`Watchdog: the board hasn't checked in for ${Math.round((now - boardSeen) / 1000)} s. Reopening it (${new Date().toLocaleTimeString()}).`);
   startBatch("window");
 }, 5000).unref();

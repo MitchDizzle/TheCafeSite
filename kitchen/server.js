@@ -78,6 +78,10 @@ const { startWatchdog } = require("./lib/system");
 const { startBackups } = require("./lib/backup");
 const { startReservations } = require("./lib/reservations");
 const { handle } = require("./lib/routes");
+const startlog = require("./lib/startlog");
+const { version } = startlog;
+const { live } = require("./lib/live");
+const { pushOffsite } = require("./lib/offsite");
 
 function start() {
   const server = http.createServer(handle);
@@ -100,6 +104,8 @@ function start() {
   startWatchdog();
   server.listen(cfg.port, HOST, () => {
     console.log(`Kitchen board on http://localhost:${cfg.port}${MOCK ? "  (MOCK ORDERS)" : ""}`);
+    startlog.trim();
+    startlog.note(`up on port ${cfg.port}, version ${version()}`);
     console.log(cfg.frontOnNetwork ? `Front page for the counter: ${FRONT_URL}` : "Front page: this PC only (frontOnNetwork is false).");
     if (cfg.frontOnNetwork) {
       for (const a of frontAddresses()) console.log(`  or by address: ${a.url}   (${a.adapter}, hardware address ${a.mac})`);
@@ -109,8 +115,14 @@ function start() {
     for (const note of cfg.notes) console.log(`config.json: ${note}`);
     // The catalog first, so a skipped category is never on the first board.
     // Then the website's week, then today's specials into Square.
+    // The start log: how long the item list and the first orders took, then
+    // the log goes to the GitHub backup, so a slow update can be read there.
     loadCatalog().finally(() => {
-      poll();
+      startlog.note("Square item list loaded");
+      poll().then(() => {
+        startlog.note(live.lastOkAt ? "first orders from Square: the board is ready" : `first check with Square failed: ${live.lastError}`);
+        pushOffsite();
+      });
       pullSite().finally(applyToday);
     });
     setInterval(loadCatalog, CATALOG_MINUTES * 6e4);

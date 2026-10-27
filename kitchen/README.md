@@ -89,7 +89,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 
 ## Updating the board
 
-The kitchen PC runs the **`main`** branch, the same one that deploys the website. Work happens on **`dev`** and is merged into `main` to ship it (see "Branches" in the repo's CLAUDE.md). After a merge, restart the board on the kitchen PC: run `start-kitchen.bat`, restart the PC, or use **Check for updates**. Before starting, it fetches `main` and fast-forwards. The branch is set at the top of `start-kitchen.bat` (`BOARD_BRANCH`). If git isn't installed or the update fails, it says so on screen and starts the version already there. `config.json` and the `data\` folder (cleared tickets, the plan, the history, photos) are never changed by an update.
+The kitchen PC runs the **`main`** branch, the same one that deploys the website. Work happens on **`dev`** and is merged into `main` to ship it (see "Branches" in the repo's CLAUDE.md). After a merge, restart the board on the kitchen PC: run `start-kitchen.bat`, restart the PC, or use **Check for updates**. Before starting, it fetches `main` and fast-forwards. The branch is set at the top of `start-kitchen.bat` (`BOARD_BRANCH`). If git isn't installed or the update fails, it says so on screen and starts the version already there. **Every start and update is timed, step by step,** in `datastart-log.txt` (asking GitHub, the download, closing the old program, Chrome, the Square item list, the first orders), and the board puts that file in the GitHub backup once its first orders are in, so a slow update can be read there and pinned to its step (client 2026-10-27). The windows these steps open close by themselves when they're done; only the minimized **Kitchen board program** window stays. `config.json` and the `data\` folder (cleared tickets, the plan, the history, photos) are never changed by an update.
 
 **It only updates a copy that is on `main`** (or on `kitchen-board`, the branch the PC ran before 2026-10-08, which it moves to `main` once). A copy on any other branch is someone's work in progress, so it starts it as it stands and leaves git alone.
 
@@ -257,6 +257,7 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `start-kitchen.bat` | Pulls updates from `main`, starts the program (restarting it if it ever stops), and opens Chrome in kiosk mode. Replaces any copy already running. `start-kitchen.bat window` only reopens the board window (what the watchdog runs). |
 | `start-dev.bat` | `start-kitchen.bat` for a development computer: no git, a normal window, demo orders. See "Updating the board". |
 | `keyboard-lock.reg`, `keyboard-unlock.reg` | Turn the keyboard's internet and app keys off / back on. Kitchen PC only, then restart. |
+| `stop-board.ps1` | Run by `start-kitchen.bat` before it starts anything: stops the old board program (its loop and node) and the old board window, found by what they are rather than by window title, which Windows Terminal hides (that left an old program running and windows piling up, 2026-10-27). |
 | `focus-board.ps1` | Run by `start-kitchen.bat` after Chrome opens: brings the board window to the front so the number pad types into it, not into a console window. Tries for 20 seconds; if it can't, click the board once. |
 
 ### The data folder and backups
@@ -266,6 +267,7 @@ Everything the board makes on this PC is in `data\`. Before 2026-10-13 these sat
 | File | What it is |
 |---|---|
 | `state.json` | Which orders have been cleared, and the skip list. |
+| `start-log.txt` | Each start and update, step by step with the time (`start-kitchen.bat` and `lib/startlog.js`), the last 400 lines. Nothing about orders or customers; goes to the GitHub backup. |
 | `specials-plan.json` | Specials: the days ahead, the words for each day's photo, and which days are in Square already. |
 | `stats-history.json` | Every day's orders and numbers, for Reports. Never deleted, and **the only copy of the kitchen times**. |
 | `reservations.json` | Reservations: every table booked or asked for, with names and phone numbers. |

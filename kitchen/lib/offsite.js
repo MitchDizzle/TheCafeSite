@@ -13,6 +13,8 @@
 //                         commit only changes that day
 //   specials-plan.json, state.json, reservations.json (names and phone
 //                         numbers: keep the repo private)
+//   start-log.txt         each start and update, step by step with times
+//                         (lib/startlog.js), to see why one was slow
 //   photos\               Photo post's photos, as Saved photos has them,
 //                         plus the ones moved off this PC
 // git keeps every earlier version, so the files are simply overwritten.
@@ -89,11 +91,14 @@ function put(file, text) {
 const README = `# Kitchen board backups
 
 Pushed by the kitchen PC's board program (TheCafeSite, kitchen/lib/offsite.js)
-when it starts, at 2pm and from Manage -> Back up now. Nothing here is
-edited by hand.
+when it starts (and again once its first orders are in), at 2pm and from
+Manage -> Back up now. Nothing here is edited by hand.
 
 - history/<date>.json: that day's orders, as in Manage -> Reports (no customer names)
 - specials-plan.json, state.json: the board's specials plan and cleared tickets
+- reservations.json: the reservations book (names and phone numbers)
+- start-log.txt: each start and update, step by step with the time, to see
+  which step made one slow
 - photos/: Photo post's photos, kept for the website, with the ones moved
   off the kitchen PC (Saved photos -> Move to GitHub)
 
@@ -106,7 +111,7 @@ function copyIn() {
     const history = JSON.parse(fs.readFileSync(path.join(DATA, "stats-history.json"), "utf8"));
     for (const [date, day] of Object.entries(history.days || {})) put(path.join(REPO, "history", `${date}.json`), JSON.stringify(day, null, 1) + "\n");
   } catch {}
-  for (const name of ["specials-plan.json", "state.json", "reservations.json"]) {
+  for (const name of ["specials-plan.json", "state.json", "reservations.json", "start-log.txt"]) {
     try { put(path.join(REPO, name), fs.readFileSync(path.join(DATA, name), "utf8")); } catch {}
   }
   const photos = path.join(DATA, "photos");

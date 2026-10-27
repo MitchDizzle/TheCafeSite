@@ -495,7 +495,7 @@ async function handle(req, res) {
     if (refused) return send(res, 200, { ok: false, message: refused });
     if (url.pathname === "/api/front-update") {
       console.log(`Update from the front page (${new Date().toLocaleTimeString()}).`);
-      return send(res, 200, await checkUpdates());
+      return send(res, 200, await checkUpdates("the front page"));
     }
     resetDay(!!body.clearBoard, "the front page");
     return send(res, 200, { ok: true, message: body.clearBoard
@@ -512,7 +512,7 @@ async function handle(req, res) {
   }
   if (req.method === "POST" && url.pathname === "/api/update") {
     if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
-    return send(res, 200, await checkUpdates());
+    return send(res, 200, await checkUpdates("the board"));
   }
   if (req.method === "POST" && url.pathname === "/api/power") {
     if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });

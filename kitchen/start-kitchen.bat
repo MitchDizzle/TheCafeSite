@@ -9,11 +9,17 @@ rem ON A DEVELOPMENT COMPUTER, run start-dev.bat instead. It sets
 rem KITCHEN_DEV=1, and then this file never touches git and opens the board
 rem in an ordinary window rather than locked full screen.
 cd /d "%~dp0"
+rem Each step's time goes into data\start-log.txt (with the board program's
+rem own steps, lib/startlog.js), so a slow start or update can be pinned to
+rem its step. The board program puts it in the GitHub backup.
+if not exist "%~dp0data" mkdir "%~dp0data"
+set "LOG=%~dp0data\start-log.txt"
 if "%~1"=="server" goto server
 if "%~1"=="launch" goto launch
 if "%~1"=="window" goto window
 if "%~1"=="close" goto close
 
+>>"%LOG%" echo %DATE% %TIME%  bat      start
 if "%KITCHEN_DEV%"=="1" (
   echo Development copy: not updating from git, opening the board in a normal window.
   goto launch
@@ -59,11 +65,17 @@ rem ends by starting the (possibly new) file afresh.
   ) else (
     echo Updating the board from %BOARD_BRANCH%...
     git -C .. fetch origin %BOARD_BRANCH%
+    rem "call echo %%TIME%%": the time when the line runs. A plain %TIME%
+    rem in this block would be the time the block was read.
+    >>"%LOG%" call echo %%DATE%% %%TIME%%  bat      fetched %BOARD_BRANCH%
     git -C .. checkout %BOARD_BRANCH%
     git -C .. merge --ff-only origin/%BOARD_BRANCH%
     if errorlevel 1 (
+      >>"%LOG%" call echo %%DATE%% %%TIME%%  bat      could not update, starting the version already here
       echo Could not update. Starting the version already on this PC.
       timeout /t 5 >nul
+    ) else (
+      >>"%LOG%" call echo %%DATE%% %%TIME%%  bat      updated
     )
   )
   "%~f0" launch
@@ -73,9 +85,14 @@ exit /b
 :launch
 rem Close a board program that is already running, so a restart always runs
 rem the current code and never stacks two. The window is replaced below.
+rem stop-board.ps1 finds it by what it is; the window title, the old way, is
+rem kept as a second try but can't be seen under Windows Terminal.
+>>"%LOG%" echo %DATE% %TIME%  bat      closing the old board program
+for /f "delims=" %%R in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0stop-board.ps1" -Program') do >>"%LOG%" call echo %%DATE%% %%TIME%%  bat      %%R
 taskkill /FI "WINDOWTITLE eq Kitchen board program*" /T /F >nul 2>&1
 
 start "Kitchen board program" /min "%~f0" server
+>>"%LOG%" echo %DATE% %TIME%  bat      board program started
 timeout /t 4 /nobreak >nul
 call :window
 exit /b
@@ -102,27 +119,32 @@ if "%KITCHEN_DEV%"=="1" (
 
 rem Close a board window already open. It is found by its own Chrome
 rem profile folder, so no other Chrome window is affected.
-powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*--user-data-dir=*KitchenBoard*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+>>"%LOG%" echo %DATE% %TIME%  bat      window: closing the old board window
+for /f "delims=" %%R in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0stop-board.ps1" -Window') do >>"%LOG%" call echo %%DATE%% %%TIME%%  bat      %%R
 
 rem A separate profile so kiosk mode applies even if Chrome is already open.
 rem No first-run screens on it: no "make Chrome the default", no sign-in.
+>>"%LOG%" echo %DATE% %TIME%  bat      window: opening Chrome
 start "" %BROWSER% --kiosk --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --noerrdialogs --disable-session-crashed-bubble --disable-features=Translate --user-data-dir="%LOCALAPPDATA%\KitchenBoard" http://localhost:8090
 
 rem Bring the board to the front once Chrome has opened it, so the number
 rem pad types into the board and not into this window. Waits up to 20 s.
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0focus-board.ps1"
+>>"%LOG%" echo %DATE% %TIME%  bat      window: board in front
 exit /b
 
 :close
 rem Close the board window and the board program (Close the board on the
 rem power menu). Nothing brings them back until this file is run again.
-powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*--user-data-dir=*KitchenBoard*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+>>"%LOG%" echo %DATE% %TIME%  bat      close (power menu)
+for /f "delims=" %%R in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0stop-board.ps1" -Program -Window') do >>"%LOG%" call echo %%DATE%% %%TIME%%  bat      %%R
 taskkill /FI "WINDOWTITLE eq Kitchen board program*" /T /F >nul 2>&1
 exit /b
 
 :server
 rem If the program ever stops, start it again.
 node server.js
+>>"%LOG%" echo %DATE% %TIME%  bat      board program stopped (exit code %ERRORLEVEL%), restarting in 5 s
 echo Board program stopped. Restarting in 5 seconds...
 timeout /t 5 /nobreak >nul
 goto server
