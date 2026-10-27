@@ -72,9 +72,22 @@ function isSkipped(li) {
 // am/pm it's the first of the two that isn't more than half an hour before
 // the order was rung ("1:00" rung at 12:33 is 1pm). Returns { at, rest }
 // (rest: the name without the time) or null.
+//
+// Square cuts a ticket name at 30 characters, so a time at the end of a long
+// name can lose its last digits ("Krystal (frontier heritage) 11:30" came
+// through as "... 11", client 2026-10-27, and went on the board at once). A
+// name cut there that ends in the start of a time is read as the earliest
+// time it could be: "11" or "11:" is 11:00, "11:3" is 11:30. Early is the
+// safe side: the ticket shows a little sooner, never too late. Putting the
+// time first ("11:30 Krystal") keeps it whole.
 const NAME_TIME = /(?:^|\s)(\d{1,2})(?::([0-5]\d))?\s*([ap])\.?m?\.?(?=\s|$)|(?:^|\s)(\d{1,2}):([0-5]\d)(?=\s|$)/i;
+const SQUARE_NAME_MAX = 30;
+const CUT_TIME = /(?:^|\s)(\d{1,2})(?::([0-5]?))?$/;
 function timeInName(name, createdAt) {
-  const m = NAME_TIME.exec(name);
+  let m = NAME_TIME.exec(name);
+  if (!m && name.length >= SQUARE_NAME_MAX && (m = CUT_TIME.exec(name))) {
+    m = Object.assign([m[0], undefined, undefined, undefined, m[1], m[2] ? `${m[2]}0` : "0"], { index: m.index });
+  }
   if (!m) return null;
   const h = Number(m[1] ?? m[4]), min = Number(m[2] ?? m[5] ?? 0), ap = m[3] && m[3].toLowerCase();
   if (h > 23 || (ap && (h < 1 || h > 12))) return null;

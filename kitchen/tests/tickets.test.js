@@ -111,6 +111,19 @@ test("a time in a counter ticket's name makes it due then", () => {
   assert.equal(due("5", rung(12, 0)).label, "Table 5");
 });
 
+test("a time cut off by Square's 30-character name limit is read as early as it could be", () => {
+  const rung = (h, m) => new Date(2026, 9, 27, h, m).toISOString();
+  const due = (name, at) => ticketOf(counter({ ticket_name: name, created_at: at }));
+  // "Krystal (frontier heritage) 11:30", as Square sent it on 2026-10-27.
+  let t = due("Krystal (frontier heritage) 11", rung(10, 11));
+  assert.equal(t.dueAt, new Date(2026, 9, 27, 11, 0).toISOString());
+  assert.equal(t.label, "Krystal (frontier heritage)");
+  assert.equal(due("Krystal (frontier heritage) 11:", rung(10, 11)).dueAt, new Date(2026, 9, 27, 11, 0).toISOString());
+  assert.equal(due("Krystal (frontier heritage 11:3", rung(10, 11)).dueAt, new Date(2026, 9, 27, 11, 30).toISOString());
+  // Shorter than the limit, nothing was cut: a bare number is still just a name.
+  assert.equal(due("Krystal 11", rung(10, 11)).dueAt, null);
+});
+
 test("with no name, a paid order shows its receipt number", () => {
   assert.equal(ticketOf(counter()).label, "#R7KQ");
 });
