@@ -1241,8 +1241,8 @@
   // ---- new-order chime (Chrome is launched with autoplay allowed; the
   // first tap anywhere also unlocks audio, in case it wasn't). A service-bell
   // tune, not a blip (Mitch 2026-10-26: it has to be recognised over a busy
-  // kitchen): four rising bell notes, ding-ding-ding-DING, played twice,
-  // about 2.5 seconds in all. Each note is a bell, not a pure tone: the note,
+  // kitchen): four rising bell notes, ding-ding-ding-DING, played once
+  // (2026-10-27; twice was too much), about 1.5 seconds. Each note is a bell, not a pure tone: the note,
   // a softer inharmonic overtone (2.76×, what makes a bell sound like a bell)
   // and a triangle wave under it, which carries better through small speakers
   // and kitchen noise. A compressor keeps the stacked notes from clipping.
@@ -1282,9 +1282,7 @@
       const start = audio.currentTime + 0.05;
       // E5, G#5, B5, then E6 held longer: an E major arpeggio.
       const tune = [[659, 0, 0.6], [831, 0.16, 0.6], [988, 0.32, 0.6], [1319, 0.48, 1.0]];
-      for (const round of [0, 1.25]) {
-        for (const [freq, at, ring] of tune) bell(start + round + at, freq, 0.5, ring);
-      }
+      for (const [freq, at, ring] of tune) bell(start + at, freq, 0.5, ring);
     } catch {}
   }
   // A low falling tone when the board loses Square or its own program,
