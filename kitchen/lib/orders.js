@@ -48,12 +48,28 @@ let nextPollAt = null; // when the next scheduled Square check runs, for the boa
 let polling = null; // the in-flight poll, so "check now" never runs two at once
 const logged = new Set(); // order ids already announced in the console
 
-// Seconds to the next check: pollSeconds in the kitchen's hours, and
-// quietPollSeconds outside them, but never past the moment they start.
+// Someone has the front page or the phone page open: they ask the kitchen
+// PC for orders every few seconds, so after hours that's someone working
+// (an order rung after 2pm, testing), and Square is checked at full speed
+// until they've been gone WATCH_MS (client 2026-10-27: the front page took
+// up to 5 minutes to show a change). The board's own screen doesn't count:
+// it's on all the time.
+const WATCH_MS = 2 * 6e4;
+let watchedAt = 0;
+function watched() {
+  const wasIdle = Date.now() - watchedAt > WATCH_MS;
+  watchedAt = Date.now();
+  // Back from the quiet pace now, not when the 5-minute wait runs out.
+  if (wasIdle && pollEvery > cfg.pollSeconds) poll();
+}
+
+// Seconds to the next check: pollSeconds in the kitchen's hours (or while
+// someone has the front page open), and quietPollSeconds otherwise, but
+// never past the moment the hours start.
 function pollDelay(now = new Date()) {
   const [from, to] = cfg.kitchenHours;
   const open = (d) => cfg.openDays.includes(d.getDay()) && d.getHours() >= from && d.getHours() < to;
-  if (open(now) || live.demo) return cfg.pollSeconds; // a demo moves as fast as real orders
+  if (open(now) || live.demo || Date.now() - watchedAt < WATCH_MS) return cfg.pollSeconds; // a demo moves as fast as real orders
   const next = new Date(now);
   next.setHours(from, 0, 0, 0);
   if (next <= now) next.setDate(next.getDate() + 1);
@@ -211,4 +227,4 @@ function resetDay(clearBoard, from) {
   console.log(`Reset for the day from ${from} (${new Date().toLocaleTimeString()})${clearBoard ? ", board cleared" : ""}.`);
 }
 
-module.exports = { poll, pollDelay, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay };
+module.exports = { poll, pollDelay, watched, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay };

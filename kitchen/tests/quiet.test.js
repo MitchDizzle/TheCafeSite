@@ -4,7 +4,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 require("./board.js");
-const { pollDelay } = require("../lib/orders");
+const { pollDelay, watched } = require("../lib/orders");
 const { cfg } = require("../lib/config");
 
 test("fast in the kitchen's hours, slow after 2pm and at weekends, fast again on the dot", () => {
@@ -15,4 +15,11 @@ test("fast in the kitchen's hours, slow after 2pm and at weekends, fast again on
   assert.equal(pollDelay(at("2026-10-31T10:00:00")), cfg.quietPollSeconds, "Saturday");
   assert.equal(pollDelay(at("2026-10-28T04:58:00")), 120, "Wednesday 4:58am: the next check is at 5");
   assert.equal(pollDelay(at("2026-11-01T04:58:00")), cfg.quietPollSeconds, "Sunday 4:58am: closed all day");
+});
+
+test("after hours, the front page being open keeps Square checked at full speed", () => {
+  const saturday = new Date("2026-10-31T16:00:00");
+  assert.equal(pollDelay(saturday), cfg.quietPollSeconds);
+  watched(); // the front page asked for its orders
+  assert.equal(pollDelay(saturday), cfg.pollSeconds);
 });

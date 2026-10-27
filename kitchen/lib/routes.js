@@ -8,7 +8,7 @@ const { localDate, dayWords } = require("./util");
 const { live } = require("./live");
 const { catalog, loadCatalog, modifierListsByName } = require("./catalog");
 const { bump, handedOff, canceled, byHand, keepOnFront, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
-const { poll, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay } = require("./orders");
+const { poll, watched, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay } = require("./orders");
 const { recordHistoryNow, historyReport, todayView } = require("./stats");
 const surveys = require("./surveys");
 const { dessertItems, saveDesserts, saveDessertPhoto, newDessert } = require("./desserts");
@@ -181,6 +181,7 @@ async function handle(req, res) {
     return res.end(fs.readFileSync(path.join(DIR, APP_FILES[url.pathname])));
   }
   if (req.method === "GET" && url.pathname === "/api/front") {
+    watched(); // after hours, someone looking keeps Square checked at full speed
     return send(res, 200, frontSnapshot());
   }
   if (req.method === "POST" && url.pathname === "/api/handoff") {

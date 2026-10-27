@@ -27,9 +27,10 @@ const DEFAULTS = {
   // Outside the kitchen's hours (this PC's clock; from an hour before
   // opening to closing, on openDays) Square is checked every
   // quietPollSeconds instead, so a PC left on overnight and at weekends
-  // isn't asking every 5 seconds (client 2026-10-27). An online order for
-  // tomorrow still shows on the front page within that time, and Check now
-  // on the board always checks at once.
+  // isn't asking every 5 seconds (client 2026-10-27). While the front page
+  // or the phone page is open it's every pollSeconds anyway (lib/orders.js,
+  // watched); with nobody looking, an online order for tomorrow still shows
+  // within quietPollSeconds, and Check now on the board checks at once.
   kitchenHours: [5, 14],
   quietPollSeconds: 300,
   sound: true, // new-order chime and lost-connection alarm
