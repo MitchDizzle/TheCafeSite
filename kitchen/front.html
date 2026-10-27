@@ -468,7 +468,7 @@
   }
 
   function apply(data) {
-    const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000;
+    const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000 + (data.pollSeconds || 5) * 1000; // checks slow down after hours
     alertEl.hidden = !(data.error || stale || data.mock);
     alertEl.hidden = alertEl.hidden && !data.demo;
     // Test mode and the demo are practice: the demo's purple, like the board.

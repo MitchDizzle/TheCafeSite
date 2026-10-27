@@ -891,7 +891,7 @@
     renderResv(data.reservations);
 
     // Status banner: Square unreachable, or the last good poll is stale.
-    const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000;
+    const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000 + (data.pollSeconds || 5) * 1000; // checks slow down after hours
     if (data.error || stale) {
       problem(data.lastOkAt
         ? `Can't reach Square — orders shown as of ${fmtTime(data.lastOkAt)}. Check the internet. New orders may be missing.`
@@ -1143,7 +1143,7 @@
       </div>
       ${stats.topItems.length ? `<p class="top-items">Most ordered: ${stats.topItems.map((i) => `${esc(i.name)} ×${i.qty}`).join(", ")}</p>` : ""}` : ""}
       <p>Sound is <b>${soundOn ? "on" : "off"}</b>. Tap the speaker in the top bar to change it.</p>
-      <p class="meta">Checks Square every ${pollSeconds} s · last good check ${esc(last)}</p>
+      <p class="meta">Checks Square every ${pollSeconds >= 60 ? `${Math.round(pollSeconds / 60)} min` : `${pollSeconds} s`} · last good check ${esc(last)}</p>
       <div class="actions">
         <button type="button" data-demo>${demo ? "End demo" : "Demo orders"}</button>
         <button type="button" data-reset>Reset for the day</button>

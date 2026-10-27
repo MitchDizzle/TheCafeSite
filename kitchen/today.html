@@ -376,7 +376,7 @@
       if (!res.ok) throw new Error(String(res.status));
       const data = await res.json();
       lastFront = data;
-      const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000;
+      const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000 + (data.pollSeconds || 5) * 1000; // checks slow down after hours
       alertEl.classList.toggle("practice", !!data.mock && !data.error && !stale);
       alertEl.hidden = !(data.mock || data.error || stale);
       alertEl.textContent = data.mock ? "TEST MODE: made-up orders and history, not from Square."

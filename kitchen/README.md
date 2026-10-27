@@ -58,7 +58,7 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 - **Allergy notes** (peanut, gluten, dairy and the like) show in red with a ⚠ sign, on the ticket or on the item.
 - **More than one** of an item shows as a red **2×**.
 - **The other meat** on a burger shows in a red block (**CHICKEN** not beef). The usual meat is the item's first variation in Square: Beef, except the Cordon Bleu Sandwich, which is Chicken first. Change the order of an item's variations in Square to change which is flagged.
-- **The board checks Square every 5 seconds.** The refresh icon in the top right has a ring that empties as the next check approaches and refills when it runs. Tap it (or press **Enter**) to check right now. The ring turns light red when Square can't be reached.
+- **The board checks Square every 5 seconds** from 5am to 2pm on open days, and **every 5 minutes** the rest of the time (nights and weekends, so the PC can stay on; `kitchenHours` and `quietPollSeconds` in `config.json`). An online order placed after hours still shows on the front page within 5 minutes, and a demo always runs at full speed. The refresh icon in the top right has a ring that empties as the next check approaches and refills when it runs. Tap it (or press **Enter**) to check right now. The ring turns light red when Square can't be reached.
 - **The speaker icon** mutes and unmutes the chime and the alarm. Muted shows as a filled cream button with a cross, and that screen remembers the setting until someone taps it again.
 - **A bell tune** (four rising notes, ding-ding-ding-DING, played once, about 1½ seconds) means a new order. **A low falling tone** plus a red banner means the board lost Square or its own program. Tickets shown at that point might be out of date, and new ones might be missing, so go by the printer until it clears.
 - **A cream "continues below" pointer** appears when a ticket runs off the bottom of the screen. Press **+** to see it.
@@ -241,7 +241,7 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 
 | File | What it is |
 |---|---|
-| `server.js` | Polls Square every 5 s and serves the board on `http://localhost:8090`. It only listens on the PC itself, not the network, and the power menu and update check only answer the board page itself. |
+| `server.js` | Polls Square every 5 s (5 min after hours) and serves the board on `http://localhost:8090`. It only listens on the PC itself, not the network, and the power menu and update check only answer the board page itself. |
 | `lib\` | The board program's parts, one file per job (config, Square, tickets, specials, stats, routes…); `server.js` lists them. Nothing to install. |
 | `tests\` | The tests (see "Tests"). |
 | `board.html` | The kitchen screen. |

@@ -24,6 +24,14 @@ const DEFAULTS = {
   locationIds: [], // empty = every active location on the account
   port: 8090,
   pollSeconds: 5,
+  // Outside the kitchen's hours (this PC's clock; from an hour before
+  // opening to closing, on openDays) Square is checked every
+  // quietPollSeconds instead, so a PC left on overnight and at weekends
+  // isn't asking every 5 seconds (client 2026-10-27). An online order for
+  // tomorrow still shows on the front page within that time, and Check now
+  // on the board always checks at once.
+  kitchenHours: [5, 14],
+  quietPollSeconds: 300,
   sound: true, // new-order chime and lost-connection alarm
   // Pickup orders (and phone orders with a time) go on the kitchen board
   // this long before they're due: 15 covers big and small orders (client

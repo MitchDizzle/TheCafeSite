@@ -48,13 +48,30 @@ let nextPollAt = null; // when the next scheduled Square check runs, for the boa
 let polling = null; // the in-flight poll, so "check now" never runs two at once
 const logged = new Set(); // order ids already announced in the console
 
+// Seconds to the next check: pollSeconds in the kitchen's hours, and
+// quietPollSeconds outside them, but never past the moment they start.
+function pollDelay(now = new Date()) {
+  const [from, to] = cfg.kitchenHours;
+  const open = (d) => cfg.openDays.includes(d.getDay()) && d.getHours() >= from && d.getHours() < to;
+  if (open(now) || live.demo) return cfg.pollSeconds; // a demo moves as fast as real orders
+  const next = new Date(now);
+  next.setHours(from, 0, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  while (!cfg.openDays.includes(next.getDay()) && next - now < 8 * 864e5) next.setDate(next.getDate() + 1);
+  return Math.max(cfg.pollSeconds, Math.min(cfg.quietPollSeconds, Math.ceil((next - now) / 1000)));
+}
+let pollEvery = cfg.pollSeconds; // the wait before the check now scheduled
+
 function poll() {
   if (polling) return polling;
   clearTimeout(pollTimer);
   polling = pollOnce().finally(() => {
     polling = null;
-    pollTimer = setTimeout(poll, cfg.pollSeconds * 1000);
-    nextPollAt = new Date(Date.now() + cfg.pollSeconds * 1000).toISOString();
+    const every = pollDelay();
+    if (every !== pollEvery) console.log(`${new Date().toLocaleTimeString()}  checking Square every ${every >= 60 ? `${Math.round(every / 60)} min` : `${every} s`}`);
+    pollEvery = every;
+    pollTimer = setTimeout(poll, every * 1000);
+    nextPollAt = new Date(Date.now() + every * 1000).toISOString();
   });
   return polling;
 }
@@ -110,7 +127,7 @@ function snapshot() {
     .filter((t) => t.waitUntil)
     .sort((a, b) => Date.parse(a.waitUntil) - Date.parse(b.waitUntil));
   return { tickets, waiting, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
-    clearedList: boardCleared(), stats: statsToday(), demo: live.demo, pollSeconds: cfg.pollSeconds, nextPollAt, checking: !!polling,
+    clearedList: boardCleared(), stats: statsToday(), demo: live.demo, pollSeconds: pollEvery, nextPollAt, checking: !!polling,
     reservations: screenView() };
 }
 
@@ -158,7 +175,7 @@ function frontSnapshot() {
     });
   return { orders, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, lastHandedOff: lastHandedOff(),
     handedOffList: undoList(handedOff).map((h) => ({ ...h, auto: autoOff.has(h.id) })), stats: statsToday(), demo: live.demo,
-    updatePin: !!cfg.updatePin, pollSeconds: cfg.pollSeconds, autoHandoffMinutes: cfg.autoHandoffMinutes,
+    updatePin: !!cfg.updatePin, pollSeconds: pollEvery, autoHandoffMinutes: cfg.autoHandoffMinutes,
     reservations: screenView() };
 }
 
@@ -194,4 +211,4 @@ function resetDay(clearBoard, from) {
   console.log(`Reset for the day from ${from} (${new Date().toLocaleTimeString()})${clearBoard ? ", board cleared" : ""}.`);
 }
 
-module.exports = { poll, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay };
+module.exports = { poll, pollDelay, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay };
