@@ -3,7 +3,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 require("./board.js");
-const { todayView, summarize } = require("../lib/stats");
+const { todayView, summarize, netSales } = require("../lib/stats");
 
 // One history record at a local date and time, as dayRecords makes them.
 const p2 = (n) => String(n).padStart(2, "0");
@@ -57,4 +57,21 @@ test("summarize: the average ticket leaves out orders with no total", () => {
   assert.equal(s.orders, 3);
   assert.equal(s.avgTicket, 10);
   assert.equal(summarize([]).avgTicket, null);
+});
+
+test("sales are Square's Net sales: items after discounts, no tax, tip or gift card", () => {
+  const c = (amount) => ({ amount, currency: "USD" });
+  const order = {
+    total_money: c(2830), total_tax_money: c(180), total_tip_money: c(300),
+    line_items: [
+      { item_type: "ITEM", gross_sales_money: c(1200), total_discount_money: c(100) },
+      { item_type: "CUSTOM_AMOUNT", gross_sales_money: c(250) },
+      { item_type: "GIFT_CARD", gross_sales_money: c(2500) },
+    ],
+  };
+  assert.equal(netSales(order), 13.5);
+  // A day saved before the board kept Net sales counts its total until filled in.
+  const s = summarize([rec("2026-10-20", 8, 0, 28.3, { net: 13.5 }), rec("2026-10-20", 9, 0, 10)]);
+  assert.equal(s.sales, 23.5);
+  assert.equal(s.collected, 38.3);
 });

@@ -36,7 +36,8 @@ function dayRecords() {
     const when = Date.parse((f && f.pickup_details && f.pickup_details.pickup_at) || o.created_at);
     if (when < today || when >= tomorrow) continue;
     const food = (o.line_items || []).filter((li) => !NOT_FOOD.has(li.item_type));
-    if (!food.length) continue;
+    const net = netSales(o);
+    if (!food.length && !net) continue;
     const online = isOnline(o, f);
     const t = tickets.get(o.id);
     // Time in the kitchen: from when it went on the kitchen board to Done,
@@ -58,7 +59,9 @@ function dayRecords() {
       online,
       toGo: t ? t.toGo : online,
       paid: !!(o.tenders || []).length,
+      // What the customer paid, tax and tip in, and Square's Net sales.
       sales: o.total_money && o.total_money.amount != null ? o.total_money.amount / 100 : null,
+      net,
       items: food.map((li) => ({
         name: itemName(li),
         variation: li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
@@ -74,11 +77,27 @@ function dayRecords() {
   return out;
 }
 
+// Square's Net sales for an order: what its items sold for after discounts,
+// without tax, tips, service charges or gift cards sold, as Square's
+// Dashboard counts sales (client 2026-10-27: the board counted each order's
+// total, tax and tip in, so it ran about 15% over Square). A keypad (custom
+// amount) sale counts here though the kitchen never sees it.
+function netSales(o) {
+  const cents = (o.line_items || [])
+    .filter((li) => li.item_type !== "GIFT_CARD")
+    .reduce((a, li) => a + ((li.gross_sales_money && li.gross_sales_money.amount) || 0) - ((li.total_discount_money && li.total_discount_money.amount) || 0), 0);
+  return Math.round(cents) / 100;
+}
+
+// A day's order, as sales: Net sales, or its total for an order saved
+// before the board kept Net sales and not yet filled in (fillNet).
+const netOf = (r) => (r.net != null ? r.net : r.sales != null ? r.sales : 0);
+
 // The numbers for a list of records: one day's (the front's Today) or any
 // range's (Reports). Same shape either way.
 function summarize(records) {
   const out = { orders: records.length, breakfast: 0, lunch: 0, counter: 0, online: 0, toGo: 0, forHere: 0,
-    kitchenDone: 0, avgMinutes: null, longestMinutes: null, sales: 0, avgTicket: null, items: [], topItems: [], byHour: {} };
+    kitchenDone: 0, avgMinutes: null, longestMinutes: null, sales: 0, collected: 0, avgTicket: null, items: [], topItems: [], byHour: {} };
   const qty = new Map();
   const times = [];
   const bySize = lead.SIZES.map(() => []);
@@ -93,13 +112,15 @@ function summarize(records) {
       const n = lead.itemsOf(r);
       if (n > 0) bySize[lead.sizeOf(n)].push(r.kitchenMinutes);
     }
-    out.sales += r.sales || 0;
+    out.sales += netOf(r);
+    out.collected += r.sales || 0;
     if (r.sales != null) priced++;
     const h = new Date(r.at).getHours();
     out.byHour[h] = (out.byHour[h] || 0) + 1;
     for (const it of r.items) qty.set(it.name, (qty.get(it.name) || 0) + it.qty);
   }
   out.sales = Math.round(out.sales * 100) / 100;
+  out.collected = Math.round(out.collected * 100) / 100;
   if (priced) out.avgTicket = Math.round((out.sales / priced) * 100) / 100;
   if (times.length) {
     out.avgMinutes = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
@@ -148,6 +169,35 @@ lead.learn(history.days, localDate());
 let historyWrittenAt = 0;
 let historyLast = "";
 
+function writeHistory() {
+  // Write the copy whole, then swap it in: a power cut mid-write never
+  // leaves a half-written history.
+  fs.writeFileSync(HISTORY_FILE + ".tmp", JSON.stringify(history));
+  fs.renameSync(HISTORY_FILE + ".tmp", HISTORY_FILE);
+}
+
+// Days saved before the board kept Net sales (2026-10-27) get it from
+// Square once, by order id, a hundred orders a call, so Reports and /today
+// compare like with like. Runs at start; an order Square can't find keeps
+// its total.
+async function fillNet() {
+  const { square, resolveLocations } = require("./square");
+  const todo = new Map();
+  for (const day of Object.values(history.days)) for (const r of day.orders) if (r.net === undefined && r.id) todo.set(r.id, r);
+  if (!todo.size) return;
+  const ids = [...todo.keys()];
+  const [location_id] = await resolveLocations();
+  let filled = 0;
+  for (let i = 0; i < ids.length; i += 100) {
+    const { orders = [] } = await square("POST", "/orders/batch-retrieve", { location_id, order_ids: ids.slice(i, i + 100) });
+    for (const o of orders) { todo.get(o.id).net = netSales(o); filled++; }
+  }
+  for (const r of todo.values()) if (r.net === undefined) r.net = null;
+  writeHistory();
+  console.log(`Stats history: Net sales filled in for ${filled} earlier order(s)`);
+}
+if (!MOCK) setTimeout(() => fillNet().catch((err) => console.error(`Stats history: ${err.message}`)), 10000).unref();
+
 function recordHistory() {
   if (lead.learnedOn() !== localDate()) lead.learn(history.days, localDate());
   if (Date.now() - historyWrittenAt < HISTORY_SECONDS * 1000) return;
@@ -158,10 +208,7 @@ function recordHistory() {
   const date = localDate();
   history.days[date] = { savedAt: new Date().toISOString(), orders: records };
   try {
-    // Write the copy whole, then swap it in: a power cut mid-write never
-    // leaves a half-written history.
-    fs.writeFileSync(HISTORY_FILE + ".tmp", JSON.stringify(history));
-    fs.renameSync(HISTORY_FILE + ".tmp", HISTORY_FILE);
+    writeHistory();
     historyLast = json;
     historyWrittenAt = Date.now();
   } catch (err) {
@@ -250,4 +297,4 @@ function todayView(now = new Date(), records = dayRecords(), days = history.days
     later: later.length ? brief(later) : null, lastWeek, usual, week };
 }
 
-module.exports = { statsToday, recordHistory, recordHistoryNow, historyReport, todayView, summarize };
+module.exports = { statsToday, recordHistory, recordHistoryNow, historyReport, todayView, summarize, netSales };

@@ -184,12 +184,12 @@ Settings in `config.json`, both optional:
 
 How the day is going, for the owner's phone, at the shop or away from it: `http://<kitchen PC name>:8090/today`, or **Manage → Today on the phone** on the front page. Read-only: nothing on it presses Done or Handed off.
 
-- **At the top, behind the PIN** (the Manage PIN; sales are the owner's business, not the counter's): sales so far with the order count and average ticket, and how that compares with **last week's same day by this time** ("▲ $45 (12%) ahead of last Mon by now"). Pickups already booked for later today are listed apart, so a morning is compared with a morning.
+- **At the top, behind the PIN** (the Manage PIN; sales are the owner's business, not the counter's): net sales so far with the order count and average ticket, and how that compares with **last week's same day by this time** ("▲ $45 (12%) ahead of last Mon by now"). Pickups already booked for later today are listed apart, so a morning is compared with a morning.
 - **The day's split:** breakfast / lunch, counter / online, to go / for here, and time in the kitchen.
 - **Compared with:** today, last week's same day and a usual one (the average of up to four of them) up to this time, then those days' whole-day totals, then this week so far against last week's to the same day and time. A day the board never ran is missing from the history, so it isn't compared; the first weeks after this update show less.
 - **Busiest hours:** orders per hour today, last week's same day beside each.
 - **Most ordered today** (top ten), then **on the board now**: every open order as the front page has it, with how long it's been cooking or when it's due. It checks every 5 seconds while the page is open, the numbers every 30, and nothing while the phone is locked.
-- **The numbers are the board's own count**, the same as Reports: each order's total in Square, tax included, once it's paid (online orders when they're placed). Canceled, test and demo orders aren't in it. Square's Dashboard has the official sales, and it's the place to look when the kitchen PC is off.
+- **The numbers are the board's own count**, the same as Reports: Square's **Net sales** (what the items sold for after discounts, without tax, tips or gift cards sold), as Square's Dashboard shows them. Until 2026-10-27 it was each order's total, tax and tips in, about 15% over Square's; the board fills in Net sales for those days from Square once, when it starts. Square counts a sale on the day it's paid and the board on the day it's made (a pickup paid the night before), and a refund isn't taken off, so a day can still differ a little. Canceled, test and demo orders aren't in it. Square's Dashboard has the official sales, and it's the place to look when the kitchen PC is off.
 - **The PIN** is asked once; **Remember on this phone** (ticked) keeps it, shared with the front page's Manage on the same phone. A changed PIN is forgotten by itself and asked again, never tried over and over (five wrong PINs would lock Manage for 10 minutes).
 - **On the home screen** it's its own icon, "Café Today" (Share → Add to Home Screen, as for the front page).
 
@@ -424,7 +424,7 @@ Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo
 - **Days (CSV):** one row per day.
 - **Every order (CSV):** one row per order, with its items.
 
-A day the board never ran is missing; Square's own reports still have its sales. Sales are each order's total in Square, tax included. It's the only place the kitchen times exist, so it's copied every day; set `backupDir` to keep a copy off the PC (see "The data folder and backups").
+A day the board never ran is missing; Square's own reports still have its sales. Sales are Square's Net sales (see `/today` above); "collected" beside them is what customers paid, tax and tips in, which is what the board counted as sales until 2026-10-27. The CSVs have both. It's the only place the kitchen times exist, so it's copied every day; set `backupDir` to keep a copy off the PC (see "The data folder and backups").
 
 ## Desserts (Manage on the front page)
 
