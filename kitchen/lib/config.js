@@ -47,6 +47,7 @@ const DEFAULTS = {
   // DoorDash orders stay off the kitchen board until a Dasher is assigned or
   // this many minutes after they came in, whichever is first (client
   // 2026-10-21: a Dasher can take up to an hour). 0 shows them at once.
+  // One scheduled for later goes by its time instead, like a pickup.
   dasherWaitMinutes: 15,
   openLookbackDays: 14, // how far back to look for pre-ordered pickups
   skipItems: [], // the skip list to start from; after that it's edited live on /front (Manage)

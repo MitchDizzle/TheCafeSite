@@ -420,6 +420,27 @@ test("DoorDash: off the kitchen board until a Dasher is assigned or 15 minutes",
   assert.equal(hiddenReason(t, Date.now()), null);
 });
 
+test("DoorDash scheduled for later: goes on by its time, not 15 minutes after it came in", () => {
+  // As Square sent one on 2026-10-28: placed at 10:20 for a 12:45 Dasher.
+  const later = (id, dueIn, note) => {
+    const o = doordash({ id, created_at: minutesFromNow(-20) });
+    Object.assign(o.fulfillments[0].delivery_details, { schedule_type: "SCHEDULED", courier_pickup_at: minutesFromNow(dueIn),
+      deliver_at: minutesFromNow(dueIn), prep_time_duration: "PT300S" }, note ? { note } : {});
+    return ticketOf(o);
+  };
+  const t = later("DOORDASHLATER1", 145);
+  assert.equal(t.boardAt, new Date(Date.parse(t.dueAt) - 15 * 6e4).toISOString());
+  assert.equal(t.holdUntil, null, "not waiting for a Dasher");
+  assert.match(hiddenReason(t, Date.now()), /more than/);
+  assert.equal(waitUntil(t, Date.now()), null, "not in the WAIT UNTIL row yet");
+  // An hour out it's in the row, by its own time; a Dasher named early changes nothing.
+  const soon = later("DOORDASHLATER2", 45, "Courier Name: Sam\r\nCourier Phone Number: +15555550100");
+  assert.match(hiddenReason(soon, Date.now()), /more than/);
+  assert.equal(waitUntil(soon, Date.now()), soon.boardAt);
+  assert.equal(soon.boardAt, new Date(Date.parse(soon.dueAt) - 15 * 6e4).toISOString());
+  assert.equal(hiddenReason(later("DOORDASHLATER3", 10), Date.now()), null, "on the board 15 min before");
+});
+
 test("yesterday's open order greets nobody", () => {
   const t = ticketOf(counter({ created_at: minutesFromNow(-25 * 60) }));
   assert.equal(hiddenReason(t, Date.now()), "due before today");

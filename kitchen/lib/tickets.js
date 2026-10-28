@@ -200,8 +200,8 @@ function toTicket(order) {
   const doordash = online && /doordash/i.test(`${(order.source && order.source.name) || ""} ${(f && f.delivery_details && f.delivery_details.courier_provider_name) || ""}`);
   const courier = doordash ? ((/Courier Name:\s*([^\r\n]+)/i.exec((details && details.note) || "") || [])[1] || "").trim() || null : null;
   // How far ahead of its due time it goes on: more for a bigger order.
-  const leadMins = dueAt && !doordash ? leadMinutes(items.reduce((n, it) => n + it.qty, 0)) : null;
-  const boardAt = onBoardAt(order, { dueAt, doordash, courier, leadMins });
+  const leadMins = dueAt ? leadMinutes(items.reduce((n, it) => n + it.qty, 0)) : null;
+  const { boardAt, forDasher } = onBoardAt(order, { dueAt, doordash, courier, leadMins });
   // To go or for here. The Restaurants POS records the dining option as the
   // fulfillment: "To Go" is PICKUP, "For Here" is IN_STORE. To Go is the
   // POS default, so a table number wins: someone sitting down with a number
@@ -238,7 +238,7 @@ function toTicket(order) {
     // from; holdUntil is that time while a DoorDash order waits for a Dasher.
     boardAt,
     leadMinutes: leadMins,
-    holdUntil: doordash && !courier && Date.parse(boardAt) > Date.now() ? boardAt : null,
+    holdUntil: forDasher && !courier && Date.parse(boardAt) > Date.now() ? boardAt : null,
     courier,
     items,
     front,
@@ -256,7 +256,10 @@ function toTicket(order) {
 // Dasher is first seen or dasherWaitMinutes after it came in, whichever is
 // first; one due later (a pickup, a time in the name) its leadMinutes
 // before it's due (showAheadMinutes, or more for a big order: lib/lead.js);
-// anything else as it's rung up.
+// anything else as it's rung up. A DoorDash order scheduled for later is
+// one due later: it goes on by its time, whatever its Dasher does (client
+// 2026-10-28: one placed at 10:20 for a 12:45 Dasher said "wait until
+// 10:35"). forDasher: the Dasher rule is what sets the time.
 const courierSeen = new Map(); // order id -> when the board first saw its Dasher
 function onBoardAt(order, { dueAt, doordash, courier, leadMins }) {
   const created = Date.parse(order.created_at);
@@ -267,8 +270,10 @@ function onBoardAt(order, { dueAt, doordash, courier, leadMins }) {
       if (!courierSeen.has(order.id)) courierSeen.set(order.id, Date.now());
       at = Math.min(at, courierSeen.get(order.id));
     }
-  } else if (dueAt) at = Date.parse(dueAt) - (leadMins || cfg.showAheadMinutes) * 6e4;
-  return new Date(Math.max(created, at)).toISOString();
+  }
+  const byDue = dueAt ? Date.parse(dueAt) - (leadMins || cfg.showAheadMinutes) * 6e4 : -Infinity;
+  const forDasher = doordash && at >= byDue;
+  return { boardAt: new Date(Math.max(created, at, byDue)).toISOString(), forDasher };
 }
 
 // Today's work only, on both screens: a stale order from yesterday that
