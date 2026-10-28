@@ -131,6 +131,12 @@
 
 .asked-n { font-weight: 700; font-variant-numeric: tabular-nums; }
 
+.asked-reply {
+    margin-top: 0.2rem;
+    font-size: 0.95rem;
+    color: rgba(var(--text-dark-rgb), 0.75);
+}
+
 .quotes { display: grid; gap: 1.2rem; }
 
 .quotes blockquote {
