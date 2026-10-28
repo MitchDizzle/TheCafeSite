@@ -63,8 +63,8 @@
       const on = new Set(((d.lists && d.lists.lists) || []).map((n) => n.toLowerCase()));
       const shown = [...names, ...((d.lists && d.lists.lists) || []).filter((n) => !names.some((x) => x.toLowerCase() === n.toLowerCase()))];
       return `<details class="d-lists"${on.size ? " open" : ""}>
-        <summary>Also on the plate in Square <small>${on.size ? esc([...shown].filter((n) => on.has(n.toLowerCase())).join(", ")) : "none"}${d.lists && d.lists.from === "dish" ? " · as last time for this dish" : ""}</small></summary>
-        <p class="m-note">Square's own lists, as they are in Square: online ordering and the till show them on the plate that day. Ticked for a dish, they come back the next time it's on.</p>
+        <summary>Also on the plate in Square <small>${on.size ? esc([...shown].filter((n) => on.has(n.toLowerCase())).join(", ")) : "none"}${d.lists && d.lists.from === "dish" ? " · as last time for this dish" : d.lists && d.lists.from === "sandwich" ? " · it's a sandwich" : ""}</small></summary>
+        <p class="m-note">Square's own lists, as they are in Square: online ordering and the till show them on the plate that day.${(r.sandwichLists || []).length ? ` A sandwich gets ${esc(listWords(r.sandwichLists))} by itself, and other days don't.` : ""} Ticked for a dish, they come back the next time it's on.</p>
         ${shown.map((n) => `<label class="check"><input type="checkbox" data-list="${esc(n)}"${on.has(n.toLowerCase()) ? " checked" : ""}><span>${esc(n)}</span></label>`).join("")}
       </details>`;
     };

@@ -123,6 +123,45 @@ test("today's sides: a day set on the front page keeps its own", async () => {
   assert.deepEqual(plan.days[today].sides, ["Corn"]);
 });
 
+const { listsFor, isSandwich } = require("../lib/specials/plan");
+
+test("a sandwich by its name: Sandwich, Wrap, Hoagie, Melt, Burger, ...", () => {
+  for (const name of ["Cheesy Steak Sandwich", "Chicken Bacon Avocado Wrap", "French Dip on a Hoagie", "Patty Melt", "Bacon Cheeseburger Sliders", "BLT", "Cheese Burger", "Cheeseburger"]) {
+    assert.equal(isSandwich(name), true, name);
+  }
+  for (const name of ["Chicken Fried Chicken", "BBQ Ribs", "Spaghetti & Meatballs", "Ham Steak", "Wrapped Pork Loin", ""]) {
+    assert.equal(isSandwich(name), false, name);
+  }
+});
+
+test("Add and Toppings: on by themselves on a sandwich day, none on another; Specials' ticks win", () => {
+  Object.assign(plan, { dayLists: {}, dishLists: {} });
+  assert.deepEqual(listsFor("2026-10-29", day("Cheesy Steak Sandwich")), { lists: ["Add", "Toppings"], from: "sandwich" });
+  assert.deepEqual(listsFor("2026-10-28", day("Chicken Fried Chicken")), { lists: [], from: null });
+  assert.deepEqual(listsFor("2026-10-28", null), { lists: [], from: null }, "nothing planned");
+  plan.dishLists["hot beef sandwich"] = [];
+  assert.deepEqual(listsFor("2026-10-21", day("Hot Beef Sandwich")), { lists: [], from: "dish" }, "unticked for that dish once");
+  plan.dayLists["2026-10-29"] = ["Add"];
+  assert.deepEqual(listsFor("2026-10-29", day("Cheesy Steak Sandwich")), { lists: ["Add"], from: "day" });
+  Object.assign(plan, { dayLists: {}, dishLists: {} });
+});
+
+test("Add and Toppings go on Lunch Special in Square on a sandwich day and off the next day", async () => {
+  const today = localDate();
+  Object.assign(plan, { dayLists: {}, dishLists: {}, listsUsed: [] });
+  await loadCatalog();
+  const onItem = () => {
+    const infos = mockItems.get("ITEM-Lunch Special").item_data.modifier_list_info || [];
+    return Object.fromEntries(["LIST-Add", "LIST-Toppings"].map((id) => [id, (infos.find((x) => x.modifier_list_id === id) || {}).enabled]));
+  };
+  delete plan.sidesApplied[today];
+  await applySides(today, day("Cheesy Steak Sandwich"));
+  assert.deepEqual(onItem(), { "LIST-Add": true, "LIST-Toppings": true });
+  delete plan.sidesApplied[today];
+  await applySides(today, day("Chicken Fried Chicken", { sides: ["Mashed Potatoes & White Gravy", "Green Beans"] }));
+  assert.deepEqual(onItem(), { "LIST-Add": false, "LIST-Toppings": false });
+});
+
 test("each side list has its side picked already, on the option and on the item", async () => {
   const today = localDate();
   await loadCatalog();

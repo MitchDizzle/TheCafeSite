@@ -228,9 +228,10 @@ async function saveLeaveOff(options) {
 // ordering only shows what's on the item). Each list stays as it was made in
 // Square (its options, prices, how many can be picked); the board only
 // switches it on or off on the item, after the sides. A list never picked in
-// Specials (plan.listsUsed) is left alone. Returns words for the log, or null.
+// Specials (plan.listsUsed) and not a sandwich's (cfg.sandwichLists) is left
+// alone. Returns words for the log, or null.
 async function saveExtraLists(names) {
-  const managed = [...new Set([...plan.listsUsed, ...names])];
+  const managed = [...new Set([...plan.listsUsed, ...cfg.sandwichLists, ...names])];
   if (!managed.length) return null;
   await loadCatalog();
   const itemId = catalog.itemIds.get(cfg.sideItem.trim().toLowerCase());
@@ -273,8 +274,9 @@ async function applySides(today, day) {
   // `v`: bumped when the way the lists are written changes, so today's are
   // rewritten after an update (2: required, 2026-10-13; 3: the Special Side
   // too, 2026-10-15; 4: Leave Off, 2026-10-18; 5: the pick marked on the
-  // option too, 2026-10-19; 6: Square's own lists, 2026-10-27).
-  const sig = JSON.stringify({ v: 6, slots, swaps, special, offs, extra });
+  // option too, 2026-10-19; 6: Square's own lists, 2026-10-27; 7: a
+  // sandwich's lists on by themselves, off on any other day, 2026-10-28).
+  const sig = JSON.stringify({ v: 7, slots, swaps, special, offs, extra });
   const last = plan.sidesApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
   if (!slots.length && !offs.length && !extra.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;

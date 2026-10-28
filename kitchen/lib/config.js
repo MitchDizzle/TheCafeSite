@@ -79,6 +79,10 @@ const DEFAULTS = {
   // day's `leaveOff` from the website, pick any, $0, and is off on a day
   // without one. "" leaves it alone.
   leaveOffList: "Leave Off",
+  // Square's lists on sideItem for a sandwich special (one named Sandwich,
+  // Wrap, Burger, Hoagie, ...): on that day, off on every other (client
+  // 2026-10-28). Ticks in Specials win for a day or a dish. [] leaves them alone.
+  sandwichLists: ["Add", "Toppings"],
   // The daily items' descriptions, which online ordering and DoorDash show
   // under the name: each morning the board writes the day's plate or soup in
   // front of these words ("Lasagna with ... Served from 11am."), and puts

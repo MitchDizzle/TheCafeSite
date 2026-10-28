@@ -75,12 +75,18 @@ const plateOf = (day) => {
   return (it && it.today) || "";
 };
 
+// A plate that's a sandwich by its name: it gets cfg.sandwichLists (Add,
+// Toppings) unless Specials says otherwise (client 2026-10-28).
+const SANDWICH = /\b(sandwich(es)?|\w*burgers?|wraps?|melts?|hoagies?|subs?|club|blts?|reubens?|philly|paninis?|sliders?|po'?\s?boys?|french dip)\b/i;
+const isSandwich = (name) => SANDWICH.test(String(name || ""));
+
 // The lists on Lunch Special on `date`: picked for that day, else the ones
-// last picked for its dish. { lists, from: "day" | "dish" | null }.
+// last picked for its dish, else a sandwich's. { lists, from: "day" | "dish" | "sandwich" | null }.
 function listsFor(date, day = plan.days[date]) {
   if (Array.isArray(plan.dayLists[date])) return { lists: plan.dayLists[date], from: "day" };
   const dish = dishKey(plateOf(day));
   if (dish && Array.isArray(plan.dishLists[dish])) return { lists: plan.dishLists[dish], from: "dish" };
+  if (isSandwich(plateOf(day)) && cfg.sandwichLists.length) return { lists: cfg.sandwichLists, from: "sandwich" };
   return { lists: [], from: null };
 }
 
@@ -241,6 +247,7 @@ async function planView(squareLists = []) {
     days: dates.map((date) => ({ date, plan: plan.days[date] || null, note: plan.notes[date] || null, photoPick: plan.photoPick[date] || {}, lists: listsFor(date), applied: plan.applied[date] || null })),
     // Square's modifier lists that can go on the plate, but not the board's own (the sides, Leave Off).
     squareLists,
+    sandwichLists: cfg.sandwichLists,
     site: { url: cfg.specialsUrl, ...plan.site },
   };
 }
@@ -343,4 +350,4 @@ function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}) 
   return { days, notes: noted, photos: picked, lists: withLists };
 }
 
-module.exports = { SITE_MINUTES, RETRY_MINUTES, plan, savePlan, siteFieldFor, pullSite, planView, savePlanDays, listsFor };
+module.exports = { SITE_MINUTES, RETRY_MINUTES, plan, savePlan, siteFieldFor, pullSite, planView, savePlanDays, listsFor, isSandwich };
