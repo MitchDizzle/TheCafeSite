@@ -84,6 +84,7 @@ pageCss: "/assets/css/feedback.css"
 
         {%- if feedback.asked.length %}
         <h2 class="feedback-h">What you've asked for</h2>
+        <p class="feedback-note">How many surveys asked for each one.</p>
         <ul class="asked" role="list">
             {%- for a in feedback.asked %}
             <li><span>{{ a.label }}</span><span class="asked-n">{{ a.count }}</span></li>

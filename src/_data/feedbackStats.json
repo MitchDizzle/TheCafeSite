@@ -1,17 +1,255 @@
 {
-  "_note": "Made by the kitchen PC: Manage -> Survey -> For the website. Replace this whole file with a new one from there; don't edit it by hand. Counts only, plus the comments customers ticked may be shared (first name and initial at most). While total is 0 the /feedback page isn't built and isn't linked.",
-  "updated": null,
-  "since": null,
+  "_note": "Made by the kitchen PC: Manage -> Survey -> For the website. Replace this whole file with a new one from there; don't edit it by hand. The themes and 'You said, we did' are in feedback.json, written by hand.",
+  "updated": "2026-10-28",
+  "since": "2026-10-05",
   "scale": [
     "Great",
     "Good",
     "Okay",
     "Poor"
   ],
-  "total": 0,
-  "cards": 0,
+  "total": 182,
+  "cards": 182,
   "web": 0,
-  "ratings": [],
-  "months": [],
+  "ratings": [
+    {
+      "name": "food",
+      "label": "The food",
+      "answered": 177,
+      "counts": [
+        [
+          "Great",
+          143
+        ],
+        [
+          "Good",
+          28
+        ],
+        [
+          "Okay",
+          6
+        ],
+        [
+          "Poor",
+          0
+        ]
+      ]
+    },
+    {
+      "name": "service",
+      "label": "The service",
+      "answered": 180,
+      "counts": [
+        [
+          "Great",
+          163
+        ],
+        [
+          "Good",
+          15
+        ],
+        [
+          "Okay",
+          1
+        ],
+        [
+          "Poor",
+          1
+        ]
+      ]
+    },
+    {
+      "name": "wait",
+      "label": "How long it took",
+      "answered": 172,
+      "counts": [
+        [
+          "Great",
+          158
+        ],
+        [
+          "Good",
+          11
+        ],
+        [
+          "Okay",
+          3
+        ],
+        [
+          "Poor",
+          0
+        ]
+      ]
+    },
+    {
+      "name": "value",
+      "label": "Value for the price",
+      "answered": 180,
+      "counts": [
+        [
+          "Great",
+          154
+        ],
+        [
+          "Good",
+          21
+        ],
+        [
+          "Okay",
+          5
+        ],
+        [
+          "Poor",
+          0
+        ]
+      ]
+    },
+    {
+      "name": "place",
+      "label": "Cleanliness & seating",
+      "answered": 181,
+      "counts": [
+        [
+          "Great",
+          172
+        ],
+        [
+          "Good",
+          9
+        ],
+        [
+          "Okay",
+          0
+        ],
+        [
+          "Poor",
+          0
+        ]
+      ]
+    }
+  ],
+  "months": [
+    {
+      "month": "2026-10",
+      "total": 182,
+      "ratings": [
+        {
+          "name": "food",
+          "label": "The food",
+          "answered": 177,
+          "counts": [
+            [
+              "Great",
+              143
+            ],
+            [
+              "Good",
+              28
+            ],
+            [
+              "Okay",
+              6
+            ],
+            [
+              "Poor",
+              0
+            ]
+          ]
+        },
+        {
+          "name": "service",
+          "label": "The service",
+          "answered": 180,
+          "counts": [
+            [
+              "Great",
+              163
+            ],
+            [
+              "Good",
+              15
+            ],
+            [
+              "Okay",
+              1
+            ],
+            [
+              "Poor",
+              1
+            ]
+          ]
+        },
+        {
+          "name": "wait",
+          "label": "How long it took",
+          "answered": 172,
+          "counts": [
+            [
+              "Great",
+              158
+            ],
+            [
+              "Good",
+              11
+            ],
+            [
+              "Okay",
+              3
+            ],
+            [
+              "Poor",
+              0
+            ]
+          ]
+        },
+        {
+          "name": "value",
+          "label": "Value for the price",
+          "answered": 180,
+          "counts": [
+            [
+              "Great",
+              154
+            ],
+            [
+              "Good",
+              21
+            ],
+            [
+              "Okay",
+              5
+            ],
+            [
+              "Poor",
+              0
+            ]
+          ]
+        },
+        {
+          "name": "place",
+          "label": "Cleanliness & seating",
+          "answered": 181,
+          "counts": [
+            [
+              "Great",
+              172
+            ],
+            [
+              "Good",
+              9
+            ],
+            [
+              "Okay",
+              0
+            ],
+            [
+              "Poor",
+              0
+            ]
+          ]
+        }
+      ]
+    }
+  ],
   "quotes": []
 }
