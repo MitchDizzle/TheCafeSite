@@ -48,9 +48,22 @@ function power(action) {
 }
 
 // "Check for updates": fetch the branch this copy is on and compare. If
-// anything is new, re-run start-kitchen.bat, which pulls it and restarts the
-// program and the board window — the same as double-clicking it, so there
-// is one update path, not two. That run replaces this process.
+// anything is new, it's installed QUIETLY when it can be (client 2026-10-29:
+// no closing the board window mid-service for a small update): git puts it
+// in place here, and this program ends with RESTART_EXIT, which
+// start-kitchen.bat's loop answers by starting it again at once. The board
+// window stays open; its page carries on through the few seconds the program
+// is away (Done taps are kept and sent when it's back) and reloads itself
+// once nobody is using it, if the update changed it (lib/pages.js). The
+// fronts do the same.
+//
+// The loud way, re-running start-kitchen.bat (pull, restart the program AND
+// the window, the same as double-clicking it), is still used when the update
+// changes the launch files themselves (LAUNCH_FILES: the running loop is that
+// batch file), and on a copy that isn't on main (the batch file moves the
+// old kitchen-board branch over, and leaves anyone's work branch alone).
+const RESTART_EXIT = 75;
+const LAUNCH_FILES = ["kitchen/start-kitchen.bat", "kitchen/stop-board.ps1", "kitchen/focus-board.ps1"];
 function git(args) {
   return new Promise((resolve, reject) =>
     execFile("git", ["-C", path.join(DIR, ".."), ...args], { windowsHide: true, timeout: 30000 }, (err, out) =>
@@ -81,7 +94,32 @@ async function checkUpdates(from) {
   const n = `${behind} update${behind === 1 ? "" : "s"}`;
   if (MOCK) return { ok: true, message: `Test mode: ${n} found. Run start-kitchen.bat to install them.` };
   if (process.platform !== "win32") return { ok: true, message: `${n} found. Run start-kitchen.bat to install them.` };
-  console.log(`Update check: ${n} on ${branch}. Restarting through start-kitchen.bat.`);
+  let changed = [];
+  try {
+    changed = (await git(["diff", "--name-only", `HEAD..origin/${branch}`])).split(/\r?\n/).filter(Boolean);
+  } catch {
+    changed = LAUNCH_FILES; // can't tell: the loud way, which always works
+  }
+  const launch = changed.filter((f) => LAUNCH_FILES.includes(f));
+  if (branch === "main" && !launch.length) {
+    try {
+      await git(["merge", "--ff-only", `origin/${branch}`]);
+    } catch (err) {
+      console.error(`Update: ${err.message}`);
+      startlog.note(`quiet update failed after ${secs()}: ${err.message.split(/\r?\n/)[0]}`);
+      return { ok: false, message: "Couldn't install the update. Nothing changed, and the board carries on as it was." };
+    }
+    startlog.note(`quiet update: ${n} installed in ${secs()}, restarting the program only (the window stays)`);
+    console.log(`Update: ${n} on ${branch} installed. Restarting the program; the board window stays open.`);
+    // Today's numbers written first, so the restart loses none of them.
+    setTimeout(() => {
+      try { require("./stats").recordHistoryNow(); } catch {}
+      process.exit(RESTART_EXIT);
+    }, 300);
+    return { ok: true, restarting: true, quiet: true,
+      message: `Installed ${n}. The board program restarts by itself in a few seconds. The screens stay up, catch up when it's back, and reload themselves once nobody's using them.` };
+  }
+  console.log(`Update check: ${n} on ${branch}${launch.length ? `, including ${launch.join(", ")}` : ""}. Restarting through start-kitchen.bat.`);
   setTimeout(() => startBatch(), 300);
   return { ok: true, restarting: true, message: `Installing ${n}. The board will be back in about 10 seconds.` };
 }

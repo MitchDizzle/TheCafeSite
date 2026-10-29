@@ -508,15 +508,57 @@
     render();
   }
 
+  // An update changed this page (lib/pages.js): it reloads itself once
+  // nobody's using it (Manage closed, nothing typed or tapped for a bit),
+  // so nobody loses what they're typing.
+  let pageVersion = "";
+  let pageStale = false;
+  let lastTouch = 0;
+  for (const ev of ["pointerdown", "keydown", "input"]) document.addEventListener(ev, () => { lastTouch = Date.now(); }, true);
+  setInterval(() => {
+    if (pageStale && !queued.length && scrim.hidden && Date.now() - lastTouch > 15000) location.reload();
+  }, 2000);
+
+  // An update restarts the board program for a few seconds (lib/system.js).
+  // Handed off, Canceled, Undo and Seated pressed meanwhile wait here, in
+  // order, and go when it's back, as on the board.
+  const QUEUE_KEY = "front-queue";
+  let queued = [];
+  try { queued = JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]").filter((q) => Date.now() - q.at < 2 * 36e5); } catch {}
+  const saveQueue = () => { try { localStorage.setItem(QUEUE_KEY, JSON.stringify(queued)); } catch {} };
+  function send(path, body) {
+    const later = () => { queued.push({ path, body, at: Date.now() }); saveQueue(); };
+    if (queued.length) return later();
+    post(path, body).catch(later);
+  }
+  async function flush() {
+    while (queued.length) {
+      await post(queued[0].path, queued[0].body);
+      queued.shift();
+      saveQueue();
+    }
+  }
+
+  const RESTART_GRACE_MS = 45000;
+  let lastLoadOk = 0;
   async function load() {
     try {
+      if (queued.length) await flush();
       const res = await fetch(api("/api/front"), { cache: "no-store" });
       if (!res.ok) throw new Error(String(res.status));
-      apply(await res.json());
+      const data = await res.json();
+      if (data.pageVersion) {
+        pageVersion = pageVersion || data.pageVersion;
+        if (data.pageVersion !== pageVersion) pageStale = true;
+      }
+      apply(data);
+      lastLoadOk = Date.now();
     } catch {
       alertEl.hidden = false;
       alertEl.classList.remove("demo-banner");
-      alertEl.textContent = "Can't reach the kitchen PC. Is it on, and is this device on the cafe wifi?";
+      alertEl.textContent = lastLoadOk && Date.now() - lastLoadOk < RESTART_GRACE_MS
+        ? "Reconnecting to the kitchen PC (an update restarts it for a few seconds). Taps are kept."
+        : "Can't reach the kitchen PC. Is it on, and is this device on the cafe wifi?";
     } finally {
       setTimeout(load, POLL_MS);
     }
@@ -539,14 +581,14 @@
       // Off both screens; Undo in the top bar brings it back.
       orders = orders.filter((o) => o.id !== id);
       render();
-      post("/api/cancel-unpaid", { id }).catch(() => {});
+      send("/api/cancel-unpaid", { id });
       return;
     }
     if (e.target.closest(".handoff")) {
       // Gone from this screen at once; the server confirms.
       orders = orders.filter((o) => o.id !== id);
       render();
-      post("/api/handoff", { id }).catch(() => {});
+      send("/api/handoff", { id });
       return;
     }
     const li = e.target.closest("[data-tick]");
@@ -582,7 +624,7 @@
     const id = e.target.closest("[data-unhand]")?.dataset.unhand;
     if (!id) return;
     openUndoMenu(false);
-    post("/api/unhandoff", { id }).catch(() => {});
+    send("/api/unhandoff", { id });
   });
   document.addEventListener("click", (e) => {
     if (!undoMenu.hidden && !e.target.closest(".undo-wrap")) openUndoMenu(false);
@@ -624,7 +666,7 @@
     const id = e.target.closest("[data-seated]") && e.target.closest("[data-resv]").dataset.resv;
     if (!id) return;
     e.target.closest("[data-resv]").remove();
-    post("/api/reservation-seated", { id }).catch(() => {});
+    send("/api/reservation-seated", { id });
   });
 
   // ---- today's numbers (breakfast / lunch split by the 11am cutoff)
@@ -852,7 +894,9 @@
   async function runUpdate() {
     busy("Check for updates", "Checking…");
     const r = await postJson("/api/front-update", { pin: pinValue });
-    if (r.restarting) {
+    if (r.quiet) {
+      result("Check for updates", r);
+    } else if (r.restarting) {
       screen({ title: "Updating", back: false, body: `<p class="m-result good">${esc(r.message)}</p>`,
         buttons: [{ label: "Done", act: "close", kind: "primary" }] });
     } else result("Check for updates", r);

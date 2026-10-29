@@ -142,8 +142,14 @@ taskkill /FI "WINDOWTITLE eq Kitchen board program*" /T /F >nul 2>&1
 exit /b
 
 :server
-rem If the program ever stops, start it again.
+rem If the program ever stops, start it again. Exit code 75 is the program
+rem ending itself after installing an update quietly (lib/system.js): it
+rem starts again at once, and the board window is left open.
 node server.js
+if "%ERRORLEVEL%"=="75" (
+  >>"%LOG%" echo %DATE% %TIME%  bat      board program restarting after a quiet update
+  goto server
+)
 >>"%LOG%" echo %DATE% %TIME%  bat      board program stopped (exit code %ERRORLEVEL%), restarting in 5 s
 echo Board program stopped. Restarting in 5 seconds...
 timeout /t 5 /nobreak >nul

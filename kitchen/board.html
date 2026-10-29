@@ -671,6 +671,12 @@
 
   function tick() {
     const now = Date.now();
+    // Reload for an update once the screen's been left alone a moment, with
+    // no menu or dialog open and nothing waiting to be sent.
+    if (pageStale && !queued.length && scrim.hidden && menuEl.hidden && undoMenu.hidden && now - lastTouch > 8000) {
+      location.reload();
+      return;
+    }
     if (lastOkAt) {
       const s = Math.round((now - Date.parse(lastOkAt)) / 1000);
       refreshBtn.title = `Check Square now (last checked ${s < 2 ? "just now" : s + "s ago"})`;
@@ -875,7 +881,18 @@
     if (html !== resvHtml) resvEl.innerHTML = resvHtml = html;
   }
 
+  // An update changed this page (lib/pages.js): it reloads itself in tick()
+  // once nobody's using it, so a cook is never cut off mid-tap.
+  let pageVersion = "";
+  let pageStale = false;
+  let lastTouch = 0;
+  for (const ev of ["pointerdown", "keydown"]) document.addEventListener(ev, () => { lastTouch = Date.now(); }, true);
+
   function apply(data) {
+    if (data.pageVersion) {
+      pageVersion = pageVersion || data.pageVersion;
+      if (data.pageVersion !== pageVersion) pageStale = true;
+    }
     serverSound = data.sound !== false;
     renderSound();
     pollSeconds = data.pollSeconds || pollSeconds;
@@ -925,12 +942,45 @@
     render(fresh);
   }
 
+  // An update restarts the board program (lib/system.js) while this window
+  // stays open: a few seconds away. Done, Undo and Bring back pressed
+  // meanwhile wait here, in order, and go when it's back, so none is lost
+  // (the screen shows a Done straight away, as always). Kept in localStorage
+  // too, so a reload in between keeps them; one older than two hours is
+  // dropped, as the order has moved on by then.
+  const QUEUE_KEY = "kb-queue";
+  let queued = [];
+  try { queued = JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]").filter((q) => Date.now() - q.at < 2 * 36e5); } catch {}
+  const saveQueue = () => { try { localStorage.setItem(QUEUE_KEY, JSON.stringify(queued)); } catch {} };
+  function send(path, id) {
+    const later = () => { queued.push({ path, id, at: Date.now() }); saveQueue(); };
+    if (queued.length) return later(); // keep the order they were pressed in
+    post(path, id).catch(later);
+  }
+  async function flush() {
+    while (queued.length) {
+      await post(queued[0].path, queued[0].id); // throws while the program is still away
+      queued.shift();
+      saveQueue();
+    }
+  }
+
+  // Away for less than this right after being fine is an update's restart:
+  // a quiet notice. Longer, it's the alarm.
+  const RESTART_GRACE_MS = 45000;
+  let lastLoadOk = 0;
   async function load() {
     try {
+      if (queued.length) await flush();
       const res = await fetch("/api/tickets", { cache: "no-store" });
       apply(await res.json());
+      lastLoadOk = Date.now();
     } catch {
-      problem("The board program isn't running. Restart the kitchen PC.");
+      if (lastLoadOk && Date.now() - lastLoadOk < RESTART_GRACE_MS) {
+        notice("Reconnecting to the board program (an update restarts it for a few seconds). Done still works.");
+      } else {
+        problem("The board program isn't running. Restart the kitchen PC.");
+      }
     } finally {
       setTimeout(load, POLL_MS);
     }
@@ -960,13 +1010,13 @@
     else tickets = tickets.filter((x) => x.id !== id);
     lastJson = "";
     render(new Set());
-    post("/api/bump", id).catch(() => {});
+    send("/api/bump", id);
   }
 
   // The server keeps what was cleared, newest first: pressing Undo again
   // keeps bringing back older tickets, and it survives a reload or restart.
   function undo() {
-    post("/api/undo").catch(() => {});
+    send("/api/undo");
   }
 
   async function checkNow() {
@@ -1007,7 +1057,7 @@
     const id = e.target.closest("[data-unbump]")?.dataset.unbump;
     if (!id) return;
     openUndoMenu(false);
-    post("/api/unbump", id).catch(() => {});
+    send("/api/unbump", id);
   });
   document.addEventListener("click", (e) => {
     if (!undoMenu.hidden && !e.target.closest(".undo-wrap")) openUndoMenu(false);
@@ -1120,7 +1170,9 @@
   async function checkForUpdates() {
     showDialog(`<h2 id="dialog-title">Checking for updates…</h2><p>One moment.</p>`);
     const r = await ask("/api/update");
-    if (r.restarting) {
+    if (r.quiet) {
+      message("Updated", r.message);
+    } else if (r.restarting) {
       showDialog(`<h2 id="dialog-title">Updating</h2><p>${esc(r.message)}</p>`);
     } else {
       message(r.ok ? "Updates" : "Couldn't check", r.message || "Something went wrong.");

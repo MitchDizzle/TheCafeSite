@@ -1,6 +1,7 @@
 // Polling Square and what each screen is sent: the kitchen board's tickets
 // (snapshot) and the front page's orders (frontSnapshot), Undo's lists, the
 // ready orders that clear themselves, the demo, and Reset for the day.
+const { pageVersions } = require("./pages");
 const { MOCK, MUTE, cfg } = require("./config");
 const { fetchOrders } = require("./square");
 const { live } = require("./live");
@@ -144,7 +145,7 @@ function snapshot() {
     .sort((a, b) => Date.parse(a.waitUntil) - Date.parse(b.waitUntil));
   return { tickets, waiting, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
     clearedList: boardCleared(), stats: statsToday(), demo: live.demo, pollSeconds: pollEvery, nextPollAt, checking: !!polling,
-    reservations: screenView() };
+    reservations: screenView(), pageVersion: pageVersions.board };
 }
 
 // A ready order nobody pressed Handed off for clears itself off the front
@@ -192,7 +193,7 @@ function frontSnapshot() {
   return { orders, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, lastHandedOff: lastHandedOff(),
     handedOffList: undoList(handedOff).map((h) => ({ ...h, auto: autoOff.has(h.id) })), stats: statsToday(), demo: live.demo,
     updatePin: !!cfg.updatePin, pollSeconds: pollEvery, autoHandoffMinutes: cfg.autoHandoffMinutes,
-    reservations: screenView() };
+    reservations: screenView(), pageVersion: pageVersions.front };
 }
 
 // ---------------------------------------------------------------- demo
