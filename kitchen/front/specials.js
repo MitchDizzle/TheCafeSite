@@ -156,7 +156,7 @@
     screen({ title: "Specials", back: true,
       body: `<p class="m-note">Each morning the kitchen PC puts that day's specials into Square by itself. Saving today puts it in now.
         Days the website lists fill in on their own; a day changed here stays as you typed it.</p>
-        <p class="m-note">Comes with sets Side 1 and Side 2 on Lunch Special too: each side is picked for the counter already and can be swapped for a deli salad. Choice of side, or two sides with "or" between ("tossed salad or cooked broccoli"), picks Chef's Choice.</p>
+        <p class="m-note">Comes with sets Side 1 and Side 2 on Lunch Special too: each side is picked for the counter already and can be swapped for a deli salad. Choice of side picks Chef's Choice. Two sides with "or" between ("tossed salad or cooked broccoli") pick nothing, so the counter or the customer picks one.</p>
         ${site}
         ${r.missing.length ? `<p class="m-error">Not found in Square under these names: ${esc(r.missing.join(", "))}.</p>` : ""}
         <form id="m-plan">${r.days.map(dayHtml).join("")}</form>`,

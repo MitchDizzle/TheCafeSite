@@ -5,8 +5,9 @@
 //   - a set side ("Corn"): its list has Corn, pre-picked, then the swap
 //     sides. Left alone, the plate comes as planned; tapping a swap side
 //     swaps that one side.
-//   - a side written "Tossed Salad or Cooked Broccoli": Chef's Choice,
-//     pre-picked, then both, then the swap sides.
+//   - a side written "Tossed Salad or Cooked Broccoli": both, nothing
+//     picked, then the swap sides, so the customer or the counter picks
+//     one (client 2026-10-29: no Chef's Choice; it was pre-picked first).
 //   - choice of side (anySide): one list, Chef's Choice pre-picked, then the
 //     swap sides.
 // The swap sides are the day's own extra sides (the website's extraSides),
@@ -14,8 +15,8 @@
 // day's soup when the website sets soupSide (client 2026-10-13). Every
 // option is $0, and each list is pick exactly one with the day's side
 // picked already, so nobody has to tap anything for the plate to come as
-// planned. It was optional (pick at most one) until 2026-10-13, which Square
-// Online showed as checkboxes with the one allowed already ticked: nothing
+// planned (an "or" side has none picked: that one is asked). It was
+// optional (pick at most one) until 2026-10-13, which Square Online showed as checkboxes with the one allowed already ticked: nothing
 // else could be picked. Required, it shows them as choices to switch between. A list the day doesn't need is switched off
 // on the item, not deleted, and a list is only made the first time a day
 // needs it. A side past the last list can't be swapped, and the log says so.
@@ -39,8 +40,8 @@ function sideSlots(day) {
   if (day.anySide) return [{ pick: CHEFS_CHOICE, also: [] }];
   return (day.sides || []).map((s) => {
     const parts = String(s).split(/\s+or\s+/i).map(cleanText).filter(Boolean);
-    return parts.length > 1 ? { pick: CHEFS_CHOICE, also: parts } : { pick: cleanText(s), also: [] };
-  }).filter((slot) => slot.pick);
+    return parts.length > 1 ? { pick: null, also: parts } : { pick: cleanText(s), also: [] };
+  }).filter((slot) => slot.pick || slot.also.length);
 }
 
 // What any side can be swapped for on `date`: the day's extra sides, the
@@ -100,29 +101,31 @@ async function saveSides(slots, swaps) {
   const lists = await modifierListsByName();
   const item = await readObject(itemId);
   const where = { present_at_all_locations: item.present_at_all_locations, present_at_location_ids: item.present_at_location_ids };
-  const set = []; // per side list: { list, pickId }; list is null when there's none and none is needed
+  const set = []; // per side list: { list, on, pickId }; list is null when there's none and none is needed
   for (const [i, name] of cfg.sideLists.entries()) {
     const slot = slots[i];
     let list = lists.get(name.trim().toLowerCase()) || null;
-    if (!slot) { set.push({ list, pickId: null }); continue; }
+    if (!slot) { set.push({ list, on: false, pickId: null }); continue; }
     // A side typed on the front page in its own case ("tossed salad") takes
     // the swap list's spelling, so it doesn't rename that option.
     const canon = (w) => swaps.find((x) => x.toLowerCase() === w.toLowerCase()) || w;
-    list = await writeOptions(list, name, `side-${i + 1}`, [slot.pick, ...slot.also, ...swaps].map(canon), where, "SINGLE", canon(slot.pick));
-    const pick = (list.modifier_list_data.modifiers || []).find((m) => m.modifier_data.name.toLowerCase() === slot.pick.toLowerCase());
-    set.push({ list, pickId: pick ? pick.id : null });
+    const pickWord = slot.pick && canon(slot.pick);
+    list = await writeOptions(list, name, `side-${i + 1}`, [slot.pick, ...slot.also, ...swaps].filter(Boolean).map(canon), where, "SINGLE", pickWord);
+    const pick = pickWord && (list.modifier_list_data.modifiers || []).find((m) => m.modifier_data.name.toLowerCase() === pickWord.toLowerCase());
+    set.push({ list, on: true, pickId: pick ? pick.id : null });
   }
   // Then the item: each list on it, on or off, exactly one pick, with the
-  // day's side pre-picked. Read fresh: saveDaily may have just written it.
+  // day's side pre-picked (none on an "or" side). Read fresh: saveDaily may
+  // have just written it.
   const fresh = await readObject(itemId);
   const infos = (fresh.item_data.modifier_list_info ||= []);
   const before = JSON.stringify(infos);
-  for (const { list, pickId } of set) {
+  for (const { list, on, pickId } of set) {
     if (!list) continue;
     let info = infos.find((x) => x.modifier_list_id === list.id);
     if (!info) { info = { modifier_list_id: list.id }; infos.push(info); }
-    info.enabled = !!pickId;
-    info.min_selected_modifiers = pickId ? 1 : 0;
+    info.enabled = on;
+    info.min_selected_modifiers = on ? 1 : 0;
     info.max_selected_modifiers = 1;
     info.modifier_overrides = pickId ? pickOverride(pickId) : [];
   }
@@ -134,10 +137,10 @@ async function saveSides(slots, swaps) {
   infos.forEach((info, ordinal) => { info.ordinal = ordinal; });
   if (JSON.stringify(infos) !== before) await upsertObject(fresh);
   if (slots.length > cfg.sideLists.length) {
-    console.log(`${slots.length} sides today but ${cfg.sideLists.length} side lists: ${slots.slice(cfg.sideLists.length).map((x) => x.pick).join(", ")} can't be swapped.`);
+    console.log(`${slots.length} sides today but ${cfg.sideLists.length} side lists: ${slots.slice(cfg.sideLists.length).map((x) => x.pick || x.also.join(" or ")).join(", ")} can't be swapped.`);
   }
   return slots.slice(0, cfg.sideLists.length)
-    .map((slot, i) => `${cfg.sideLists[i]}: ${slot.pick}${slot.also.length ? ` (${slot.also.join(" or ")})` : ""}`);
+    .map((slot, i) => `${cfg.sideLists[i]}: ${slot.pick || "customer picks"}${slot.also.length ? ` (${slot.also.join(" or ")})` : ""}`);
 }
 
 // The Special Side (cfg.specialSideItem), the $2 side sold on its own, offers
@@ -275,8 +278,9 @@ async function applySides(today, day) {
   // rewritten after an update (2: required, 2026-10-13; 3: the Special Side
   // too, 2026-10-15; 4: Leave Off, 2026-10-18; 5: the pick marked on the
   // option too, 2026-10-19; 6: Square's own lists, 2026-10-27; 7: a
-  // sandwich's lists on by themselves, off on any other day, 2026-10-28).
-  const sig = JSON.stringify({ v: 7, slots, swaps, special, offs, extra });
+  // sandwich's lists on by themselves, off on any other day, 2026-10-28; 8:
+  // an "or" side without Chef's Choice, 2026-10-29).
+  const sig = JSON.stringify({ v: 8, slots, swaps, special, offs, extra });
   const last = plan.sidesApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
   if (!slots.length && !offs.length && !extra.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;

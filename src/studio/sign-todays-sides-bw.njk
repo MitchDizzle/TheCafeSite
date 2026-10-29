@@ -1,0 +1,68 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Today's special sides sign (black & white)"
+canvasW: "8.5in"
+canvasH: "11in"
+pageSize: "8.5in 11in"
+pageCss: "/assets/css/studio/sign.css"
+bw: true
+sidesDate: "2026-10-29"
+tags: studio
+studioWeekly: true
+studioData: ["specials.json"]
+studioTitle: "Today's special sides — black & white"
+studioCategory: "Signs"
+studioSize: "8.5 × 11 in portrait · letter stand-up sign holder"
+studioNote: "A one-day counter sign for a special whose side is a pick of two (2026-10-29: Oven Browned Potatoes or Twice Baked Potato Casserole, or any regular side)."
+studioW: 816
+studioH: 1056
+studioOrder: 34
+---
+{#- Today's special sides, for the counter (client 2026-10-29: two sides
+    added last minute, the plate comes with one of them or any regular
+    side). The day is `sidesDate` above, read from specials.json, so the
+    plate and the sides are the ones Square has: its `sides` is one entry
+    with "or" between ("Oven Browned Potatoes or Twice Baked Potato
+    Casserole"), which is one side the customer picks. For another day,
+    change the date, check the day's sides read that way, build, print.
+    The regular sides box is the Deli Salads (menu.json) and the soup, the
+    same swap list as Lunch Special's Side 1 in Square. -#}
+{%- set d = (specials.days | where("date", sidesDate))[0] %}
+{%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
+{%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
+<div class="canvas sign sign--bw">
+    {% include "partials/studio/sign-mast.njk" %}
+
+    <div class="sign-heading">
+        <h2 class="p-display sign-heading-title">Today&rsquo;s Special Sides</h2>
+    </div>
+
+    {%- if d %}
+    <p class="p-display ts-plate">{{ d.special }}</p>
+    <p class="ts-one">comes with <strong>one</strong> side. Pick from:</p>
+
+    <div class="ts-picks">
+        {%- for s in (d.sides[0] or "").split(" or ") %}
+        {%- if not loop.first %}
+        <p class="ts-or">or</p>
+        {%- endif %}
+        <p class="p-display ts-pick">{{ s }}</p>
+        {%- endfor %}
+    </div>
+    {%- endif %}
+
+    <div class="sign-spacer"></div>
+    {%- if deli %}
+    <section class="sw-choice ts-regular">
+        <p class="p-display sw-choice-title">Or any of our regular sides</p>
+        <ul class="sw-choices">
+            {%- for c in deli.choices %}
+            <li>{{ c }}</li>
+            {%- endfor %}
+            {%- if specials.soupSide %}
+            <li>Cup of the day&rsquo;s soup</li>
+            {%- endif %}
+        </ul>
+    </section>
+    {%- endif %}
+</div>

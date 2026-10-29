@@ -19,9 +19,9 @@ test("the side lists: a set side is picked already", () => {
   ]);
 });
 
-test("the side lists: two sides with 'or' are Chef's Choice and both", () => {
+test("the side lists: two sides with 'or' are both, nothing picked (no Chef's Choice)", () => {
   assert.deepEqual(sideSlots(day("Lasagna", { sides: ["Tossed Salad or Cooked Broccoli", "Breadstick"] })), [
-    { pick: "Chef's Choice", also: ["Tossed Salad", "Cooked Broccoli"] },
+    { pick: null, also: ["Tossed Salad", "Cooked Broccoli"] },
     { pick: "Breadstick", also: [] },
   ]);
 });
@@ -64,7 +64,7 @@ test("Leave Off: that day's words as No options, kept if already written No", ()
 test("Lunch Special's description: the plate, its sides, the drink, the swap", () => {
   plan.includesDrink = true;
   assert.equal(dayDescription("Lunch Special", day("Lasagna", { sides: ["Tossed Salad or Cooked Broccoli", "Breadstick"] })),
-    "Lasagna with Tossed Salad or Cooked Broccoli and Breadstick. Includes a fountain drink or iced tea. Swap a side below if you like. Served from 11am.");
+    "Lasagna with Tossed Salad or Cooked Broccoli and Breadstick. Includes a fountain drink or iced tea. Pick your side below. Served from 11am.");
 });
 
 test("Lunch Special's description: three sides read as a list", () => {

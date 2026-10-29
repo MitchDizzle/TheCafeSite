@@ -64,8 +64,9 @@ const DEFAULTS = {
   // dessert made there goes. "" for the items above only.
   dessertCategory: "Desserts",
   // The item whose sides are set each morning, and its side lists, one per
-  // side the plate comes with: each pre-picks the day's side (or Chef's
-  // Choice) and lists the sides it can be swapped for. Names as in Square;
+  // side the plate comes with: each pre-picks the day's side (Chef's Choice
+  // on a choice-of-side day, nothing on an "or" side) and lists the sides it
+  // can be swapped for. Names as in Square;
   // a list that isn't there yet is made the first time it's needed.
   sideItem: "Lunch Special",
   sideLists: ["Side 1", "Side 2", "Side 3"],
