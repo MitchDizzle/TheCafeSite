@@ -8,8 +8,10 @@ pageCss: "/assets/css/studio/fb-costume-cookie.css"
 # The promotion. The caption (fb-costume-cookie.11tydata.js) reads these
 # same fields, so the picture and the words can't disagree.
 promoDate: "2026-10-30"
-cookie: "Brown Butter M&M Chocolate Chip"
+cookie: "M&M Cookie"
 cookieSub: "Gluten-free"
+# Said beside cookieSub on the picture and in the caption (client 2026-10-29).
+cookieMade: "made from scratch"
 # Mitch's cut-out of a real cookie, a PNG with a transparent background.
 # Until it's in src/assets/studio/, the post shows the drawn stand-in.
 cookiePhoto: "/assets/studio/cookie-gf-mm.png"
@@ -72,7 +74,7 @@ studioOrder: 23
         </div>
 
         <p class="p-display ck-name">{{ cookie }}</p>
-        <p class="p-display-italic ck-sub">{{ cookieSub }}</p>
+        <p class="p-display-italic ck-sub">{{ cookieSub }} &middot; {{ cookieMade }}</p>
 
         <p class="p-body ck-fine">One per person, while they last. Made apart from our regular cooking, in a kitchen that also uses wheat. Contains milk, egg and soy; may contain peanuts.</p>
     </div>
