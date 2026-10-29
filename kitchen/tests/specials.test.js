@@ -10,7 +10,7 @@ const { sideSlots, swapsFor, specialSideOptions, leaveOffOptions, counterOnlyOn,
 
 const day = (special, extra = {}) => ({ from: "site", items: { "Lunch Special": { today: special, prices: {} } }, ...extra });
 
-beforeEach(() => { plan.includesDrink = false; plan.soupSide = false; plan.extraSides = {}; plan.leaveOff = {}; plan.counterOnly = {}; plan.swapSides = ["Tossed Salad", "Cottage Cheese"]; });
+beforeEach(() => { plan.includesDrink = false; plan.soupSide = false; plan.extraSides = {}; plan.leaveOff = {}; plan.counterOnly = {}; plan.frontExtra = {}; plan.dayMods = {}; plan.dishMods = {}; plan.siteMods = {}; plan.swapSides = ["Tossed Salad", "Cottage Cheese"]; });
 
 test("the side lists: a set side is picked already", () => {
   assert.deepEqual(sideSlots(day("Meatloaf", { sides: ["Mashed Potatoes & White Gravy", "Corn"] })), [
@@ -144,43 +144,85 @@ test("today's sides: a day set on the front page keeps its own", async () => {
   assert.deepEqual(plan.days[today].sides, ["Corn"]);
 });
 
-const { listsFor, isSandwich } = require("../lib/specials/plan");
+const { listsFor, modsFor, modOption, savePlanDays } = require("../lib/specials/plan");
+const { modifierOptions } = require("../lib/specials/sides");
 
-test("a sandwich by its name: Sandwich, Wrap, Hoagie, Melt, Burger, ...", () => {
-  for (const name of ["Cheesy Steak Sandwich", "Chicken Bacon Avocado Wrap", "French Dip on a Hoagie", "Patty Melt", "Bacon Cheeseburger Sliders", "BLT", "Cheese Burger", "Cheeseburger"]) {
-    assert.equal(isSandwich(name), true, name);
-  }
-  for (const name of ["Chicken Fried Chicken", "BBQ Ribs", "Spaghetti & Meatballs", "Ham Steak", "Wrapped Pork Loin", ""]) {
-    assert.equal(isSandwich(name), false, name);
-  }
-});
-
-test("Add and Toppings: on by themselves on a sandwich day, none on another; Specials' ticks win", () => {
+test("Preset Modifiers: picked for the day, else as last time for the dish; none by a sandwich's name", () => {
   Object.assign(plan, { dayLists: {}, dishLists: {} });
-  assert.deepEqual(listsFor("2026-10-29", day("Cheesy Steak Sandwich")), { lists: ["Add", "Toppings"], from: "sandwich" });
-  assert.deepEqual(listsFor("2026-10-28", day("Chicken Fried Chicken")), { lists: [], from: null });
+  assert.deepEqual(listsFor("2026-10-29", day("Cheesy Steak Sandwich")), { lists: [], from: null });
   assert.deepEqual(listsFor("2026-10-28", null), { lists: [], from: null }, "nothing planned");
-  plan.dishLists["hot beef sandwich"] = [];
-  assert.deepEqual(listsFor("2026-10-21", day("Hot Beef Sandwich")), { lists: [], from: "dish" }, "unticked for that dish once");
+  plan.dishLists["hot beef sandwich"] = ["Toppings"];
+  assert.deepEqual(listsFor("2026-10-21", day("Hot Beef Sandwich")), { lists: ["Toppings"], from: "dish" });
   plan.dayLists["2026-10-29"] = ["Add"];
   assert.deepEqual(listsFor("2026-10-29", day("Cheesy Steak Sandwich")), { lists: ["Add"], from: "day" });
   Object.assign(plan, { dayLists: {}, dishLists: {} });
 });
 
-test("Add and Toppings go on Lunch Special in Square on a sandwich day and off the next day", async () => {
+test("a Specials Modifier as typed: free, or priced with +$1, +1 or $1.50", () => {
+  assert.deepEqual(modOption("No onion"), { name: "No onion", price: null });
+  assert.deepEqual(modOption("Extra Cheese +$1"), { name: "Extra Cheese", price: "1.00" });
+  assert.deepEqual(modOption("Add bacon +1.5"), { name: "Add bacon", price: "1.50" });
+  assert.deepEqual(modOption("Side of gravy $0.75"), { name: "Side of gravy", price: "0.75" });
+  assert.deepEqual(modOption("Add 2 eggs"), { name: "Add 2 eggs", price: null }, "a number with no + or $ is words");
+});
+
+test("Specials Modifiers: the day's typed, else the website's (Leave Off first), else the dish's last", () => {
+  const d = day("Chicken Bacon Avocado Wrap");
+  assert.deepEqual(modsFor("2026-10-20", d), { words: [], from: null });
+  plan.dishMods["chicken bacon avocado wrap"] = ["No Avocado"];
+  assert.deepEqual(modsFor("2026-10-20", d), { words: ["No Avocado"], from: "dish" });
+  plan.leaveOff = { "2026-10-20": ["Bacon"] };
+  plan.siteMods = { "2026-10-20": ["Extra Cheese +$1"] };
+  assert.deepEqual(modsFor("2026-10-20", d), { words: ["No Bacon", "Extra Cheese +$1"], from: "site" });
+  assert.deepEqual(modifierOptions("2026-10-20", d), [{ name: "No Bacon", price: null }, { name: "Extra Cheese", price: "1.00" }]);
+  plan.dayMods = { "2026-10-20": [] };
+  assert.deepEqual(modsFor("2026-10-20", d), { words: [], from: "day" }, "emptied in Specials: none that day");
+});
+
+test("Specials: typed modifiers and extra sides are saved for the day, and the modifiers for the dish", () => {
+  const today = localDate();
+  plan.days[today] = { from: "site", items: { "Lunch Special": { today: "Patty Melt", prices: {} } }, sides: ["Chips"] };
+  savePlanDays({}, {}, {}, new Set(), {}, {
+    mods: { [today]: ["No onion", "Extra cheese +$1"] },
+    extras: { [today]: { sides: ["Twice Baked Potato Casserole"], counterOnly: true } },
+  });
+  assert.deepEqual(plan.dayMods[today], ["No onion", "Extra cheese +$1"]);
+  assert.deepEqual(plan.dishMods["patty melt"], ["No onion", "Extra cheese +$1"]);
+  assert.equal(plan.days[today].from, "site", "the day itself stays the website's");
+  assert.deepEqual(swapsFor(today, plan.days[today]), ["Twice Baked Potato Casserole", "Tossed Salad", "Cottage Cheese"]);
+  assert.deepEqual(specialSideOptions(plan.days[today], today), ["Chips", "Twice Baked Potato Casserole"]);
+  assert.deepEqual([...counterOnlyOn(today)], ["twice baked potato casserole"]);
+  savePlanDays({}, {}, {}, new Set(), {}, { extras: { [today]: { sides: [], counterOnly: true } } });
+  assert.deepEqual(swapsFor(today, plan.days[today]), ["Tossed Salad", "Cottage Cheese"], "emptied: gone");
+  assert.throws(() => savePlanDays({}, {}, {}, new Set(), {}, { mods: { [today]: ["+$1"] } }), /needs a name/);
+  delete plan.days[today];
+});
+
+test("Specials Modifiers go on Lunch Special in Square as one list, priced; Leave Off and unpicked presets go off", async () => {
   const today = localDate();
   Object.assign(plan, { dayLists: {}, dishLists: {}, listsUsed: [] });
+  plan.dayMods = { [today]: ["No Onion", "Extra Cheese +$1"] };
   await loadCatalog();
-  const onItem = () => {
-    const infos = mockItems.get("ITEM-Lunch Special").item_data.modifier_list_info || [];
-    return Object.fromEntries(["LIST-Add", "LIST-Toppings"].map((id) => [id, (infos.find((x) => x.modifier_list_id === id) || {}).enabled]));
-  };
   delete plan.sidesApplied[today];
-  await applySides(today, day("Cheesy Steak Sandwich"));
-  assert.deepEqual(onItem(), { "LIST-Add": true, "LIST-Toppings": true });
+  await applySides(today, day("Cheesy Steak Sandwich", { sides: ["Chips"] }));
+  const list = [...mockItems.values()].find((o) => o.type === "MODIFIER_LIST" && o.modifier_list_data.name === "Specials Modifiers");
+  assert.ok(list, "the list is made");
+  assert.equal(list.modifier_list_data.selection_type, "MULTIPLE");
+  assert.deepEqual(list.modifier_list_data.modifiers.map((m) => [m.modifier_data.name, m.modifier_data.price_money.amount]), [["No Onion", 0], ["Extra Cheese", 100]]);
+  const on = (id) => ((mockItems.get("ITEM-Lunch Special").item_data.modifier_list_info || []).find((x) => x.modifier_list_id === id) || {}).enabled;
+  assert.equal(on(list.id), true);
+  assert.equal(on("LIST-Add"), undefined, "a sandwich no longer gets Add by its name");
+  plan.dayLists = { [today]: ["Add"] };
+  plan.listsUsed = ["Add"];
   delete plan.sidesApplied[today];
-  await applySides(today, day("Chicken Fried Chicken", { sides: ["Mashed Potatoes & White Gravy", "Green Beans"] }));
-  assert.deepEqual(onItem(), { "LIST-Add": false, "LIST-Toppings": false });
+  await applySides(today, day("Cheesy Steak Sandwich", { sides: ["Chips"] }));
+  assert.equal(on("LIST-Add"), true, "picked as a preset: on");
+  plan.dayMods = {};
+  plan.dayLists = {};
+  delete plan.sidesApplied[today];
+  await applySides(today, day("Meatloaf", { sides: ["Corn"] }));
+  assert.equal(on(list.id), false, "a day without any: off");
+  assert.equal(on("LIST-Add"), false);
 });
 
 test("each side list has its side picked already, on the option and on the item", async () => {

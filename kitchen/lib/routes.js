@@ -310,7 +310,7 @@ async function handle(req, res) {
       if (url.pathname === "/api/front-plan") {
         await pullSite(); // so the website's latest is what's shown
         // Square's lists for the plate's picker, but not the board's own.
-        const own = new Set([...cfg.sideLists, cfg.leaveOffList, cfg.specialSideList].filter(Boolean).map((n) => n.trim().toLowerCase()));
+        const own = new Set([...cfg.sideLists, cfg.leaveOffList, cfg.modifiersList, cfg.specialSideList].filter(Boolean).map((n) => n.trim().toLowerCase()));
         let squareLists = [];
         try {
           squareLists = [...(await modifierListsByName()).values()].map((l) => String(l.modifier_list_data.name || "").trim())
@@ -318,7 +318,7 @@ async function handle(req, res) {
         } catch (err) { console.error(`Specials, Square's lists: ${err.message}`); }
         return send(res, 200, { ok: true, ...(await planView(squareLists)), photos: allPhotos() });
       }
-      const saved = savePlanDays(body.days, body.notes, body.photos, new Set(allPhotos().map((p) => p.id)), body.lists);
+      const saved = savePlanDays(body.days, body.notes, body.photos, new Set(allPhotos().map((p) => p.id)), body.lists, { mods: body.mods, extras: body.extras });
       const dates = [...new Set([...saved.days, ...saved.notes, ...saved.photos, ...saved.lists])].sort();
       if (!dates.length) return send(res, 200, { ok: true, message: "Nothing changed." });
       let message = `Saved: ${dates.map(dayWords).join(", ")}.`;

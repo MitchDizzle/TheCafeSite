@@ -54,19 +54,52 @@
           placeholder="e.g. Mashed potatoes & gravy, green beans"${any ? " disabled" : ""}>
       </fieldset>`;
     };
-    // Square's own lists (Add, Toppings) to switch on on the plate that day,
-    // for a sandwich special (client 2026-10-27). Ticked for a dish once, they
-    // come back by themselves the next time it's on.
-    const listsHtml = (d) => {
+    // Extra sides for the day (client 2026-10-29: the casserole sold off
+    // beside the day's side): swapped in on Side 1 and offered on the Special
+    // Side, and Counter only keeps them off online ordering. The website's
+    // own (its extraSides) are listed above them, as they always apply.
+    const extrasHtml = (d) => {
+      const x = d.extras || {};
+      const front = x.front || { sides: [], counterOnly: false };
+      const site = x.site || [];
+      return `<fieldset class="d-sides d-extras">
+        <legend>Extra sides today <small>swap in for Side 1, and on the Special Side</small></legend>
+        ${site.length ? `<p class="m-note">From the website: ${esc(site.join(", "))}${(x.siteCounter || []).length ? ` (counter only: ${esc(x.siteCounter.join(", "))})` : ""}</p>` : ""}
+        <input type="text" data-field="extras" aria-label="Extra sides today" value="${esc(front.sides.join(", "))}" maxlength="160" autocomplete="off"
+          placeholder="e.g. Twice baked potato casserole">
+        <label class="check"><input type="checkbox" data-field="counter"${front.counterOnly ? " checked" : ""}><span>Counter only: not on online ordering</span></label>
+      </fieldset>`;
+    };
+    // Preset Modifiers: Square's own lists (Add, Toppings) switched on on the
+    // plate that day, added from a dropdown (client 2026-10-29: a checkbox for
+    // every list was too long). Picked for a dish once, they come back the
+    // next time it's on.
+    const chip = (n) => `<span class="d-chip" data-list="${esc(n)}">${esc(n)}<button type="button" data-unlist aria-label="Take off ${esc(n)}">✕</button></span>`;
+    const presetsHtml = (d) => {
       const names = r.squareLists || [];
-      if (!names.length) return "";
-      const on = new Set(((d.lists && d.lists.lists) || []).map((n) => n.toLowerCase()));
-      const shown = [...names, ...((d.lists && d.lists.lists) || []).filter((n) => !names.some((x) => x.toLowerCase() === n.toLowerCase()))];
-      return `<details class="d-lists"${on.size ? " open" : ""}>
-        <summary>Also on the plate in Square <small>${on.size ? esc([...shown].filter((n) => on.has(n.toLowerCase())).join(", ")) : "none"}${d.lists && d.lists.from === "dish" ? " · as last time for this dish" : d.lists && d.lists.from === "sandwich" ? " · it's a sandwich" : ""}</small></summary>
-        <p class="m-note">Square's own lists, as they are in Square: online ordering and the till show them on the plate that day.${(r.sandwichLists || []).length ? ` A sandwich gets ${esc(listWords(r.sandwichLists))} by itself, and other days don't.` : ""} Ticked for a dish, they come back the next time it's on.</p>
-        ${shown.map((n) => `<label class="check"><input type="checkbox" data-list="${esc(n)}"${on.has(n.toLowerCase()) ? " checked" : ""}><span>${esc(n)}</span></label>`).join("")}
-      </details>`;
+      const on = (d.lists && d.lists.lists) || [];
+      if (!names.length && !on.length) return "";
+      return `<fieldset class="d-sides d-presets">
+        <legend>Preset Modifiers${d.lists && d.lists.from === "dish" ? " <small>as last time for this dish</small>" : ""}</legend>
+        <div class="d-chips">${on.map(chip).join("")}</div>
+        <select data-preset aria-label="Add a preset modifier list">
+          <option value="">Add a list from Square…</option>
+          ${names.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join("")}
+        </select>
+      </fieldset>`;
+    };
+    // Specials Modifiers: the day's own options, typed (client 2026-10-29).
+    // The board makes them one list on Lunch Special, pick any; "+$1" prices
+    // one. Typed for a dish once, they come back the next time it's on.
+    const modsHtml = (d) => {
+      const m = d.mods || { words: [], from: null };
+      const from = m.from === "dish" ? "as last time for this dish" : m.from === "site" ? "from the website" : "";
+      return `<fieldset class="d-sides d-mods">
+        <legend>Specials Modifiers${from ? ` <small>${from}</small>` : ""}</legend>
+        <input type="text" data-field="mods" aria-label="Specials Modifiers" value="${esc(m.words.join(", "))}" maxlength="300" autocomplete="off"
+          placeholder="e.g. No onion, Add mayo, Extra cheese +$1">
+        <p class="m-note">Commas between. Free unless it ends in a price, like +$1.</p>
+      </fieldset>`;
     };
     const photos = r.photos || [];
     const byId = new Map(photos.map((p) => [p.id, p]));
@@ -129,7 +162,7 @@
               <label class="m-field">${esc(it.name)}
                 <input type="text" data-field="today" value="${esc(name)}" maxlength="60" autocomplete="off"
                   placeholder="${/soup/i.test(it.key) ? "e.g. Chicken Dumpling" : isSalad(it.key) ? "e.g. Cobb" : "e.g. Meatloaf"}"></label>
-              ${isPlate(it.key) ? sidesHtml(plan, d.date) + listsHtml(d) : ""}
+              ${isPlate(it.key) ? sidesHtml(plan, d.date) + extrasHtml(d) + presetsHtml(d) + modsHtml(d) : ""}
               ${photos.length ? photoHtml(d, it) : ""}
             </div>`;
           }).join("")}
@@ -180,8 +213,16 @@
       return { items, sides, anySide: any };
     };
     const readWords = (day) => (day.querySelector('[data-field="desc"]').value || "").trim();
-    const readLists = (day) => [...day.querySelectorAll("[data-list]:checked")].map((el) => el.dataset.list);
+    const readLists = (day) => [...day.querySelectorAll(".d-chip[data-list]")].map((el) => el.dataset.list);
     const beforeLists = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(readLists(day))]));
+    const commas = (el) => (el ? el.value.split(",").map((x) => x.trim()).filter(Boolean) : []);
+    const readMods = (day) => commas(day.querySelector('[data-field="mods"]'));
+    const beforeMods = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(readMods(day))]));
+    const readExtras = (day) => {
+      const box = day.querySelector('[data-field="counter"]');
+      return { sides: commas(day.querySelector('[data-field="extras"]')), counterOnly: !!(box && box.checked) };
+    };
+    const beforeExtras = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(readExtras(day))]));
     const readPicks = (day) => Object.fromEntries([...day.querySelectorAll(".d-photo")].map((box) => [box.dataset.key, box.dataset.pick]));
     const beforePicks = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(readPicks(day))]));
     const before = new Map([...form.querySelectorAll(".m-day")].map((day) => [day.dataset.date, JSON.stringify(read(day))]));
@@ -189,7 +230,9 @@
     const mark = (day) => day.classList.toggle("edited",
       JSON.stringify(read(day)) !== before.get(day.dataset.date) || readWords(day) !== beforeWords.get(day.dataset.date)
       || JSON.stringify(readPicks(day)) !== beforePicks.get(day.dataset.date)
-      || JSON.stringify(readLists(day)) !== beforeLists.get(day.dataset.date));
+      || JSON.stringify(readLists(day)) !== beforeLists.get(day.dataset.date)
+      || JSON.stringify(readMods(day)) !== beforeMods.get(day.dataset.date)
+      || JSON.stringify(readExtras(day)) !== beforeExtras.get(day.dataset.date));
     form.addEventListener("toggle", (e) => {
       if (e.target.matches(".d-photo") && e.target.open && !e.target.querySelector(".d-photo-body").childElementCount) fillPicker(e.target);
     }, true);
@@ -220,13 +263,29 @@
         box.querySelector(".d-photo-now").textContent = photoNow(e.target.value, name);
         return mark(day);
       }
-      if (e.target.matches("[data-list]")) return mark(e.target.closest(".m-day"));
+      // A preset picked from the dropdown: a chip, once.
+      if (e.target.matches("[data-preset]")) {
+        const day = e.target.closest(".m-day");
+        const name = e.target.value;
+        e.target.value = "";
+        if (name && !readLists(day).some((n) => n.toLowerCase() === name.toLowerCase())) {
+          day.querySelector(".d-chips").insertAdjacentHTML("beforeend", chip(name));
+        }
+        return mark(day);
+      }
+      if (e.target.matches('[data-field="counter"]')) return mark(e.target.closest(".m-day"));
       if (e.target.type !== "radio") return;
       const day = e.target.closest(".m-day");
       day.querySelector('[data-field="sides"]').disabled = e.target.value === "any";
       mark(day);
     });
     form.addEventListener("click", (e) => {
+      const off = e.target.closest("[data-unlist]");
+      if (off) {
+        const day = off.closest(".m-day");
+        off.closest(".d-chip").remove();
+        return mark(day);
+      }
       if (!e.target.closest("[data-clear]")) return;
       const day = e.target.closest(".m-day");
       for (const input of day.querySelectorAll('input[type="text"], textarea')) input.value = "";
@@ -246,7 +305,13 @@
       const notes = {};
       const picks = {};
       const lists = {};
+      const mods = {};
+      const extras = {};
       for (const day of form.querySelectorAll(".m-day")) {
+        const modsNow = readMods(day);
+        if (JSON.stringify(modsNow) !== beforeMods.get(day.dataset.date)) mods[day.dataset.date] = modsNow;
+        const extrasNow = readExtras(day);
+        if (JSON.stringify(extrasNow) !== beforeExtras.get(day.dataset.date)) extras[day.dataset.date] = extrasNow;
         const listNow = readLists(day);
         if (JSON.stringify(listNow) !== beforeLists.get(day.dataset.date)) lists[day.dataset.date] = listNow;
         const pickNow = readPicks(day);
@@ -257,7 +322,7 @@
         if (text !== beforeWords.get(day.dataset.date)) notes[day.dataset.date] = { description: text };
       }
       busy("Specials", "Saving…");
-      result("Specials", await postJson("/api/front-plan-save", { pin: Front.pin, days, notes, photos: picks, lists }));
+      result("Specials", await postJson("/api/front-plan-save", { pin: Front.pin, days, notes, photos: picks, lists, mods, extras }));
     });
   }
 

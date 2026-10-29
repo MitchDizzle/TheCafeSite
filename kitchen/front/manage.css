@@ -116,11 +116,14 @@
 .d-sides .check input { width: 1.2rem; height: 1.2rem; }
 .d-sides input[type="text"] { font: inherit; font-size: 1.05rem; color: var(--text); padding: 0.4rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
 .d-sides input[type="text"]:disabled { background: #F1ECE3; color: var(--muted); }
-.d-lists { display: grid; gap: 0.3rem; margin-top: 0.4rem; }
-.d-lists > summary { cursor: pointer; font-weight: 700; color: var(--teal-dark); padding: 0.25rem 0; }
-.d-lists > summary small { font-weight: 400; color: var(--muted); margin-left: 0.4rem; }
-.d-lists .check { margin: 0; font-size: 1.05rem; }
-.d-lists .check input { width: 1.2rem; height: 1.2rem; }
+.d-extras, .d-presets, .d-mods { margin-top: 0.5rem; }
+.d-sides legend small { font-weight: 400; margin-left: 0.3rem; }
+.d-sides .m-note { margin: 0; }
+.d-presets select { font: inherit; font-size: 1.05rem; color: var(--text); padding: 0.4rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; background: var(--paper); }
+.d-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.d-chips:empty { display: none; }
+.d-chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.3rem 0.25rem 0.65rem; border-radius: 999px; background: var(--teal); color: #fff; font-weight: 700; }
+.d-chip button { font: inherit; font-size: 0.9rem; line-height: 1; width: 1.6rem; height: 1.6rem; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.2); color: #fff; cursor: pointer; }
 .d-prices > summary { cursor: pointer; font-weight: 700; color: var(--teal-dark); padding: 0.25rem 0; }
 .d-prices > summary small { font-weight: 400; color: var(--muted); margin-left: 0.4rem; }
 .d-price-item { margin-top: 0.6rem; }

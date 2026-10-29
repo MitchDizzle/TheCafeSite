@@ -75,14 +75,17 @@ const DEFAULTS = {
   // "" leaves it alone.
   specialSideItem: "Special Side",
   specialSideList: "Today's Side",
-  // The list on sideItem for what can be left off that day's plate ("No
-  // Bacon" on a Chicken Bacon Avocado Wrap day): each morning it holds the
-  // day's `leaveOff` from the website, pick any, $0, and is off on a day
-  // without one. "" leaves it alone.
+  // The board's own list on sideItem for the day's Specials Modifiers, typed
+  // in Specials ("No Onion, Add Mayo, Extra Cheese +$1") or the website's day
+  // `modifiers` and `leaveOff`: pick any, $0 unless priced, off on a day
+  // without any (client 2026-10-29). "" leaves it alone.
+  modifiersList: "Specials Modifiers",
+  // The list that held the day's leaveOff before the Specials Modifiers took
+  // it over (2026-10-29): only ever switched off now. "" leaves it alone.
   leaveOffList: "Leave Off",
-  // Square's lists on sideItem for a sandwich special (one named Sandwich,
-  // Wrap, Burger, Hoagie, ...): on that day, off on every other (client
-  // 2026-10-28). Ticks in Specials win for a day or a dish. [] leaves them alone.
+  // Square's lists on sideItem a sandwich special used to get by its name
+  // (2026-10-28): now they go on only when picked in Specials (Preset
+  // Modifiers), and are switched off on a day they aren't. [] leaves them alone.
   sandwichLists: ["Add", "Toppings"],
   // The daily items' descriptions, which online ordering and DoorDash show
   // under the name: each morning the board writes the day's plate or soup in

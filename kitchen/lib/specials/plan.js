@@ -50,17 +50,25 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 //            Twice Baked Potato Casserole, sold off: client 2026-10-29), the website's day
 //            `counterOnly`. Hidden from online ordering in Square. Kept apart from `days`
 //            like extraSides, and read the same way, even for today.
+// frontExtra: { "YYYY-MM-DD": { sides: [...], counterOnly } }, extra sides typed in Specials
+//            for that day (client 2026-10-29), as the website's extraSides: swapped in on
+//            Side 1-3 and offered on the Special Side; counterOnly hides them online. Kept
+//            apart from `days`, so typing them leaves a website day the website's.
 // dayLists: { "YYYY-MM-DD": ["Add", "Toppings"] }, Square's own modifier lists to switch on
-//            on Lunch Special that day (a sandwich's Add and Toppings, client 2026-10-27),
+//            on Lunch Special that day ("Preset Modifiers" in Specials, client 2026-10-27),
 //            picked in Specials. Kept apart from `days` like the photo picks.
 // dishLists: { "<dish>": [...] }, the lists last picked for a dish, used on a day it's
-//            served with nothing picked for that day, so a sandwich gets its lists by itself.
+//            served with nothing picked for that day, so a dish gets its lists by itself.
+// dayMods: { "YYYY-MM-DD": [...] }, the Specials Modifiers typed in Specials for that day
+//            ("No Onion", "Extra Cheese +$1"), the board's own list on Lunch Special
+//            (client 2026-10-29). dishMods: the same, last typed for a dish, used on a day
+//            with none of its own. siteMods: the website's day `modifiers`.
 // listsUsed: every list ever picked: the board switches these off on a day without them,
 //            and leaves every other list on the item alone (Dressing).
 // soupSide: a cup of the day's soup can be picked as a side, as the website last said
 // includesDrink: every lunch special includes a drink, as the website last said
 // site:    the last read of the website, for the front to show
-const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, dayLists: {}, dishLists: {}, listsUsed: [], swapSides: [], extraSides: {}, leaveOff: {}, counterOnly: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
+const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, dayLists: {}, dishLists: {}, listsUsed: [], dayMods: {}, dishMods: {}, siteMods: {}, frontExtra: {}, swapSides: [], extraSides: {}, leaveOff: {}, counterOnly: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
 try {
   Object.assign(plan, JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")));
 } catch {}
@@ -68,7 +76,7 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.counterOnly, plan.photoPick, plan.dayLists, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.counterOnly, plan.frontExtra, plan.dayMods, plan.siteMods, plan.photoPick, plan.dayLists, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
 }
 
@@ -79,19 +87,50 @@ const plateOf = (day) => {
   return (it && it.today) || "";
 };
 
-// A plate that's a sandwich by its name: it gets cfg.sandwichLists (Add,
-// Toppings) unless Specials says otherwise (client 2026-10-28).
-const SANDWICH = /\b(sandwich(es)?|\w*burgers?|wraps?|melts?|hoagies?|subs?|club|blts?|reubens?|philly|paninis?|sliders?|po'?\s?boys?|french dip)\b/i;
-const isSandwich = (name) => SANDWICH.test(String(name || ""));
-
-// The lists on Lunch Special on `date`: picked for that day, else the ones
-// last picked for its dish, else a sandwich's. { lists, from: "day" | "dish" | "sandwich" | null }.
+// The lists on Lunch Special on `date` (Preset Modifiers): picked for that
+// day, else the ones last picked for its dish. { lists, from: "day" | "dish" | null }.
+// A sandwich got Add and Toppings by its name from 2026-10-28 until the
+// typed Specials Modifiers replaced that (client 2026-10-29): a list goes on
+// only when it's picked.
 function listsFor(date, day = plan.days[date]) {
   if (Array.isArray(plan.dayLists[date])) return { lists: plan.dayLists[date], from: "day" };
   const dish = dishKey(plateOf(day));
   if (dish && Array.isArray(plan.dishLists[dish])) return { lists: plan.dishLists[dish], from: "dish" };
-  if (isSandwich(plateOf(day)) && cfg.sandwichLists.length) return { lists: cfg.sandwichLists, from: "sandwich" };
   return { lists: [], from: null };
+}
+
+// One Specials Modifier as typed: "Extra Cheese +$1" (or "+1", "$1.50") is
+// that option at that price, anything else is $0 ("No Onion").
+function modOption(text) {
+  const words = cleanText(text);
+  const m = /^(.*?)\s*(?:\+\s*\$?|\$)\s*(\d{1,3}(?:\.\d{1,2})?)\s*$/.exec(words);
+  return m ? { name: m[1], price: Number(m[2]).toFixed(2) } : { name: words, price: null };
+}
+
+// The Specials Modifiers on `date` (the board's own list on Lunch Special,
+// cfg.modifiersList), as typed: typed in Specials for that day, else the
+// website's for that day (its `modifiers`, after its `leaveOff` as "No ..."),
+// else the ones last typed for its dish. { words, from: "day" | "site" | "dish" | null }.
+function modsFor(date, day = plan.days[date]) {
+  if (Array.isArray(plan.dayMods[date])) return { words: plan.dayMods[date], from: "day" };
+  const site = [...(plan.leaveOff[date] || []).map((w) => (/^no\s/i.test(w) ? w : `No ${w}`)), ...(plan.siteMods[date] || [])];
+  if (site.length) return { words: site, from: "site" };
+  const dish = dishKey(plateOf(day));
+  if (dish && Array.isArray(plan.dishMods[dish])) return { words: plan.dishMods[dish], from: "dish" };
+  return { words: [], from: null };
+}
+
+// The day's extra sides: the website's extraSides, then those typed in
+// Specials. And those of them, or of the website's counterOnly, sold at the
+// counter only (hidden online).
+const sameWord = (a, b) => a.toLowerCase() === b.toLowerCase();
+const uniq = (list) => list.filter((w, i) => w && list.findIndex((x) => sameWord(x, w)) === i);
+function extrasOn(date) {
+  return uniq([...(plan.extraSides[date] || []), ...((plan.frontExtra[date] || {}).sides || [])]);
+}
+function counterOnlyFor(date) {
+  const front = plan.frontExtra[date] || {};
+  return uniq([...(plan.counterOnly[date] || []), ...(front.counterOnly ? front.sides || [] : [])]);
 }
 
 // A price from the website as the plan keeps it ("10.00"), or "" when it
@@ -201,6 +240,18 @@ async function pullSite() {
       plan.leaveOff[date] = list;
       console.log(`Can be left off ${date}'s plate, from the website: ${list.join(", ")}.`);
     }
+    // A day's Specials Modifiers, read the same way.
+    const mods = {};
+    for (const d of listed) {
+      const list = Array.isArray(d.modifiers) ? [...new Set(d.modifiers.map(cleanText).filter(Boolean))].slice(0, 12) : [];
+      if (d.date >= today && list.length) mods[d.date] = list;
+    }
+    for (const date of Object.keys(plan.siteMods)) if (date >= today && !mods[date]) delete plan.siteMods[date];
+    for (const [date, list] of Object.entries(mods)) {
+      if (JSON.stringify(plan.siteMods[date]) === JSON.stringify(list)) continue;
+      plan.siteMods[date] = list;
+      console.log(`Specials Modifiers for ${date} from the website: ${list.join(", ")}.`);
+    }
     // Sides sold at the counter only, read the same way: they only hide
     // options from online ordering and never change the day's names.
     const counter = {};
@@ -261,10 +312,11 @@ async function planView(squareLists = []) {
     items: items.filter((it) => !it.missing).map(({ key, name, variations }) => ({ key, name, sizes: variations.map((v) => ({ size: v.size, price: v.price })) })),
     live: Object.fromEntries(items.filter((it) => !it.missing).map((it) => [it.key, it.today])),
     missing: items.filter((it) => it.missing).map((it) => it.name),
-    days: dates.map((date) => ({ date, plan: plan.days[date] || null, note: plan.notes[date] || null, photoPick: plan.photoPick[date] || {}, lists: listsFor(date), applied: plan.applied[date] || null })),
-    // Square's modifier lists that can go on the plate, but not the board's own (the sides, Leave Off).
+    days: dates.map((date) => ({ date, plan: plan.days[date] || null, note: plan.notes[date] || null, photoPick: plan.photoPick[date] || {}, lists: listsFor(date), mods: modsFor(date),
+      extras: { front: plan.frontExtra[date] || null, site: plan.extraSides[date] || [], siteCounter: plan.counterOnly[date] || [] },
+      applied: plan.applied[date] || null })),
+    // Square's modifier lists that can go on the plate (Preset Modifiers), but not the board's own (the sides, Specials Modifiers).
     squareLists,
-    sandwichLists: cfg.sandwichLists,
     site: { url: cfg.specialsUrl, ...plan.site },
   };
 }
@@ -280,10 +332,12 @@ const checkDate = (date, today) => {
 // photos:  { "YYYY-MM-DD": { "<dailyItems name>": "<photo id>" | "none" | "" } } ("" = the usual)
 // lists:   { "YYYY-MM-DD": ["Add", "Toppings"] }, Square's lists on Lunch Special that day
 // photoIds: every kept photo's id (allPhotos), to check a picked one against
+// more.mods:   { "YYYY-MM-DD": ["No Onion", "Extra Cheese +$1"] }, the Specials Modifiers
+// more.extras: { "YYYY-MM-DD": { sides: [...], counterOnly } }, the day's extra sides
 // Only the days the front changed. A day left with nothing in it is taken off
 // the plan (if the website lists it, its copy comes back on the next read).
 // Everything is checked before anything is kept. Returns the dates of each.
-function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}) {
+function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}, more = {}) {
   const today = localDate();
   const next = {};
   for (const [date, change] of Object.entries(changes || {})) {
@@ -344,9 +398,35 @@ function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}) 
     checkDate(date, today);
     listed[date] = [...new Set((Array.isArray(raw) ? raw : []).map(cleanText).filter(Boolean))].slice(0, 8);
   }
+  // The Specials Modifiers typed for a day, each checked now so a bad price
+  // saves nothing; remembered for its dish too, like the lists.
+  const modded = {};
+  for (const [date, raw] of Object.entries(more.mods || {})) {
+    checkDate(date, today);
+    modded[date] = [...new Set((Array.isArray(raw) ? raw : []).map(cleanText).filter(Boolean))].slice(0, 12);
+    for (const w of modded[date]) {
+      if (!modOption(w).name) throw Object.assign(new Error(`"${w}" needs a name before its price. Nothing was saved.`), { plain: true });
+    }
+  }
+  // The day's extra sides typed here.
+  const extra = {};
+  for (const [date, raw] of Object.entries(more.extras || {})) {
+    checkDate(date, today);
+    const sides = uniq((Array.isArray(raw && raw.sides) ? raw.sides : []).map(cleanText).filter(Boolean)).slice(0, 6);
+    extra[date] = sides.length ? { sides, counterOnly: !!(raw && raw.counterOnly) } : null;
+  }
   for (const [date, day] of Object.entries(next)) {
     if (day) plan.days[date] = day;
     else delete plan.days[date];
+  }
+  for (const [date, words] of Object.entries(modded)) {
+    plan.dayMods[date] = words;
+    const dish = dishKey(plateOf(plan.days[date]));
+    if (dish) plan.dishMods[dish] = words;
+  }
+  for (const [date, x] of Object.entries(extra)) {
+    if (x) plan.frontExtra[date] = x;
+    else delete plan.frontExtra[date];
   }
   for (const [date, names] of Object.entries(listed)) {
     plan.dayLists[date] = names;
@@ -362,9 +442,9 @@ function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}) 
   const days = Object.keys(next).sort();
   const noted = Object.keys(words).sort();
   const picked = Object.keys(picks).sort();
-  const withLists = Object.keys(listed).sort();
+  const withLists = [...new Set([...Object.keys(listed), ...Object.keys(modded), ...Object.keys(extra)])].sort();
   if (days.length || noted.length || picked.length || withLists.length) console.log(`Specials changed from the front page (${new Date().toLocaleTimeString()}): ${[...new Set([...days, ...noted, ...picked, ...withLists])].sort().join(", ")}.`);
   return { days, notes: noted, photos: picked, lists: withLists };
 }
 
-module.exports = { SITE_MINUTES, RETRY_MINUTES, plan, savePlan, siteFieldFor, pullSite, planView, savePlanDays, listsFor, isSandwich };
+module.exports = { SITE_MINUTES, RETRY_MINUTES, plan, savePlan, siteFieldFor, pullSite, planView, savePlanDays, listsFor, modsFor, modOption, extrasOn, counterOnlyFor };
