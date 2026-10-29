@@ -35,7 +35,10 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 40px 60px 30px;
+    /* Extra room at the top: Facebook's preview trims about 45px off the
+       top and bottom of a 4:5 post (2026-10-29), so nothing sits that close
+       to either edge. */
+    padding: 78px 60px 28px;
     border-bottom: 10px solid var(--pumpkin-burnt);
 }
 
@@ -134,7 +137,7 @@
 .ck-cookie-photo {
     display: block;
     height: 100%;
-    max-height: 460px;
+    max-height: 400px;
     max-width: 100%;
     object-fit: contain;
     filter: drop-shadow(0 14px 18px rgba(110, 45, 0, 0.35));
@@ -172,7 +175,7 @@
     background: var(--teal-dark);
     color: var(--cream);
     text-align: center;
-    padding: 22px 40px 26px;
+    padding: 20px 40px 66px;
 }
 
 .ck-foot-call {
