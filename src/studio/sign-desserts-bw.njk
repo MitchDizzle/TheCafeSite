@@ -1,0 +1,51 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Dessert fridge sign (black & white)"
+canvasW: "8.5in"
+canvasH: "11in"
+pageSize: "8.5in 11in"
+pageCss: "/assets/css/studio/sign.css"
+bw: true
+tags: studio
+studioData: ["menu.json"]
+studioTitle: "Dessert fridge sign — black & white"
+studioCategory: "Signs"
+studioSize: "8.5 × 11 in portrait · letter, taped to the dessert fridge"
+studioNote: "Prices only: every fridge dessert at one price, and the magic bars and rice crispy treats at theirs."
+studioW: 816
+studioH: 1056
+studioOrder: 32
+---
+{#- Dessert fridge sign (client 2026-10-29): black & white, no logo, just
+    the prices. Every dessert in the fridge is one price since that day
+    (cheesecake, cream puffs, whatever the batch is), so the sign names
+    none of them: they change with each batch. That price is Cheesecake's
+    in menu.json and the bars' is Dessert Bar's (its kinds are the magic
+    bar and the rice crispy treat); a dessert added from the kitchen
+    board's Manage -> Desserts lives only in Square, so set it to the same
+    price there. If you find yourself typing a price here, stop. -#}
+{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
+{%- set fridge = (desserts.items | where("name", "Cheesecake"))[0] %}
+{%- set bars = (desserts.items | where("name", "Dessert Bar"))[0] %}
+<div class="canvas sign sign--bw fd">
+    <div class="sign-heading">
+        <h2 class="p-display sign-heading-title">Desserts</h2>
+    </div>
+
+    <div class="fd-items">
+        {%- if fridge %}
+        <section class="fd-item">
+            <p class="p-display fd-name">Fridge Desserts</p>
+            <p class="fd-sub">Any dessert in this fridge</p>
+            <p class="p-display fd-price">{{ fridge.price | money }} <span class="fd-each">each</span></p>
+        </section>
+        {%- endif %}
+
+        {%- if bars %}
+        <section class="fd-item">
+            <p class="p-display fd-name">Magic Bars &amp;<br>Rice Crispy Treats</p>
+            <p class="p-display fd-price">{{ bars.price | money }} <span class="fd-each">each</span></p>
+        </section>
+        {%- endif %}
+    </div>
+</div>
