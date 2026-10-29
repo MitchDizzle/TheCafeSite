@@ -1,0 +1,161 @@
+/* ============================================================
+   Costume cookie — Facebook post, 1080 × 1350 px (4:5 portrait)
+   Piece: src/studio/fb-costume-cookie.njk
+
+   Built like the weekly specials post (fb-weekly-specials.css), teal bands
+   top and bottom, but with a Halloween orange body (client 2026-10-29).
+   Shown about 540px wide on a phone, so nothing a customer needs is set
+   under 24px.
+
+   THE ORANGE is a one-off for this post, so it lives here and not in
+   tokens.css. It is light enough that --text-dark reads on it at body size
+   (5.7:1 at the light end); cream and the accent red don't (2.2:1 and
+   under), so every word in the body is dark. The cookie sits on a cream
+   plate because its own tan nearly matches the orange.
+   ============================================================ */
+
+.ck {
+    --pumpkin:       #F39237;
+    --pumpkin-deep:  #EC8128;
+    --pumpkin-burnt: #B9540F;
+    --pumpkin-light: #F7B267;
+
+    background: linear-gradient(170deg, var(--pumpkin) 0%, var(--pumpkin-deep) 100%);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Masthead band ────────────────────────────────────────── */
+
+.ck-head {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    color: var(--cream);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 60px 30px;
+    border-bottom: 10px solid var(--pumpkin-burnt);
+}
+
+.ck-wordmark {
+    --mark-w: 300px;
+}
+
+.ck-kicker {
+    font-size: 48px;
+    margin-top: 12px;
+}
+
+/* Light orange on teal is 3.9:1, fine for bold caps this size. */
+.ck-range {
+    font-size: 26px;
+    color: var(--pumpkin-light);
+    margin-top: 8px;
+    /* .p-label tracks 0.18em after the last letter too; half of it back as
+       indent re-centres the line. */
+    text-indent: 0.18em;
+}
+
+/* ── The offer ────────────────────────────────────────────── */
+
+.ck-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 28px 56px 26px;
+}
+
+/* The tagline: the one thing the post says. */
+.ck-headline {
+    font-size: 92px;
+    line-height: 1.0;
+    color: var(--teal-dark);
+}
+
+.ck-headline-2 {
+    display: block;
+    font-style: italic;
+    font-weight: 900;
+    color: var(--text-dark);
+}
+
+/* The cookie takes whatever height the words leave, on a cream plate. */
+.ck-cookie {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 18px 0 14px;
+}
+
+.ck-plate {
+    height: 100%;
+    max-height: 500px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 42% 38%, #fff 0%, var(--cream) 62%, #EFE7DA 100%);
+    box-shadow: 0 14px 30px rgba(110, 45, 0, 0.35), inset 0 0 0 10px rgba(255, 255, 255, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ck-cookie-img {
+    display: block;
+    width: 86%;
+    height: 86%;
+    object-fit: contain;
+}
+
+/* A cut-out photo has no shadow of its own, so it gets one to sit on the
+   plate; the drawn stand-in carries its own. */
+.ck-cookie-img--photo {
+    filter: drop-shadow(6px 12px 14px rgba(var(--text-dark-rgb), 0.3));
+}
+
+.ck-name {
+    font-size: 46px;
+    line-height: 1.1;
+    color: var(--text-dark);
+}
+
+.ck-sub {
+    font-size: 36px;
+    color: var(--text-dark);
+    margin-top: 4px;
+}
+
+.ck-fine {
+    font-size: 24px;
+    line-height: 1.3;
+    margin-top: 14px;
+    max-width: 900px;
+}
+
+/* ── Footer band ──────────────────────────────────────────── */
+
+.ck-foot {
+    background: var(--teal-dark);
+    color: var(--cream);
+    text-align: center;
+    padding: 22px 40px 26px;
+}
+
+.ck-foot-call {
+    font-size: 40px;
+    white-space: nowrap;
+}
+
+.ck-foot-line {
+    font-size: 24px;
+    margin-top: 6px;
+    opacity: 0.88;
+}
+
+.dot { opacity: 0.55; margin: 0 0.3em; }

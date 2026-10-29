@@ -44,6 +44,13 @@ private CafeWork repo (see `CLAUDE.md`).
     pan-fried on the flat-top.
   - No GF or V marks, and no "gluten-free" or "vegetarian" claims, until the
     client confirms them (`menu.json` → `dietsConfirmed`).
+  - Something baked with no wheat (the costume cookies, 2026-10-30) may be
+    called "gluten-free" only when it is mixed and baked apart from the
+    regular cooking (after close, nothing else cooking, cleaned equipment),
+    and always with a line saying the kitchen also uses wheat. Made
+    alongside the day's cooking, it is "made with gluten-free ingredients"
+    instead: the FDA says a restaurant that can't keep a food under 20 ppm
+    gluten shouldn't call it gluten-free.
   - The soup is sold separately. Say so wherever the specials are listed.
   - Don't list flavours or desserts that change with each batch. Customers
     ask at the counter.
@@ -65,7 +72,9 @@ private CafeWork repo (see `CLAUDE.md`).
 ## 3. Colour
 
 **Source of truth: `src/assets/css/tokens.css`.** Don't copy hex values into a
-new file. Use the tokens.
+new file. Use the tokens. A seasonal one-off (the Halloween orange on
+`fb-costume-cookie`, 2026-10-30) keeps its own colours in its own stylesheet,
+never in `tokens.css`, and still uses the teal bands.
 
 The palette follows the front-window graphic: cool teal backgrounds with a
 warm red accent on top.

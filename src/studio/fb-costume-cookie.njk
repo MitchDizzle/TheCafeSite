@@ -1,0 +1,85 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Costume Cookie Post (1080 × 1350)"
+canvasW: "1080px"
+canvasH: "1350px"
+pageCss: "/assets/css/studio/fb-costume-cookie.css"
+
+# The promotion. The caption (fb-costume-cookie.11tydata.js) reads these
+# same fields, so the picture and the words can't disagree.
+promoDate: "2026-10-30"
+cookie: "Brown Butter M&M Chocolate Chip"
+cookieSub: "Gluten-free"
+# Mitch's cut-out of a real cookie, a PNG with a transparent background.
+# Until it's in src/assets/studio/, the post shows the drawn stand-in.
+cookiePhoto: "/assets/studio/cookie-gf-mm.png"
+
+tags: studio
+studioWeekly: true
+studioTitle: "Costume cookie — Facebook post"
+studioCategory: "Social"
+studioSize: "1080 × 1350 px · portrait feed post"
+studioNote: "Wear a costume in on Friday, October 30 for a free cookie. Kids get one too, but that isn't advertised. The cookie is Mitch's cut-out photo at src/assets/studio/cookie-gf-mm.png (transparent PNG) once it's there, a drawn stand-in until then. Says 'gluten-free' because the cookies have no wheat and are mixed and baked after close with nothing else cooking, on cleaned equipment; the line that the kitchen also uses wheat stays with it everywhere."
+studioW: 1080
+studioH: 1350
+studioOrder: 23
+---
+{#- One promotion, one day: a free cookie for anyone who comes in wearing a
+    costume.
+
+    THE TAGLINE is the post: "Wear a costume for a free cookie", biggest
+    thing on it (client 2026-10-29).
+
+    THE PALETTE is the weekly post's teal bands top and bottom with a
+    Halloween orange body (client 2026-10-29); the orange and why every word
+    on it is dark are in fb-costume-cookie.css.
+
+    NO KIDS LINE. Kids get a cookie too, but it isn't advertised (client
+    2026-10-29): the post is about the costumes, not about drawing kids in.
+
+    THE GLUTEN WORDING. "Gluten-free", always with the line that they're
+    made apart from the regular cooking in a kitchen that also uses wheat,
+    on the post, in the caption and on the bag labels
+    (label-costume-cookies). The flour is certified and nothing in them has
+    wheat, and Mitch mixes and bakes them after close with nothing else
+    cooking (client 2026-10-29); the kitchen line is there so someone with
+    celiac can still decide for themselves.
+
+    Every size is set for the ~540px a portrait post shows at on a phone:
+    nothing a customer needs is under 24px. -#}
+{%- set o = site.opening %}
+<div class="canvas ck">
+
+    <header class="ck-head">
+        <div class="wordmark wordmark--light wordmark--hero ck-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-display-italic ck-kicker">Happy Halloween</p>
+        <p class="p-label ck-range">{{ promoDate | dayDate("long") }} &middot; {{ site.address.locality }}, {{ site.address.region }}</p>
+    </header>
+
+    <div class="ck-body">
+        <h1 class="p-display ck-headline">Wear a costume <span class="ck-headline-2">for a free cookie</span></h1>
+
+        <div class="ck-cookie">
+            <div class="ck-plate">
+                {%- if cookiePhoto | hasAsset %}
+                <img class="ck-cookie-img ck-cookie-img--photo" src="{{ cookiePhoto }}" alt="">
+                {%- else %}
+                <img class="ck-cookie-img" src="/assets/studio/cookie-art.svg" alt="">
+                {%- endif %}
+            </div>
+        </div>
+
+        <p class="p-display ck-name">{{ cookie }}</p>
+        <p class="p-display-italic ck-sub">{{ cookieSub }}</p>
+
+        <p class="p-body ck-fine">One per person, while they last. Made apart from our regular cooking, in a kitchen that also uses wheat. Contains milk, egg and soy; may contain peanuts.</p>
+    </div>
+
+    <footer class="ck-foot">
+        <p class="p-display ck-foot-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
+        <p class="p-body ck-foot-line">{{ promoDate | dayDate("weekday") }} {{ o.opens.time | replace(":00", "") }}{{ o.opens.meridiem }} &ndash; {{ o.closes.time | replace(":00", "") }}{{ o.closes.meridiem }} &middot; {{ site.address.street }}, {{ site.address.locality }}, {{ site.address.region }}</p>
+    </footer>
+
+</div>

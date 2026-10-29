@@ -1,0 +1,42 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Costume cookie labels (Avery 18262)"
+canvasW: "8.5in"
+canvasH: "11in"
+pageSize: "8.5in 11in"
+pageCss: "/assets/css/studio/label-avery.css"
+tags: studio
+studioWeekly: true
+studioTitle: "Costume cookie labels — Avery 18262"
+studioCategory: "Labels"
+studioSize: "8.5 × 11 in · fourteen 1⅓ × 4 in labels (Avery 18262 / 5162 / 5262 / 8162)"
+studioNote: "Bag labels for the free cookies on costume Friday (fb-costume-cookie). Print at 100% (Actual size, no Fit to page) on plain paper first and hold it over a label sheet to check the line-up. Ingredients are in descending order by weight; the flour's own list is King Arthur Measure for Measure's, so check it against the bag. 'Gluten-free' always comes with the line that they're made apart from the regular cooking in a kitchen that also uses wheat."
+studioW: 816
+studioH: 1056
+studioOrder: 61
+
+product: "Brown Butter M&M Chocolate Chip"
+productSub: "Gluten-free"
+ingredients: "Gluten-Free Flour (Rice Flour, Brown Rice Flour, Sorghum Flour, Tapioca Starch, Potato Starch, Cellulose, Xanthan Gum), Butter (Milk), Brown Sugar, Semi-Sweet and Milk Chocolate Chips, M&M's, Sugar, Egg, Coffee, Baking Soda, Salt."
+contains: "Milk, Egg, Soy. May contain peanuts"
+kitchenNote: "Mixed and baked apart from our regular cooking, in a kitchen that also uses wheat."
+---
+{#- Avery 18262 (same sheet as 5162 / 5262 / 8162): letter, 2 columns × 7 rows of
+    4 × 1⅓ in labels, 0.8333in top margin, 5/32in side margin, 3/16in between
+    the columns, no gap between rows. Each label keeps its text 0.1in in
+    from its top and bottom and 0.18in from its sides, so a printer that
+    feeds a little off still lands it on the label.
+
+    The same sheet as personal/pumpkin-cookies, with the cafe's name on it,
+    since these go home with customers. The kitchen note sits on the
+    allergen line: anyone with celiac reads both. -#}
+<div class="canvas avery-sheet">
+    {%- for n in range(14) %}
+    <div class="bake-label">
+        <h1 class="bake-name">{{ product }}</h1>
+        <p class="bake-sub">{{ productSub }} <span class="bake-from">&middot; {{ site.name }}, {{ site.address.locality }}</span></p>
+        <p class="bake-ingredients"><b>Ingredients:</b> {{ ingredients }}</p>
+        <p class="bake-contains"><b>Contains: {{ contains }}.</b> {{ kitchenNote }}</p>
+    </div>
+    {%- endfor %}
+</div>

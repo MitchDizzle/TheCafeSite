@@ -1,0 +1,76 @@
+/* ============================================================
+   Avery 18262 / 5162 / 5262 / 8162 — 1⅓ × 4 in labels, 14 per letter sheet.
+   The sheet's geometry is fixed by the label stock; change the type,
+   never these numbers. Used by studio/label-costume-cookies.njk; the
+   personal pumpkin labels carry their own copy (personal/pumpkin-cookies).
+   ============================================================ */
+
+.avery-sheet {
+    box-sizing: border-box;
+    padding: 0.8333in 0.15625in 0;
+    display: grid;
+    grid-template-columns: 4in 4in;
+    grid-template-rows: repeat(7, 1.3333in);
+    column-gap: 0.1875in;
+    background: #fff;
+}
+
+.bake-label {
+    box-sizing: border-box;
+    height: 1.3333in;
+    padding: 0.1in 0.18in;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    font-family: 'Lato', sans-serif;
+    color: var(--text-dark);
+}
+
+/* Screen proof only: shows where each label's edge falls. */
+@media screen {
+    .bake-label { outline: 1px dashed #cfd6d8; outline-offset: -1px; }
+}
+
+.bake-label p,
+.bake-label h1 { margin: 0; }
+
+.bake-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 15pt;
+    line-height: 1.1;
+    color: var(--teal-dark);
+    white-space: nowrap;
+}
+
+.bake-sub {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 10pt;
+    line-height: 1.25;
+    color: var(--teal-dark);
+    padding-bottom: 0.04in;
+    margin-bottom: 0.04in !important;
+    border-bottom: 1px solid var(--accent);
+}
+
+/* The cafe's name after the sub line, quieter than the sub itself. */
+.bake-from {
+    font-family: 'Lato', sans-serif;
+    font-style: normal;
+    font-size: 7.5pt;
+    color: var(--text-dark);
+    opacity: 0.8;
+}
+
+.bake-ingredients {
+    font-size: 7pt;
+    line-height: 1.22;
+}
+
+.bake-contains {
+    font-size: 7pt;
+    line-height: 1.22;
+    margin-top: 0.02in !important;
+}
