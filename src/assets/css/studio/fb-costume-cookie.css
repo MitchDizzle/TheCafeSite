@@ -69,17 +69,31 @@
     padding: 28px 56px 26px;
 }
 
-/* A soft white glow behind each block of dark words, fading out into the
-   orange at its edges, so the type sits a little lighter than the ground
-   (client 2026-10-29). */
-.ck-headline,
-.ck-words {
-    background: radial-gradient(closest-side, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.35) 60%, rgba(255, 255, 255, 0) 100%);
+/* A light purple glow that follows the letters of every dark word: solid
+   right around them, fading out into the orange (client 2026-10-29). The
+   tight shadows make the solid part, the wide ones the fade; the big
+   headline gets wider ones to match its size. */
+.ck {
+    --glow: #DCC4F2;
+    --glow-fade: rgba(220, 196, 242, 0.75);
+}
+
+.ck-body {
+    text-shadow:
+        0 0 2px var(--glow), 0 0 3px var(--glow), 0 0 4px var(--glow),
+        0 0 5px var(--glow), 0 0 7px var(--glow), 0 0 10px var(--glow),
+        0 0 16px var(--glow-fade), 0 0 26px var(--glow-fade);
+}
+
+.ck-headline {
+    text-shadow:
+        0 0 3px var(--glow), 0 0 5px var(--glow), 0 0 7px var(--glow),
+        0 0 9px var(--glow), 0 0 12px var(--glow), 0 0 16px var(--glow),
+        0 0 26px var(--glow-fade), 0 0 42px var(--glow-fade);
 }
 
 /* The tagline: the one thing the post says. */
 .ck-headline {
-    padding: 14px 70px;
     font-size: 92px;
     line-height: 1.0;
     color: var(--teal-dark);
@@ -137,7 +151,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 16px 70px 18px;
 }
 
 .ck-name {
