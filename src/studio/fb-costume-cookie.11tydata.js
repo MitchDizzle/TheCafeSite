@@ -19,7 +19,7 @@ module.exports = {
         `Wear a costume for a free cookie: ${day} at The Café in ${site.address.locality}, ${site.address.region}.`,
         `It's our ${data.cookie.replace(/Cookie$/, "cookie")}, ${data.cookieMade} right here in our kitchen and ${data.cookieSub.toLowerCase()}.`,
         // Said in full here: the picture only has room for the short version.
-        "One per person, while they last. There's no wheat in them, and they're mixed and baked apart from our regular cooking, but our kitchen does use wheat the rest of the day. They contain milk, egg and soy, and the M&M's may contain peanuts.",
+        "One per person, while they last. There's no wheat in them, and they're mixed and baked apart from our regular cooking, but our kitchen does use wheat the rest of the day. They contain milk, egg and soy.",
         [
           `${site.address.street}, ${site.address.locality}, ${site.address.region}`,
           `Open ${weekday} ${hours}`,

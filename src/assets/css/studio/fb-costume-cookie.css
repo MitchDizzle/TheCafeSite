@@ -69,8 +69,17 @@
     padding: 28px 56px 26px;
 }
 
+/* A soft white glow behind each block of dark words, fading out into the
+   orange at its edges, so the type sits a little lighter than the ground
+   (client 2026-10-29). */
+.ck-headline,
+.ck-words {
+    background: radial-gradient(closest-side, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.35) 60%, rgba(255, 255, 255, 0) 100%);
+}
+
 /* The tagline: the one thing the post says. */
 .ck-headline {
+    padding: 14px 70px;
     font-size: 92px;
     line-height: 1.0;
     color: var(--teal-dark);
@@ -113,10 +122,22 @@
     object-fit: contain;
 }
 
-/* A cut-out photo has no shadow of its own, so it gets one to sit on the
-   plate; the drawn stand-in carries its own. */
-.ck-cookie-img--photo {
-    filter: drop-shadow(6px 12px 14px rgba(var(--text-dark-rgb), 0.3));
+/* The cut-out photo is the cookies on their own plate, so it skips the cream
+   one and takes the same shadow the plate would have. */
+.ck-cookie-photo {
+    display: block;
+    height: 100%;
+    max-height: 460px;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 14px 18px rgba(110, 45, 0, 0.35));
+}
+
+.ck-words {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 70px 18px;
 }
 
 .ck-name {

@@ -12,8 +12,10 @@ cookie: "M&M Cookie"
 cookieSub: "Gluten-free"
 # Said beside cookieSub on the picture and in the caption (client 2026-10-29).
 cookieMade: "made from scratch"
-# Mitch's cut-out of a real cookie, a PNG with a transparent background.
-# Until it's in src/assets/studio/, the post shows the drawn stand-in.
+# Mitch's cut-out of the real cookies on a plate, a PNG with a transparent
+# background. The test batch was dyed green; the giveaway batch isn't, so the
+# photo's dough was shifted back to golden (2026-10-29). Without the file,
+# the post shows the drawn stand-in on a cream plate.
 cookiePhoto: "/assets/studio/cookie-gf-mm.png"
 
 tags: studio
@@ -64,19 +66,22 @@ studioOrder: 23
         <h1 class="p-display ck-headline">Wear a costume <span class="ck-headline-2">for a free cookie</span></h1>
 
         <div class="ck-cookie">
+            {%- if cookiePhoto | hasAsset %}
+            {#- The photo brings its own plate. #}
+            <img class="ck-cookie-photo" src="{{ cookiePhoto }}" alt="">
+            {%- else %}
             <div class="ck-plate">
-                {%- if cookiePhoto | hasAsset %}
-                <img class="ck-cookie-img ck-cookie-img--photo" src="{{ cookiePhoto }}" alt="">
-                {%- else %}
                 <img class="ck-cookie-img" src="/assets/studio/cookie-art.svg" alt="">
-                {%- endif %}
             </div>
+            {%- endif %}
         </div>
 
-        <p class="p-display ck-name">{{ cookie }}</p>
-        <p class="p-display-italic ck-sub">{{ cookieSub }} &middot; {{ cookieMade }}</p>
+        <div class="ck-words">
+            <p class="p-display ck-name">{{ cookie }}</p>
+            <p class="p-display-italic ck-sub">{{ cookieSub }} &middot; {{ cookieMade }}</p>
 
-        <p class="p-body ck-fine">One per person, while they last. Made apart from our regular cooking, in a kitchen that also uses wheat. Contains milk, egg and soy; may contain peanuts.</p>
+            <p class="p-body ck-fine">One per person, while they last. Made apart from our regular cooking, in a kitchen that also uses wheat. Contains milk, egg and soy.</p>
+        </div>
     </div>
 
     <footer class="ck-foot">
