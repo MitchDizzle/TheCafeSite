@@ -69,31 +69,24 @@
     padding: 28px 56px 26px;
 }
 
-/* A light purple glow that follows the letters of every dark word: solid
-   right around them, fading out into the orange (client 2026-10-29). The
-   tight shadows make the solid part, the wide ones the fade; the big
-   headline gets wider ones to match its size. */
+/* The dark words sit on light purple panels whose edges blur out into the
+   orange (client 2026-10-29): solid behind every letter for the older eyes
+   this post is for, Halloween-coloured, and no hard box. The wide spread
+   shadow in the panel's own colour is the fade. */
 .ck {
-    --glow: #DCC4F2;
-    --glow-fade: rgba(220, 196, 242, 0.75);
+    --panel: #ECE0F8;
 }
 
-.ck-body {
-    text-shadow:
-        0 0 2px var(--glow), 0 0 3px var(--glow), 0 0 4px var(--glow),
-        0 0 5px var(--glow), 0 0 7px var(--glow), 0 0 10px var(--glow),
-        0 0 16px var(--glow-fade), 0 0 26px var(--glow-fade);
-}
-
-.ck-headline {
-    text-shadow:
-        0 0 3px var(--glow), 0 0 5px var(--glow), 0 0 7px var(--glow),
-        0 0 9px var(--glow), 0 0 12px var(--glow), 0 0 16px var(--glow),
-        0 0 26px var(--glow-fade), 0 0 42px var(--glow-fade);
+.ck-headline,
+.ck-words {
+    background: var(--panel);
+    border-radius: 48px;
+    box-shadow: 0 0 22px 16px var(--panel);
 }
 
 /* The tagline: the one thing the post says. */
 .ck-headline {
+    padding: 4px 28px 10px;
     font-size: 92px;
     line-height: 1.0;
     color: var(--teal-dark);
@@ -151,6 +144,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 8px 28px 10px;
 }
 
 .ck-name {
@@ -166,7 +160,7 @@
 }
 
 .ck-fine {
-    font-size: 24px;
+    font-size: 26px;
     line-height: 1.3;
     margin-top: 14px;
     max-width: 900px;
