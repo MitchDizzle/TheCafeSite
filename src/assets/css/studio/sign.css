@@ -1,7 +1,7 @@
 /* ============================================================
    Counter signs, 8.5 × 11 in portrait, for letter stand-up sign holders.
    Pieces: sign-drinks(-bw).njk, sign-specials(-bw).njk, sign-todays-sides-bw.njk,
-   sign-desserts-bw.njk
+   sign-desserts-bw.njk, sign-dessert-bars-bw.njk
    Partials: partials/studio/sign-drinks.njk, partials/studio/sign-specials.njk
 
    Read from the line, four to eight feet away, so the type is poster
@@ -372,10 +372,11 @@
     margin-top: 0.1in;
 }
 
-/* ── Dessert fridge sign (sign-desserts-bw.njk) ────────────
-   Prices only, no logo (client 2026-10-29). Two boxes share the page
-   below the heading, each with its price set as large as the heading so
-   it reads from across the room. */
+/* ── Dessert fridge & dessert bars signs ───────────────────
+   sign-desserts-bw.njk and sign-dessert-bars-bw.njk (client 2026-10-29):
+   prices only, no logo, so the room goes to type. The fridge sign is the
+   priced rows above at a size up, one dessert to a line, spread down the
+   page; the bars sign is one box filling the sheet, its price huge. */
 
 .fd .sign-heading {
     margin-top: 0;
@@ -385,42 +386,62 @@
     font-size: 1.1in;
 }
 
-.fd-items {
+.fd-rows {
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-    gap: 0.3in;
     margin-top: 0.2in;
+}
+
+.fd-rows .sign-row + .sign-row {
+    margin-top: 0;
+}
+
+.fd-rows .sign-row-name,
+.fd-rows .sign-row-price {
+    font-size: 0.56in;
+}
+
+.fd-rows .sign-row-sub {
+    font-size: 0.3in;
+    font-style: italic;
+}
+
+.fd-items {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .fd-item {
     border: 0.035in solid var(--teal);
     border-radius: 0.14in;
-    padding: 0.3in 0.3in 0.34in;
+    padding: 0.5in 0.3in 0.6in;
     text-align: center;
 }
 
 .fd-name {
-    font-size: 0.62in;
+    font-size: 0.72in;
     line-height: 1.1;
 }
 
-.fd-sub {
-    font-size: 0.32in;
+.fd-and {
+    font-size: 0.6in;
     font-style: italic;
-    margin-top: 0.06in;
+    margin: 0.1in 0;
 }
 
 .fd-price {
-    font-size: 1.2in;
+    font-size: 1.8in;
     font-weight: 700;
     line-height: 1;
-    margin-top: 0.18in;
+    margin-top: 0.4in;
 }
 
 .fd-each {
-    font-size: 0.4in;
+    font-size: 0.55in;
     font-weight: 400;
     font-style: italic;
 }

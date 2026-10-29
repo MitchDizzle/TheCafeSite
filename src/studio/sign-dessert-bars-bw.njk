@@ -1,0 +1,36 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Magic bars & rice crispy treats sign (black & white)"
+canvasW: "8.5in"
+canvasH: "11in"
+pageSize: "8.5in 11in"
+pageCss: "/assets/css/studio/sign.css"
+bw: true
+tags: studio
+studioData: ["menu.json"]
+studioTitle: "Magic bars & rice crispy treats sign — black & white"
+studioCategory: "Signs"
+studioSize: "8.5 × 11 in portrait · letter"
+studioNote: "The dessert bars and their price, on a sheet of their own (the fridge desserts have theirs)."
+studioW: 816
+studioH: 1056
+studioOrder: 33
+---
+{#- Magic bars & rice crispy treats sign (client 2026-10-29), apart from
+    the dessert fridge sign: black & white, no logo, the price only. It is
+    Dessert Bar's in menu.json, whose two kinds in Square these are. If you
+    find yourself typing a price here, stop. -#}
+{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
+{%- set bars = (desserts.items | where("name", "Dessert Bar"))[0] %}
+<div class="canvas sign sign--bw fd">
+    {%- if bars %}
+    <div class="fd-items">
+        <section class="fd-item">
+            <p class="p-display fd-name">Magic Bars</p>
+            <p class="p-display fd-and">&amp;</p>
+            <p class="p-display fd-name">Rice Crispy Treats</p>
+            <p class="p-display fd-price">{{ bars.price | money }} <span class="fd-each">each</span></p>
+        </section>
+    </div>
+    {%- endif %}
+</div>
