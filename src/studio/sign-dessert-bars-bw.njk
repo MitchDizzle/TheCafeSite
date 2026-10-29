@@ -7,7 +7,7 @@ pageSize: "8.5in 11in"
 pageCss: "/assets/css/studio/sign.css"
 bw: true
 tags: studio
-studioData: ["menu.json"]
+studioData: ["desserts.json", "menu.json"]
 studioTitle: "Magic bars & rice crispy treats sign — black & white"
 studioCategory: "Signs"
 studioSize: "8.5 × 11 in portrait · letter"
@@ -18,10 +18,13 @@ studioOrder: 33
 ---
 {#- Magic bars & rice crispy treats sign (client 2026-10-29), apart from
     the dessert fridge sign: black & white, no logo, the price only. It is
-    Dessert Bar's in menu.json, whose two kinds in Square these are. If you
-    find yourself typing a price here, stop. -#}
-{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
+    Dessert Bar's in Square (src/_data/desserts.json, see
+    sign-desserts-bw.njk), whose two kinds these are; menu.json's if that
+    file ever lacks it. If you find yourself typing a price here, stop. -#}
 {%- set bars = (desserts.items | where("name", "Dessert Bar"))[0] %}
+{%- if not bars %}
+{%- set bars = ((menu.categories | where("id", "desserts"))[0].items | where("name", "Dessert Bar"))[0] %}
+{%- endif %}
 <div class="canvas sign sign--bw fd">
     {%- if bars %}
     <div class="fd-items">

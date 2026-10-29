@@ -6,7 +6,8 @@
   "scripts": {
     "start": "eleventy --serve",
     "clean": "node -e \"require('fs').rmSync('_site',{recursive:true,force:true})\"",
-    "build": "npm run clean && eleventy && node scripts/export-studio.js",
+    "build": "npm run clean && node scripts/desserts.js && eleventy && node scripts/export-studio.js",
+    "desserts": "node scripts/desserts.js",
     "export": "eleventy && node scripts/export-studio.js",
     "square": "python scripts/square-catalog.py",
     "thumbs": "node scripts/photo-thumbs.js",

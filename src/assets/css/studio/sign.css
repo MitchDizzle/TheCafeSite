@@ -375,8 +375,8 @@
 /* ── Dessert fridge & dessert bars signs ───────────────────
    sign-desserts-bw.njk and sign-dessert-bars-bw.njk (client 2026-10-29):
    prices only, no logo, so the room goes to type. The fridge sign is the
-   priced rows above at a size up, one dessert to a line, spread down the
-   page; the bars sign is one box filling the sheet, its price huge. */
+   priced rows above at a size up, one dessert to a line (read from
+   Square, so a long name may come in: proof it), spread down the page; the bars sign is one box filling the sheet, its price huge. */
 
 .fd .sign-heading {
     margin-top: 0;
@@ -398,9 +398,10 @@
     margin-top: 0;
 }
 
+/* 0.48in fits "Meringue Chocolate Pie" and its price on one line. */
 .fd-rows .sign-row-name,
 .fd-rows .sign-row-price {
-    font-size: 0.56in;
+    font-size: 0.48in;
 }
 
 .fd-rows .sign-row-sub {

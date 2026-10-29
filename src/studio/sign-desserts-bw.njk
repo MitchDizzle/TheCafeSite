@@ -6,51 +6,52 @@ canvasH: "11in"
 pageSize: "8.5in 11in"
 pageCss: "/assets/css/studio/sign.css"
 bw: true
-fridgeDesserts:
-  - name: "Plain Cheesecake"
-    sub: "Caramel or chocolate sauce, if you like"
-  - name: "Pumpkin Cheesecake"
-  - name: "Cream Puffs"
+skipDesserts: ["Dessert Bar", "Cheesecake"]
 tags: studio
-studioData: ["menu.json"]
+studioData: ["desserts.json"]
 studioTitle: "Dessert fridge sign — black & white"
 studioCategory: "Signs"
 studioSize: "8.5 × 11 in portrait · letter, taped to the dessert fridge"
-studioNote: "What's in the dessert fridge, one to a line, each with its price. The magic bars and rice crispy treats have their own sign."
+studioNote: "What's in the dessert fridge, one to a line, each with its price, read from Square. The magic bars and rice crispy treats have their own sign."
 studioW: 816
 studioH: 1056
 studioOrder: 32
 ---
 {#- Dessert fridge sign (client 2026-10-29): black & white, no logo, the
-    desserts listed one to a line with their price. The list is
-    `fridgeDesserts` above, typed by hand: the kinds change with each
-    batch and live only in Square (kitchen board, Manage -> Desserts), so
-    change the list when the batch does, build, print. Every fridge
-    dessert is one price since that day, Cheesecake's in menu.json; a
-    dessert added from Manage -> Desserts is set to it in Square. If you
-    find yourself typing a price here, stop. The magic bars and rice
-    crispy treats are on sign-dessert-bars-bw.njk. -#}
-{%- set desserts = (menu.categories | where("id", "desserts"))[0] %}
-{%- set fridge = (desserts.items | where("name", "Cheesecake"))[0] %}
+    desserts one to a line with their price. They're read from Square
+    (src/_data/desserts.json, made by scripts/desserts.js: the kitchen
+    board's Manage -> Desserts), so when the desserts change, change them
+    there, `npm run build` (or `npm run desserts`), commit desserts.json
+    and print a new sheet. A kind Square counts at 0 is left off.
+    `skipDesserts` above leaves whole items off: the bars have their own
+    sign (sign-dessert-bars-bw.njk), and Cheesecake is off while the cafe
+    is out of it (client 2026-10-29: only Plain is counted in Square, so
+    the count alone wouldn't drop it). If you find yourself typing a
+    dessert or a price here, stop. -#}
 <div class="canvas sign sign--bw fd">
     <div class="sign-heading">
         <h2 class="p-display sign-heading-title">Desserts</h2>
     </div>
 
-    {%- if fridge %}
     <ul class="sign-rows fd-rows">
-        {%- for i in fridgeDesserts %}
+        {%- for item in desserts.items %}
+        {%- if item.name not in skipDesserts %}
+        {%- set kinds = item.kinds | rejectattr("out") %}
+        {%- for k in kinds %}
         <li class="sign-row">
             <div class="sign-row-head">
-                <span class="sign-row-name">{{ i.name }}</span>
+                <span class="sign-row-name">{{ k.name }}</span>
                 <span class="sign-row-fill" aria-hidden="true"></span>
-                <span class="sign-row-price">{{ fridge.price | money }}</span>
+                <span class="sign-row-price">{{ item.price | money }}</span>
             </div>
-            {%- if i.sub %}
-            <p class="sign-row-sub">{{ i.sub }}</p>
+            {%- if loop.last %}
+            {%- for l in item.lists %}
+            <p class="sign-row-sub">{{ l.name }}: {{ l.options | join(" or ") }}</p>
+            {%- endfor %}
             {%- endif %}
         </li>
         {%- endfor %}
+        {%- endif %}
+        {%- endfor %}
     </ul>
-    {%- endif %}
 </div>
