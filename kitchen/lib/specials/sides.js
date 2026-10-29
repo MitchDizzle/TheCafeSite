@@ -31,9 +31,21 @@ const { catalog, loadCatalog, readObject, modifierListsByName, upsertObject } = 
 const { plan, savePlan, RETRY_MINUTES, listsFor } = require("./plan");
 
 const CHEFS_CHOICE = "Chef's Choice";
-// The item's own word that an option is picked already (on_by_default before
-// Square's 2025-05-21, which the catalog calls now use).
-const pickOverride = (id) => [{ modifier_id: id, on_by_default_override: "YES" }];
+// The item's own word for its options in a list (Square's 2025-05-21, which
+// the catalog calls use): the one picked already (on_by_default before), and
+// any sold at the counter only that day (`hidden`, lower case: the website's
+// counterOnly, client 2026-10-29), which online ordering leaves out while the
+// till still has it.
+function overridesFor(list, pickId, hidden = new Set()) {
+  return (list.modifier_list_data.modifiers || [])
+    .filter((m) => m.id === pickId || hidden.has(m.modifier_data.name.toLowerCase()))
+    .map((m) => ({ modifier_id: m.id,
+      ...(m.id === pickId ? { on_by_default_override: "YES" } : {}),
+      ...(hidden.has(m.modifier_data.name.toLowerCase()) ? { hidden_online_override: "YES" } : {}) }));
+}
+
+// What's sold at the counter only on `date`, lower case.
+const counterOnlyOn = (date) => new Set((plan.counterOnly[date] || []).map((w) => w.toLowerCase()));
 
 function sideSlots(day) {
   if (!day) return [];
@@ -56,7 +68,7 @@ function swapsFor(date, day) {
 // One pick-one list's options, $0 each, in this order: made the first time
 // it's needed (list null), written only when they changed. `pick`, the option
 // picked already, is marked so on the option itself as well as on the item
-// (pickOverride): Side 1 kept coming up with nothing picked on the till while
+// (overridesFor): Side 1 kept coming up with nothing picked on the till while
 // the item said otherwise (client 2026-10-19), and Square has since deprecated
 // the item's old on_by_default (see square.js). Returns Square's copy, with real ids.
 async function writeOptions(list, name, key, words, where, selection = "SINGLE", pick = null) {
@@ -93,8 +105,9 @@ async function writeOptions(list, name, key, words, where, selection = "SINGLE",
   return list;
 }
 
-// slots: from sideSlots. swaps: the swap sides. Returns words for the log.
-async function saveSides(slots, swaps) {
+// slots: from sideSlots. swaps: the swap sides. hidden: counterOnlyOn.
+// Returns words for the log.
+async function saveSides(slots, swaps, hidden) {
   await loadCatalog();
   const itemId = catalog.itemIds.get(cfg.sideItem.trim().toLowerCase());
   if (!itemId) throw Object.assign(new Error(`${cfg.sideItem} isn't in Square.`), { plain: true });
@@ -127,7 +140,7 @@ async function saveSides(slots, swaps) {
     info.enabled = on;
     info.min_selected_modifiers = on ? 1 : 0;
     info.max_selected_modifiers = 1;
-    info.modifier_overrides = pickId ? pickOverride(pickId) : [];
+    info.modifier_overrides = on ? overridesFor(list, pickId, hidden) : [];
   }
   // The side lists first, in order, then the item's other lists (Dressing),
   // so the dressing is asked after the sides (client 2026-10-13).
@@ -153,9 +166,10 @@ function specialSideOptions(day) {
 }
 
 // options: from specialSideOptions. One option is picked already, so the side
-// is one tap; with more, it asks which. Returns words for the log, or null
+// is one tap; with more, it asks which. A side sold at the counter only
+// (hidden) is left out online here too. Returns words for the log, or null
 // when the item isn't in Square.
-async function saveSpecialSide(options) {
+async function saveSpecialSide(options, hidden) {
   await loadCatalog();
   const itemId = catalog.itemIds.get(cfg.specialSideItem.trim().toLowerCase());
   if (!itemId) return null;
@@ -180,7 +194,7 @@ async function saveSpecialSide(options) {
   info.enabled = options.length > 0;
   info.min_selected_modifiers = options.length ? 1 : 0;
   info.max_selected_modifiers = 1;
-  info.modifier_overrides = mods.length === 1 && options.length ? pickOverride(mods[0].id) : [];
+  info.modifier_overrides = options.length ? overridesFor(list, mods.length === 1 ? mods[0].id : null, hidden) : [];
   infos.forEach((x, ordinal) => { x.ordinal = ordinal; });
   if (JSON.stringify(infos) !== before) await upsertObject(fresh);
   return options.length ? `${cfg.specialSideItem}: ${options.join(", ")}` : `${cfg.specialSideItem}: off`;
@@ -274,23 +288,25 @@ async function applySides(today, day) {
   const special = cfg.specialSideItem ? specialSideOptions(day) : [];
   const offs = cfg.leaveOffList ? leaveOffOptions(today) : [];
   const extra = listsFor(today, day).lists;
+  const hidden = counterOnlyOn(today);
   // `v`: bumped when the way the lists are written changes, so today's are
   // rewritten after an update (2: required, 2026-10-13; 3: the Special Side
   // too, 2026-10-15; 4: Leave Off, 2026-10-18; 5: the pick marked on the
   // option too, 2026-10-19; 6: Square's own lists, 2026-10-27; 7: a
   // sandwich's lists on by themselves, off on any other day, 2026-10-28; 8:
-  // an "or" side without Chef's Choice, 2026-10-29).
-  const sig = JSON.stringify({ v: 8, slots, swaps, special, offs, extra });
+  // an "or" side without Chef's Choice, 2026-10-29; 9: counter-only sides
+  // hidden online, 2026-10-29).
+  const sig = JSON.stringify({ v: 9, slots, swaps, special, offs, extra, hidden: [...hidden] });
   const last = plan.sidesApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
   if (!slots.length && !offs.length && !extra.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;
   try {
-    const done = await saveSides(slots, swaps);
-    const side = [cfg.specialSideItem ? await saveSpecialSide(special) : null,
+    const done = await saveSides(slots, swaps, hidden);
+    const side = [cfg.specialSideItem ? await saveSpecialSide(special, hidden) : null,
       cfg.leaveOffList ? await saveLeaveOff(offs) : null, await saveExtraLists(extra)].filter(Boolean).join("; ");
     plan.sidesApplied[today] = { sig, at: new Date().toISOString() };
     console.log(done.length
-      ? `Today's sides put on ${cfg.sideItem} in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}${side ? `; ${side}` : ""}.`
+      ? `Today's sides put on ${cfg.sideItem} in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}${side ? `; ${side}` : ""}${hidden.size ? `; not online: ${plan.counterOnly[today].join(", ")}` : ""}.`
       : `No sides today: ${cfg.sideItem}'s side lists are off${side ? `, ${side}` : ""} (${new Date().toLocaleTimeString()}).`);
   } catch (err) {
     if (!last || last.error !== err.message) console.error(`Today's sides: ${err.message}`);
@@ -300,4 +316,4 @@ async function applySides(today, day) {
   return plan.sidesApplied[today];
 }
 
-module.exports = { sideSlots, swapsFor, specialSideOptions, leaveOffOptions, applySides };
+module.exports = { sideSlots, swapsFor, specialSideOptions, leaveOffOptions, counterOnlyOn, overridesFor, applySides };

@@ -7,7 +7,7 @@ const { DIR, cfg } = require("../config");
 const { cleanText } = require("../util");
 const { catalog, loadCatalog, readItem, writeItem } = require("../catalog");
 const { plan, savePlan, siteFieldFor, RETRY_MINUTES } = require("./plan");
-const { sideSlots } = require("./sides");
+const { sideSlots, counterOnlyOn } = require("./sides");
 
 let specialSides;
 try {
@@ -20,13 +20,22 @@ try {
 const cleanWords = (s) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, 400);
 const htmlOf = (s) => `<p>${s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`;
 
-function dayDescription(name, day) {
+// The day as online ordering sees it: a side sold at the counter only
+// (hidden, lower case) taken out of the plate's sides, so the description
+// never offers what online ordering doesn't ("A or B" with B hidden reads A).
+function onlineDay(day, hidden) {
+  if (!day || !hidden || !hidden.size || !day.sides) return day;
+  const sides = day.sides.map((s) => String(s).split(/\s+or\s+/i).filter((w) => !hidden.has(cleanText(w).toLowerCase())).join(" or ")).filter(Boolean);
+  return { ...day, sides };
+}
+
+function dayDescription(name, day, hidden) {
   const plain = cleanWords(cfg.descriptions[name]);
   const what = day && day.items[name] && cleanText(day.items[name].today);
   if (!what) return plain;
   const words = [];
   if (siteFieldFor(name) === "special") {
-    const sides = specialSides(day);
+    const sides = specialSides(onlineDay(day, hidden));
     words.push(`${what}${sides ? ` ${sides}` : ""}.`);
     if (plan.includesDrink) words.push("Includes a fountain drink or iced tea.");
     if (name === cfg.sideItem && sideSlots(day).length) {
@@ -45,7 +54,8 @@ function dayDescription(name, day) {
 async function applyDescriptions(today, day) {
   const names = cfg.dailyItems.filter((n) => typeof cfg.descriptions[n] === "string");
   if (!names.length) return null;
-  const want = Object.fromEntries(names.map((n) => [n, dayDescription(n, day)]));
+  const hidden = counterOnlyOn(today);
+  const want = Object.fromEntries(names.map((n) => [n, dayDescription(n, day, hidden)]));
   const sig = JSON.stringify(want);
   const last = plan.descApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;

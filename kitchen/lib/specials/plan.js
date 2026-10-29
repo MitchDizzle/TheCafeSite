@@ -46,6 +46,10 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // leaveOff: { "YYYY-MM-DD": [...] }, what can be left off that day's plate ("Bacon": a "No
 //            Bacon" option on Lunch Special), the website's day `leaveOff`. Kept apart
 //            from `days` like extraSides, and read the same way, even for today.
+// counterOnly: { "YYYY-MM-DD": [...] }, sides sold at the counter only that day (yesterday's
+//            Twice Baked Potato Casserole, sold off: client 2026-10-29), the website's day
+//            `counterOnly`. Hidden from online ordering in Square. Kept apart from `days`
+//            like extraSides, and read the same way, even for today.
 // dayLists: { "YYYY-MM-DD": ["Add", "Toppings"] }, Square's own modifier lists to switch on
 //            on Lunch Special that day (a sandwich's Add and Toppings, client 2026-10-27),
 //            picked in Specials. Kept apart from `days` like the photo picks.
@@ -56,7 +60,7 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // soupSide: a cup of the day's soup can be picked as a side, as the website last said
 // includesDrink: every lunch special includes a drink, as the website last said
 // site:    the last read of the website, for the front to show
-const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, dayLists: {}, dishLists: {}, listsUsed: [], swapSides: [], extraSides: {}, leaveOff: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
+const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, dayLists: {}, dishLists: {}, listsUsed: [], swapSides: [], extraSides: {}, leaveOff: {}, counterOnly: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
 try {
   Object.assign(plan, JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")));
 } catch {}
@@ -64,7 +68,7 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.photoPick, plan.dayLists, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.counterOnly, plan.photoPick, plan.dayLists, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
 }
 
@@ -196,6 +200,19 @@ async function pullSite() {
       if (JSON.stringify(plan.leaveOff[date]) === JSON.stringify(list)) continue;
       plan.leaveOff[date] = list;
       console.log(`Can be left off ${date}'s plate, from the website: ${list.join(", ")}.`);
+    }
+    // Sides sold at the counter only, read the same way: they only hide
+    // options from online ordering and never change the day's names.
+    const counter = {};
+    for (const d of listed) {
+      const list = Array.isArray(d.counterOnly) ? [...new Set(d.counterOnly.map(cleanText).filter(Boolean))].slice(0, 8) : [];
+      if (d.date >= today && list.length) counter[d.date] = list;
+    }
+    for (const date of Object.keys(plan.counterOnly)) if (date >= today && !counter[date]) delete plan.counterOnly[date];
+    for (const [date, list] of Object.entries(counter)) {
+      if (JSON.stringify(plan.counterOnly[date]) === JSON.stringify(list)) continue;
+      plan.counterOnly[date] = list;
+      console.log(`At the counter only on ${date}, from the website: ${list.join(", ")}.`);
     }
     if (typeof json.soupSide === "boolean" && json.soupSide !== plan.soupSide) {
       plan.soupSide = json.soupSide;

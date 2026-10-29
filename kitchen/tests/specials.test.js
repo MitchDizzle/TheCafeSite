@@ -6,11 +6,11 @@ const { test, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
 const board = require("./board.js");
 
-const { sideSlots, swapsFor, specialSideOptions, leaveOffOptions, dayDescription, plan } = board;
+const { sideSlots, swapsFor, specialSideOptions, leaveOffOptions, counterOnlyOn, overridesFor, dayDescription, plan } = board;
 
 const day = (special, extra = {}) => ({ from: "site", items: { "Lunch Special": { today: special, prices: {} } }, ...extra });
 
-beforeEach(() => { plan.includesDrink = false; plan.soupSide = false; plan.extraSides = {}; plan.leaveOff = {}; plan.swapSides = ["Tossed Salad", "Cottage Cheese"]; });
+beforeEach(() => { plan.includesDrink = false; plan.soupSide = false; plan.extraSides = {}; plan.leaveOff = {}; plan.counterOnly = {}; plan.swapSides = ["Tossed Salad", "Cottage Cheese"]; });
 
 test("the side lists: a set side is picked already", () => {
   assert.deepEqual(sideSlots(day("Meatloaf", { sides: ["Mashed Potatoes & White Gravy", "Corn"] })), [
@@ -65,6 +65,27 @@ test("Lunch Special's description: the plate, its sides, the drink, the swap", (
   plan.includesDrink = true;
   assert.equal(dayDescription("Lunch Special", day("Lasagna", { sides: ["Tossed Salad or Cooked Broccoli", "Breadstick"] })),
     "Lasagna with Tossed Salad or Cooked Broccoli and Breadstick. Includes a fountain drink or iced tea. Pick your side below. Served from 11am.");
+});
+
+test("At the counter only: hidden online on the item, the pick kept, that day's only", () => {
+  plan.counterOnly = { "2026-10-29": ["Twice Baked Potato Casserole"] };
+  const hidden = counterOnlyOn("2026-10-29");
+  const mod = (id, name) => ({ id, modifier_data: { name } });
+  const list = { modifier_list_data: { modifiers: [mod("A", "Oven Browned Potatoes"), mod("B", "Twice Baked Potato Casserole"), mod("C", "Tossed Salad")] } };
+  assert.deepEqual(overridesFor(list, null, hidden), [{ modifier_id: "B", hidden_online_override: "YES" }]);
+  assert.deepEqual(overridesFor(list, "C", hidden), [
+    { modifier_id: "B", hidden_online_override: "YES" },
+    { modifier_id: "C", on_by_default_override: "YES" },
+  ]);
+  assert.deepEqual(overridesFor(list, "C", counterOnlyOn("2026-10-30")), [{ modifier_id: "C", on_by_default_override: "YES" }]);
+});
+
+test("Lunch Special's description: a counter-only side is left out, and it still asks", () => {
+  const d = day("Cheesy Steak Sandwich", { sides: ["Oven Browned Potatoes or Twice Baked Potato Casserole"] });
+  assert.equal(dayDescription("Lunch Special", d, new Set(["twice baked potato casserole"])),
+    "Cheesy Steak Sandwich with Oven Browned Potatoes. Pick your side below. Served from 11am.");
+  assert.equal(dayDescription("Lunch Special", d),
+    "Cheesy Steak Sandwich with Oven Browned Potatoes or Twice Baked Potato Casserole. Pick your side below. Served from 11am.");
 });
 
 test("Lunch Special's description: three sides read as a list", () => {

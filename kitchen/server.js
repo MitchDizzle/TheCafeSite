@@ -69,7 +69,7 @@ const { poll } = require("./lib/orders");
 const { syncSquare } = require("./lib/square-status");
 const { SITE_MINUTES, pullSite, plan } = require("./lib/specials/plan");
 const { applyToday } = require("./lib/specials/today");
-const { sideSlots, swapsFor, specialSideOptions, leaveOffOptions } = require("./lib/specials/sides");
+const { sideSlots, swapsFor, specialSideOptions, leaveOffOptions, counterOnlyOn, overridesFor } = require("./lib/specials/sides");
 const { dayDescription } = require("./lib/specials/descriptions");
 const { setSkip, bumped, platesDone, canceled, handedOff, markedReady } = require("./lib/state");
 const { toTicket, isOnline, hiddenReason, frontHiddenReason, readyAt, orderDetail } = require("./lib/tickets");
@@ -141,5 +141,5 @@ if (require.main === module) start();
 // tickets, and the state they read.
 module.exports = {
   cfg, toTicket, isOnline, hiddenReason, frontHiddenReason, readyAt, orderDetail, setSkip, loadCatalog,
-  sideSlots, swapsFor, specialSideOptions, leaveOffOptions, dayDescription, plan, bumped, platesDone, canceled, handedOff, markedReady,
+  sideSlots, swapsFor, specialSideOptions, leaveOffOptions, counterOnlyOn, overridesFor, dayDescription, plan, bumped, platesDone, canceled, handedOff, markedReady,
 };
