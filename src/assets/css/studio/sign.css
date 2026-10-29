@@ -309,51 +309,66 @@
 
 /* ── Today's special sides (sign-todays-sides-bw.njk) ──────
    A one-day sign for a plate whose side is a pick of two (client
-   2026-10-29). The two sides are the point, so they're set large, each in
-   its own box ("Twice Baked Potato Casserole" takes two lines); the
-   regular sides box reuses the specials sign's, a size up. */
+   2026-10-29). No logo: it stands on the counter, so the room goes to
+   type. The two sides are the point, so they're set large, each in its own
+   box ("Twice Baked Potato Casserole" takes two lines); the regular sides
+   box reuses the specials sign's, a few sizes up, one side to a line. */
+
+.ts .sign-heading {
+    margin-top: 0;
+}
+
+.ts .sign-heading-title {
+    font-size: 0.64in;
+}
 
 .ts-plate {
-    font-size: 0.46in;
+    font-size: 0.5in;
     line-height: 1.1;
     text-align: center;
     margin-top: 0.34in;
 }
 
 .ts-one {
-    font-size: 0.28in;
+    font-size: 0.34in;
     font-style: italic;
     text-align: center;
     margin-top: 0.08in;
 }
 
 .ts-picks {
-    margin-top: 0.3in;
+    margin-top: 0.26in;
     text-align: center;
 }
 
 .ts-pick {
-    font-size: 0.5in;
+    font-size: 0.54in;
     line-height: 1.1;
     border: 0.035in solid var(--teal);
     border-radius: 0.12in;
-    padding: 0.24in 0.2in;
+    padding: 0.18in 0.2in;
 }
 
 .ts-or {
-    font-size: 0.32in;
+    font-size: 0.36in;
     font-style: italic;
-    margin: 0.12in 0;
+    margin: 0.06in 0;
+}
+
+.ts-regular {
+    padding: 0.16in 0.24in 0.2in;
 }
 
 .ts-regular .sw-choice-title {
-    font-size: 0.34in;
+    font-size: 0.42in;
 }
 
 .ts-regular .sw-choices {
-    font-size: 0.25in;
-    gap: 0.06in 0.34in;
-    margin-top: 0.12in;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.32in;
+    gap: 0.03in;
+    margin-top: 0.1in;
 }
 
 /* ── "How did we do?" survey sign ──────────────────────────

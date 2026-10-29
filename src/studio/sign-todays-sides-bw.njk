@@ -26,13 +26,13 @@ studioOrder: 34
     Casserole"), which is one side the customer picks. For another day,
     change the date, check the day's sides read that way, build, print.
     The regular sides box is the Deli Salads (menu.json) and the soup, the
-    same swap list as Lunch Special's Side 1 in Square. -#}
+    same swap list as Lunch Special's Side 1 in Square. No logo (client
+    2026-10-29: it stands on the counter, so the name is redundant there);
+    the room it took goes to bigger type. -#}
 {%- set d = (specials.days | where("date", sidesDate))[0] %}
 {%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
 {%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
-<div class="canvas sign sign--bw">
-    {% include "partials/studio/sign-mast.njk" %}
-
+<div class="canvas sign sign--bw ts">
     <div class="sign-heading">
         <h2 class="p-display sign-heading-title">Today&rsquo;s Special Sides</h2>
     </div>
