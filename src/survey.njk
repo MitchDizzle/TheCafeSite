@@ -98,7 +98,8 @@ noindex: true
                     {%- if site.reviews.googleUrl or feedbackStats.total %}
                     <div class="survey-after" data-after-success hidden>
                         {%- if site.reviews.googleUrl %}
-                        <p>Enjoyed your visit? A Google review helps a small cafe more than anything.</p>
+                        {#- Asked of everyone, good visit or bad: asking only the happy ones is against Google's rules. -#}
+                        <p>Good or bad, a Google review helps a small cafe more than anything.</p>
                         <a class="btn btn-primary" href="{{ site.reviews.googleUrl }}" rel="noopener">Leave a Google review</a>
                         {%- endif %}
                         {%- if feedbackStats.total %}

@@ -1,0 +1,36 @@
+{#- "Leave us a Google review" counter sign, shared by sign-review.njk (colour)
+    and sign-review-bw.njk (`bw: true`). The QR encodes
+    https://lvcafetogo.com/review (src/review.njk), which forwards to
+    site.reviews.googleUrl, so a printed sign survives a change of that link.
+
+    THE WORDING ASKS EVERYONE. Google allows asking for reviews, but not
+    asking only the happy customers and not giving anything for one (its
+    contribution policy, read 2026-10-30). So the sign says "good or bad",
+    never "Enjoyed your visit?", and nothing is ever offered with it.
+
+    THE STEPS are spelled out because this audience skews older: the camera
+    is not an obvious place to start. The link opens the cafe's Google page,
+    not a sign-in page (site.json, _comment_reviews). Google still wants an
+    account to post one, so the foot gives anyone without one the paper card. -#}
+<div class="canvas sign sign--review{% if bw %} sign--bw{% endif %}">
+    {% include "partials/studio/sign-mast.njk" %}
+
+    <div class="sign-heading">
+        <h2 class="p-display sign-heading-title ink-teal">Leave us a Google review</h2>
+        <p class="p-body sign-survey-sub">Good or bad, it helps people find us.</p>
+    </div>
+
+    <div class="sign-survey-qr">
+        {% inlineSvg "/assets/qr-review.svg" %}
+    </div>
+
+    <ol class="p-body sign-review-steps">
+        <li>Open your phone&rsquo;s camera and point it at the square</li>
+        <li>Tap the link that pops up</li>
+        <li>Scroll down to the stars, tap one, and write a few words</li>
+    </ol>
+    <p class="p-display sign-survey-url ink-teal">{{ site.social.website }}/review</p>
+
+    <div class="sign-spacer"></div>
+    <p class="p-body sign-foot">No Google account? Ask for a survey card at the counter.</p>
+</div>

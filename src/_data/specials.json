@@ -65,6 +65,45 @@
         "Mac & Cheese",
         "Baked Beans"
       ]
+    },
+    {
+      "date": "2026-11-02",
+      "soup": "Chicken Pot Pie",
+      "special": "Kahlua Chicken",
+      "sides": [
+        "Wild Rice",
+        "Veggies"
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "soup": "Ham & Beans",
+      "special": "Macho Nachos",
+      "anySide": true
+    },
+    {
+      "date": "2026-11-04",
+      "soup": "Broccoli & Cauliflower Cheese",
+      "special": "Stuffed Pork Chop",
+      "sides": [
+        "Scalloped Potatoes",
+        "Veggies"
+      ]
+    },
+    {
+      "date": "2026-11-05",
+      "soup": "Italian Wedding",
+      "special": "Cranberry Chicken or Ham Salad Croissant",
+      "anySide": true
+    },
+    {
+      "date": "2026-11-06",
+      "soup": "Potato Cheese",
+      "special": "Meatloaf",
+      "sides": [
+        "Mashed Potatoes & Brown Gravy",
+        "Veggies"
+      ]
     }
   ]
 }

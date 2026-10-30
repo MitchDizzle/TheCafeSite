@@ -1,0 +1,101 @@
+---
+layout: layouts/piece.njk
+title: "The Café — First Month Post (1080 × 1350)"
+canvasW: "1080px"
+canvasH: "1350px"
+pageCss: "/assets/css/studio/fb-first-month.css"
+
+# What the survey cards asked for and where each stands, and what is still
+# being worked on. The caption (fb-first-month.11tydata.js) reads these same
+# fields, so the picture and the words can't disagree. The percentages come
+# from src/_data/feedbackStats.json.
+asked:
+  - ask: "Home-style plates, lasagna, ribs"
+    reply: "On the specials, with more to come"
+  - ask: "More desserts"
+    reply: "We've added more, and cookies are on the way"
+  - ask: "French fries"
+    reply: "Not for now: our kitchen has no fryer"
+  - ask: "Evenings and weekends"
+    reply: "Not for now: our cooks and managers all work days"
+working:
+  - "Keeping the food hot"
+  - "More seasoning"
+  - "Easier ordering at the counter"
+
+tags: studio
+studioWeekly: true
+studioData: ["feedbackStats.json"]
+studioTitle: "First month — Facebook post"
+studioCategory: "Social"
+studioSize: "1080 × 1350 px · portrait feed post"
+studioNote: "A thank-you for the first month: the survey numbers, what people asked for and where it stands, and what's still being worked on. The percentages come from src/_data/feedbackStats.json; the rest is in this piece's front matter, and the caption is built from both. Its 'Not for now' lines match /feedback. The caption asks for a Google review, 'good or bad', to everyone: never offer anything for one."
+studioW: 1080
+studioH: 1350
+studioOrder: 24
+---
+{#- A thank-you, and a straight answer to the survey cards.
+
+    EVERY RATING IS SHOWN, the lowest with the highest, each as the share
+    who said Great or Good, the same sum /feedback does. The counts behind
+    them, Okay and Poor included, are on that page, and the caption says so.
+
+    "NOT FOR NOW" is the same answer /feedback gives (feedback.json), and
+    STILL WORKING ON comes from the survey's most common "do better" themes.
+    A customer's words never go here: this batch of cards has no OK to share.
+
+    Every size is set for the ~540px a portrait post shows at on a phone:
+    nothing a customer needs is under 24px. -#}
+{%- set o = site.opening %}
+<div class="canvas fm">
+
+    <header class="fm-head">
+        <div class="wordmark wordmark--light wordmark--hero fm-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-display-italic fm-kicker">Our First Month</p>
+        <p class="p-label fm-range">Open since {{ o.monthDay }} &middot; {{ site.address.locality }}, {{ site.address.region }}</p>
+    </header>
+
+    <div class="fm-body">
+        <h1 class="p-display fm-title">Thank you, {{ site.address.locality }}</h1>
+        <p class="p-body fm-lede">You filled out {{ feedbackStats.total }} survey cards, and we read every one.</p>
+
+        <p class="p-label fm-label">Rated Great or Good</p>
+        <ul class="fm-stats" role="list">
+            {%- for r in ratingShares %}
+            <li class="fm-stat">
+                <span class="p-display fm-num">{{ r.share }}%</span>
+                <span class="p-body fm-stat-name">{{ r.label }}</span>
+            </li>
+            {%- endfor %}
+        </ul>
+
+        <p class="p-label fm-label">What you asked for</p>
+        <ul class="fm-asked" role="list">
+            {%- for a in asked %}
+            <li class="fm-row">
+                <span class="p-display fm-ask">{{ a.ask }}</span>
+                <span class="p-body fm-reply">{{ a.reply }}</span>
+            </li>
+            {%- endfor %}
+        </ul>
+
+        <section class="fm-working">
+            <p class="p-display fm-working-title">Still working on</p>
+            <ul class="fm-working-list" role="list">
+                {%- for w in working %}
+                <li>{{ w }}</li>
+                {%- endfor %}
+            </ul>
+        </section>
+
+        <p class="p-body fm-more">Keep telling us: cards at the counter, or {{ site.social.website }}/survey</p>
+    </div>
+
+    <footer class="fm-foot">
+        <p class="p-display fm-foot-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
+        <p class="p-body fm-foot-line">{{ o.hoursDays }}, {{ o.opens.time | replace(":00", "") }}{{ o.opens.meridiem }} &ndash; {{ o.closes.time | replace(":00", "") }}{{ o.closes.meridiem }} &middot; {{ site.address.street }}, {{ site.address.locality }}, {{ site.address.region }}</p>
+    </footer>
+
+</div>

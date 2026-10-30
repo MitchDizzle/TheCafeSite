@@ -1,0 +1,25 @@
+---
+# /review — a short address we own that forwards to the cafe's Google page
+# (site.reviews.googleUrl). Printed QR codes (the counter sign) point HERE
+# rather than at Google, so if that link ever changes, one edit to site.json
+# keeps every printed code working. Unlisted: noindex, off the nav and the
+# sitemap. With no review link it falls back to the survey.
+permalink: /review.html
+eleventyExcludeFromCollections: true
+---
+{%- set target = site.reviews.googleUrl or "/survey" -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <meta http-equiv="refresh" content="0; url={{ target }}">
+    <title>Leave a review | {{ site.name }}</title>
+    <script>location.replace({{ target | dump | safe }});</script>
+</head>
+<body style="font-family: sans-serif; padding: 2rem;">
+    <p>Taking you to Google&hellip;</p>
+    <p><a href="{{ target }}">Continue to leave a review</a></p>
+</body>
+</html>

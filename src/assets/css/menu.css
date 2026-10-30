@@ -588,4 +588,6 @@
         text-transform: uppercase;
         color: var(--mint);
     }
+    /* A day with no soup planned yet: no "Soup:" label with nothing after it. */
+    .ts-table td:empty { display: none; }
 }

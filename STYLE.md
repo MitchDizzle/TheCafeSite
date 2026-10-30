@@ -39,6 +39,9 @@ private CafeWork repo (see `CLAUDE.md`).
   name ("Biscuit & Gravy") but never joins a list.
 - **Say a price, a rule or a condition once**, at the top, not on every row.
   This is how the weekly post handles the drink and the soup prices.
+- **Asking for a Google review:** ask everyone ("good or bad", never "Enjoyed
+  your visit?") and never offer anything for one. Those are Google's rules, and
+  breaking them can get reviews removed.
 - **Never promise what we can't stand behind:**
   - Nothing is deep-fried, because there is no fryer. Fried Potatoes are
     pan-fried on the flat-top.
@@ -160,7 +163,7 @@ The audience skews older, so these are floors, not targets.
 
 - **Filigree divider:** `partials/studio/filigree.njk`. It takes the colour
   of the text around it.
-- **QR codes:** `src/assets/qr-*.svg` (order, website, Facebook, survey).
+- **QR codes:** `src/assets/qr-*.svg` (order, website, Facebook, survey, review).
   They are always **black on white with the white border left on**, because
   scanners need that border. They point at our own short links
   (lvcafetogo.com/order), so a printed code survives a change of ordering

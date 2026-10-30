@@ -72,7 +72,9 @@
    in the middle of the gap between them. */
 .wk-grid {
     --day-w: 110px;
-    --soup-w: 260px;
+    /* Wide enough for "Broccoli & Cauliflower" on one line: a third line of
+       soup makes the row taller and pushes the footer off the post. */
+    --soup-w: 310px;
     --col-gap: 24px;
     flex: 1;
     display: flex;

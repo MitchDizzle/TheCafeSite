@@ -37,9 +37,9 @@
         </header>
 
         <div class="ds-main">
-            {#- A name longer than any so far steps down a size, so it still
-                fits in two lines. -#}
-            <p class="p-display ds-special{% if d.special.length > 24 %} ds-special--long{% endif %} ink-teal">{{ d.special }}</p>
+            {#- A long name steps down a size, so it still fits in two lines;
+                a third line pushes the soup box off the sheet. -#}
+            <p class="p-display ds-special{% if d.special.length > 32 %} ds-special--longer{% elif d.special.length > 24 %} ds-special--long{% endif %} ink-teal">{{ d.special }}</p>
             {%- if sides %}
             <p class="ds-sides">{{ sides }}</p>
             {%- endif %}
@@ -66,7 +66,7 @@
         <footer class="ds-soup">
             <p class="p-label ds-box-label ink-accent">Soup of the day</p>
             <div class="ds-soup-row">
-                <p class="p-display ds-soup-name ink-teal">{{ d.soup }}</p>
+                <p class="p-display ds-soup-name{% if d.soup.length > 22 %} ds-soup-name--long{% endif %} ink-teal">{{ d.soup }}</p>
                 {%- if soupCat and soupCat.items %}
                 <p class="ds-soup-price">{% for s in soupCat.items %}{% if not loop.first %} &middot; {% endif %}{{ s.name }} {{ s.price | money }}{% endfor %}</p>
                 {%- endif %}

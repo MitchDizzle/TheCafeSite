@@ -226,7 +226,7 @@
     grid-template-columns: var(--day-w) 1fr var(--soup-w);
     column-gap: var(--col-gap);
     align-items: center;
-    padding: 0.12in 0;
+    padding: 0.07in 0;
     border-bottom: 0.015in solid #ccc;
 }
 
@@ -486,6 +486,34 @@
     font-size: 0.34in;
 }
 
+/* ── "Leave us a Google review" sign ───────────────────────
+   The survey sign's QR box, a little smaller to leave room for the steps,
+   which are set large because this is the audience that needs them. */
+
+.sign--review .sign-heading-title {
+    font-size: 0.56in;
+    white-space: nowrap;
+}
+
+.sign--review .sign-survey-qr {
+    width: 3in;
+    margin-top: 0.26in;
+}
+
+.sign-review-steps {
+    margin: 0.24in 0 0 0.34in;
+    font-size: 0.27in;
+    line-height: 1.25;
+}
+
+.sign-review-steps li + li {
+    margin-top: 0.07in;
+}
+
+.sign--review .sign-survey-url {
+    margin-top: 0.16in;
+}
+
 /* ── Black & white masthead: the logo in solid ink ─────────
    Every bw sign carries the same wordmark as the colour ones, so the set
    reads as one. No offset shadow: in one ink it only thickens the letters. */
@@ -634,6 +662,12 @@
     font-size: 1.1in;
 }
 
+/* Over 32 characters ("Cranberry Chicken or Ham Salad Croissant" is 40), a
+   step more, so that one still takes two lines. */
+.ds-special--longer {
+    font-size: 0.85in;
+}
+
 .ds-sides {
     font-size: 0.62in;
     line-height: 1.2;
@@ -708,6 +742,12 @@
     font-size: 0.85in;
     line-height: 1.1;
     margin-top: 0.06in;
+}
+
+/* Over 22 characters ("Broccoli & Cauliflower Cheese" is 29), one line: two
+   at the full size run the box off the sheet. */
+.ds-soup-name--long {
+    font-size: 0.6in;
 }
 
 .ds-soup-price {

@@ -189,6 +189,7 @@ p { max-width: 65ch; }
     text-transform: uppercase;
     color: var(--text-dark);
     transition: color 0.2s;
+    white-space: nowrap;
 }
 
 .nav__links a:hover {
@@ -219,7 +220,8 @@ p { max-width: 65ch; }
     transition: transform 0.2s, opacity 0.2s;
 }
 
-@media (max-width: 700px) {
+/* 800px: "Menu & Specials" needs that much room to stay on the one line. */
+@media (max-width: 800px) {
     .nav__toggle { display: flex; }
 
     .nav__links {

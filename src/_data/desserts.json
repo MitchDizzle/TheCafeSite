@@ -1,6 +1,6 @@
 {
   "_note": "Made by scripts/desserts.js (npm run desserts, and the start of npm run build) from Square's desserts, as the kitchen board's Manage -> Desserts has them. Don't edit it: change the desserts there, then run it again and commit this file. `out` is a kind Square counts at 0. Read by studio/sign-desserts-bw.njk and sign-dessert-bars-bw.njk.",
-  "updated": "2026-10-29",
+  "updated": "2026-10-30",
   "items": [
     {
       "name": "Cheesecake",
@@ -42,7 +42,8 @@
       "price": 3.5,
       "kinds": [
         {
-          "name": "Banana Pudding"
+          "name": "Banana Pudding",
+          "out": true
         }
       ],
       "lists": []
@@ -58,15 +59,36 @@
       "lists": []
     },
     {
+      "name": "Cinnamon Roll",
+      "price": 2.5,
+      "kinds": [
+        {
+          "name": "Cinnamon Roll"
+        }
+      ],
+      "lists": []
+    },
+    {
       "name": "Cream Puffs",
       "price": 3.5,
       "kinds": [
         {
-          "name": "Cream Puffs"
+          "name": "Cream Puffs",
+          "out": true
         },
         {
           "name": "Chocolate Cream Puffs",
           "out": true
+        }
+      ],
+      "lists": []
+    },
+    {
+      "name": "M&M Cookies",
+      "price": 1.5,
+      "kinds": [
+        {
+          "name": "M&M Cookies"
         }
       ],
       "lists": []
@@ -77,6 +99,16 @@
       "kinds": [
         {
           "name": "Meringue Chocolate Pie"
+        }
+      ],
+      "lists": []
+    },
+    {
+      "name": "Pecan Sticky Bun",
+      "price": 2.5,
+      "kinds": [
+        {
+          "name": "Pecan Sticky Bun"
         }
       ],
       "lists": []
