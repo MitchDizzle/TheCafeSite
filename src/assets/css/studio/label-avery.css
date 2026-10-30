@@ -35,6 +35,22 @@
 .bake-label p,
 .bake-label h1 { margin: 0; }
 
+/* The cookie's name with the baker's on the same line, right-aligned. */
+.bake-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.1in;
+}
+
+.bake-by {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 9pt;
+    color: var(--teal-dark);
+    white-space: nowrap;
+}
+
 .bake-name {
     font-family: 'Playfair Display', serif;
     font-weight: 700;

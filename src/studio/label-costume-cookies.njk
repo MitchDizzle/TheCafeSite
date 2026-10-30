@@ -17,8 +17,9 @@ studioOrder: 61
 
 product: "M&M Cookie"
 productSub: "Gluten-free"
-ingredients: "Gluten-Free Flour (Rice Flour, Brown Rice Flour, Sorghum Flour, Tapioca Starch, Potato Starch, Cellulose, Xanthan Gum), Butter, Brown Sugar, Chocolate Chips, M&M's, Sugar, Egg, Coffee, Baking Soda, Salt."
+ingredients: "Gluten-Free Flour (Rice Flour, Brown Rice Flour, Sorghum Flour, Tapioca Starch, Potato Starch, Cellulose, Xanthan Gum), Butter, Brown Sugar, Chocolate Chips, M&M's, Sugar, Egg, Coffee, Baking Soda, Salt, Food Coloring (some cookies)."
 contains: "Milk, Egg, Soy"
+baker: "Mitch Gardner"
 kitchenNote: "Mixed and baked apart from our regular cooking, in a kitchen that also uses wheat."
 ---
 {#- Avery 18262 (same sheet as 5162 / 5262 / 8162): letter, 2 columns × 7 rows of
@@ -28,12 +29,16 @@ kitchenNote: "Mixed and baked apart from our regular cooking, in a kitchen that 
     feeds a little off still lands it on the label.
 
     The same sheet as personal/pumpkin-cookies, with the cafe's name on it,
-    since these go home with customers. The kitchen note sits on the
+    since these go home with customers, and the baker's
+    name beside the cookie's. The kitchen note sits on the
     allergen line: anyone with celiac reads both. -#}
 <div class="canvas avery-sheet">
     {%- for n in range(14) %}
     <div class="bake-label">
-        <h1 class="bake-name">{{ product }}</h1>
+        <div class="bake-head">
+            <h1 class="bake-name">{{ product }}</h1>
+            <p class="bake-by">Baked by {{ baker }}</p>
+        </div>
         <p class="bake-sub">{{ productSub }} <span class="bake-from">&middot; {{ site.name }}, {{ site.address.locality }}</span></p>
         <p class="bake-ingredients"><b>Ingredients:</b> {{ ingredients }}</p>
         <p class="bake-contains"><b>Contains: {{ contains }}.</b> {{ kitchenNote }}</p>
