@@ -12,7 +12,7 @@
   "soupSide": true,
   "_note_extra_sides": "`extraSides` on a day adds sides to that day's swap list only, ahead of the Deli Salads, and to the Special Side ('just for today': Oven Browned Potatoes on 2026-10-13, client; the Special Side since 2026-10-29). Nothing else shows them; they only add choices in Square. Listing the plate's own sides here lets a customer double up: Side 1 keeps its side picked and offers the other, and Side 2 the same (Mac & Cheese and Baked Beans on 2026-10-30, client). They can also be typed on the kitchen PC's front page (Manage > Specials, Extra sides today). Unlike the rest of a day, the kitchen PC takes them even for today once it's in Square, so adding one this morning reaches Square within half an hour (or at Check for updates).",
   "_note_counter_only": "`counterOnly` on a day lists sides sold at the counter only that day, hidden from online ordering: [\"Twice Baked Potato Casserole\"] on 2026-10-29, yesterday's, sold off until it runs out (client). Write each exactly as in `sides` or `extraSides`. The kitchen PC hides those options online on Lunch Special's side lists and the Special Side (Square's 'Hide on Square Online'), keeps them on the till, and leaves them out of Lunch Special's description. Read like extraSides: even for today once it's in Square, within half an hour or at Check for updates. The website, the posts and the signs still name the side. kitchen/README.md, 'Sides in Square'.",
-  "_note_modifiers": "`modifiers` on a day are that plate's Specials Modifiers: options typed as they should read on the ticket, free unless ending in a price: [\"Add Mayo\", \"Extra Cheese +$1\"] (client 2026-10-29). The kitchen PC puts them, after any `leaveOff`, in the 'Specials Modifiers' list on Lunch Special that morning, pick any; read even for today, like extraSides. Typing them on the kitchen PC's front page (Manage > Specials) wins over these for that day. Nothing else shows them. kitchen/README.md, 'Specials Modifiers'.",
+  "_note_modifiers": "`modifiers` on a day are that plate's Specials Modifiers: options typed as they should read on the ticket, free unless ending in a price: [\"Add Mayo\", \"Extra Cheese +$1\"] (client 2026-10-29). The kitchen PC puts them, after any `leaveOff`, in the 'Specials Modifiers' list on Lunch Special that morning, pick any; read even for today, like extraSides. Typing them on the kitchen PC's front page (Manage > Specials) wins over these for that day. A plate that is one of two lists both here, so the ticket and online ordering can say which (Cranberry Chicken or Ham Salad Croissant on 2026-11-05). Nothing else shows them. kitchen/README.md, 'Specials Modifiers'.",
   "_note_leave_off": "`leaveOff` on a day lists what a customer can have left off that plate, a word each: [\"Bacon\"] on the Chicken Bacon Avocado Wrap (client 2026-10-18). The kitchen PC puts them first in the 'Specials Modifiers' list on Lunch Special that morning (a 'Leave Off' list of their own until 2026-10-29), pick any, $0, worded 'No Bacon', so the ticket says so; on a day without any the list is off. Like extraSides it is read even for today once it's in Square. Nothing else shows it: the post and the signs don't. Plan one with each week's specials whenever a plate has something people often ask to leave off. kitchen/README.md, 'Leave Off'.",
   "_note_price": "`price` here, at the top of the file, is what EVERY lunch special costs unless its day sets its own `price` (client 2026-10-12: $10 unless otherwise described). The kitchen PC puts it into Square with the day's plate each morning, so this file is now where the price is set: change it here, not on the till. The weekly Facebook post shows it once at the top, and a day's own price beside that plate. The soup's Cup / Bowl prices stay in menu.json.",
   "price": 10,
@@ -98,7 +98,11 @@
       "date": "2026-11-05",
       "soup": "Italian Wedding",
       "special": "Cranberry Chicken or Ham Salad Croissant",
-      "anySide": true
+      "anySide": true,
+      "modifiers": [
+        "Cranberry Chicken",
+        "Ham Salad"
+      ]
     },
     {
       "date": "2026-11-06",
