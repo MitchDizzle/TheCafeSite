@@ -198,6 +198,20 @@ test("Specials: typed modifiers and extra sides are saved for the day, and the m
   delete plan.days[today];
 });
 
+test("Doubling up: the plate's own sides as extra sides put each on the other's list, its own still picked", async () => {
+  const today = localDate();
+  plan.extraSides = { [today]: ["Mac & Cheese", "Baked Beans"] };
+  await loadCatalog();
+  delete plan.sidesApplied[today];
+  await applySides(today, day("BBQ Ribs", { sides: ["Mac & Cheese", "Baked Beans"] }));
+  const names = (name) => [...mockItems.values()].find((o) => o.type === "MODIFIER_LIST" && o.modifier_list_data.name === name)
+    .modifier_list_data.modifiers.map((m) => [m.modifier_data.name, m.modifier_data.on_by_default]);
+  assert.deepEqual(names("Side 1"), [["Mac & Cheese", true], ["Baked Beans", false], ["Tossed Salad", false], ["Cottage Cheese", false]]);
+  assert.deepEqual(names("Side 2"), [["Baked Beans", true], ["Mac & Cheese", false], ["Tossed Salad", false], ["Cottage Cheese", false]]);
+  assert.deepEqual(names("Today's Side").map(([n]) => n), ["Mac & Cheese", "Baked Beans"]);
+  delete plan.sidesApplied[today];
+});
+
 test("Specials Modifiers go on Lunch Special in Square as one list, priced; Leave Off and unpicked presets go off", async () => {
   const today = localDate();
   Object.assign(plan, { dayLists: {}, dishLists: {}, listsUsed: [] });

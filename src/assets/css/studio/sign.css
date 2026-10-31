@@ -310,7 +310,8 @@
 
 /* ── Today's special sides (sign-todays-sides-bw.njk) ──────
    A one-day sign for a plate whose side is a pick of two (client
-   2026-10-29). No logo: it stands on the counter, so the room goes to
+   2026-10-29), or with two sides that can be doubled up (client
+   2026-10-30). No logo: it stands on the counter, so the room goes to
    type. The two sides are the point, so they're set large, each in its own
    box ("Twice Baked Potato Casserole" takes two lines); the regular sides
    box reuses the specials sign's, a few sizes up, one side to a line. */
@@ -356,6 +357,17 @@
     margin: 0.06in 0;
 }
 
+.ts-more {
+    font-size: 0.34in;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 0.14in;
+}
+
+.ts-more + .ts-more {
+    margin-top: 0.02in;
+}
+
 .ts-regular {
     padding: 0.16in 0.24in 0.2in;
 }
@@ -370,6 +382,20 @@
     font-size: 0.32in;
     gap: 0.03in;
     margin-top: 0.1in;
+}
+
+/* The two lines under the boxes take the room the double-up day needs. */
+
+.ts--both .ts-pick {
+    padding: 0.09in 0.2in;
+}
+
+.ts--both .ts-or {
+    margin: 0;
+}
+
+.ts--both .ts-regular .sw-choices {
+    font-size: 0.3in;
 }
 
 /* ── Dessert fridge & dessert bars signs ───────────────────
