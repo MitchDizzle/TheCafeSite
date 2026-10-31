@@ -34,6 +34,7 @@ pageCss: "/assets/css/reserve.css"
                 <form action="{{ site.reservations.formUrl }}" method="POST" novalidate
                       data-reserve
                       data-max-ahead="{{ site.reservations.maxAheadDays }}"
+                      data-closed="{{ site.closedDays | dump }}"
                       data-success="Thank you! We got your request. We'll call or email to confirm your table.">
 
                     <!-- honeypot: people never see or fill this. Not called "website":

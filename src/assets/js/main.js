@@ -144,8 +144,8 @@
     /* ── /reserve: table requests to the cafe's Google Apps Script ──
        Same checks as the script (kitchen/google-script/Code.gs), so a
        refusal there is rare: today or later, within maxAheadDays, Monday to
-       Friday (Central time, the cafe's). Sent as a plain form post with
-       _js=1, which makes the script answer in JSON.
+       Friday and not a closed day (Central time, the cafe's). Sent as a plain
+       form post with _js=1, which makes the script answer in JSON.
 
        Google runs the script on that post and answers with a redirect to a
        second address that hands over the script's reply. That second step
@@ -165,10 +165,13 @@
         var ahead = +form.getAttribute('data-max-ahead') || 90;
         dateEl.min = central(Date.now());
         dateEl.max = central(Date.now() + ahead * 864e5);
+        var closed = JSON.parse(form.getAttribute('data-closed') || '[]');
         var checkDay = function () {
             var v = dateEl.value;
             var day = /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(v + 'T12:00:00Z').getUTCDay() : -1;
-            dateEl.setCustomValidity(day === 0 || day === 6 ? "We're open Monday to Friday. Please pick a weekday." : '');
+            var shut = closed.filter(function (c) { return c.date === v; })[0];
+            dateEl.setCustomValidity(day === 0 || day === 6 ? "We're open Monday to Friday. Please pick a weekday."
+                : shut ? "We're closed that day for " + shut.name + '. Please pick another day.' : '');
         };
         dateEl.addEventListener('change', checkDay);
         // The script wants a number it can call back: ten digits at least.

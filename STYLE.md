@@ -212,6 +212,10 @@ rather than starting blank. `src/studio/README.md` explains how.
 - **Routine:** add next week to `specials.json`, run `npm run build`, upload,
   then post the PNG and copy the caption from `/studio/downloads/`.
 
+**A holiday closure** (`fb-closed`): the day we're closed, biggest thing on it,
+then the day we're back. No order link. Change the day in its front matter and
+add it to `closedDays` in `site.json`, which covers the website and `/reserve`.
+
 **For any post:**
 
 - **Upload the PNG, not a JPEG.** Facebook re-compresses whatever it gets, and

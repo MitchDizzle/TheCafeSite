@@ -1,0 +1,24 @@
+{#- The line at the top of every page for the two weeks before a day the cafe
+    is closed (site.closedDays). Pages are uploaded once, so each day ships
+    hidden and the script picks on Central time, like the specials box: an old
+    closure is hidden, never shown. -#}
+{%- if site.closedDays and site.closedDays.length %}
+{%- for c in site.closedDays %}
+    <div class="construction-banner" role="note" data-closed-day="{{ c.date }}" hidden>
+        Closed {{ c.date | dayDate("long") }} <span style="white-space:nowrap">for {{ c.name }}</span>
+    </div>
+{%- endfor %}
+    <script>
+        (function () {
+            var central = function (ms) {
+                return new Date(ms).toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+            };
+            var today = central(Date.now());
+            var soon = central(Date.now() + 14 * 864e5);
+            document.querySelectorAll('[data-closed-day]').forEach(function (el) {
+                var day = el.getAttribute('data-closed-day');
+                el.hidden = day < today || day > soon;
+            });
+        })();
+    </script>
+{%- endif %}

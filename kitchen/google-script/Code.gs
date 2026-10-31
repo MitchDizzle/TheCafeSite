@@ -31,6 +31,7 @@ const CAFE = {
 };
 const TZ = "America/Chicago";
 const OPEN_DAYS = [1, 2, 3, 4, 5]; // Monday to Friday (0 = Sunday)
+const CLOSED_DAYS = { "2026-11-11": "Veterans Day" }; // as site.json's closedDays
 const FIRST_TIME = "06:00"; // earliest table
 const LAST_TIME = "13:30"; // latest table (closing is 2pm)
 const HOLD_MINUTES = 20; // the table is held this long after its time
@@ -205,6 +206,7 @@ function clean_(p) {
   if (date < today) throw new Error("That date has passed.");
   if (date > last) throw new Error(`We take reservations up to ${MAX_AHEAD_DAYS} days ahead. Please call us for later dates.`);
   if (!OPEN_DAYS.includes(new Date(date + "T12:00:00Z").getUTCDay())) throw new Error("We're open Monday to Friday. Please pick a weekday.");
+  if (CLOSED_DAYS[date]) throw new Error(`We're closed that day for ${CLOSED_DAYS[date]}. Please pick another day.`);
   if (!/^\d{2}:\d{2}$/.test(time) || time < FIRST_TIME || time > LAST_TIME) {
     throw new Error(`Please pick a time between ${timeWords_(FIRST_TIME)} and ${timeWords_(LAST_TIME)}.`);
   }

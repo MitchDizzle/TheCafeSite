@@ -380,7 +380,7 @@ Tables booked ahead, for any number of people (client 2026-10-19). The paper boo
 - The list shows the last 7 days too. A change that couldn't reach Google is marked *Not sent yet*; the PC tries again at its next check.
 - **How often the PC checks Google:** every 2 minutes from 5am to 3pm, every 15 minutes the rest of the time, and straight away when Reservations is opened (it opens within 8 seconds even when Google is slow; a request still on its way turns up by itself). That's a few hundred short checks a day, far under the free account's limit of about 90 minutes of script time a day.
 
-**The website's form** is `/reserve` (`src/reserve.njk`), in the menu as Reserve. Until the script's address is in `site.json` it shows the phone number instead of the form. The form checks the same things as the script: today up to 90 days ahead, Monday to Friday, 6am to 1:30pm, 1 to 80 people. It says the table is held for 20 minutes and to check in at the counter. Change those in both `site.json` (`reservations`) and the top of `google-script/Code.gs`.
+**The website's form** is `/reserve` (`src/reserve.njk`), in the menu as Reserve. Until the script's address is in `site.json` it shows the phone number instead of the form. The form checks the same things as the script: today up to 90 days ahead, Monday to Friday and not a closed day (`closedDays` in `site.json`, `CLOSED_DAYS` in `Code.gs`), 6am to 1:30pm, 1 to 80 people. It says the table is held for 20 minutes and to check in at the counter. Change those in both `site.json` (`reservations`) and the top of `google-script/Code.gs`.
 
 ### Setting up Google (one time)
 

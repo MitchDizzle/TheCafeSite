@@ -49,6 +49,11 @@
     "closes": { "time": "2:00", "meridiem": "pm" }
   },
 
+  "_comment_closed": "Weekdays the cafe is closed (holidays): `date` is YYYY-MM-DD and `name` finishes the sentence 'Closed Wednesday, November 11 for Veterans Day'. Every page shows that line for the two weeks before (partials/site/closed-notice.njk, gone once the day has passed) and /reserve refuses the day (main.js, and CLOSED_DAYS in kitchen/google-script/Code.gs: change both). Its Facebook post is studio/fb-closed.njk. Online ordering, DoorDash and the Google Profile are set by hand. A past day can stay here; it's never shown.",
+  "closedDays": [
+    { "date": "2026-11-11", "name": "Veterans Day" }
+  ],
+
   "_comment_construction": "Set to false to remove the under-construction banner from every page at once.",
   "_comment_survey": "Where /survey sends its answers (Formspree, by email). It shares the newsletter form on /contact until a form of its own is made in Formspree: swap the URL here and every survey link follows. Survey emails carry the subject 'Customer survey'. Mind Formspree's monthly submission limit on the free plan, which is shared across every form on the account.",
   "survey": { "formUrl": "https://formspree.io/f/mdarqnql" },

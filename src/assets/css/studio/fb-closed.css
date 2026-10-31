@@ -1,0 +1,137 @@
+/* ============================================================
+   Closed for a holiday — Facebook post, 1080 × 1350 px (4:5 portrait)
+   Piece: src/studio/fb-closed.njk
+
+   Built like the weekly specials post (fb-weekly-specials.css): teal bands
+   top and bottom and a cream body, so the red can be read. Shown about 540px
+   wide on a phone, so nothing a customer needs is set under 24px.
+   ============================================================ */
+
+.fc {
+    background: var(--cream);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Masthead band ────────────────────────────────────────── */
+
+.fc-head {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    color: var(--cream);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    /* Extra room at the top: Facebook's preview trims about 45px off the
+       top and bottom of a 4:5 post, so nothing sits that close to either
+       edge. */
+    padding: 78px 60px 30px;
+    border-bottom: 10px solid var(--accent);
+}
+
+.fc-wordmark {
+    --mark-w: 330px;
+}
+
+.fc-kicker {
+    font-size: 54px;
+    margin-top: 14px;
+}
+
+.fc-range {
+    font-size: 26px;
+    color: var(--mint);
+    margin-top: 8px;
+    /* .p-label tracks 0.18em after the last letter too; half of it back as
+       indent re-centres the line. */
+    text-indent: 0.18em;
+}
+
+/* ── The message ──────────────────────────────────────────── */
+
+.fc-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 28px 64px;
+}
+
+.fc-headline {
+    font-size: 146px;
+    line-height: 1.05;
+    color: var(--accent);
+}
+
+.fc-date {
+    font-size: 68px;
+    line-height: 1.15;
+    margin-top: 10px;
+}
+
+.fc-stars {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    margin: 40px 0 34px;
+    color: var(--accent);
+}
+
+.fc-star {
+    display: block;
+    fill: currentColor;
+}
+
+.fc-star--side { width: 44px; height: 44px; }
+.fc-star--mid  { width: 66px; height: 66px; }
+
+.fc-thanks {
+    font-size: 54px;
+    line-height: 1.2;
+    text-wrap: balance;
+}
+
+.fc-back {
+    width: 100%;
+    margin-top: 44px;
+    padding: 26px 32px 30px;
+    background: var(--cream-alt);
+    border-radius: 16px;
+}
+
+.fc-back-label {
+    font-size: 26px;
+    color: var(--accent);
+    text-indent: 0.18em;
+}
+
+.fc-back-day {
+    font-size: 54px;
+    line-height: 1.15;
+    margin-top: 8px;
+}
+
+/* ── Footer band ──────────────────────────────────────────── */
+
+.fc-foot {
+    background: var(--teal-dark);
+    color: var(--cream);
+    text-align: center;
+    padding: 20px 40px 66px;
+}
+
+.fc-foot-call {
+    font-size: 40px;
+    white-space: nowrap;
+}
+
+.fc-foot-line {
+    font-size: 24px;
+    margin-top: 6px;
+    opacity: 0.88;
+}
+
+.dot { opacity: 0.55; margin: 0 0.3em; }

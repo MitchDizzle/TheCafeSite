@@ -1,0 +1,74 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Closed Post (1080 × 1350)"
+canvasW: "1080px"
+canvasH: "1350px"
+pageCss: "/assets/css/studio/fb-closed.css"
+
+# The closure. The caption (fb-closed.11tydata.js) reads these same fields, so
+# the picture and the words can't disagree. For another holiday, change these
+# and the studio lines below; empty `thanks` leaves that line out. The website
+# and /reserve read site.json's closedDays, so add the day there too.
+closedDate: "2026-11-11"
+holiday: "Veterans Day"
+backDate: "2026-11-12"
+thanks: "Thank you to everyone who has served."
+
+tags: studio
+studioWeekly: true
+studioTitle: "Closed for Veterans Day — Facebook post"
+studioCategory: "Social"
+studioSize: "1080 × 1350 px · portrait feed post"
+studioNote: "We're closed Wednesday, November 11 for Veterans Day, back Thursday, November 12 (client 2026-10-31). The day, the holiday and the thank-you are in this piece's front matter, and the caption is built from them. Change them for the next holiday closure."
+studioW: 1080
+studioH: 1350
+studioOrder: 25
+---
+{#- One message: the day we're closed and the day we're back.
+
+    A cream body between the teal bands, so the red can be read (never red on
+    teal). The red, teal and cream with the stars are all the holiday styling
+    it needs: no flag, no emoji.
+
+    Every size is set for the ~540px a portrait post shows at on a phone:
+    nothing a customer needs is under 24px. -#}
+{%- set o = site.opening %}
+{%- set opens = (o.opens.time | replace(":00", "")) + o.opens.meridiem %}
+{%- set closes = (o.closes.time | replace(":00", "")) + o.closes.meridiem %}
+{%- set star = "50,2 60.8,35.2 95.6,35.2 67.4,55.7 78.2,88.8 50,68.3 21.8,88.8 32.6,55.7 4.4,35.2 39.2,35.2" %}
+<div class="canvas fc">
+
+    <header class="fc-head">
+        <div class="wordmark wordmark--light wordmark--hero fc-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-display-italic fc-kicker">{{ holiday }}</p>
+        <p class="p-label fc-range">{{ site.address.locality }}, {{ site.address.region }}</p>
+    </header>
+
+    <div class="fc-body">
+        <h1 class="p-display fc-headline">We&rsquo;re closed</h1>
+        <p class="p-display fc-date">{{ closedDate | dayDate("long") }}</p>
+
+        <div class="fc-stars" aria-hidden="true">
+            {%- for size in ["side", "mid", "side"] %}
+            <svg class="fc-star fc-star--{{ size }}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="{{ star }}"/></svg>
+            {%- endfor %}
+        </div>
+
+        {%- if thanks %}
+        <p class="p-display-italic fc-thanks">{{ thanks }}</p>
+        {%- endif %}
+
+        <div class="fc-back">
+            <p class="p-label fc-back-label">We&rsquo;ll be back</p>
+            <p class="p-display fc-back-day">{{ backDate | dayDate("long") }} at {{ opens }}</p>
+        </div>
+    </div>
+
+    <footer class="fc-foot">
+        <p class="p-display fc-foot-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
+        <p class="p-body fc-foot-line">{{ o.hoursDays }}, {{ opens }} &ndash; {{ closes }} &middot; {{ site.address.street }}, {{ site.address.locality }}, {{ site.address.region }}</p>
+    </footer>
+
+</div>
