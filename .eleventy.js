@@ -86,6 +86,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addFilter("specialSides", require("./src/_lib/specials-caption.js").specialSides);
   // The week with repeated plates (or soups) dropped, for the day-free board signs.
   eleventyConfig.addFilter("distinctBy", require("./src/_lib/specials-caption.js").distinctBy);
+  // Monday to Friday of a date's week, for the closed post and door sign.
+  eleventyConfig.addFilter("workWeek", require("./src/_lib/specials-caption.js").workWeek);
 
   // Narrow a list to the items whose `key` equals `value`.
   //

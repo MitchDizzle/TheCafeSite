@@ -1,0 +1,42 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Closed door sign (black & white)"
+canvasW: "17in"
+canvasH: "11in"
+pageSize: "17in 11in"
+pageCss: "/assets/css/studio/sign.css"
+bw: true
+
+# Which entry of site.json's closedDays this sign is for: the holiday, the day
+# back and the thank-you are there, shared with the post (fb-closed).
+closedDate: "2026-11-11"
+
+tags: studio
+studioWeekly: true
+studioTitle: "Closed for Veterans Day — door sign"
+studioCategory: "Signs"
+studioSize: "17 × 11 in landscape · taped inside the door glass, under the hours sign"
+studioNote: "Goes up on the door Friday, November 6, under the hours sign, and comes down Thursday morning, November 12. Same size as the hours sign, so the two stack on the door's glass. It shows the week, because it's up on days the cafe is open. Prints fine fitted to a letter sheet too. Reads closedDays in site.json."
+studioW: 1632
+studioH: 1056
+studioOrder: 26
+---
+{#- A holiday closure for the door, up for days before it: the holiday is the
+    biggest thing on it and the week shows which day, so "closed" can't be
+    read on a day the cafe is open (client 2026-10-31). Black ink only, a
+    temporary sheet. The same reasons as the post, fb-closed. -#}
+{%- set c = (site.closedDays | where("date", closedDate))[0] %}
+{%- set o = site.opening %}
+<div class="canvas sign sign--bw door door--closed">
+    <p class="p-display-italic dc-for">Closed for</p>
+    <h2 class="p-display dc-holiday">{{ c.name }}</h2>
+    <p class="dc-date">{{ c.date | dayDate("long") }}</p>
+
+    {% include "partials/studio/closed-week.njk" %}
+
+    <div class="sign-spacer"></div>
+    <p class="dc-back">Back {{ c.back | dayDate("long") }} at {{ o.opens.time | replace(":00", "") }}{{ o.opens.meridiem }}</p>
+    {%- if c.thanks %}
+    <p class="p-display-italic dc-thanks">{{ c.thanks }}</p>
+    {%- endif %}
+</div>

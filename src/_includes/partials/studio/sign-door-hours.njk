@@ -1,0 +1,37 @@
+{#- The front door's hours sign (client 2026-10-31): replaces "Now Open", a
+    month after opening, and is meant to be read from the parking lot.
+
+    THE DAYS AND HOURS ARE THE SIGN. Landscape, because the door's glass is
+    about 22in wide: 17in across takes the type about 1.6 times bigger than
+    the old 11in-wide sign could. Lato Black, not Playfair: Playfair's thin
+    strokes and old-style numerals are what go first at a distance.
+
+    The logo is small because the window beside the door already carries the
+    name. The QR and website are for whoever has walked up to the door. No
+    street address: whoever reads the door is standing at it. -#}
+{%- set o = site.opening %}
+<div class="canvas sign door{% if bw %} sign--bw{% endif %}">
+    <header class="door-mast">
+        <div class="wordmark {{ 'wordmark--ink' if bw else 'wordmark--light' }}">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-display-italic door-kicker">Breakfast &amp; Lunch</p>
+    </header>
+
+    <div class="door-hours">
+        <p class="door-days">{{ o.hoursDays }}</p>
+        <p class="door-time">{{ o.opens.time | replace(":00", "") }}{{ o.opens.meridiem }} &ndash; {{ o.closes.time | replace(":00", "") }}{{ o.closes.meridiem }}</p>
+        <p class="door-closed">Closed Saturday and Sunday</p>
+    </div>
+
+    {#- The QR encodes lvcafetogo.com/order (src/order.njk), so a change of
+        ordering page never strands a printed code. -#}
+    <footer class="door-foot">
+        <div class="qr door-qr">
+            {% inlineSvg "/assets/qr-order.svg" %}
+        </div>
+        <p class="p-body door-order">Scan to <strong>order online</strong></p>
+        <p class="p-body door-note">Lunch specials and soup from 11am</p>
+        <p class="door-web">{{ site.social.website }}</p>
+    </footer>
+</div>

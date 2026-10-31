@@ -5,7 +5,7 @@
 {%- if site.closedDays and site.closedDays.length %}
 {%- for c in site.closedDays %}
     <div class="construction-banner" role="note" data-closed-day="{{ c.date }}" hidden>
-        Closed {{ c.date | dayDate("long") }} <span style="white-space:nowrap">for {{ c.name }}</span>
+        Closed for {{ c.name }}, <span style="white-space:nowrap">{{ c.date | dayDate("long") }}</span>
     </div>
 {%- endfor %}
     <script>

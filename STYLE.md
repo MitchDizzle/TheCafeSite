@@ -181,6 +181,7 @@ The audience skews older, so these are floors, not targets.
 | Receipt logo | 1280 × 648 px | Square digital receipts and invoices |
 | Counter signs | 8.5 × 11 in portrait | Letter stand-up sign holders |
 | Daily specials board signs | 11 × 17 in portrait | One page per plate, with no date, so they can be reused |
+| Door signs (`sign-door-hours`, `sign-closed-bw`) | 17 × 11 in landscape | Read from the parking lot: Lato Black, as wide as the sheet takes. They stack on the door's glass |
 | Labels (tip jar, business card bowl) | 11 × 8.5 in, two 10 × 3.6 in labels | Cut apart |
 | Survey card | 11 × 8.5 in, two 5.5 × 8.5 cards | One ink |
 | Tri-fold menu | Letter, black & white | Also the PDF behind "Print this menu" on /menu |
@@ -212,9 +213,12 @@ rather than starting blank. `src/studio/README.md` explains how.
 - **Routine:** add next week to `specials.json`, run `npm run build`, upload,
   then post the PNG and copy the caption from `/studio/downloads/`.
 
-**A holiday closure** (`fb-closed`): the day we're closed, biggest thing on it,
-then the day we're back. No order link. Change the day in its front matter and
-add it to `closedDays` in `site.json`, which covers the website and `/reserve`.
+**A holiday closure** (`fb-closed`, door sign `sign-closed-bw`): the holiday is
+the biggest thing on it, never "We're closed" (client 2026-10-31: a quick look
+reads that as the cafe closing), and the week is shown day by day, open or
+closed. No order link. Add the day to `closedDays` in `site.json`, which also
+covers the website and `/reserve`, and set `closedDate` in both pieces. Once
+the day has passed, the post starts "Outdated. Thank You", like the weekly posts.
 
 **For any post:**
 

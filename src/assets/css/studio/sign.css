@@ -2,6 +2,7 @@
    Counter signs, 8.5 × 11 in portrait, for letter stand-up sign holders.
    Pieces: sign-drinks(-bw).njk, sign-specials(-bw).njk, sign-todays-sides-bw.njk,
    sign-desserts-bw.njk, sign-dessert-bars-bw.njk
+   (and the door signs, 17 × 11 in, in their own section below)
    Partials: partials/studio/sign-drinks.njk, partials/studio/sign-specials.njk
 
    Read from the line, four to eight feet away, so the type is poster
@@ -578,6 +579,198 @@
     font-size: 0.42in;
     text-align: center;
     margin-top: 0.3in;
+}
+
+/* ── Door signs: 17 × 11 in landscape, read from the parking lot ──
+   Pieces: sign-door-hours(-bw).njk, sign-closed-bw.njk
+
+   Taped inside the door glass, facing out, one over the other. The width
+   limits the type, so the longest line is set to fill it: nowrap makes an
+   overrun show on the proof rather than reflow. Lato Black for anything
+   read from the lot; Playfair's hairlines don't carry that far. */
+
+.door {
+    padding: 0.45in 0.5in;
+}
+
+.door-mast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--teal);
+    color: var(--cream);
+    border-radius: 0.14in;
+    padding: 0.16in 0.5in 0.2in;
+}
+
+.door-mast .wordmark {
+    --mark-w: 3.9in;
+}
+
+.door-kicker {
+    font-size: 0.7in;
+}
+
+.sign--bw .door-mast {
+    background: none;
+    color: #000;
+    border-radius: 0;
+    border-bottom: 0.04in solid #000;
+    padding: 0 0 0.14in;
+}
+
+.sign--bw .door-mast .wordmark {
+    --mark-shadow-color: transparent;
+}
+
+.door-hours {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 0;
+}
+
+.door-days,
+.door-time {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.door-days {
+    font-size: 1.82in;
+    color: var(--accent);
+}
+
+.door-time {
+    font-size: 3.1in;
+}
+
+/* Clear of the p's descender in "2pm". */
+.door-closed {
+    font-weight: 700;
+    font-size: 0.66in;
+    line-height: 1.1;
+    margin-top: 0.3in;
+}
+
+.door-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4in;
+    border-top: 0.02in solid var(--text-dark);
+    padding-top: 0.14in;
+}
+
+/* content-box: `width` is the code and the padding, its quiet zone, goes
+   outside it. Four modules of 33 at this size. */
+.door-qr {
+    box-sizing: content-box;
+    width: 1.25in;
+    padding: 0.15in;
+}
+
+.door-order,
+.door-note {
+    font-size: 0.36in;
+    white-space: nowrap;
+}
+
+.door-order strong { font-weight: 900; }
+
+.door-web {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 0.5in;
+    white-space: nowrap;
+}
+
+/* The closed sign. The holiday is the biggest thing on it. */
+
+.door--closed {
+    align-items: center;
+    text-align: center;
+}
+
+.dc-for {
+    font-size: 0.9in;
+    line-height: 1.1;
+}
+
+.dc-holiday {
+    font-size: 2.55in;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.dc-date {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 1.15in;
+    line-height: 1.1;
+    margin-top: 0.1in;
+    white-space: nowrap;
+}
+
+.door--closed .cw {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.14in;
+    margin-top: 0.2in;
+    list-style: none;
+}
+
+.door--closed .cw-day {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    column-gap: 0.14in;
+    border: 0.04in solid #000;
+    border-radius: 0.1in;
+    padding: 0.08in 0.1in 0.12in;
+}
+
+.door--closed .cw-name {
+    font-size: 0.5in;
+}
+
+.door--closed .cw-num {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 0.72in;
+}
+
+.door--closed .cw-state {
+    flex-basis: 100%;
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 0.68in;
+    line-height: 1.1;
+}
+
+.door--closed .cw-day--closed {
+    background: #000;
+    color: #fff;
+}
+
+.dc-back {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 0.66in;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.dc-thanks {
+    font-size: 0.56in;
+    line-height: 1.2;
 }
 
 /* ── Tip jar label: two per sheet, cut on the dashes ─────── */

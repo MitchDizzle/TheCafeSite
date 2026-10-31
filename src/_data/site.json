@@ -49,9 +49,9 @@
     "closes": { "time": "2:00", "meridiem": "pm" }
   },
 
-  "_comment_closed": "Weekdays the cafe is closed (holidays): `date` is YYYY-MM-DD and `name` finishes the sentence 'Closed Wednesday, November 11 for Veterans Day'. Every page shows that line for the two weeks before (partials/site/closed-notice.njk, gone once the day has passed) and /reserve refuses the day (main.js, and CLOSED_DAYS in kitchen/google-script/Code.gs: change both). Its Facebook post is studio/fb-closed.njk. Online ordering, DoorDash and the Google Profile are set by hand. A past day can stay here; it's never shown.",
+  "_comment_closed": "Weekdays the cafe is closed (holidays): `date` is YYYY-MM-DD, `name` finishes 'Closed for Veterans Day', `back` is the next day open and `thanks` an optional line for the post and sign. Every page shows 'Closed for Veterans Day, Wednesday, November 11' for the two weeks before (partials/site/closed-notice.njk, gone once the day has passed) and /reserve refuses the day (main.js, and CLOSED_DAYS in kitchen/google-script/Code.gs: change both). The post (studio/fb-closed.njk) and the door sign (studio/sign-closed-bw.njk) read this entry by their `closedDate`, and both show that week, Monday to Friday, open or closed. Online ordering, DoorDash and the Google Profile are set by hand. A past day can stay here; it's never shown.",
   "closedDays": [
-    { "date": "2026-11-11", "name": "Veterans Day" }
+    { "date": "2026-11-11", "name": "Veterans Day", "back": "2026-11-12", "thanks": "Thank you to everyone who has served." }
   ],
 
   "_comment_construction": "Set to false to remove the under-construction banner from every page at once.",

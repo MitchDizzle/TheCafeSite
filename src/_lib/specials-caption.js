@@ -68,6 +68,13 @@ function mondayOf(iso) {
   return d.toISOString().slice(0, 10);
 }
 
+// The Monday to Friday of a YYYY-MM-DD date's week, each as YYYY-MM-DD: the
+// week shown on the closed post and door sign.
+function workWeek(iso) {
+  const monday = new Date(`${mondayOf(iso)}T00:00:00Z`).getTime();
+  return [0, 1, 2, 3, 4].map((i) => new Date(monday + i * 864e5).toISOString().slice(0, 10));
+}
+
 // The newest week in specials.json's `days`: the Monday-to-Sunday week of
 // the latest date in the file, in date order. The file holds this week and
 // next side by side (next week goes in while this one is still on /menu),
@@ -98,4 +105,4 @@ function distinctBy(days, key) {
   });
 }
 
-module.exports = { weekRange, dayLines, soupLine, specialSides, latestWeek, distinctBy };
+module.exports = { weekRange, dayLines, soupLine, specialSides, latestWeek, workWeek, distinctBy };

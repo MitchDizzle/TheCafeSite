@@ -5,26 +5,28 @@ canvasW: "1080px"
 canvasH: "1350px"
 pageCss: "/assets/css/studio/fb-closed.css"
 
-# The closure. The caption (fb-closed.11tydata.js) reads these same fields, so
-# the picture and the words can't disagree. For another holiday, change these
-# and the studio lines below; empty `thanks` leaves that line out. The website
-# and /reserve read site.json's closedDays, so add the day there too.
+# Which entry of site.json's closedDays this post is for. The holiday, the
+# day back and the thank-you are there, shared with the door sign
+# (sign-closed-bw), and the caption (fb-closed.11tydata.js) reads the same
+# entry, so the picture and the words can't disagree. For another holiday,
+# add its entry, change this date, and reword the studio lines below.
 closedDate: "2026-11-11"
-holiday: "Veterans Day"
-backDate: "2026-11-12"
-thanks: "Thank you to everyone who has served."
 
 tags: studio
 studioWeekly: true
 studioTitle: "Closed for Veterans Day — Facebook post"
 studioCategory: "Social"
 studioSize: "1080 × 1350 px · portrait feed post"
-studioNote: "We're closed Wednesday, November 11 for Veterans Day, back Thursday, November 12 (client 2026-10-31). The day, the holiday and the thank-you are in this piece's front matter, and the caption is built from them. Change them for the next holiday closure."
+studioNote: "Closed Wednesday, November 11 for Veterans Day, back Thursday, November 12 (client 2026-10-31). The holiday is the biggest thing on it and the week is shown open or closed, so it can't be read as the cafe closing. Post Monday, November 9; once the day has passed, edit the post to start 'Outdated. Thank You' like the weekly posts. Reads closedDays in site.json."
 studioW: 1080
 studioH: 1350
 studioOrder: 25
 ---
-{#- One message: the day we're closed and the day we're back.
+{#- The holiday first, then the day, then the week around it.
+
+    THE HOLIDAY IS THE BIGGEST THING ON IT (client 2026-10-31): with "We're
+    closed" as the headline, a quick look says the cafe is closed, not that
+    it's one day off. THE WEEK under it shows every other day open.
 
     A cream body between the teal bands, so the red can be read (never red on
     teal). The red, teal and cream with the stars are all the holiday styling
@@ -32,6 +34,7 @@ studioOrder: 25
 
     Every size is set for the ~540px a portrait post shows at on a phone:
     nothing a customer needs is under 24px. -#}
+{%- set c = (site.closedDays | where("date", closedDate))[0] %}
 {%- set o = site.opening %}
 {%- set opens = (o.opens.time | replace(":00", "")) + o.opens.meridiem %}
 {%- set closes = (o.closes.time | replace(":00", "")) + o.closes.meridiem %}
@@ -42,13 +45,16 @@ studioOrder: 25
         <div class="wordmark wordmark--light wordmark--hero fc-wordmark">
             {% inlineSvg "/assets/thecafe.svg", "", site.name %}
         </div>
-        <p class="p-display-italic fc-kicker">{{ holiday }}</p>
+        <p class="p-display-italic fc-kicker">Holiday Hours</p>
         <p class="p-label fc-range">{{ site.address.locality }}, {{ site.address.region }}</p>
     </header>
 
     <div class="fc-body">
-        <h1 class="p-display fc-headline">We&rsquo;re closed</h1>
-        <p class="p-display fc-date">{{ closedDate | dayDate("long") }}</p>
+        <p class="p-display-italic fc-for">Closed for</p>
+        <h1 class="p-display fc-holiday">{{ c.name }}</h1>
+        <p class="p-display fc-date">{{ c.date | dayDate("long") }}</p>
+
+        {% include "partials/studio/closed-week.njk" %}
 
         <div class="fc-stars" aria-hidden="true">
             {%- for size in ["side", "mid", "side"] %}
@@ -56,14 +62,9 @@ studioOrder: 25
             {%- endfor %}
         </div>
 
-        {%- if thanks %}
-        <p class="p-display-italic fc-thanks">{{ thanks }}</p>
+        {%- if c.thanks %}
+        <p class="p-display-italic fc-thanks">{{ c.thanks }}</p>
         {%- endif %}
-
-        <div class="fc-back">
-            <p class="p-label fc-back-label">We&rsquo;ll be back</p>
-            <p class="p-display fc-back-day">{{ backDate | dayDate("long") }} at {{ opens }}</p>
-        </div>
     </div>
 
     <footer class="fc-foot">

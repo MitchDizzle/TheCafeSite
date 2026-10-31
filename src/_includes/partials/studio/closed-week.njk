@@ -1,0 +1,14 @@
+{#- The closure's week, Monday to Friday, each day open or closed, so one
+    closed day can't be read as the cafe being closed (client 2026-10-31). Any
+    other day in site.closedDays that week shows as closed too. Needs
+    `closedDate` from the piece; each stylesheet sizes it. -#}
+<ul class="cw" role="list">
+    {%- for day in closedDate | workWeek %}
+    {%- set shut = (site.closedDays | where("date", day)).length %}
+    <li class="cw-day{% if shut %} cw-day--closed{% endif %}">
+        <span class="p-label cw-name">{{ day | dayDate("short") }}</span>
+        <span class="cw-num">{{ day.split("-")[2] | int }}</span>
+        <span class="cw-state">{{ "Closed" if shut else "Open" }}</span>
+    </li>
+    {%- endfor %}
+</ul>

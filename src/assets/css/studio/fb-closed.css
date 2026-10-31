@@ -60,23 +60,75 @@
     padding: 28px 64px;
 }
 
-.fc-headline {
-    font-size: 146px;
-    line-height: 1.05;
+.fc-for {
+    font-size: 60px;
+    line-height: 1.1;
+}
+
+/* The biggest thing on the post: the holiday, not the closing. */
+.fc-holiday {
+    font-size: 150px;
+    line-height: 1.1;
     color: var(--accent);
+    white-space: nowrap;
 }
 
 .fc-date {
     font-size: 68px;
     line-height: 1.15;
-    margin-top: 10px;
+    margin-top: 6px;
+    font-variant-numeric: lining-nums;
+}
+
+/* ── The week, one day closed ─────────────────────────────── */
+
+.cw {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 38px;
+    list-style: none;
+}
+
+.cw-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 6px 18px;
+    background: var(--cream-alt);
+    border-radius: 14px;
+}
+
+.cw-name {
+    font-size: 26px;
+    text-indent: 0.18em;
+}
+
+.cw-num {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 60px;
+    line-height: 1.1;
+}
+
+.cw-state {
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+}
+
+/* Cream on red, 5.08:1. */
+.cw-day--closed {
+    background: var(--accent);
+    color: var(--cream);
 }
 
 .fc-stars {
     display: flex;
     align-items: center;
     gap: 26px;
-    margin: 40px 0 34px;
+    margin: 34px 0 24px;
     color: var(--accent);
 }
 
@@ -92,26 +144,6 @@
     font-size: 54px;
     line-height: 1.2;
     text-wrap: balance;
-}
-
-.fc-back {
-    width: 100%;
-    margin-top: 44px;
-    padding: 26px 32px 30px;
-    background: var(--cream-alt);
-    border-radius: 16px;
-}
-
-.fc-back-label {
-    font-size: 26px;
-    color: var(--accent);
-    text-indent: 0.18em;
-}
-
-.fc-back-day {
-    font-size: 54px;
-    line-height: 1.15;
-    margin-top: 8px;
 }
 
 /* ── Footer band ──────────────────────────────────────────── */
