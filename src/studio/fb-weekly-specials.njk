@@ -128,7 +128,7 @@ studioOrder: 22
             <p class="p-display wk-choice-title">Sides</p>
             {#- One short line (2026-10-23); the caption keeps the longer wording.
                 The "choice of side" half only on a week that has such a day. -#}
-            <p class="p-body wk-choice-note">{% if week | selectattr("anySide") | length %}Pick one with &ldquo;choice of side,&rdquo; or swap one in on any special{% else %}Swap one in for the sides on any special{% endif %}</p>
+            <p class="p-body wk-choice-note">{% if week | selectattr("anySide") | length %}Pick one with &ldquo;choice of side,&rdquo; or swap one in for a side on any special{% else %}Swap one in for the sides on any special{% endif %}</p>
             <ul class="wk-choices">
                 {%- for c in deli.choices %}
                 <li>{{ c }}</li>

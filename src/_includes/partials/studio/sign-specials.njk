@@ -77,7 +77,7 @@
     <section class="sw-choice">
         <p class="p-display sw-choice-title ink-teal">Sides</p>
         {#- One short line (2026-10-23), as on the post. -#}
-        <p class="sw-choice-note">{% if week | selectattr("anySide") | length %}Pick one with &ldquo;choice of side,&rdquo; or swap one in on any special{% else %}Swap one in for the sides on any special{% endif %}</p>
+        <p class="sw-choice-note">{% if week | selectattr("anySide") | length %}Pick one with &ldquo;choice of side,&rdquo; or swap one in for a side on any special{% else %}Swap one in for the sides on any special{% endif %}</p>
         <ul class="sw-choices">
             {%- for c in deli.choices %}
             <li>{{ c }}</li>
