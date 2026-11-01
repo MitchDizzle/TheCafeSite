@@ -1,10 +1,13 @@
 {#- The front door's hours sign (client 2026-10-31): replaces "Now Open", a
     month after opening, and is meant to be read from the parking lot.
 
-    THE DAYS AND HOURS ARE THE SIGN. Landscape, because the door's glass is
-    about 22in wide: 17in across takes the type about 1.6 times bigger than
-    the old 11in-wide sign could. Lato Black, not Playfair: Playfair's thin
-    strokes and old-style numerals are what go first at a distance.
+    THE DAYS AND HOURS ARE THE SIGN. Portrait (client 2026-11-01), so the
+    times stack: on two lines they're bigger than the one line could be even
+    at 17in across. Lato Black, not Playfair: Playfair's thin strokes and
+    old-style numerals are what go first at a distance.
+
+    "Order at the Counter" is the next thing to read (client 2026-11-01): it
+    tells whoever walks in how the cafe works, so it gets the band.
 
     The logo is small because the window beside the door already carries the
     name. The QR and website are for whoever has walked up to the door. No
@@ -20,9 +23,13 @@
 
     <div class="door-hours">
         <p class="door-days">{{ o.hoursDays }}</p>
-        <p class="door-time">{{ o.opens.time | replace(":00", "") }}{{ o.opens.meridiem }} &ndash; {{ o.closes.time | replace(":00", "") }}{{ o.closes.meridiem }}</p>
+        <p class="door-time">{{ o.opens.time | replace(":00", "") }}{{ o.opens.meridiem }}</p>
+        <p class="door-to">to</p>
+        <p class="door-time">{{ o.closes.time | replace(":00", "") }}{{ o.closes.meridiem }}</p>
         <p class="door-closed">Closed Saturday and Sunday</p>
     </div>
+
+    <p class="door-counter">Order at the Counter</p>
 
     {#- The QR encodes lvcafetogo.com/order (src/order.njk), so a change of
         ordering page never strands a printed code. -#}
@@ -30,8 +37,10 @@
         <div class="qr door-qr">
             {% inlineSvg "/assets/qr-order.svg" %}
         </div>
-        <p class="p-body door-order">Scan to <strong>order online</strong></p>
-        <p class="p-body door-note">Lunch specials and soup from 11am</p>
-        <p class="door-web">{{ site.social.website }}</p>
+        <div class="door-foot-words">
+            <p class="p-body door-order">Scan to <strong>order online</strong></p>
+            <p class="p-body door-note">Lunch specials and soup from 11am</p>
+            <p class="door-web">{{ site.social.website }}</p>
+        </div>
     </footer>
 </div>

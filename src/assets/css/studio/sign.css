@@ -2,7 +2,7 @@
    Counter signs, 8.5 × 11 in portrait, for letter stand-up sign holders.
    Pieces: sign-drinks(-bw).njk, sign-specials(-bw).njk, sign-todays-sides-bw.njk,
    sign-desserts-bw.njk, sign-dessert-bars-bw.njk
-   (and the door signs, 17 × 11 in, in their own section below)
+   (and the door signs, in their own section below)
    Partials: partials/studio/sign-drinks.njk, partials/studio/sign-specials.njk
 
    Read from the line, four to eight feet away, so the type is poster
@@ -581,8 +581,9 @@
     margin-top: 0.3in;
 }
 
-/* ── Door signs: 17 × 11 in landscape, read from the parking lot ──
-   Pieces: sign-door-hours(-bw).njk, sign-closed-bw.njk
+/* ── Door signs, read from the parking lot ─────────────────
+   Pieces: sign-door-hours(-bw).njk (11 × 17 in portrait),
+   sign-closed-bw.njk (17 × 11 in landscape)
 
    Taped inside the door glass, facing out, one over the other. The width
    limits the type, so the longest line is set to fill it: nowrap makes an
@@ -595,12 +596,14 @@
 
 .door-mast {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.08in;
     background: var(--teal);
     color: var(--cream);
     border-radius: 0.14in;
-    padding: 0.16in 0.5in 0.2in;
+    padding: 0.2in 0.4in 0.2in;
+    text-align: center;
 }
 
 .door-mast .wordmark {
@@ -608,7 +611,8 @@
 }
 
 .door-kicker {
-    font-size: 0.7in;
+    font-size: 0.62in;
+    line-height: 1.1;
 }
 
 .sign--bw .door-mast {
@@ -642,26 +646,55 @@
 }
 
 .door-days {
-    font-size: 1.82in;
+    font-size: 1.24in;
     color: var(--accent);
+    margin-bottom: 0.12in;
 }
 
 .door-time {
-    font-size: 3.1in;
+    font-size: 3.4in;
+    line-height: 0.92;
 }
 
-/* Clear of the p's descender in "2pm". */
+.door-to {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 0.7in;
+    line-height: 1;
+}
+
+/* Clear of the p's descender in "2pm", which hangs below its line box. */
 .door-closed {
     font-weight: 700;
-    font-size: 0.66in;
+    font-size: 0.74in;
     line-height: 1.1;
-    margin-top: 0.3in;
+    margin-top: 0.62in;
+    white-space: nowrap;
+}
+
+.door-counter {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 0.9in;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    background: var(--accent);
+    color: var(--cream);
+    border-radius: 0.14in;
+    padding: 0.14in 0.2in 0.2in;
+    margin-bottom: 0.18in;
+}
+
+.sign--bw .door-counter {
+    background: none;
+    color: #000;
+    border: 0.06in solid #000;
 }
 
 .door-foot {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 0.4in;
     border-top: 0.02in solid var(--text-dark);
     padding-top: 0.14in;
@@ -671,6 +704,7 @@
    outside it. Four modules of 33 at this size. */
 .door-qr {
     box-sizing: content-box;
+    flex: none;
     width: 1.25in;
     padding: 0.15in;
 }
@@ -678,6 +712,7 @@
 .door-order,
 .door-note {
     font-size: 0.36in;
+    line-height: 1.25;
     white-space: nowrap;
 }
 
@@ -687,6 +722,7 @@
     font-family: 'Lato', sans-serif;
     font-weight: 900;
     font-size: 0.5in;
+    line-height: 1.2;
     white-space: nowrap;
 }
 

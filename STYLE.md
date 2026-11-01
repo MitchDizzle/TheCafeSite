@@ -181,7 +181,8 @@ The audience skews older, so these are floors, not targets.
 | Receipt logo | 1280 × 648 px | Square digital receipts and invoices |
 | Counter signs | 8.5 × 11 in portrait | Letter stand-up sign holders |
 | Daily specials board signs | 11 × 17 in portrait | One page per plate, with no date, so they can be reused |
-| Door signs (`sign-door-hours`, `sign-closed-bw`) | 17 × 11 in landscape | Read from the parking lot: Lato Black, as wide as the sheet takes. They stack on the door's glass |
+| Door hours sign (`sign-door-hours`) | 11 × 17 in portrait | Read from the parking lot: Lato Black, as wide as the sheet takes, the times stacked on two lines |
+| Holiday door sign (`sign-closed-bw`) | 17 × 11 in landscape, or fitted to letter | Goes under the hours sign on the door's glass; fitted to letter it's the same 11 in wide |
 | Labels (tip jar, business card bowl) | 11 × 8.5 in, two 10 × 3.6 in labels | Cut apart |
 | Survey card | 11 × 8.5 in, two 5.5 × 8.5 cards | One ink |
 | Tri-fold menu | Letter, black & white | Also the PDF behind "Print this menu" on /menu |
