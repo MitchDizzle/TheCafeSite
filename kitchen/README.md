@@ -56,6 +56,8 @@ Everything works from a number pad, with Num Lock on or off. The mouse is there 
 - **Undo with the mouse:** click Undo for a list of everything cleared today (name, first item, how long ago) and click the one to bring back. Backspace / 0 still steps back one at a time.
 - **A new order** flashes mint around the edge of the whole screen, and the ticket keeps a mint outline and a mint **NEW** tag for a minute (mint, not amber, so new never looks like late). Without speakers, that's the only alert, so it lasts long enough to be noticed from the grill.
 - **Allergy notes** (peanut, gluten, dairy and the like) show in red with a ⚠ sign, on the ticket or on the item.
+- **A note keeps its lines** as typed, and **a line with a "!"** in it shows in a black band (Mitch 2026-11-02), so "Cut in half!" isn't lost among the rest. Square has to keep the line breaks for this: ring a $0 "Test" with a two-line note to see. The front page keeps the lines too.
+- **Settings & help → avg in the kitchen:** with the mouse over it, today's longest order (its time, when, where from, how many items, the receipt number and what was on it).
 - **More than one** of an item shows as a red **2×**.
 - **The other meat** on a burger shows in a red block (**CHICKEN** not beef). The usual meat is the item's first variation in Square: Beef, except the Cordon Bleu Sandwich, which is Chicken first. Change the order of an item's variations in Square to change which is flagged.
 - **The board checks Square every 5 seconds** from 5am to 2pm on open days, and **every 5 minutes** the rest of the time (nights and weekends, so the PC can stay on; `kitchenHours` and `quietPollSeconds` in `config.json`). **While the front page or `/today` is open on any device it's every 5 seconds anyway**, and from the moment one is opened, so someone working after 2pm sees changes at once; it slows again 2 minutes after the last one is closed. With nobody looking, an online order placed after hours shows within 5 minutes; a demo always runs at full speed. The refresh icon in the top right has a ring that empties as the next check approaches and refills when it runs. Tap it (or press **Enter**) to check right now. The ring turns light red when Square can't be reached.
@@ -244,6 +246,7 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `server.js` | Polls Square every 5 s (5 min after hours) and serves the board on `http://localhost:8090`. It only listens on the PC itself, not the network, and the power menu and update check only answer the board page itself. |
 | `lib\` | The board program's parts, one file per job (config, Square, tickets, specials, stats, routes…); `server.js` lists them. Nothing to install. |
 | `tests\` | The tests (see "Tests"). |
+| `backup-tools\` | `read-history.js` and `HOW-TO-READ.md`, copied into the GitHub backup with each push (see "Reading the backup"). |
 | `board.html` | The kitchen screen. |
 | `front.html` | The front page for the counter (`/front`). |
 | `today.html` | The owner's phone page (`/today`): the day's numbers, the reservations and the open orders. |
@@ -278,7 +281,7 @@ Everything the board makes on this PC is in `data\`. Before 2026-10-13 these sat
 
 **Backups.** When the board starts, again at 2pm (closing) if it's still on, and whenever **Manage → Back up now** is pressed, it copies `stats-history.json`, `specials-plan.json`, `state.json`, `reservations.json` and `surveys.json` into `data\backups\<date>\`, keeping the last 30 days. That covers a bad write or a deleted file, not a dead PC. For that, set **`backupDir`** in `config.json` to a folder off this PC's drive: a USB stick left plugged in (`"backupDir": "E:\\Kitchen backup"`, with two backslashes), a OneDrive folder on the Kitchen account, or a share on another PC. The same dated copies go there, plus every Photo post photo (`photos\`). If it can't be reached (the stick is out), the program window says so and the board carries on. `/check` shows when each place was last written.
 
-**Backup to GitHub (the copy off this PC).** Set **`backupRepo`** in `config.json` to a private GitHub repo and the same backup is pushed there each time: one file per day of history (`history\<date>.json`), the plan, `state.json` and the Photo post photos, with every earlier version kept by git. It can be read from any computer, and Claude can read it for reports. The PC never signs in to GitHub; it makes its own key, which can write to that one repo only:
+**Backup to GitHub (the copy off this PC).** Set **`backupRepo`** in `config.json` to a private GitHub repo and the same backup is pushed there each time: one file per day of this month's history (`history\<date>.json`, one order a line), each finished month zipped into one file (`history\<month>.json.gz`: October 2026 went from 780 KB to 72 KB), the plan, `state.json` and the Photo post photos, with every earlier version kept by git. It can be read from any computer, and Claude can read it for reports. The PC never signs in to GitHub; it makes its own key, which can write to that one repo only:
 
 1. On GitHub, make a **private** repo with nothing in it (no README needed), e.g. `CafeKitchenData`.
 2. On the kitchen PC, add `"backupRepo": "git@github.com:<you>/CafeKitchenData.git"` to `config.json` (the repo's web address works too) and restart the board.
@@ -288,7 +291,9 @@ Everything the board makes on this PC is in `data\`. Before 2026-10-13 these sat
 
 The key is `data\backup-key` (and `.pub`); the clone it pushes from is `data\offsite\`. If the PC is ever replaced, delete the old key from Deploy keys and add the new PC's.
 
-To put a file back: close the board, copy it from a dated folder into `data\`, start the board. For the history from GitHub, the day files are joined back into `stats-history.json` (ask Claude).
+To put a file back: close the board, copy it from a dated folder into `data\`, start the board. For the history from GitHub: in a clone of the repo, `node tools/read-history.js --restore stats-history.json`, then copy that file into `data\` with the board closed.
+
+**Reading the backup.** Each push also puts `tools/read-history.js` and `HOW-TO-READ.md` in the repo, from `kitchen/backup-tools/` here (edit them there: the board rewrites the repo's copies and its README). In a clone, `node tools/read-history.js 2026-10` sums up a month (days, totals, the slowest orders, by hour, top items, the Lunch Specials), `--csv` and `--items` write spreadsheets, and HOW-TO-READ.md says what every field means.
 
 ## Specials (Manage on the front page)
 
@@ -425,10 +430,19 @@ Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo
 
 **Every day's numbers are kept for good** in `data\stats-history.json` on the kitchen PC, one entry per day, saved as the day goes (every 30 seconds while orders come in), so nothing depends on the board being closed properly at night. Each day keeps every order that counted: when, breakfast or lunch, counter or online, to go or for here, paid, its total in Square, the items (with the size or "what it is today", so a report can tell which specials sold), and its time in the kitchen. No customer names. Test, demo and canceled orders never get in, and a **Reset for the day** restarts that day's history the same as Today's numbers.
 
-**Manage → Reports** shows any range of days: This week, Last week, This month, Last month, Last 30 days, or any two dates. For the range: orders (and a day's average), sales, breakfast / lunch, counter / online, to go / for here, average and longest time in the kitchen, a line per day, **time in the kitchen by order size** (so a few big orders don't make a day look slow; with how far ahead each size starts now), and every item ordered. Two downloads for a report made elsewhere (a spreadsheet opens them):
+**Manage → Reports** shows any range of days: This week, Last week, This month, Last month, Last 30 days, or any two dates. For the range: orders (and a day's average), sales, breakfast / lunch, counter / online, to go / for here, average and longest time in the kitchen, a line per day, **time in the kitchen by order size** (so a few big orders don't make a day look slow; with how far ahead each size starts now), and every item ordered. Since 2026-11-02 (Mitch: more detail when it's wanted):
+
+- **Up or down:** orders, a day's average, sales, tips and the kitchen time each show the same stretch before (the same weekdays a week back, or the month before for a range starting on the 1st). The arrow says up or down; teal is good, red isn't (a longer kitchen time is red).
+- **Avg in the kitchen / longest:** tap (or hover with a mouse) for the three slowest orders: time, when, where from, items, receipt number.
+- **Counter / online:** tap for online pickups and DoorDash: the kitchen's time, then how long they waited until Handed off (for DoorDash, the Dasher). Counted from 2026-11-02 on.
+- **By hour:** orders, a day's average and the kitchen time for each hour; tap an hour for its orders, slowest first.
+- **Slowest dishes:** the kitchen time of the orders each dish was in (dishes in 3 or more timed orders; drinks and anything on the skip list left out), the Lunch Special and soup by what they were that day.
+- **Specials sold:** each Lunch Special and Soup of the Day by what it was, best sellers first by how many sold a day it was on, cups and bowls apart.
+
+Two downloads for a report made elsewhere (a spreadsheet opens them):
 
 - **Days (CSV):** one row per day.
-- **Every order (CSV):** one row per order, with its items.
+- **Every order (CSV):** one row per order, with its items, the receipt number, where from (counter, online, DoorDash) and the wait at the front.
 
 A day the board never ran is missing; Square's own reports still have its sales. Sales are Square's Net sales (see `/today` above); tips are on their own line (with how many orders had one), and "collected" beside them is what customers paid, tax and tips in, which is what the board counted as sales until 2026-10-27. The CSVs have both. It's the only place the kitchen times exist, so it's copied every day; set `backupDir` to keep a copy off the PC (see "The data folder and backups").
 

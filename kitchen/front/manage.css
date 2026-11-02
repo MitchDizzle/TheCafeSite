@@ -163,6 +163,22 @@
 .r-table th, .r-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
 .r-table th:first-child, .r-table td:first-child { text-align: left; }
 .r-table thead th { font-size: 0.8rem; color: var(--muted); }
+/* A stat with more behind it: a tap (or a mouse over it) opens .r-more. */
+.r-stats button.stat { font: inherit; color: inherit; text-align: left; background: transparent; cursor: pointer; border-color: var(--teal); }
+.r-stats button.stat.on, .r-stats button.stat:hover { background: #F6FAFA; }
+.r-stats .stat em { display: block; margin-top: 0.15rem; font-style: normal; font-size: 0.78rem; font-weight: 800; color: var(--teal-dark); }
+.r-vs { display: block; margin-top: 0.15rem; font-size: 0.78rem; color: var(--muted); }
+.r-vs.good::first-letter { color: var(--teal-dark); }
+.r-vs.bad::first-letter { color: var(--red); }
+.r-vs-note { margin-top: -0.4rem; }
+.r-more { margin: -0.3rem 0 1rem; padding: 0.2rem 0.9rem 0.6rem; border: 1px solid var(--teal); border-radius: 0.45rem; background: #F6FAFA; }
+.r-orders { margin: 0; padding-left: 1.4rem; }
+.r-orders li { padding: 0.25rem 0; }
+.r-orders li span { display: block; color: var(--muted); font-size: 0.9rem; white-space: normal; }
+.r-h-note { margin-left: 0.4rem; letter-spacing: 0; text-transform: none; font-size: 0.85rem; }
+.r-hours tr[data-hour] { cursor: pointer; }
+.r-hours tr[data-hour]:hover, .r-hours tr[data-hour]:focus { background: #F6FAFA; outline: none; }
+.r-hour-orders td { text-align: left !important; white-space: normal !important; background: #FBFAF7; }
 .r-items { margin: 0; padding-left: 1.4rem; columns: 2 14rem; column-gap: 1.5rem; }
 .r-items li { break-inside: avoid; padding: 0.1rem 0; }
 

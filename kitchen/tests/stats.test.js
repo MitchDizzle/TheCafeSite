@@ -77,3 +77,40 @@ test("sales are Square's Net sales: items after discounts, no tax, tip or gift c
   assert.equal(s.tips, 3);
   assert.equal(s.tipped, 1);
 });
+
+test("summarize: the slowest orders, dishes by kitchen time, the hours, and online timing only where it's known", () => {
+  const items = (...names) => names.map((name) => ({ name, variation: null, qty: 1 }));
+  const s = summarize([
+    rec("2026-11-02", 11, 0, 10, { kitchenMinutes: 20, receipt: "SLOW", items: items("Reuben", "Chips") }),
+    rec("2026-11-02", 11, 30, 10, { kitchenMinutes: 12, items: items("Reuben") }),
+    rec("2026-11-02", 12, 0, 10, { kitchenMinutes: 14, items: items("Reuben") }),
+    rec("2026-11-02", 12, 10, 10, { kitchenMinutes: 4, items: [{ name: "Soup of the Day", variation: "Cup · Chili", qty: 1 }] }),
+    rec("2026-11-02", 12, 20, 10, { kitchenMinutes: 5, online: true, doordash: true, waitMinutes: 9 }),
+    rec("2026-11-02", 12, 30, 10, { kitchenMinutes: 6, online: true }), // saved before doordash was kept
+  ]);
+  assert.equal(s.longest.kitchenMinutes, 20);
+  assert.equal(s.longest.receipt, "SLOW");
+  assert.deepEqual(s.longest.items, ["Reuben", "Chips"]);
+  assert.equal(s.slowest.length, 3);
+  assert.deepEqual(s.dishes, [{ name: "Reuben", orders: 5, medianMinutes: 12 }]);
+  assert.deepEqual(s.hours.map((h) => [h.hour, h.orders]), [[11, 2], [12, 4]]);
+  assert.equal(s.handoff.doordash.orders, 1);
+  assert.equal(s.handoff.doordash.waitMinutes, 9);
+  assert.equal(s.handoff.online.orders, 0);
+});
+
+test("Reports: the same days before, and the specials sold by what they were", () => {
+  const { previousRange, specialsSold } = require("../lib/stats");
+  assert.deepEqual(previousRange("2026-11-02", "2026-11-08"), { from: "2026-10-26", to: "2026-11-01", label: "the week before" });
+  assert.equal(previousRange("2026-11-02", "2026-11-03").from, "2026-10-26");
+  assert.deepEqual(previousRange("2026-11-01", "2026-11-30"), { from: "2026-10-01", to: "2026-10-31", label: "the month before" });
+  assert.deepEqual(previousRange("2026-11-01", "2026-11-02"), { from: "2026-10-01", to: "2026-10-02", label: "the same days the month before" });
+  const sp = (date, variation, qty, name = "Lunch Special") => rec(date, 12, 0, 10, { items: [{ name, variation, qty }] });
+  const out = specialsSold([
+    { date: "2026-10-26", orders: [sp("2026-10-26", "Meatloaf", 30), sp("2026-10-26", "Cup · Chili", 4, "Soup of the Day"), sp("2026-10-26", "Bowl · Chili", 2, "Soup of the Day")] },
+    { date: "2026-10-27", orders: [sp("2026-10-27", "Lasagna", 20)] },
+    { date: "2026-11-02", orders: [sp("2026-11-02", "Meatloaf", 50)] },
+  ]);
+  assert.deepEqual(out.plates.map((p) => [p.name, p.days, p.qty, p.perDay]), [["Meatloaf", 2, 80, 40], ["Lasagna", 1, 20, 20]]);
+  assert.deepEqual(out.soups.map((p) => [p.name, p.cups, p.bowls]), [["Chili", 4, 2]]);
+});

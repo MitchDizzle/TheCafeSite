@@ -77,7 +77,7 @@ function mockOrders() {
         li(1, "Build Your Own", {
           variation_name: "Two meats",
           modifiers: [{ name: "Ham" }, { name: "Roast beef" }, { name: "Swiss" }, { name: "Wheat" }],
-          note: "Mayo on the side",
+          note: "Mayo on the side\nCut in half!",
         }),
         li(3, "Chocolate Chip Cookie"),
       ],
@@ -336,7 +336,7 @@ function demoOrders(start) {
     counter(2, -9, "Ray", [li(1, "Clubhouse Wrap", { modifiers: [{ name: "No tomato" }] }), li(1, "Chips", { variation_name: "BBQ" })]),
     counter(3, -3, "Bob", [li(2, "Cheeseburger", { modifiers: [{ name: "No onion" }, { name: "Ketchup packet" }] })]),
     online(4, -25, 6, "Marge", [li(1, "Reuben Sandwich"), li(1, "Soup of the Day", { variation_name: "Cup" })], "Peanut allergy"),
-    online(5, -5, 40, "Dee", [li(1, "Chef Salad", { variation_name: "Full", modifiers: [{ name: "Ranch" }] }), li(1, "Bottle Juice", { variation_name: "Apple" })]),
+    online(5, -5, 40, "Dee", [li(1, "Chef Salad", { variation_name: "Full", modifiers: [{ name: "Ranch" }] }), li(1, "Bottle Juice", { variation_name: "Apple" })], "Extra napkins\nDressing on the side!\nWill call when outside"),
   ];
   const later = [
     ["Sue", [li(1, "Philly Steak Sandwich")]],

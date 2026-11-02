@@ -9,8 +9,12 @@
 // ever reads.
 //
 // The repo is a clone in data\offsite\, laid out to be read:
-//   history\<date>.json   one day of stats-history.json each, so a day's
-//                         commit only changes that day
+//   history\<date>.json   one day of stats-history.json each, one order a
+//                         line, so a day's commit only changes that day
+//   history\<month>.json.gz  a finished month's days packed together
+//                         (Mitch 2026-11-02: smaller), the same text zipped
+//   tools\read-history.js + HOW-TO-READ.md   reads both, from
+//                         kitchen/backup-tools/ (kept in step with the format)
 //   specials-plan.json, state.json, reservations.json (names and phone
 //                         numbers: keep the repo private)
 //   start-log.txt         each start and update, step by step with times
@@ -25,8 +29,10 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const zlib = require("zlib");
 const { execFile } = require("child_process");
 const { DATA, MOCK, DEV, cfg } = require("./config");
+const { localDate } = require("./util");
 
 const REPO = path.join(DATA, "offsite");
 const KEY = path.join(DATA, "backup-key");
@@ -81,20 +87,28 @@ const gitEnv = () => ({
 });
 const git = (args) => run("git", ["-C", REPO, "-c", "user.name=Kitchen PC", "-c", "user.email=kitchen-pc@localhost", ...args], gitEnv());
 
-// Write a file only if it changed.
-function put(file, text) {
+// Write a file only if it changed (text, or a Buffer for a zipped one).
+function put(file, data) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  try { if (fs.readFileSync(file, "utf8") === text) return; } catch {}
-  fs.writeFileSync(file, text);
+  try {
+    const now = fs.readFileSync(file);
+    if (Buffer.isBuffer(data) ? now.equals(data) : now.toString("utf8") === data) return;
+  } catch {}
+  fs.writeFileSync(file, data);
 }
 
 const README = `# Kitchen board backups
 
 Pushed by the kitchen PC's board program (TheCafeSite, kitchen/lib/offsite.js)
 when it starts (and again once its first orders are in), at 2pm and from
-Manage -> Back up now. Nothing here is edited by hand.
+Manage -> Back up now. Nothing here is edited by hand: the board rewrites
+this README, tools/ and HOW-TO-READ.md from its own copies.
 
-- history/<date>.json: that day's orders, as in Manage -> Reports (no customer names)
+- history/<date>.json: one day's orders this month, one order a line, as in
+  Manage -> Reports (no customer names)
+- history/<month>.json.gz: a finished month's days, zipped
+- tools/read-history.js: reads both; HOW-TO-READ.md says how, and what each
+  field means
 - specials-plan.json, state.json: the board's specials plan and cleared tickets
 - reservations.json: the reservations book (names and phone numbers)
 - start-log.txt: each start and update, step by step with the time, to see
@@ -102,15 +116,41 @@ Manage -> Back up now. Nothing here is edited by hand.
 - photos/: Photo post's photos, kept for the website, with the ones moved
   off the kitchen PC (Saved photos -> Move to GitHub)
 
-To put the history back on the kitchen PC, the days are joined into
-kitchen/data/stats-history.json as { "days": { "<date>": <file> } }.
+To put the history back on the kitchen PC:
+node tools/read-history.js --restore stats-history.json, then copy that file
+to kitchen/data/ with the board closed.
 `;
+
+// A day's file: one order a line, still JSON. A third smaller than one
+// field a line, and a changed order is one changed line.
+function dayText(day) {
+  const { orders = [], ...rest } = day;
+  const head = JSON.stringify(rest).slice(0, -1);
+  return `${head}${head.length > 1 ? "," : ""}"orders":[\n${orders.map((o) => JSON.stringify(o)).join(",\n")}\n]}\n`;
+}
+// A finished month: its days in one file, zipped. gzip's header carries no
+// time here, so the same month zips to the same bytes and isn't recommitted.
+const monthGz = (days) => zlib.gzipSync(`{"days":{\n${days.map(([date, day]) => `${JSON.stringify(date)}:${dayText(day).trimEnd()}`).join(",\n")}\n}}\n`, { level: 9 });
 
 function copyIn() {
   try {
     const history = JSON.parse(fs.readFileSync(path.join(DATA, "stats-history.json"), "utf8"));
-    for (const [date, day] of Object.entries(history.days || {})) put(path.join(REPO, "history", `${date}.json`), JSON.stringify(day, null, 1) + "\n");
+    const thisMonth = localDate().slice(0, 7);
+    const months = new Map();
+    for (const [date, day] of Object.entries(history.days || {}).sort(([a], [b]) => a.localeCompare(b))) {
+      const month = date.slice(0, 7);
+      if (month < thisMonth) months.set(month, [...(months.get(month) || []), [date, day]]);
+      else put(path.join(REPO, "history", `${date}.json`), dayText(day));
+    }
+    for (const [month, days] of months) {
+      put(path.join(REPO, "history", `${month}.json.gz`), monthGz(days));
+      for (const [date] of days) fs.rmSync(path.join(REPO, "history", `${date}.json`), { force: true });
+    }
   } catch {}
+  const tools = path.join(__dirname, "..", "backup-tools");
+  for (const [from, to] of [["read-history.js", "tools/read-history.js"], ["HOW-TO-READ.md", "HOW-TO-READ.md"]]) {
+    try { put(path.join(REPO, to), fs.readFileSync(path.join(tools, from), "utf8")); } catch {}
+  }
   for (const name of ["specials-plan.json", "state.json", "reservations.json", "start-log.txt"]) {
     try { put(path.join(REPO, name), fs.readFileSync(path.join(DATA, name), "utf8")); } catch {}
   }
@@ -134,7 +174,7 @@ function copyIn() {
     // One deleted in Saved photos goes from the repo too (git still has it).
     for (const name of fs.readdirSync(path.join(REPO, "photos"))) if (!keep.has(name)) fs.rmSync(path.join(REPO, "photos", name), { force: true });
   }
-  if (!fs.existsSync(path.join(REPO, "README.md"))) put(path.join(REPO, "README.md"), README);
+  put(path.join(REPO, "README.md"), README);
 }
 
 // One push at a time. Asked for while one is going (Back up now during the
@@ -177,4 +217,4 @@ async function push() {
   }
 }
 
-module.exports = { REPO, offsiteStatus, pushOffsite, repoUrl };
+module.exports = { REPO, offsiteStatus, pushOffsite, repoUrl, copyIn };

@@ -8,8 +8,8 @@ const path = require("path");
 const { DATA, MOCK } = require("./config");
 const { startOfToday, localDate } = require("./util");
 const { live } = require("./live");
-const { bumped, platesDone, offBoard, state } = require("./state");
-const { NOT_FOOD, itemName, isOnline } = require("./tickets");
+const { bumped, platesDone, offBoard, byHand, state } = require("./state");
+const { NOT_FOOD, itemName, isOnline, isSkipped } = require("./tickets");
 const { mockHistory } = require("./mock");
 const lead = require("./lead");
 
@@ -52,11 +52,24 @@ function dayRecords() {
       const m = (Date.parse(doneAt) - Date.parse(t.boardAt || o.created_at) - ((offBoard[o.id] && offBoard[o.id].ms) || 0)) / 6e4;
       if (m >= 0 && m < 240) kitchenMinutes = Math.round(m * 10) / 10;
     }
+    // An online order's wait at the front: Done to Handed off, pressed by a
+    // person (not the automatic hand-off). For DoorDash it's the Dasher's
+    // wait, kept apart from the kitchen's time (from 2026-11-02).
+    let waitMinutes = null;
+    if (online && doneAt && byHand[o.id]) {
+      const m = (Date.parse(byHand[o.id]) - Date.parse(doneAt)) / 6e4;
+      if (m >= 0 && m < 240) waitMinutes = Math.round(m * 10) / 10;
+    }
+    const tender = (o.tenders || [])[0];
     out.push({
       id: o.id,
+      // The number on the receipt (as the board shows a ticket with no
+      // name), to find the order in Square from Reports.
+      receipt: tender && tender.id ? tender.id.slice(0, 4).toUpperCase() : null,
       at: new Date(when).toISOString(),
       meal: new Date(when).getHours() < BREAKFAST_ENDS ? "breakfast" : "lunch",
       online,
+      doordash: online ? isDoorDash(o, f) : false,
       toGo: t ? t.toGo : online,
       paid: !!(o.tenders || []).length,
       // What the customer paid, tax and tip in, and Square's Net sales.
@@ -73,10 +86,13 @@ function dayRecords() {
       // front aren't), for the time by order size (lib/lead.js).
       kitchenItems: t ? t.items.reduce((n, it) => n + it.qty, 0) : null,
       kitchenMinutes,
+      waitMinutes,
     });
   }
   return out;
 }
+
+const isDoorDash = (o, f) => /doordash/i.test(`${(o.source && o.source.name) || ""} ${(f && f.delivery_details && f.delivery_details.courier_provider_name) || ""}`);
 
 // Square's Net sales for an order: what its items sold for after discounts,
 // without tax, tips, service charges or gift cards sold, as Square's
@@ -95,6 +111,26 @@ const tipOf = (o) => ((o.total_tip_money && o.total_tip_money.amount) || 0) / 10
 // A day's order, as sales: Net sales, or its total for an order saved
 // before the board kept Net sales and not yet filled in (fillNet).
 const netOf = (r) => (r.net != null ? r.net : r.sales != null ? r.sales : 0);
+
+// A dish as Reports lists it: the daily items by what they were that day
+// (Square keeps it as the variation: "Meatloaf", "Cup · Ham & Beans").
+const DISH_MIN_ORDERS = 3; // fewer timed orders than this says nothing
+function dishName(it) {
+  const v = it.variation || "";
+  if (/^lunch special$/i.test(it.name) && v) return `Lunch Special: ${v}`;
+  if (/^soup of the day$/i.test(it.name)) {
+    const m = /^(cup|bowl)\s*·\s*(.+)$/i.exec(v);
+    if (m) return `Soup: ${m[2]}`;
+  }
+  return it.name;
+}
+
+// One order, as a stat's detail shows it: what and when, never who.
+const orderBrief = (r) => ({
+  at: r.at, receipt: r.receipt || null, where: r.doordash ? "DoorDash" : r.online ? "Online" : "Counter", toGo: r.toGo,
+  kitchenItems: r.kitchenItems, kitchenMinutes: r.kitchenMinutes,
+  items: r.items.map((i) => `${i.qty > 1 ? `${i.qty} ` : ""}${i.name}${i.variation ? ` (${i.variation})` : ""}`),
+});
 
 // The numbers for a list of records: one day's (the front's Today) or any
 // range's (Reports). Same shape either way.
@@ -133,6 +169,34 @@ function summarize(records) {
   }
   out.items = [...qty].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, n]) => ({ name, qty: n }));
   out.topItems = out.items.slice(0, 5);
+  // Behind the times, for a tap or a hover on them (Mitch 2026-11-02): the
+  // slowest orders, the dishes whose orders took longest, and the kitchen's
+  // time hour by hour.
+  const timed = records.filter((r) => r.kitchenMinutes != null);
+  out.slowest = [...timed].sort((a, b) => b.kitchenMinutes - a.kitchenMinutes).slice(0, 3).map(orderBrief);
+  out.longest = out.slowest[0] || null;
+  const byDish = new Map();
+  // Only what the kitchen makes: a drink or chips handed over at the front
+  // (the skip list) would only take on the times of the orders it was in.
+  for (const r of timed) for (const name of new Set(r.items.filter((it) => !isSkipped({ name: it.name })).map(dishName))) byDish.set(name, [...(byDish.get(name) || []), r.kitchenMinutes]);
+  out.dishes = [...byDish].filter(([, list]) => list.length >= DISH_MIN_ORDERS)
+    .map(([name, list]) => ({ name, orders: list.length, medianMinutes: Math.round(lead.median(list)) }))
+    .sort((a, b) => b.medianMinutes - a.medianMinutes || b.orders - a.orders).slice(0, 12);
+  out.hours = Object.keys(out.byHour).map(Number).sort((a, b) => a - b).map((hour) => {
+    const list = timed.filter((r) => new Date(r.at).getHours() === hour).map((r) => r.kitchenMinutes);
+    return { hour, orders: out.byHour[hour], avgMinutes: list.length ? Math.round(list.reduce((a, b) => a + b, 0) / list.length) : null };
+  });
+  // Online pickups and DoorDash: the kitchen's time, then the wait at the
+  // front until Handed off. Only orders saved from 2026-11-02 on say which
+  // they were, so older ones are left out rather than guessed.
+  const handoff = (list) => {
+    const kitchen = list.map((r) => r.kitchenMinutes).filter((m) => m != null);
+    const wait = list.map((r) => r.waitMinutes).filter((m) => m != null);
+    return { orders: list.length, kitchenMinutes: kitchen.length ? Math.round(lead.median(kitchen)) : null,
+      waitMinutes: wait.length ? Math.round(lead.median(wait)) : null, waited: wait.length };
+  };
+  const known = records.filter((r) => r.online && r.doordash !== undefined);
+  out.handoff = known.length ? { online: handoff(known.filter((r) => !r.doordash)), doordash: handoff(known.filter((r) => r.doordash)) } : null;
   // Time in the kitchen by order size, so a big order doesn't make a day
   // look slow: median and average for each size.
   out.bySize = lead.SIZES.map((s, i) => {
@@ -147,7 +211,7 @@ function summarize(records) {
 // The full item list stays out: the screens poll this every few seconds
 // and show only the top five.
 function statsToday() {
-  const { items, ...today } = summarize(dayRecords());
+  const { items, slowest, dishes, hours, handoff, ...today } = summarize(dayRecords());
   return today;
 }
 
@@ -231,12 +295,76 @@ function recordHistoryNow() {
 // Manage -> Reports: the days in [from, to], each with its numbers, and the
 // numbers for the whole range. `orders` (every record) only when asked, for
 // the CSV download.
-function historyReport(from, to, withOrders) {
-  const dates = Object.keys(history.days).filter((d) => d >= from && d <= to).sort();
-  const days = dates.map((date) => ({ date, ...summarize(history.days[date].orders) }));
-  const records = dates.flatMap((d) => history.days[d].orders);
-  const out = { from, to, first: Object.keys(history.days).sort()[0] || null, days, total: summarize(records), lead: lead.leadTable() };
-  if (withOrders) out.orders = dates.flatMap((date) => history.days[date].orders.map((r) => ({ date, ...r })));
+function historyReport(from, to, withOrders, days = history.days) {
+  const datesIn = (a, b) => Object.keys(days).filter((d) => d >= a && d <= b).sort();
+  const dates = datesIn(from, to);
+  const records = dates.flatMap((d) => days[d].orders);
+  const out = { from, to, first: Object.keys(days).sort()[0] || null,
+    days: dates.map((date) => { const { slowest, dishes, hours, handoff, ...s } = summarize(days[date].orders); return { date, ...s }; }),
+    total: summarize(records), lead: lead.leadTable(), specials: specialsSold(dates.map((date) => ({ date, orders: days[date].orders }))) };
+  // The same stretch before, to say up or down: the same weekdays a week
+  // (or whole weeks) back, or for a range starting on the 1st, the same
+  // days of the month before.
+  const prev = previousRange(from, to);
+  const before = datesIn(prev.from, prev.to);
+  if (before.length) {
+    const s = summarize(before.flatMap((d) => days[d].orders));
+    out.before = { ...prev, days: before.length, orders: s.orders, sales: s.sales, tips: s.tips, avgMinutes: s.avgMinutes, avgTicket: s.avgTicket };
+  }
+  if (withOrders) out.orders = dates.flatMap((date) => days[date].orders.map((r) => ({ date, ...r })));
+  return out;
+}
+
+function previousRange(from, to) {
+  const span = Math.round((Date.parse(`${to}T12:00:00`) - Date.parse(`${from}T12:00:00`)) / 864e5) + 1;
+  if (from.endsWith("-01") && from.slice(0, 7) === to.slice(0, 7)) {
+    const start = new Date(`${from}T12:00:00`);
+    start.setMonth(start.getMonth() - 1);
+    const last = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+    const whole = Number(to.slice(8)) === new Date(start.getFullYear(), start.getMonth() + 2, 0).getDate(); // to is its month's last day
+    const end = new Date(start.getFullYear(), start.getMonth(), whole ? last : Math.min(Number(to.slice(8)), last), 12);
+    return { from: localDate(start), to: localDate(end), label: whole ? "the month before" : "the same days the month before" };
+  }
+  const weeks = Math.ceil(span / 7);
+  return { from: shiftDate(from, -7 * weeks), to: shiftDate(to, -7 * weeks),
+    label: span === 7 && weeks === 1 ? "the week before" : weeks === 1 ? "the same days the week before" : `the same days ${weeks} weeks before` };
+}
+
+// The daily items sold each day, by what they were that day, and each plate
+// across the range by how many sold a day it was on, to see which to repeat.
+function specialsSold(days) {
+  const plates = new Map();
+  const soups = new Map();
+  const out = { days: [], plates: [], soups: [] };
+  const tally = (map, name, date, n, cupOrBowl) => {
+    const e = map.get(name) || { name, dates: new Set(), qty: 0, cups: 0, bowls: 0 };
+    e.dates.add(date);
+    e.qty += n;
+    if (cupOrBowl) e[`${cupOrBowl}s`] += n;
+    map.set(name, e);
+  };
+  for (const { date, orders } of days) {
+    const day = { date, plates: {}, soups: {} };
+    for (const r of orders) for (const it of r.items) {
+      const v = it.variation || "";
+      if (/^lunch special$/i.test(it.name) && v) {
+        day.plates[v] = (day.plates[v] || 0) + it.qty;
+        tally(plates, v, date, it.qty);
+      } else if (/^soup of the day$/i.test(it.name)) {
+        const m = /^(cup|bowl)\s*·\s*(.+)$/i.exec(v);
+        if (!m) continue;
+        const kind = m[1].toLowerCase();
+        const s = day.soups[m[2]] || (day.soups[m[2]] = { cups: 0, bowls: 0 });
+        s[`${kind}s`] += it.qty;
+        tally(soups, m[2], date, it.qty, kind);
+      }
+    }
+    if (Object.keys(day.plates).length || Object.keys(day.soups).length) out.days.push(day);
+  }
+  const ranked = (map) => [...map.values()].map((e) => ({ name: e.name, days: e.dates.size, qty: e.qty, cups: e.cups, bowls: e.bowls, perDay: Math.round((e.qty / e.dates.size) * 10) / 10 }))
+    .sort((a, b) => b.perDay - a.perDay || a.name.localeCompare(b.name));
+  out.plates = ranked(plates);
+  out.soups = ranked(soups);
   return out;
 }
 
@@ -302,4 +430,4 @@ function todayView(now = new Date(), records = dayRecords(), days = history.days
     later: later.length ? brief(later) : null, lastWeek, usual, week };
 }
 
-module.exports = { statsToday, recordHistory, recordHistoryNow, historyReport, todayView, summarize, netSales };
+module.exports = { statsToday, recordHistory, recordHistoryNow, historyReport, todayView, summarize, netSales, previousRange, specialsSold };

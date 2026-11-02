@@ -93,6 +93,14 @@
   .stat { background: #EFE9DE; border-radius: 0.4rem; padding: 0.5rem 0.7rem; }
   .stat b { display: block; font-size: 1.8rem; line-height: 1.1; }
   .stat span { font-size: 0.95rem; color: var(--muted); }
+  /* The avg card shows today's longest order with the mouse over it. */
+  .stat.has-more { position: relative; cursor: help; }
+  .stat.has-more > span::after { content: " ›"; }
+  .stat-more { display: none; position: absolute; z-index: 2; right: 0; top: calc(100% + 0.3rem); width: 22rem; padding: 0.6rem 0.8rem; border-radius: 0.4rem;
+    background: #1A1A1A; color: var(--cream); font-size: 0.95rem; box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.35); }
+  .stat-more b { font-size: 1.1rem; }
+  .stat-more span { display: block; margin-top: 0.2rem; color: #CFC8BB; }
+  .stat.has-more:hover .stat-more { display: block; }
   .dialog .top-items { font-size: 1.05rem; margin: -0.4rem 0 1rem; color: var(--muted); }
 
   .keys b { display: inline-block; min-width: 1.6em; padding: 0 0.3em; border: 2px solid currentColor; border-radius: 0.3rem; text-align: center; font-weight: 800; }
@@ -459,6 +467,8 @@
     font-weight: 700;
   }
   .ticket > .note { margin: 0.2rem 0.75rem 0.4rem; }
+  .note .bang { padding: 0 0.25rem; background: #1A1A1A; color: #FFF0C2; font-weight: 900; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .note.allergy .bang { color: #FBE3E1; }
   /* Allergy notes are a food-safety matter, not a preference: red, with a
      warning sign, so they can't be read as "ranch on the side". */
   .note.allergy { background: #FBE3E1; border-left-color: var(--red); color: #7A1F18; }
@@ -717,7 +727,10 @@
     if (ALLERGY.test(m)) return ' class="allergy"';
     return /^(no|without|hold|light|easy)\b/i.test(m) ? ' class="neg"' : "";
   }
-  const noteHtml = (n) => `<div class="note${ALLERGY.test(n) ? " allergy" : ""}">${esc(n)}</div>`;
+  // A note keeps the lines it was typed on, and a line with a "!" in it is
+  // picked out (Mitch 2026-11-02): it's the one the cook mustn't miss.
+  const noteHtml = (n) => `<div class="note${ALLERGY.test(n) ? " allergy" : ""}">${String(n).split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+    .map((l) => (l.includes("!") ? `<span class="bang">${esc(l)}</span>` : esc(l))).join("<br>")}</div>`;
 
   // Top bar: what's on the board now, and today's orders so far (the same
   // count as Settings' "orders today").
@@ -1191,7 +1204,10 @@
       ${stats ? `<div class="stats">
         <div class="stat"><b>${stats.orders}</b><span>orders today</span></div>
         <div class="stat"><b>${stats.breakfast} / ${stats.lunch}</b><span>breakfast / lunch</span></div>
-        <div class="stat"><b>${stats.avgMinutes ?? "–"}${stats.avgMinutes != null ? " min" : ""}</b><span>avg in the kitchen</span></div>
+        <div class="stat${stats.longest ? " has-more" : ""}"><b>${stats.avgMinutes ?? "–"}${stats.avgMinutes != null ? " min" : ""}</b><span>avg in the kitchen</span>
+          ${stats.longest ? `<div class="stat-more"><b>Longest: ${Math.round(stats.longest.kitchenMinutes)} min</b>
+            ${esc(fmtTime(stats.longest.at))} · ${esc(stats.longest.where)}${stats.longest.kitchenItems != null ? ` · ${stats.longest.kitchenItems} item${stats.longest.kitchenItems === 1 ? "" : "s"}` : ""}${stats.longest.receipt ? ` · #${esc(stats.longest.receipt)}` : ""}
+            <span>${esc(stats.longest.items.join(", "))}</span></div>` : ""}</div>
       </div>
       ${stats.topItems.length ? `<p class="top-items">Most ordered: ${stats.topItems.map((i) => `${esc(i.name)} ×${i.qty}`).join(", ")}</p>` : ""}` : ""}
       <p>Sound is <b>${soundOn ? "on" : "off"}</b>. Tap the speaker in the top bar to change it.</p>

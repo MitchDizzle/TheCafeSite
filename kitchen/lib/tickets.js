@@ -378,4 +378,4 @@ function markSameTable(list) {
   }
 }
 
-module.exports = { NOT_FOOD, itemName, isOnline, toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt, orderDetail };
+module.exports = { NOT_FOOD, itemName, isOnline, isSkipped, toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt, orderDetail };
