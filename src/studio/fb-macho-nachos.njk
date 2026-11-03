@@ -29,8 +29,10 @@ studioW: 1080
 studioH: 1350
 studioOrder: 25
 ---
-{#- One day's plate and a dessert, for a rainy day (client 2026-11-03:
-    "Don't let the rain prevent you from having a Macho day").
+{#- One day's plate and a dessert, a row each, photo beside the words.
+    The rainy-day line ("Don't let the rain prevent you from having a Macho
+    day") is the caption's opening only: the picture is just the plate and
+    the dessert (client 2026-11-03).
 
     THE PLATE is the day in specials.json, found by postDate: its name, its
     price (the day's own or the usual one), the drink, and its leaveOff
@@ -54,40 +56,33 @@ studioOrder: 25
     </header>
 
     <div class="mn-body">
-        <h1 class="mn-headline">
-            <span class="p-display-italic mn-headline-1">Don&rsquo;t let the rain stop</span>
-            <span class="p-display mn-headline-2">a Macho day</span>
-        </h1>
-
-        <div class="mn-cards">
-            <section class="mn-card">
-                {%- if nachosPhoto | hasAsset %}
-                <img class="mn-photo" src="{{ nachosPhoto }}" alt="">
+        <section class="mn-card">
+            {%- if nachosPhoto | hasAsset %}
+            <img class="mn-photo" src="{{ nachosPhoto }}" alt="">
+            {%- endif %}
+            <div class="mn-words">
+                <p class="p-label mn-label">Lunch special</p>
+                <h2 class="p-display mn-name">{{ day.special }}</h2>
+                <p class="p-display-italic mn-price">{{ plate.price }}{% if specials.includesDrink %} with a drink{% endif %}</p>
+                {%- if plate.toppings %}
+                <p class="p-body mn-detail">{{ plate.toppings }}</p>
                 {%- endif %}
-                <div class="mn-words">
-                    <p class="p-label mn-label">Today&rsquo;s lunch special</p>
-                    <h2 class="p-display mn-name">{{ day.special }}</h2>
-                    <p class="p-display-italic mn-price">{{ plate.price }}{% if specials.includesDrink %} with a drink{% endif %}</p>
-                    {%- if plate.toppings %}
-                    <p class="p-body mn-detail">{{ plate.toppings }}</p>
-                    {%- endif %}
-                </div>
-            </section>
+                <p class="p-label mn-served">From 11am</p>
+            </div>
+        </section>
 
-            <section class="mn-card">
-                {%- if puffsPhoto | hasAsset %}
-                <img class="mn-photo" src="{{ puffsPhoto }}" alt="">
-                {%- endif %}
-                <div class="mn-words">
-                    <p class="p-label mn-label">For dessert</p>
-                    <h2 class="p-display mn-name">{{ dessert }}</h2>
-                    <p class="p-display-italic mn-price">{{ puffs.price }} each</p>
-                    <p class="p-body mn-detail">{{ puffs.kinds | capitalize }}, while they last</p>
-                </div>
-            </section>
-        </div>
-
-        <p class="p-label mn-served">Lunch from 11am</p>
+        {#- The photo on the other side, so the two rows zig-zag. #}
+        <section class="mn-card mn-card--flip">
+            {%- if puffsPhoto | hasAsset %}
+            <img class="mn-photo" src="{{ puffsPhoto }}" alt="">
+            {%- endif %}
+            <div class="mn-words">
+                <p class="p-label mn-label">For dessert</p>
+                <h2 class="p-display mn-name">{{ dessert }}</h2>
+                <p class="p-display-italic mn-price">{{ puffs.price }} each</p>
+                <p class="p-body mn-detail">{{ puffs.kinds | capitalize }}, while they last</p>
+            </div>
+        </section>
     </div>
 
     <footer class="mn-foot">
