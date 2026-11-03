@@ -425,16 +425,27 @@
 }
 
 .nachos-list li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 0.22in;
     font-size: 0.48in;
     font-weight: 700;
     line-height: 1;
-    padding: 0.11in 0 0.11in 0.15in;
+    padding: 0.1in 0 0.1in 0.15in;
     border-bottom: 0.015in solid #000;
 }
 
 .nachos-list li::before {
     content: "\2022";
-    margin-right: 0.22in;
+}
+
+/* A note under a topping (what's in the cheese sauce), lined up with it. */
+.nachos-note {
+    grid-column: 2;
+    font-size: 0.28in;
+    font-weight: 400;
+    font-style: italic;
+    margin-top: 0.05in;
 }
 
 .nachos-foot {

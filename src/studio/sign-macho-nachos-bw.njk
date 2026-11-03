@@ -11,11 +11,15 @@ bw: true
 # Taco Modifier in Square (each one a "No …" there) without the Frito chips,
 # which are the base, not a topping; plus taco meat, chili beans, nacho
 # cheese, salsa and sour cream. The day's `leaveOff` in specials.json is the
-# same list, so the till offers a "No …" for each.
+# same list, so the till offers a "No …" for each. A topping with a `note`
+# gets a small line under it: the nacho cheese sauce is made with jalapeño,
+# onion and tomato (client 2026-11-03), so someone who can't have spice, or
+# asks for no onion or no tomato, needs to know it's in the cheese too.
 toppings:
   - Taco meat (beef)
   - Chili beans
-  - Nacho cheese
+  - name: Nacho cheese
+    note: "made with jalapeño, onion & tomato"
   - Shredded cheese
   - Tomato
   - Onion
@@ -47,7 +51,7 @@ studioOrder: 35
 
     <ul class="nachos-list">
         {%- for t in toppings %}
-        <li>{{ t }}</li>
+        <li><span>{{ t.name or t }}</span>{% if t.note %}<span class="nachos-note">{{ t.note }}</span>{% endif %}</li>
         {%- endfor %}
     </ul>
 
