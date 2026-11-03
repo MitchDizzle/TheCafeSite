@@ -231,7 +231,8 @@ async function pullSite() {
     // "No ..." options in Square and never changes the day's names.
     const offs = {};
     for (const d of listed) {
-      const list = Array.isArray(d.leaveOff) ? [...new Set(d.leaveOff.map(cleanText).filter(Boolean))].slice(0, 8) : [];
+      // Up to 12, like `modifiers` (8 until 2026-11-03: the Macho Nachos have ten).
+      const list = Array.isArray(d.leaveOff) ? [...new Set(d.leaveOff.map(cleanText).filter(Boolean))].slice(0, 12) : [];
       if (d.date >= today && list.length) offs[d.date] = list;
     }
     for (const date of Object.keys(plan.leaveOff)) if (date >= today && !offs[date]) delete plan.leaveOff[date];

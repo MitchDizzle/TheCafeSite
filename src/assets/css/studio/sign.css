@@ -401,7 +401,8 @@
 
 /* ── Macho Nachos toppings (sign-macho-nachos-bw.njk) ──────
    Client 2026-11-03: staff point at it, so each topping is on its own
-   line, big enough to pick one out with a finger from across the counter. */
+   line, big enough to pick one out with a finger from across the counter.
+   Sized for ten; more needs smaller rows. */
 
 .nachos .sign-heading {
     margin-top: 0;
@@ -424,10 +425,10 @@
 }
 
 .nachos-list li {
-    font-size: 0.54in;
+    font-size: 0.48in;
     font-weight: 700;
     line-height: 1;
-    padding: 0.16in 0 0.16in 0.15in;
+    padding: 0.11in 0 0.11in 0.15in;
     border-bottom: 0.015in solid #000;
 }
 
