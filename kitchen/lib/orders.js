@@ -5,7 +5,7 @@ const { pageVersions } = require("./pages");
 const { MOCK, MUTE, cfg } = require("./config");
 const { fetchOrders } = require("./square");
 const { live } = require("./live");
-const { bumped, platesDone, offBoard, handedOff, canceled, keepOnFront, autoOff, readySince, state, saveState } = require("./state");
+const { bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, autoOff, readySince, state, saveState } = require("./state");
 const { toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
 const { withMockStates } = require("./square-status");
 const { statsToday, recordHistory } = require("./stats");
@@ -184,7 +184,8 @@ function frontSnapshot() {
   const now = Date.now();
   const orders = live.all
     .filter((t) => !frontHiddenReason(t, now))
-    .map((t) => ({ ...t, readyAt: readyAt(t), platesDone: platesDone[t.id] || null, autoSquare: !!cfg.squareStatus && !t.demo }))
+    // holdUntil is cleared at once for one sent to the kitchen, not at the next poll of Square.
+    .map((t) => ({ ...t, holdUntil: sentNow[t.id] ? null : t.holdUntil, readyAt: readyAt(t), platesDone: platesDone[t.id] || null, autoSquare: !!cfg.squareStatus && !t.demo }))
     .sort((a, b) => {
       if (!!a.readyAt !== !!b.readyAt) return a.readyAt ? -1 : 1;
       if (a.readyAt) return Date.parse(a.readyAt) - Date.parse(b.readyAt);
@@ -206,7 +207,7 @@ function startDemo() {
 
 function endDemo() {
   live.demo = null;
-  for (const map of [bumped, platesDone, offBoard, handedOff, canceled]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
+  for (const map of [bumped, platesDone, offBoard, handedOff, canceled, sentNow]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
   console.log(`Demo ended (${new Date().toLocaleTimeString()}).`);
 }
 

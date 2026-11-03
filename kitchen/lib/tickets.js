@@ -5,7 +5,7 @@ const { cfg } = require("./config");
 const { startOfToday } = require("./util");
 const { catalog } = require("./catalog");
 const { leadMinutes } = require("./lead");
-const { bumped, canceled, handedOff, markedReady, skipSets } = require("./state");
+const { bumped, canceled, handedOff, markedReady, sentNow, skipSets } = require("./state");
 
 // An online order the front has picked up, canceled or failed is finished
 // everywhere. PREPARED (marked ready in Order Manager, which texts the
@@ -238,7 +238,7 @@ function toTicket(order) {
     // from; holdUntil is that time while a DoorDash order waits for a Dasher.
     boardAt,
     leadMinutes: leadMins,
-    holdUntil: forDasher && !courier && Date.parse(boardAt) > Date.now() ? boardAt : null,
+    holdUntil: forDasher && !courier && !sentNow[order.id] && Date.parse(boardAt) > Date.now() ? boardAt : null,
     courier,
     items,
     front,
@@ -259,10 +259,12 @@ function toTicket(order) {
 // anything else as it's rung up. A DoorDash order scheduled for later is
 // one due later: it goes on by its time, whatever its Dasher does (client
 // 2026-10-28: one placed at 10:20 for a 12:45 Dasher said "wait until
-// 10:35"). forDasher: the Dasher rule is what sets the time.
+// 10:35"). forDasher: the Dasher rule is what sets the time. One the front
+// sent to the kitchen (Send to kitchen now) goes on when it was sent.
 const courierSeen = new Map(); // order id -> when the board first saw its Dasher
 function onBoardAt(order, { dueAt, doordash, courier, leadMins }) {
   const created = Date.parse(order.created_at);
+  if (sentNow[order.id]) return { boardAt: new Date(Math.max(created, Date.parse(sentNow[order.id]))).toISOString(), forDasher: false };
   let at = created;
   if (doordash) {
     at = created + cfg.dasherWaitMinutes * 6e4;
@@ -299,6 +301,8 @@ function goneReason(t) {
 function hiddenReason(t, now) {
   const gone = goneReason(t);
   if (gone) return gone;
+  // Sent from the front: on the board now, whatever its time or Dasher.
+  if (sentNow[t.id]) return null;
   if (t.holdUntil && now < Date.parse(t.holdUntil)) return `waiting for a Dasher (on the board by ${new Date(t.holdUntil).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} at the latest)`;
   return outOfWindow(t, now);
 }

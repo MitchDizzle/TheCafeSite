@@ -49,6 +49,10 @@ function unbump(id) {
 
 const handedOff = {}; // orderId -> ISO time the front pressed Handed off (/front)
 const canceled = {}; // orderId -> ISO time the front took an unpaid order off both screens
+// orderId -> ISO time the front sent a DoorDash order waiting for its Dasher
+// to the kitchen board anyway (Send to kitchen now; client 2026-11-03: the
+// Dasher came for one before DoorDash had named them in Square).
+const sentNow = {};
 // orderId -> ISO time the front brought it back with Undo after it cleared
 // itself (autoHandoffMinutes): it stays until someone hands it off by hand.
 const keepOnFront = {};
@@ -85,6 +89,7 @@ function loadState() {
     Object.assign(platesDone, saved.platesDone || {});
     Object.assign(handedOff, saved.handedOff || {});
     Object.assign(canceled, saved.canceled || {});
+    Object.assign(sentNow, saved.sentNow || {});
     Object.assign(keepOnFront, saved.keepOnFront || {});
     Object.assign(markedReady, saved.markedReady || {});
     Object.assign(byHand, saved.byHand || {});
@@ -103,7 +108,7 @@ function loadState() {
 function saveState() {
   // Three days is plenty; nothing older can reappear on either screen anyway.
   const cutoff = Date.now() - 3 * 864e5;
-  for (const map of [bumped, platesDone, handedOff, canceled, keepOnFront, markedReady, byHand, markedDone]) {
+  for (const map of [bumped, platesDone, handedOff, canceled, sentNow, keepOnFront, markedReady, byHand, markedDone]) {
     for (const [id, at] of Object.entries(map)) {
       if (Date.parse(at) < cutoff) delete map[id];
     }
@@ -111,7 +116,7 @@ function saveState() {
   for (const [id, o] of Object.entries(offBoard)) if (Date.parse(o.at) < cutoff) delete offBoard[id];
   // Demo tickets are practice: never written down, gone when the demo ends.
   const real = (map) => Object.fromEntries(Object.entries(map).filter(([id]) => !isDemo(id)));
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), platesDone: real(platesDone), handedOff: real(handedOff), canceled: real(canceled), keepOnFront: real(keepOnFront), markedReady: real(markedReady), byHand: real(byHand), markedDone: real(markedDone), skip: state.skipEdited ? state.skip : undefined, undoFloor: state.undoFloor, statsFloor: state.statsFloor }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), platesDone: real(platesDone), handedOff: real(handedOff), canceled: real(canceled), sentNow: real(sentNow), keepOnFront: real(keepOnFront), markedReady: real(markedReady), byHand: real(byHand), markedDone: real(markedDone), skip: state.skipEdited ? state.skip : undefined, undoFloor: state.undoFloor, statsFloor: state.statsFloor }, null, 2));
 }
 
 loadState();
@@ -130,6 +135,6 @@ setSkip(state.skip);
 const skipSummary = () => [...state.skip.categories.map((c) => `all of ${c}`), ...state.skip.items].join(", ") || "nothing";
 
 module.exports = {
-  bumped, platesDone, offBoard, handedOff, canceled, keepOnFront, markedReady, byHand, markedDone, autoOff, readySince,
+  bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, markedReady, byHand, markedDone, autoOff, readySince,
   state, bump, unbump, saveState, setSkip, skipSets, skipSummary,
 };

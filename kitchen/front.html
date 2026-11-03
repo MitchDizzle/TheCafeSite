@@ -161,7 +161,9 @@
   }
   .order .name { display: block; font-size: 1.2rem; font-weight: 800; overflow-wrap: anywhere; }
   .order .kind { display: block; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-  .order .status { font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; text-align: right; }
+  /* A long status ("Plates out 11:52 AM · to go cooking") wraps on its own
+     side rather than squeezing the name into a sliver. */
+  .order .status { font-weight: 800; max-width: 13rem; text-wrap: balance; font-variant-numeric: tabular-nums; text-align: right; }
   .order .status.late { color: var(--red-dark); }
 
   .order.ready { border: 2px solid var(--green); }
@@ -244,6 +246,26 @@
     cursor: pointer;
   }
   .cancel-unpaid:hover { background: #FBE3E1; }
+
+  /* DoorDash waiting for its Dasher: not on the kitchen board yet. Says why
+     and when it goes on by itself, with a button for when the Dasher (or the
+     kitchen) can't wait. Teal, not red: nothing is wrong. */
+  .dasher-band { background: #E3EEF1; }
+  .dasher-band p { margin: 0 0 0.45rem; font-weight: 700; color: var(--teal-dark); }
+  .dasher-band small { display: block; font-weight: 400; font-size: 0.9rem; color: var(--text); margin-top: 0.15rem; }
+  .send-kitchen {
+    width: 100%;
+    padding: 0.55rem;
+    border: 2px solid var(--teal);
+    border-radius: 0.4rem;
+    background: var(--paper);
+    color: var(--teal-dark);
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .send-kitchen:hover { background: #fff; }
   /* Reservations: today's tables, under the bar. One coming up (within
      reservationAheadMinutes) gets its own row with Seated; amber from 15
      minutes before its time to the end of the hold, as amber means time. */
@@ -412,6 +434,10 @@
         </header>
         ${o.unpaid ? `<div class="section unpaid-band">Not paid${o.due ? `: $${o.due.toFixed(2)} due` : ""}
           <small>Collect when they pick up. If the sale fell through, press Canceled to take it off the kitchen board too.</small></div>` : ""}
+        ${o.holdUntil && Date.now() < Date.parse(o.holdUntil) ? `<div class="section dasher-band">
+          <p>Not on the kitchen board yet: DoorDash hasn't named a Dasher.
+          <small>It goes on by itself when they do, or at ${fmtTime(o.holdUntil)} at the latest. Dasher here already, or want it started? Send it now.</small></p>
+          <button class="send-kitchen" type="button">Send to kitchen now</button></div>` : ""}
         <div class="section">
           <div class="label">From the kitchen</div>
           ${o.items.length ? itemsHtml(o.items, false, o.id) : `<div class="nothing">Nothing from the kitchen</div>`}
@@ -454,7 +480,7 @@
         // The kitchen has sent the plates; the to-go part comes later.
         text = `Plates out ${fmtTime(o.platesDone)} · to go cooking`;
       } else if (o.holdUntil && now < Date.parse(o.holdUntil)) {
-        text = `Waiting for a Dasher · kitchen by ${fmtTime(o.holdUntil)}`;
+        text = "Not in the kitchen yet";
       } else if (o.dueAt) {
         const until = Date.parse(o.dueAt) - now;
         late = until < 0;
@@ -582,6 +608,14 @@
       orders = orders.filter((o) => o.id !== id);
       render();
       send("/api/cancel-unpaid", { id });
+      return;
+    }
+    if (e.target.closest(".send-kitchen")) {
+      // Onto the kitchen board; the card stays here, cooking.
+      const o = orders.find((x) => x.id === id);
+      if (o) o.holdUntil = null;
+      render();
+      send("/api/send-to-kitchen", { id });
       return;
     }
     if (e.target.closest(".handoff")) {

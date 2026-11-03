@@ -420,6 +420,20 @@ test("DoorDash: off the kitchen board until a Dasher is assigned or 15 minutes",
   assert.equal(hiddenReason(t, Date.now()), null);
 });
 
+test("DoorDash sent to the kitchen from the front: on the board at once, Dasher or not", () => {
+  // 2026-11-03: the Dasher was at the counter before DoorDash named them in Square.
+  const { sentNow } = require("../lib/state");
+  const o = doordash({ id: "DOORDASHSENT", created_at: minutesFromNow(-2) });
+  assert.ok(ticketOf(o).holdUntil, "waiting for a Dasher first");
+  sentNow[o.id] = new Date().toISOString();
+  const t = ticketOf(o);
+  assert.equal(t.holdUntil, null);
+  assert.equal(hiddenReason(t, Date.now()), null);
+  assert.equal(waitUntil(t, Date.now()), null, "not in the WAIT UNTIL row");
+  assert.equal(t.boardAt, sentNow[o.id]);
+  delete sentNow[o.id];
+});
+
 test("DoorDash scheduled for later: goes on by its time, not 15 minutes after it came in", () => {
   // As Square sent one on 2026-10-28: placed at 10:20 for a 12:45 Dasher.
   const later = (id, dueIn, note) => {
