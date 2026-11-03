@@ -714,6 +714,9 @@
     // Square Online's orders are named "Ordering Profile - Web" by Square
     // (2026-10-12); a delivery app is called by its own name ("DoorDash").
     if (t.kind === "PICKUP" && (!t.source || /square online|ordering profile/i.test(t.source))) return "Online";
+    // DoorDash's own ordering site ("DoorDash - Storefront"): the customer
+    // comes in for it, so it must not read like a Dasher's order.
+    if (t.kind === "PICKUP" && /doordash/i.test(t.source || "")) return "DoorDash pickup";
     if (/doordash|uber ?eats|grubhub/i.test(t.source || "")) return t.source;
     const k = t.kind === "PICKUP" ? "Pickup" : t.kind.charAt(0) + t.kind.slice(1).toLowerCase();
     return t.source ? `${k} · ${t.source}` : k;

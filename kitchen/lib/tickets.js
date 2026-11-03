@@ -28,8 +28,10 @@ const TO_GO_TYPES = /^(PICKUP|DELIVERY|SHIPMENT)$/;
 // in doubt it stays on the board — an extra ticket beats a missed one.
 // Square Online orders arrive as "Ordering Profile - Web" (seen 2026-10-12)
 // and DoorDash ones as "DoorDash" with a DELIVERY fulfillment that DoorDash
-// manages (a courier, a courier pickup time); both count as online. A
-// delivery rung on the POS (no courier) stays a counter sale.
+// manages (a courier, a courier pickup time); both count as online. So do
+// "DoorDash - Storefront" orders, from DoorDash's own ordering site: mostly
+// pickups (seen 2026-11-03), where the customer comes in and no Dasher
+// does. A delivery rung on the POS (no courier) stays a counter sale.
 const OFFSITE_SOURCE = /online|ordering profile|doordash|uber ?eats|grubhub/i;
 function isOnline(order, f) {
   const source = (order.source && order.source.name) || "";
@@ -197,7 +199,10 @@ function toTicket(order) {
   // has taken it (seen 2026-10-21). Until then, and for no more than
   // dasherWaitMinutes, the kitchen doesn't see it: food made the minute it
   // comes in can sit for most of an hour waiting for a Dasher.
-  const doordash = online && /doordash/i.test(`${(order.source && order.source.name) || ""} ${(f && f.delivery_details && f.delivery_details.courier_provider_name) || ""}`);
+  // Deliveries only: a DoorDash Storefront pickup is the customer coming in,
+  // so no Dasher is ever named, and it goes on like any online pickup (client
+  // 2026-11-03: one was held its full 15 minutes while the customer waited).
+  const doordash = online && !!f && f.type === "DELIVERY" && /doordash/i.test(`${(order.source && order.source.name) || ""} ${(f && f.delivery_details && f.delivery_details.courier_provider_name) || ""}`);
   const courier = doordash ? ((/Courier Name:\s*([^\r\n]+)/i.exec((details && details.note) || "") || [])[1] || "").trim() || null : null;
   // How far ahead of its due time it goes on: more for a bigger order.
   const leadMins = dueAt ? leadMinutes(items.reduce((n, it) => n + it.qty, 0)) : null;

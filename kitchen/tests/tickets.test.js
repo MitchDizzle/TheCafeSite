@@ -420,6 +420,19 @@ test("DoorDash: off the kitchen board until a Dasher is assigned or 15 minutes",
   assert.equal(hiddenReason(t, Date.now()), null);
 });
 
+test("a DoorDash Storefront pickup waits for no Dasher: it goes on like an online pickup", () => {
+  // As Square sent Heather's on 2026-11-03: placed 8:27 for 8:37, held till 8:42 for a Dasher.
+  const o = online({ id: "DDSTOREFRONT01", created_at: minutesFromNow(-10), source: { name: "DoorDash - Storefront" },
+    ticket_name: "Heather C", tenders: [{ id: "DDTENDER", type: "OTHER" }] },
+    { pickup_details: { pickup_at: minutesFromNow(1), schedule_type: "ASAP", recipient: { display_name: "Heather C" } } });
+  const t = ticketOf(o);
+  assert.equal(t.kind, "PICKUP");
+  assert.equal(t.holdUntil, null);
+  assert.equal(t.courier, null);
+  assert.equal(hiddenReason(t, Date.now()), null, "on the kitchen board");
+  assert.equal(t.boardAt, new Date(Date.parse(o.created_at)).toISOString(), "from when it came in, due in under 15 min");
+});
+
 test("DoorDash sent to the kitchen from the front: on the board at once, Dasher or not", () => {
   // 2026-11-03: the Dasher was at the counter before DoorDash named them in Square.
   const { sentNow } = require("../lib/state");

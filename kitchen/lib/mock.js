@@ -195,6 +195,18 @@ function mockOrders() {
     fulfillments: [{ uid: "f1", type: "DELIVERY", state: "PROPOSED", delivery_details: { schedule_type: "ASAP", courier_pickup_at: at(8), courier_provider_name: "DoorDash", managed_delivery: true } }],
     line_items: [li(1, "Fried Potatoes"), li(1, "Biscuit & Gravy", { variation_name: "Full" })],
   });
+  // A pickup from DoorDash's own ordering site: the customer comes in, so
+  // it goes on like an online pickup, with no wait for a Dasher.
+  orders.push({
+    id: "MOCKDDPICKUP012",
+    state: "OPEN",
+    created_at: ago(3),
+    source: { name: "DoorDash - Storefront" },
+    ticket_name: "Heather C",
+    tenders: [{ id: "DDTENDER2", type: "OTHER" }],
+    fulfillments: [{ uid: "f1", type: "PICKUP", state: "PROPOSED", pickup_details: { pickup_at: at(7), schedule_type: "ASAP", recipient: { display_name: "Heather C" } } }],
+    line_items: [li(1, "Omelet", { modifiers: [{ name: "Sausage" }, { name: "Cheese" }] })],
+  });
   // Each order's total as Square would have it, tax included, for the
   // day's sales.
   for (const o of orders) if (!o.total_money) o.total_money = { amount: mockTotal(o.line_items), currency: "USD" };
