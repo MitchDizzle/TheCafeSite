@@ -225,6 +225,13 @@ test("Specials Modifiers go on Lunch Special in Square as one list, priced; Leav
   assert.deepEqual(list.modifier_list_data.modifiers.map((m) => [m.modifier_data.name, m.modifier_data.price_money.amount]), [["No Onion", 0], ["Extra Cheese", 100]]);
   const on = (id) => ((mockItems.get("ITEM-Lunch Special").item_data.modifier_list_info || []).find((x) => x.modifier_list_id === id) || {}).enabled;
   assert.equal(on(list.id), true);
+  // At the top, above the side lists (client 2026-11-03), and the order is
+  // what Square shows: each list's ordinal is its place.
+  const infos = mockItems.get("ITEM-Lunch Special").item_data.modifier_list_info;
+  assert.equal(infos[0].modifier_list_id, list.id, "Specials Modifiers first");
+  assert.ok(infos.every((x, i) => x.ordinal === i));
+  const side1 = [...mockItems.values()].find((o) => o.type === "MODIFIER_LIST" && o.modifier_list_data.name === "Side 1");
+  assert.equal(infos[1].modifier_list_id, side1.id, "then Side 1");
   assert.equal(on("LIST-Add"), undefined, "a sandwich no longer gets Add by its name");
   plan.dayLists = { [today]: ["Add"] };
   plan.listsUsed = ["Add"];

@@ -148,10 +148,13 @@ async function saveSides(slots, swaps, hidden) {
     info.max_selected_modifiers = 1;
     info.modifier_overrides = on ? overridesFor(list, pickId, hidden) : [];
   }
-  // The side lists first, in order, then the item's other lists (Dressing),
-  // so the dressing is asked after the sides (client 2026-10-13).
+  // Specials Modifiers at the top (client 2026-11-03: what to leave off is
+  // asked first), then the side lists, in order, then the item's other lists
+  // (Dressing), so the dressing is asked after the sides (client 2026-10-13).
   const sideIds = set.filter((x) => x.list).map((x) => x.list.id);
-  const rank = (info) => (sideIds.includes(info.modifier_list_id) ? sideIds.indexOf(info.modifier_list_id) : sideIds.length);
+  const modsList = cfg.modifiersList ? lists.get(cfg.modifiersList.trim().toLowerCase()) : null;
+  const rank = (info) => (modsList && info.modifier_list_id === modsList.id ? -1
+    : sideIds.includes(info.modifier_list_id) ? sideIds.indexOf(info.modifier_list_id) : sideIds.length);
   infos.sort((a, b) => rank(a) - rank(b));
   infos.forEach((info, ordinal) => { info.ordinal = ordinal; });
   if (JSON.stringify(infos) !== before) await upsertObject(fresh);
@@ -224,8 +227,9 @@ function modifierOptions(date, day) {
 }
 
 // options: from modifierOptions. One list on cfg.sideItem, `name`
-// (cfg.modifiersList, "Specials Modifiers"), pick any, optional, after the
-// side lists and the dressing; off on a day without any. It replaced the
+// (cfg.modifiersList, "Specials Modifiers"), pick any, optional, at the top,
+// above the side lists (client 2026-11-03; until then it came after the
+// sides and the dressing); off on a day without any. It replaced the
 // Leave Off list (cfg.leaveOffList) on 2026-10-29, which is now only ever
 // switched off. Returns words for the log, or null when there's nothing to do.
 async function saveOptionList(name, key, options) {
@@ -252,6 +256,7 @@ async function saveOptionList(name, key, options) {
   info.min_selected_modifiers = 0;
   delete info.max_selected_modifiers;
   info.modifier_overrides = [];
+  if (name === cfg.modifiersList) infos.unshift(...infos.splice(infos.indexOf(info), 1));
   infos.forEach((x, ordinal) => { x.ordinal = ordinal; });
   if (JSON.stringify(infos) !== before) await upsertObject(fresh);
   const shown = options.map((o) => (o.price ? `${o.name} +$${o.price}` : o.name));
@@ -314,8 +319,9 @@ async function applySides(today, day) {
   // sandwich's lists on by themselves, off on any other day, 2026-10-28; 8:
   // an "or" side without Chef's Choice, 2026-10-29; 9: counter-only sides
   // hidden online, 2026-10-29; 10: Specials Modifiers in place of Leave Off,
-  // extra sides on the Special Side, no lists by a sandwich's name, 2026-10-29).
-  const sig = JSON.stringify({ v: 10, slots, swaps, special, mods, extra, hidden: [...hidden] });
+  // extra sides on the Special Side, no lists by a sandwich's name, 2026-10-29;
+  // 11: Specials Modifiers at the top, 2026-11-03).
+  const sig = JSON.stringify({ v: 11, slots, swaps, special, mods, extra, hidden: [...hidden] });
   const last = plan.sidesApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
   if (!slots.length && !mods.length && !extra.length && !special.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;
