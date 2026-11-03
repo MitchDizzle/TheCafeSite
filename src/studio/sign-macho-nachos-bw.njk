@@ -1,0 +1,50 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Macho Nachos toppings sign (black & white)"
+canvasW: "8.5in"
+canvasH: "11in"
+pageSize: "8.5in 11in"
+pageCss: "/assets/css/studio/sign.css"
+bw: true
+
+# What comes on them, top to bottom as the sign lists them. The Taco Salad's
+# Taco Modifier in Square (each one a "No …" there), plus salsa and sour cream.
+toppings:
+  - Frito chips
+  - Shredded cheese
+  - Tomato
+  - Onion
+  - Olives
+  - Jalapeño
+  - Salsa
+  - Sour cream
+
+tags: studio
+studioTitle: "Macho Nachos toppings — black & white"
+studioCategory: "Signs"
+studioSize: "8.5 × 11 in portrait · letter stand-up sign holder"
+studioNote: "What comes on the Macho Nachos, one to a line in big type, so staff can point at the sign while a customer says what to leave off."
+studioW: 816
+studioH: 1056
+studioOrder: 35
+---
+{#- Macho Nachos toppings (client 2026-11-03): black & white, no logo,
+    for the counter. Staff point at it to show what comes on the nachos,
+    and the customer says what to leave off. The list is `toppings` above:
+    the Taco Salad's Taco Modifier in Square, plus salsa and sour cream.
+    When Square's list changes, change it here and print a new sheet. -#}
+<div class="canvas sign sign--bw nachos">
+    <div class="sign-heading">
+        <h2 class="p-display sign-heading-title">Macho Nachos</h2>
+        <p class="nachos-sub">come with</p>
+    </div>
+
+    <ul class="nachos-list">
+        {%- for t in toppings %}
+        <li>{{ t }}</li>
+        {%- endfor %}
+    </ul>
+
+    <div class="sign-spacer"></div>
+    <p class="nachos-foot">Don&rsquo;t want one? Just tell us.</p>
+</div>
