@@ -12,9 +12,12 @@ This folder is for things retired **by hand**. Studio pieces also archive
 |---|---|---|
 | `site-src/` | Retired site files, each at the **same path it had under `src/`**: `site-src/studio/fb-dish.njk` was `src/studio/fb-dish.njk` | see below |
 | `share/` | Phone hand-off copies of studio art (the opening-day post) | 2026-10-09 |
-| `docs/` | `The Cafe App.md` and `The Cafe Website.md`, the first project notes (a login/backend app; a no-build static site for catering and Meals on Wheels). Both were out of date: ordering moved to Square Online and the site is built with Eleventy | 2026-10-12 |
 | `FrontBanner/` | The first door banner, made before `/studio/` existed; `src/studio/front-door-banner.njk` replaced it | 2026-10-09 |
-| `The Cafe.htm`, `The Cafe » Catering.htm` and their `_files` | Saved copies of the old site | 2026-05 |
+
+Removed 2026-11-03, kept only in git history: the saved copies of the old
+theabcafe.com site (`The Cafe.htm`, `The Cafe » Catering.htm` and their
+`_files`). Also gone from here: `docs/`, the first project notes, which moved
+to the private planning repo with anything else that isn't for the public.
 
 ## What's in `site-src/`
 
