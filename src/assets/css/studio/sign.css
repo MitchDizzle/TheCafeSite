@@ -1,6 +1,6 @@
 /* ============================================================
    Counter signs, 8.5 × 11 in portrait, for letter stand-up sign holders.
-   Pieces: sign-drinks(-bw).njk, sign-specials(-bw).njk, sign-todays-sides-bw.njk,
+   Pieces: sign-drinks(-bw).njk, sign-specials(-bw).njk,
    sign-desserts-bw.njk, sign-dessert-bars-bw.njk, sign-macho-nachos-bw.njk
    (and the door signs, in their own section below)
    Partials: partials/studio/sign-drinks.njk, partials/studio/sign-specials.njk
@@ -309,7 +309,9 @@
     margin-right: 0.08in;
 }
 
-/* ── Today's special sides (sign-todays-sides-bw.njk) ──────
+/* ── Today's special sides (sign-todays-sides-bw.njk, archived) ─
+   The sign is in archive/site-src/studio/ since 2026-11-03; these styles
+   stay so it can come back as it was.
    A one-day sign for a plate whose side is a pick of two (client
    2026-10-29), or with two sides that can be doubled up (client
    2026-10-30). No logo: it stands on the counter, so the room goes to

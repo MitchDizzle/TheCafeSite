@@ -53,7 +53,8 @@
       "price": 3.5,
       "kinds": [
         {
-          "name": "Butterfinger Pie"
+          "name": "Butterfinger Pie",
+          "out": true
         }
       ],
       "lists": []
@@ -73,12 +74,10 @@
       "price": 3.5,
       "kinds": [
         {
-          "name": "Cream Puffs",
-          "out": true
+          "name": "Cream Puffs"
         },
         {
-          "name": "Chocolate Cream Puffs",
-          "out": true
+          "name": "Chocolate Cream Puffs"
         }
       ],
       "lists": []
