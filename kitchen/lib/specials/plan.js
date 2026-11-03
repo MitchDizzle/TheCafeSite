@@ -65,10 +65,14 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 //            with none of its own. siteMods: the website's day `modifiers`.
 // listsUsed: every list ever picked: the board switches these off on a day without them,
 //            and leaves every other list on the item alone (Dressing).
+// siteNotes: { "YYYY-MM-DD": "..." }, the website's day `note`: what a customer may need to
+//            know about the plate ("Our nacho cheese is made with jalapeño, onion & tomato.",
+//            client 2026-11-03), put after the plate in Lunch Special's description. Kept
+//            apart from `days` like extraSides, and read the same way, even for today.
 // soupSide: a cup of the day's soup can be picked as a side, as the website last said
 // includesDrink: every lunch special includes a drink, as the website last said
 // site:    the last read of the website, for the front to show
-const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, dayLists: {}, dishLists: {}, listsUsed: [], dayMods: {}, dishMods: {}, siteMods: {}, frontExtra: {}, swapSides: [], extraSides: {}, leaveOff: {}, counterOnly: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
+const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, dayLists: {}, dishLists: {}, listsUsed: [], dayMods: {}, dishMods: {}, siteMods: {}, frontExtra: {}, swapSides: [], extraSides: {}, leaveOff: {}, counterOnly: {}, siteNotes: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
 try {
   Object.assign(plan, JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")));
 } catch {}
@@ -76,7 +80,7 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.counterOnly, plan.frontExtra, plan.dayMods, plan.siteMods, plan.photoPick, plan.dayLists, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.counterOnly, plan.siteNotes, plan.frontExtra, plan.dayMods, plan.siteMods, plan.photoPick, plan.dayLists, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
 }
 
@@ -252,6 +256,18 @@ async function pullSite() {
       if (JSON.stringify(plan.siteMods[date]) === JSON.stringify(list)) continue;
       plan.siteMods[date] = list;
       console.log(`Specials Modifiers for ${date} from the website: ${list.join(", ")}.`);
+    }
+    // A day's note, read the same way: it only adds to the description.
+    const noted = {};
+    for (const d of listed) {
+      const note = String(d.note ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
+      if (d.date >= today && note) noted[d.date] = note;
+    }
+    for (const date of Object.keys(plan.siteNotes)) if (date >= today && !noted[date]) delete plan.siteNotes[date];
+    for (const [date, note] of Object.entries(noted)) {
+      if (plan.siteNotes[date] === note) continue;
+      plan.siteNotes[date] = note;
+      console.log(`Note for ${date}'s plate, from the website: ${note}`);
     }
     // Sides sold at the counter only, read the same way: they only hide
     // options from online ordering and never change the day's names.

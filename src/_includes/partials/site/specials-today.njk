@@ -51,6 +51,9 @@
                 {%- if d | specialSides %}
                 <p class="ts-detail">{{ d | specialSides }}</p>
                 {%- endif %}
+                {%- if d.note %}
+                <p class="ts-detail">{{ d.note }}</p>
+                {%- endif %}
                 {%- if specials.includesDrink %}
                 <p class="ts-detail">Includes a drink</p>
                 {%- endif %}

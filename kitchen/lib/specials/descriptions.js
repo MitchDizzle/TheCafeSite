@@ -1,7 +1,7 @@
 // What online ordering and DoorDash show under Lunch Special and Soup of the
 // Day: the day's plate with its sides (worded by the website's specialSides,
-// so it reads as on /menu and the posts), the drink, and cfg.descriptions'
-// words. The counter's ticket still goes by the variation name (saveDaily).
+// so it reads as on /menu and the posts), the day's note, the drink, and
+// cfg.descriptions' words. The counter's ticket still goes by the variation name (saveDaily).
 const path = require("path");
 const { DIR, cfg } = require("../config");
 const { cleanText } = require("../util");
@@ -29,7 +29,8 @@ function onlineDay(day, hidden) {
   return { ...day, sides };
 }
 
-function dayDescription(name, day, hidden) {
+// note: the website's day `note` (plan.siteNotes), after the plate.
+function dayDescription(name, day, hidden, note) {
   const plain = cleanWords(cfg.descriptions[name]);
   const what = day && day.items[name] && cleanText(day.items[name].today);
   if (!what) return plain;
@@ -37,6 +38,7 @@ function dayDescription(name, day, hidden) {
   if (siteFieldFor(name) === "special") {
     const sides = specialSides(onlineDay(day, hidden));
     words.push(`${what}${sides ? ` ${sides}` : ""}.`);
+    if (note) words.push(/[.!?]$/.test(note) ? note : `${note}.`);
     if (plan.includesDrink) words.push("Includes a fountain drink or iced tea.");
     if (name === cfg.sideItem && sideSlots(day).length) {
       // An "or" side has nothing picked, so it asks like choice of side.
@@ -55,7 +57,7 @@ async function applyDescriptions(today, day) {
   const names = cfg.dailyItems.filter((n) => typeof cfg.descriptions[n] === "string");
   if (!names.length) return null;
   const hidden = counterOnlyOn(today);
-  const want = Object.fromEntries(names.map((n) => [n, dayDescription(n, day, hidden)]));
+  const want = Object.fromEntries(names.map((n) => [n, dayDescription(n, day, hidden, plan.siteNotes[today])]));
   const sig = JSON.stringify(want);
   const last = plan.descApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;

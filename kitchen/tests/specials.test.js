@@ -67,6 +67,15 @@ test("Lunch Special's description: the plate, its sides, the drink, the swap", (
     "Lasagna with Tossed Salad or Cooked Broccoli and Breadstick. Includes a fountain drink or iced tea. Pick your side below. Served from 11am.");
 });
 
+test("Lunch Special's description: the day's note goes after the plate", () => {
+  // Client 2026-11-03: someone who can't have spice can't have the nacho cheese either.
+  plan.includesDrink = true;
+  assert.equal(dayDescription("Lunch Special", day("Macho Nachos"), undefined, "Our nacho cheese is made with jalapeño, onion & tomato."),
+    "Macho Nachos. Our nacho cheese is made with jalapeño, onion & tomato. Includes a fountain drink or iced tea. Served from 11am.");
+  assert.equal(dayDescription("Lunch Special", day("Macho Nachos"), undefined, "Made with jalapeño"),
+    "Macho Nachos. Made with jalapeño. Includes a fountain drink or iced tea. Served from 11am.", "a full stop added");
+});
+
 test("At the counter only: hidden online on the item, the pick kept, that day's only", () => {
   plan.counterOnly = { "2026-10-29": ["Twice Baked Potato Casserole"] };
   const hidden = counterOnlyOn("2026-10-29");
