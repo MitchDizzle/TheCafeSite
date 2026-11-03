@@ -1,0 +1,96 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Macho Nachos Post (1080 × 1350)"
+canvasW: "1080px"
+canvasH: "1350px"
+pageCss: "/assets/css/studio/fb-macho-nachos.css"
+
+# The day. The plate, its price and its toppings come from that day in
+# specials.json; the cream puffs' price and kinds from desserts.json
+# (npm run desserts). The caption (fb-macho-nachos.11tydata.js) reads the
+# same, so the picture and the words can't disagree.
+postDate: "2026-11-03"
+dessert: "Cream Puffs"
+# Photos, once there are some: web copies in src/assets/photos/ (STYLE.md,
+# Photos). Without a file, that card shows its words only.
+nachosPhoto: "/assets/photos/macho-nachos.jpg"
+puffsPhoto: "/assets/photos/cream-puffs.jpg"
+
+tags: studio
+studioWeekly: true
+studioData: ["specials.json", "desserts.json"]
+studioTitle: "Macho Nachos and cream puffs — Facebook post"
+studioCategory: "Social"
+studioSize: "1080 × 1350 px · portrait feed post"
+studioNote: "A rainy-day post for one day's lunch special, Macho Nachos, with the cream puffs for dessert. The plate, price and toppings come from that day in specials.json, the cream puffs from desserts.json: a kind Square counts at 0 is left off, so run npm run desserts after counting them. Photos go at src/assets/photos/macho-nachos.jpg and cream-puffs.jpg; without one, that card shows its words only."
+studioW: 1080
+studioH: 1350
+studioOrder: 25
+---
+{#- One day's plate and a dessert, for a rainy day (client 2026-11-03:
+    "Don't let the rain prevent you from having a Macho day").
+
+    THE PLATE is the day in specials.json, found by postDate: its name, its
+    price (the day's own or the usual one), the drink, and its leaveOff
+    list, which is what comes on it. The nacho cheese note is in the
+    caption, where there's room to say it properly.
+
+    THE CREAM PUFFS are desserts.json's: the price, and the kinds Square
+    still counts (puffKinds, worked out in the .11tydata.js). Count them on
+    the kitchen board and run npm run desserts before building this.
+
+    Every size is set for the ~540px a portrait post shows at on a phone:
+    nothing a customer needs is under 24px. -#}
+{%- set o = site.opening %}
+<div class="canvas mn">
+
+    <header class="mn-head">
+        <div class="wordmark wordmark--light wordmark--hero mn-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-label mn-range">{{ postDate | dayDate("long") }} &middot; {{ site.address.locality }}, {{ site.address.region }}</p>
+    </header>
+
+    <div class="mn-body">
+        <h1 class="mn-headline">
+            <span class="p-display-italic mn-headline-1">Don&rsquo;t let the rain stop</span>
+            <span class="p-display mn-headline-2">a Macho day</span>
+        </h1>
+
+        <div class="mn-cards">
+            <section class="mn-card">
+                {%- if nachosPhoto | hasAsset %}
+                <img class="mn-photo" src="{{ nachosPhoto }}" alt="">
+                {%- endif %}
+                <div class="mn-words">
+                    <p class="p-label mn-label">Today&rsquo;s lunch special</p>
+                    <h2 class="p-display mn-name">{{ day.special }}</h2>
+                    <p class="p-display-italic mn-price">{{ plate.price }}{% if specials.includesDrink %} with a drink{% endif %}</p>
+                    {%- if plate.toppings %}
+                    <p class="p-body mn-detail">{{ plate.toppings }}</p>
+                    {%- endif %}
+                </div>
+            </section>
+
+            <section class="mn-card">
+                {%- if puffsPhoto | hasAsset %}
+                <img class="mn-photo" src="{{ puffsPhoto }}" alt="">
+                {%- endif %}
+                <div class="mn-words">
+                    <p class="p-label mn-label">For dessert</p>
+                    <h2 class="p-display mn-name">{{ dessert }}</h2>
+                    <p class="p-display-italic mn-price">{{ puffs.price }} each</p>
+                    <p class="p-body mn-detail">{{ puffs.kinds | capitalize }}, while they last</p>
+                </div>
+            </section>
+        </div>
+
+        <p class="p-label mn-served">Lunch from 11am</p>
+    </div>
+
+    <footer class="mn-foot">
+        <p class="p-display mn-foot-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
+        <p class="p-body mn-foot-line">{{ postDate | dayDate("weekday") }} {{ o.opens.time | replace(":00", "") }}{{ o.opens.meridiem }} &ndash; {{ o.closes.time | replace(":00", "") }}{{ o.closes.meridiem }} &middot; {{ site.address.street }}, {{ site.address.locality }}, {{ site.address.region }}</p>
+    </footer>
+
+</div>
