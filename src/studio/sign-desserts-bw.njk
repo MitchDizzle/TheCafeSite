@@ -36,7 +36,9 @@ studioOrder: 32
     </div>
 
     <ul class="sign-rows fd-rows">
-        {%- for item in desserts.items %}
+        {#- Dearest first, so the $1.50 cookies go to the bottom (client
+            2026-11-04); same price keeps Square's order. #}
+        {%- for item in desserts.items | sort(true, false, "price") %}
         {%- if item.name not in skipDesserts %}
         {%- set kinds = item.kinds | rejectattr("out") %}
         {%- for k in kinds %}
