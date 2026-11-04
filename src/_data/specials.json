@@ -41,7 +41,11 @@
       "special": "Stuffed Pork Chop",
       "sides": [
         "Scalloped Potatoes",
-        "Veggies"
+        "Green Beans"
+      ],
+      "extraSides": [
+        "Scalloped Potatoes",
+        "Green Beans"
       ]
     },
     {
