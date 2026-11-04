@@ -1,0 +1,484 @@
+{
+  "_note": "The catering guide: event and buffet catering, run by Dalton for the cafe and sold as The Café Catering and D-Ray Catering (pronounced 'Dee Ray'). Typed in from his guide (dray catering guide.docx, received 2026-11-04) with the spelling tidied and nothing else changed: the packages, what comes with them and every price are his. It feeds the printed guide studio/catering-guide.njk (a PDF to email or hand out) and, once `site.catering.guide` is true, the 'Bigger events' section on /catering. The everyday pickup catering (lunch for 10 off the menu) is separate and stays as it is. Prices are per person. Sections are in the order the printed guide shows them, and package numbers are worked out in order down this file, so moving a package renumbers everything after it: reprint the guide after any change.",
+  "brand": "D-Ray Catering",
+  "_note_brand": "Pronounced 'Dee Ray'; his guide spells it 'Dray', which reads as one syllable. Spelling to be confirmed by Dalton; this is the only place it is written.",
+  "email": "draycatering@gmail.com",
+  "_note_email": "The reply address on the guide. The cafe's own email (site.email) stays on the website; catering requests from the /catering form still go there.",
+  "howItWorks": [
+    "Prices are per person, plus sales tax.",
+    "Fewer than 40 guests: we drop it off, ready to serve. 40 to 100: drop-off or a served buffet. More than 100: a served buffet.",
+    "Food only: no drinks or linens, except coffee, orange juice and water with breakfast.",
+    "Paper plates, napkins and plastic silverware: $1.00 per person.",
+    "Desserts are our choice from what we're baking that week.",
+    "For more than 10 people, give us at least 12 hours' notice. For a buffet or event, call as early as you can.",
+    "We take cash, check or card."
+  ],
+  "_note_howItWorks": "Dalton's rules, reworded; one of his lines is left off until he confirms it, and 'served buffet' is a reading of 'over 100 cannot be drop-off'. Open questions are in CafeWork (DRAY-CATERING-REVIEW.md).",
+  "sections": [
+    {
+      "id": "breakfast",
+      "name": "Breakfast",
+      "note": "Coffee, orange juice and water included.",
+      "packages": [
+        {
+          "name": "Egg Casserole",
+          "with": [
+            "Fresh fruit",
+            "Assorted Danish"
+          ],
+          "price": 11
+        },
+        {
+          "name": "Scrambled Eggs",
+          "with": [
+            "Bacon & sausage",
+            "Biscuits & gravy",
+            "Fresh fruit",
+            "Assorted Danish"
+          ],
+          "price": 14
+        },
+        {
+          "name": "Breakfast Burritos",
+          "with": [
+            "Fried potatoes",
+            "Biscuits & gravy",
+            "Fresh fruit",
+            "Assorted Danish"
+          ],
+          "price": 14
+        }
+      ]
+    },
+    {
+      "id": "lunches",
+      "name": "Lunches",
+      "note": "Soups, sandwiches and salads for the office or a meeting.",
+      "packages": [
+        {
+          "name": "Chicken Pot Pie & Broccoli Cheese Soups",
+          "with": [
+            "Assorted sliders & wraps",
+            "Pasta salad",
+            "Berry chicken salad",
+            "Cookies"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Cauliflower & Beef Noodle Soups",
+          "with": [
+            "Reuben sliders",
+            "Chicken bacon sliders",
+            "Spinach salad",
+            "Cobb salad",
+            "Potato salad & coleslaw",
+            "Cookies"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Clubhouse Sandwiches",
+          "with": [
+            "Chef salad",
+            "Potato salad",
+            "Tossed salad & dressing",
+            "Fresh fruit",
+            "Cookies"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Quiche",
+          "with": [
+            "Asparagus",
+            "Fresh fruit",
+            "Bacon spinach salad",
+            "Mini desserts"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Green Chili",
+          "with": [
+            "Assorted wraps & sliders",
+            "Potato salad",
+            "Taco salad",
+            "Chicken fajita salad",
+            "Chips & salsa",
+            "Mini cheesecakes"
+          ],
+          "price": 13
+        },
+        {
+          "name": "Chicken, Tuna or Ham Salad Croissants",
+          "with": [
+            "Tortellini salad",
+            "Cucumber salad",
+            "Fresh fruit",
+            "Tossed salad",
+            "Assorted desserts"
+          ],
+          "price": 14
+        }
+      ]
+    },
+    {
+      "id": "dropoff",
+      "name": "Drop-off Buffets",
+      "note": "Hot and ready in pans, dropped off and set out for you.",
+      "packages": [
+        {
+          "name": "Lasagna",
+          "with": [
+            "Salad & dressing",
+            "Garlic bread",
+            "Cookies"
+          ],
+          "price": 11
+        },
+        {
+          "name": "Chicken Enchilada Casserole",
+          "with": [
+            "Chips & cheese",
+            "Rice & beans",
+            "Lemon dessert"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Turkey & Ham Dinner",
+          "with": [
+            "Dressing",
+            "Mashed potatoes & gravy",
+            "Green beans",
+            "Sweet potatoes",
+            "Rolls & butter",
+            "Pumpkin dump cake"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Assorted Wraps & Subs",
+          "with": [
+            "Tossed salad & dressing",
+            "Tortellini salad",
+            "Potato salad",
+            "Cookies"
+          ],
+          "price": 13
+        },
+        {
+          "name": "Chicken & Beef Taco Bar",
+          "with": [
+            "Hard & soft shells",
+            "Lettuce, tomato, onion, jalapeño, cheese, sour cream & salsa",
+            "Mexican rice & pinto beans",
+            "Cheese sauce & chips",
+            "Cookies"
+          ],
+          "price": 13
+        },
+        {
+          "name": "White Wine Chicken",
+          "with": [
+            "Wild rice",
+            "Green beans",
+            "Salad & dressing",
+            "Rolls & butter",
+            "Mini cheesecake"
+          ],
+          "price": 14
+        },
+        {
+          "name": "Pasta Bar",
+          "with": [
+            "Meatballs, chicken, broccoli & mushrooms",
+            "Red & white sauces",
+            "Penne & bow tie pasta",
+            "Salad & dressing",
+            "Garlic bread",
+            "Cookies"
+          ],
+          "price": 14
+        },
+        {
+          "name": "Brisket",
+          "with": [
+            "Cheesy potato casserole",
+            "Coleslaw & pasta salad",
+            "Rolls & butter",
+            "Cookies"
+          ],
+          "price": 15
+        },
+        {
+          "name": "BBQ Beef & Pork",
+          "with": [
+            "Buns",
+            "Baked beans",
+            "Potato salad & coleslaw",
+            "Cobbler"
+          ],
+          "price": 17
+        }
+      ],
+      "_note_packages": "His guide has two drop-off taco bars ($12 with mini cheesecakes, $13 with cookies); they're one here at $13 until he says otherwise. The $12 Turkey & Ham may be a Thanksgiving price: ask."
+    },
+    {
+      "id": "cocktail",
+      "name": "Cocktail Buffets",
+      "note": "Appetizer spreads for receptions, open houses and parties.",
+      "packages": [
+        {
+          "name": "Small Roll Sandwiches",
+          "with": [
+            "Egg rolls",
+            "Pinwheels",
+            "Stuffed mushroom caps",
+            "Deviled eggs",
+            "Fruit, cheese & veggies",
+            "Spinach artichoke dip",
+            "Mini desserts"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Assorted Wraps",
+          "with": [
+            "Deviled eggs",
+            "Ham & asparagus rolls",
+            "Fresh fruit pizza",
+            "Vegetable relish tray",
+            "Mexican layer dip",
+            "Spinach dip",
+            "Mini desserts"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Assorted Sliders",
+          "with": [
+            "Wings & drummies",
+            "Meatballs",
+            "Stuffed mushroom caps",
+            "Pinwheels",
+            "Deviled eggs",
+            "Fruit, cheese & veggies",
+            "Mexican layer dip",
+            "Cookies & brownies"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Carved Beef & Turkey",
+          "with": [
+            "Rolls & condiments",
+            "Meatballs",
+            "Egg rolls",
+            "Pinwheels",
+            "Fruit, cheese & veggies",
+            "Spinach artichoke dip",
+            "Cream cheese dip",
+            "Mini desserts"
+          ],
+          "price": 16
+        },
+        {
+          "name": "Carved Beef & Turkey with Shrimp",
+          "with": [
+            "Rolls & condiments",
+            "Meatballs",
+            "Wings & drummies",
+            "Bacon-wrapped water chestnuts",
+            "Spiced shrimp",
+            "Fruit, cheese & veggies",
+            "Deviled eggs",
+            "Spinach artichoke dip",
+            "Cream cheese dip",
+            "Mini cheesecakes"
+          ],
+          "price": 19
+        }
+      ]
+    },
+    {
+      "id": "buffets",
+      "name": "Buffets",
+      "note": "Every buffet comes with rolls & butter and dessert. Choose the sides from the list.",
+      "sidesFrom": "buffet",
+      "packages": [
+        {
+          "name": "Stuffed Chicken Breast",
+          "sides": 3,
+          "price": 15.5
+        },
+        {
+          "name": "Sliced Pork Loin",
+          "sides": 3,
+          "price": 15.5
+        },
+        {
+          "name": "Carved Beef",
+          "sides": 3,
+          "price": 16
+        },
+        {
+          "name": "Carved Beef & Turkey",
+          "sides": 4,
+          "price": 18
+        },
+        {
+          "name": "Carved Beef & Ham",
+          "sides": 4,
+          "price": 18
+        },
+        {
+          "name": "Turkey & Ham",
+          "sides": 4,
+          "price": 18
+        },
+        {
+          "name": "White Wine Chicken & Brisket",
+          "sides": 4,
+          "price": 18
+        },
+        {
+          "name": "Bacon-Wrapped Pork Tenderloin & Stuffed Chicken Breast",
+          "sides": 4,
+          "price": 18
+        },
+        {
+          "name": "Carved Beef & Hawaiian Chicken",
+          "sides": 4,
+          "price": 19
+        },
+        {
+          "name": "Filet of Beef & Apple Amaretto Chicken",
+          "sides": 4,
+          "price": 34
+        },
+        {
+          "name": "Prime Rib & Kahlua Chicken",
+          "sides": 4,
+          "price": 36
+        }
+      ]
+    },
+    {
+      "id": "bbq",
+      "name": "BBQ & Southwest",
+      "note": "BBQ buffets come with 4 sides from the BBQ list, bread and dessert.",
+      "sidesFrom": "bbq",
+      "packages": [
+        {
+          "name": "Smokehouse",
+          "with": [
+            "Choose from BBQ beef, pulled pork, smoked sausage, smoked ham or turkey"
+          ],
+          "sides": 4,
+          "priceLabel": "Pick 2 $16.00 · Pick 3 $17.00"
+        },
+        {
+          "name": "BBQ Ribs & BBQ or Fried Chicken",
+          "sides": 4,
+          "price": 17
+        },
+        {
+          "name": "Brisket & Fried Chicken",
+          "sides": 4,
+          "price": 17
+        },
+        {
+          "name": "Burger Bar",
+          "with": [
+            "Hamburgers & grilled chicken on wheat or white buns",
+            "Bacon, ham, egg, mushrooms, peppers & grilled onions",
+            "Cheddar, pepper jack, Colby jack, Swiss & American",
+            "Lettuce, tomato, onion, pickles, jalapeños & the usual condiments",
+            "Mac & cheese, oven-browned potatoes, corn nuggets, pasta salad & coleslaw",
+            "Assorted desserts"
+          ],
+          "price": 16
+        },
+        {
+          "name": "Chicken Enchilada Casserole & Mexican Lasagna",
+          "with": [
+            "Rice & beans",
+            "Guacamole & sour cream",
+            "Queso dip & chips",
+            "Mini desserts"
+          ],
+          "price": 15
+        },
+        {
+          "name": "Beef & Chicken Fajita Bar",
+          "with": [
+            "Hard & soft shells",
+            "Cheese, lettuce, tomato, onion, jalapeño, sour cream, black olives & picante",
+            "Rice & beans",
+            "Cheese sauce & chips",
+            "Layer dip & chips",
+            "Mini desserts"
+          ],
+          "price": 16
+        }
+      ]
+    }
+  ],
+  "sides": {
+    "buffet": {
+      "name": "Buffet sides",
+      "items": [
+        "Baked potato",
+        "Cheesy potatoes",
+        "Twice-baked potato",
+        "Oven-browned potatoes",
+        "Boiled potatoes",
+        "Potato Margarite",
+        "Garlic smashed potatoes",
+        "Baked sweet potato",
+        "Sweet potato puff",
+        "Sweet potatoes",
+        "Wild rice",
+        "Rice pilaf",
+        "Broccoli rice casserole",
+        "Broccoli Normandy",
+        "Asparagus",
+        "Green beans",
+        "Pecan green beans",
+        "Green bean casserole",
+        "Peas & carrots",
+        "Peas",
+        "Corn",
+        "Stir-fry vegetables",
+        "Roasted vegetables",
+        "Tossed salad",
+        "Caesar salad",
+        "Spinach salad"
+      ]
+    },
+    "bbq": {
+      "name": "BBQ sides",
+      "items": [
+        "Mac & cheese",
+        "Cheesy potatoes",
+        "Baked beans",
+        "Oven-browned potatoes",
+        "Broccoli rice casserole",
+        "Cheesy corn casserole",
+        "Corn nuggets",
+        "Green beans",
+        "Potato salad",
+        "Coleslaw",
+        "Pasta salad",
+        "Seven-layer salad",
+        "Cucumber salad",
+        "Fresh fruit",
+        "Vegetable tray",
+        "Tossed salad"
+      ]
+    },
+    "_note": "'Potato Margarite' is as his guide spells it: check the dish's name with him."
+  }
+}
