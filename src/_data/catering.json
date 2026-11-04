@@ -1,5 +1,5 @@
 {
-  "_note": "The catering guide: event and buffet catering, run by Dalton for the cafe and sold as The Café Catering and D-Ray Catering (pronounced 'Dee Ray'). Typed in from his guide (dray catering guide.docx, received 2026-11-04) with the spelling tidied and nothing else changed: the packages, what comes with them and every price are his. It feeds the printed guide studio/catering-guide.njk (a PDF to email or hand out) and, once `site.catering.guide` is true, the 'Bigger events' section on /catering. The everyday pickup catering (lunch for 10 off the menu) is separate and stays as it is. Prices are per person. Sections are in the order the printed guide shows them, and package numbers are worked out in order down this file, so moving a package renumbers everything after it: reprint the guide after any change.",
+  "_note": "The catering guide: event and buffet catering, run by Dalton for the cafe and sold as The Café Catering and D-Ray Catering (pronounced 'Dee Ray'). Typed in from his guide (dray catering guide.docx, received 2026-11-04) with the spelling tidied and nothing else changed: the packages, what comes with them and every price are his. It feeds the printed tri-fold studio/catering-trifold-bw.njk (to talk a client through, hand out, or email as a PDF). The everyday pickup catering (lunch for 10 off the menu) is separate and stays as it is. Prices are per person. Sections are in the order the printed guide shows them, and package numbers are worked out in order down this file, so moving a package renumbers everything after it: reprint the guide after any change.",
   "brand": "D-Ray Catering",
   "_note_brand": "Pronounced 'Dee Ray'; his guide spells it 'Dray', which reads as one syllable. Spelling to be confirmed by Dalton; this is the only place it is written.",
   "email": "draycatering@gmail.com",
@@ -124,6 +124,83 @@
       ]
     },
     {
+      "id": "cocktail",
+      "name": "Cocktail Buffets",
+      "note": "Appetizer spreads for receptions, open houses and parties.",
+      "packages": [
+        {
+          "name": "Small Roll Sandwiches",
+          "with": [
+            "Egg rolls",
+            "Pinwheels",
+            "Stuffed mushroom caps",
+            "Deviled eggs",
+            "Fruit, cheese & veggies",
+            "Spinach artichoke dip",
+            "Mini desserts"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Assorted Wraps",
+          "with": [
+            "Deviled eggs",
+            "Ham & asparagus rolls",
+            "Fresh fruit pizza",
+            "Vegetable relish tray",
+            "Mexican layer dip",
+            "Spinach dip",
+            "Mini desserts"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Assorted Sliders",
+          "with": [
+            "Wings & drummies",
+            "Meatballs",
+            "Stuffed mushroom caps",
+            "Pinwheels",
+            "Deviled eggs",
+            "Fruit, cheese & veggies",
+            "Mexican layer dip",
+            "Cookies & brownies"
+          ],
+          "price": 12
+        },
+        {
+          "name": "Carved Beef & Turkey",
+          "with": [
+            "Rolls & condiments",
+            "Meatballs",
+            "Egg rolls",
+            "Pinwheels",
+            "Fruit, cheese & veggies",
+            "Spinach artichoke dip",
+            "Cream cheese dip",
+            "Mini desserts"
+          ],
+          "price": 16
+        },
+        {
+          "name": "Carved Beef & Turkey with Shrimp",
+          "with": [
+            "Rolls & condiments",
+            "Meatballs",
+            "Wings & drummies",
+            "Bacon-wrapped water chestnuts",
+            "Spiced shrimp",
+            "Fruit, cheese & veggies",
+            "Deviled eggs",
+            "Spinach artichoke dip",
+            "Cream cheese dip",
+            "Mini cheesecakes"
+          ],
+          "price": 19
+        }
+      ]
+    },
+    {
       "id": "dropoff",
       "name": "Drop-off Buffets",
       "note": "Hot and ready in pans, dropped off and set out for you.",
@@ -226,83 +303,6 @@
       "_note_packages": "His guide has two drop-off taco bars ($12 with mini cheesecakes, $13 with cookies); they're one here at $13 until he says otherwise. The $12 Turkey & Ham may be a Thanksgiving price: ask."
     },
     {
-      "id": "cocktail",
-      "name": "Cocktail Buffets",
-      "note": "Appetizer spreads for receptions, open houses and parties.",
-      "packages": [
-        {
-          "name": "Small Roll Sandwiches",
-          "with": [
-            "Egg rolls",
-            "Pinwheels",
-            "Stuffed mushroom caps",
-            "Deviled eggs",
-            "Fruit, cheese & veggies",
-            "Spinach artichoke dip",
-            "Mini desserts"
-          ],
-          "price": 12
-        },
-        {
-          "name": "Assorted Wraps",
-          "with": [
-            "Deviled eggs",
-            "Ham & asparagus rolls",
-            "Fresh fruit pizza",
-            "Vegetable relish tray",
-            "Mexican layer dip",
-            "Spinach dip",
-            "Mini desserts"
-          ],
-          "price": 12
-        },
-        {
-          "name": "Assorted Sliders",
-          "with": [
-            "Wings & drummies",
-            "Meatballs",
-            "Stuffed mushroom caps",
-            "Pinwheels",
-            "Deviled eggs",
-            "Fruit, cheese & veggies",
-            "Mexican layer dip",
-            "Cookies & brownies"
-          ],
-          "price": 12
-        },
-        {
-          "name": "Carved Beef & Turkey",
-          "with": [
-            "Rolls & condiments",
-            "Meatballs",
-            "Egg rolls",
-            "Pinwheels",
-            "Fruit, cheese & veggies",
-            "Spinach artichoke dip",
-            "Cream cheese dip",
-            "Mini desserts"
-          ],
-          "price": 16
-        },
-        {
-          "name": "Carved Beef & Turkey with Shrimp",
-          "with": [
-            "Rolls & condiments",
-            "Meatballs",
-            "Wings & drummies",
-            "Bacon-wrapped water chestnuts",
-            "Spiced shrimp",
-            "Fruit, cheese & veggies",
-            "Deviled eggs",
-            "Spinach artichoke dip",
-            "Cream cheese dip",
-            "Mini cheesecakes"
-          ],
-          "price": 19
-        }
-      ]
-    },
-    {
       "id": "buffets",
       "name": "Buffets",
       "note": "Every buffet comes with rolls & butter and dessert. Choose the sides from the list.",
@@ -374,10 +374,10 @@
         {
           "name": "Smokehouse",
           "with": [
-            "Choose from BBQ beef, pulled pork, smoked sausage, smoked ham or turkey"
+            "Pick 2 meats ($16.00) or 3 ($17.00): BBQ beef, pulled pork, smoked sausage, smoked ham or turkey"
           ],
           "sides": 4,
-          "priceLabel": "Pick 2 $16.00 · Pick 3 $17.00"
+          "priceLabel": "$16.00 / $17.00"
         },
         {
           "name": "BBQ Ribs & BBQ or Fried Chicken",

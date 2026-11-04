@@ -1,5 +1,5 @@
 // The catering guide's packages, numbered and keyed by section, for the
-// printed guide (studio/catering-guide.njk) and /catering's "Bigger events".
+// printed tri-fold (studio/catering-trifold-bw.njk).
 //
 // `catering | cateringGuide` returns { byId, sections } where every package
 // carries `n`, its number on the guide (1, 2, 3… straight down
