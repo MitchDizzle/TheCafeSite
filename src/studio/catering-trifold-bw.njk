@@ -25,7 +25,7 @@ studioOrder: 21
     _data/catering.json. Folded the same way as the menu tri-fold
     (menu-trifold-bw), and the panels are equal thirds like it.
 
-      Sheet 1, outside:  tuck flap | back | front cover
+      Sheet 1, outside:  tuck flap | back (contact) | front cover (how it works)
       Sheet 2, inside:   left | middle | right
 
     Numbers run in reading order: the flap is what opens first, then the
@@ -74,7 +74,7 @@ studioOrder: 21
 
 <div class="cg-stack">
 
-    <p class="fold-legend">Sheet 1 &mdash; outside &middot; <strong>tuck flap</strong> (first thing seen on opening) &middot; <strong>back</strong> &middot; <strong>front cover</strong></p>
+    <p class="fold-legend">Sheet 1 &mdash; outside &middot; <strong>tuck flap</strong> (first thing seen on opening) &middot; <strong>back</strong> (cocktail, contact) &middot; <strong>front cover</strong> (how it works)</p>
     <div class="canvas cg-sheet">
         <div class="fold-line" style="left: 33.333%"></div>
         <div class="fold-line" style="left: 66.667%"></div>
@@ -85,13 +85,28 @@ studioOrder: 21
         </div>
 
         <div class="cg-panel">
-            <section class="cg-how">
-                <h2 class="p-display cg-section-name">How it works</h2>
-                <ul>
-                    {%- for line in catering.howItWorks %}<li>{{ line }}</li>{% endfor %}
-                </ul>
-            </section>
             {{ section(g.byId.cocktail) }}
+            <div class="cg-spacer"></div>
+            <div class="cg-contact">
+                <p class="p-display cg-contact-head">Let&rsquo;s plan your event</p>
+                <p class="cg-contact-phone">{{ site.phone }}</p>
+                <div class="cg-contact-row">
+                    <div class="cg-contact-text">
+                        <p class="cg-contact-label">Email</p>
+                        <p class="cg-contact-line">{{ catering.email }}</p>
+                        <p class="cg-contact-line">{{ site.email }}</p>
+                        <p class="cg-contact-label">Online</p>
+                        <p class="cg-contact-line">{{ site.social.website }}/catering</p>
+                        <p class="cg-contact-line">{{ site.social.facebookHandle }}</p>
+                        <p class="cg-contact-label">Visit</p>
+                        <p class="cg-contact-line">{{ site.address.street }}<br>{{ site.address.locality }}, {{ site.address.region }} {{ site.address.postalCode }}</p>
+                    </div>
+                    <div class="cg-qr-wrap">
+                        <div class="qr cg-qr" aria-hidden="true">{% inlineSvg "/assets/qr-website.svg", "", "" %}</div>
+                        <p class="cg-qr-cap">Scan for our website</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="cg-panel cg-cover">
@@ -99,23 +114,20 @@ studioOrder: 21
                 {% inlineSvg "/assets/thecafe.svg", "", site.name %}
             </div>
             <p class="p-display cg-cover-title">Catering</p>
-            <p class="p-display-italic cg-cover-sub">The Café Catering<br><span class="cg-amp">&amp;</span> {{ catering.brand }}</p>
+            <p class="p-display-italic cg-cover-sub">The Café Catering <span class="cg-amp">&amp;</span> {{ catering.brand }}</p>
             <p class="cg-cover-line">Breakfasts, lunches, buffets and parties, from the kitchen that has cooked for Leavenworth since 2005.</p>
             <ul class="cg-cover-inside">
                 {%- for s in g.sections %}<li><span>{{ s.name }}</span><span>from {{ s.from | money }}</span></li>{% endfor %}
             </ul>
             <p class="cg-cover-per">per person</p>
+            <section class="cg-how">
+                <h2 class="p-display cg-section-name">How it works</h2>
+                <ul>
+                    {%- for line in catering.howItWorks %}<li>{{ line }}</li>{% endfor %}
+                </ul>
+            </section>
             <div class="cg-spacer"></div>
-            <div class="cg-contact">
-                <div class="cg-contact-text">
-                    <p class="cg-contact-phone">{{ site.phone }}</p>
-                    <p class="cg-contact-line">{{ catering.email }}</p>
-                    <p class="cg-contact-line">{{ site.email }}</p>
-                    <p class="cg-contact-line">{{ site.social.website }}/catering</p>
-                    <p class="cg-contact-line">{{ site.address.street }}, {{ site.address.locality }}</p>
-                </div>
-                <div class="qr cg-qr" aria-hidden="true">{% inlineSvg "/assets/qr-website.svg", "", "" %}</div>
-            </div>
+            <p class="cg-cover-contact"><strong>{{ site.phone }}</strong><br>{{ catering.email }} &middot; {{ site.email }}</p>
         </div>
     </div>
 

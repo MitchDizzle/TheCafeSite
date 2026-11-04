@@ -192,43 +192,43 @@
 }
 
 .cg-wordmark {
-    --mark-w: 2.5in;
+    --mark-w: 2.4in;
     /* No shadow in one ink: white letters, black outline. */
     --mark-shadow-color: transparent;
-    margin-top: 0.12in;
+    margin-top: 0.04in;
 }
 
 .cg-cover-title {
     font-size: 0.5in;
-    margin-top: 0.2in;
+    margin-top: 0.14in;
 }
 
 .cg-cover-sub {
-    font-size: 0.21in;
+    font-size: 0.17in;
     line-height: 1.25;
-    margin-top: 0.06in;
+    margin-top: 0.04in;
 }
 
 .cg-cover-line {
     font-size: 0.115in;
     line-height: 1.4;
-    margin-top: 0.14in;
+    margin-top: 0.1in;
     max-width: 2.7in;
 }
 
 .cg-cover-inside {
     list-style: none;
     width: 100%;
-    margin-top: 0.2in;
+    margin-top: 0.14in;
     border-top: 1px solid #000;
-    font-size: 0.12in;
+    font-size: 0.11in;
 }
 
 .cg-cover-inside li {
     display: flex;
     justify-content: space-between;
     border-bottom: 1px dotted #999;
-    padding: 0.04in 0.02in;
+    padding: 0.025in 0.02in;
 }
 
 .cg-cover-inside li span:first-child { font-weight: 700; }
@@ -241,30 +241,69 @@
 }
 
 .cg-contact {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 0.14in;
-    text-align: left;
     border: 1.5px solid #000;
-    padding: 0.1in 0.12in;
+    padding: 0.12in 0.14in 0.14in;
+}
+
+.cg-contact-head {
+    font-size: 0.19in;
+}
+
+.cg-contact-phone {
+    font-size: 0.24in;
+    font-weight: 900;
+    margin-top: 0.03in;
+}
+
+.cg-contact-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.14in;
+    margin-top: 0.04in;
 }
 
 .cg-contact-text { flex: 1; }
 
-.cg-contact-phone {
-    font-size: 0.2in;
-    font-weight: 900;
+.cg-contact-label {
+    font-size: 0.08in;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-top: 0.07in;
 }
 
 .cg-contact-line {
+    font-size: 0.105in;
+    line-height: 1.4;
+}
+
+.cg-qr-wrap { text-align: center; }
+
+.cg-qr {
+    width: 1in;
+    padding: 0.05in;
+}
+
+.cg-qr-cap {
+    font-size: 0.075in;
+    margin-top: 0.02in;
+}
+
+/* The cover's contact: one small line, the full block is on the back. */
+.cg-cover-contact {
     font-size: 0.1in;
     line-height: 1.45;
 }
 
-.cg-qr {
-    width: 0.8in;
-    padding: 0.05in;
+.cg-cover-contact strong {
+    font-size: 0.15in;
+    font-weight: 900;
+}
+
+.cg-cover .cg-how {
+    width: 100%;
+    text-align: left;
+    margin-top: 0.14in;
 }
 
 /* ── Proofing furniture (as the menu tri-fold) ────────────── */
