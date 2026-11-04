@@ -6,6 +6,7 @@ const { MOCK, MUTE, cfg } = require("./config");
 const { fetchOrders } = require("./square");
 const { live } = require("./live");
 const { bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, autoOff, readySince, state, saveState } = require("./state");
+const { splitAdded } = require("./addons");
 const { toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
 const { withMockStates } = require("./square-status");
 const { statsToday, recordHistory } = require("./stats");
@@ -26,7 +27,8 @@ function undoList(map, plates) {
     .map((id) => {
       const t = byId.get(id);
       const first = t.items[0] || t.front[0];
-      return { id, label: plates && !bumped[id] ? `${t.label} plates` : t.label, main: first ? first.name : "", at: map[id] };
+      const name = t.addOn ? `${t.label} (added)` : t.label;
+      return { id, label: plates && !bumped[id] ? `${name} plates` : name, main: first ? first.name : "", at: map[id] };
     });
 }
 
@@ -103,13 +105,23 @@ async function pollOnce() {
     const seen = new Set();
     live.all = [];
     live.rejected = [];
+    let linesChanged = false;
     for (const o of orders) {
       if (seen.has(o.id)) continue;
       seen.add(o.id);
       const { ticket, reason } = toTicket(o);
       if (ticket) {
         if (isDemo(o.id)) ticket.demo = true;
-        live.all.push(ticket);
+        // Items added after the kitchen had it come up as cards of their own.
+        const split = splitAdded(o, ticket);
+        if (split.changed) linesChanged = true;
+        for (const t of split.tickets) {
+          if (t.addOn && !logged.has(t.id)) {
+            logged.add(t.id);
+            console.log(`${new Date().toLocaleTimeString()}  order ...${o.id.slice(-4)} (${t.label}): items added, on the board as a card of their own`);
+          }
+          live.all.push(t);
+        }
       } else live.rejected.push({ order: o, reason });
       if (!logged.has(o.id) && !isDemo(o.id)) {
         logged.add(o.id);
@@ -120,6 +132,7 @@ async function pollOnce() {
         );
       }
     }
+    if (linesChanged) saveState();
     markSameTable(live.all);
     live.lastOkAt = new Date().toISOString();
     if (live.lastError) console.log("Square connection restored");

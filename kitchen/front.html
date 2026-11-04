@@ -100,6 +100,8 @@
   .alert.demo-banner { background: #E7D9F3; color: #3D1A5C; }
   .demo-tag { display: inline-block; padding: 0 0.4rem; margin-right: 0.4rem; border-radius: 0.25rem; background: #E7D9F3; color: #5B2A86; font-weight: 900; }
   .order.demo { border-style: dashed; }
+  /* Items added to an order the kitchen already had: their own card. */
+  .added-tag { display: inline-block; padding: 0 0.35rem; margin-left: 0.3rem; border-radius: 0.25rem; background: #D7F3F1; color: #0E2A33; font-size: 0.85em; font-weight: 900; white-space: nowrap; }
 
   .dining { display: inline-block; padding: 0 0.35rem; border-radius: 0.25rem; background: var(--teal-dark); color: var(--cream); }
   .dining.here { background: transparent; color: var(--teal-dark); border: 1.5px solid var(--teal-dark); }
@@ -431,7 +433,7 @@
     return `
       <article class="order ${ready ? "ready" : "cooking"}${o.unpaid ? " unpaid" : ""}${o.demo ? " demo" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
         <header>
-          <span><span class="name">${esc(label(o))}${o.tableOf ? ` <span class="dining here">${o.tableOf.n} of ${o.tableOf.of}</span>` : ""}</span><span class="kind">${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${o.test ? '<span class="test-tag">TEST</span>' : ""}${esc(kindLabel(o))}${diningHtml(o)}</span></span>
+          <span><span class="name">${esc(label(o))}${o.tableOf ? ` <span class="dining here">${o.tableOf.n} of ${o.tableOf.of}</span>` : ""}${o.addOn ? '<span class="added-tag">+ added</span>' : ""}</span><span class="kind">${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${o.test ? '<span class="test-tag">TEST</span>' : ""}${esc(kindLabel(o))}${diningHtml(o)}</span></span>
           <span class="status" data-status></span>
         </header>
         ${o.unpaid ? `<div class="section unpaid-band">Not paid${o.due ? `: $${o.due.toFixed(2)} due` : ""}

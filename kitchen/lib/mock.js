@@ -155,8 +155,14 @@ function mockOrders() {
     source: { name: "Point of Sale" },
     net_amount_due_money: { amount: 1200, currency: "USD" },
     fulfillments: [{ type: "PICKUP", state: "PROPOSED", pickup_details: { schedule_type: "ASAP" } }],
-    line_items: [li(1, "Breakfast Burrito")],
+    line_items: [li(1, "Breakfast Burrito", { uid: "T1" })],
   });
+  // Tammy comes in and adds to her order before paying: a minute and a half
+  // in, a cheeseburger and a drink join the same order. The burger comes up
+  // as a card of its own (lib/addons.js); the drink stays on the front's list.
+  if (Date.now() - mockStart > 90000) {
+    orders[orders.length - 1].line_items.push(li(1, "Cheeseburger", { uid: "T2", modifiers: [{ name: "No pickle" }] }), li(1, "Iced Tea / Fountain Drink", { uid: "T3" }));
+  }
   // A new counter order every 45 seconds, so the chime can be heard.
   const extra = Math.floor((Date.now() - mockStart) / 45000);
   for (let i = 0; i < Math.min(extra, 6); i++) {

@@ -370,7 +370,8 @@ function markSameTable(list) {
   const byTable = new Map();
   for (const t of list) {
     delete t.tableOf;
-    if (!t.table || canceled[t.id]) continue;
+    // Items added to an order (lib/addons.js) are that order's, not another table's.
+    if (!t.table || canceled[t.id] || t.addOn) continue;
     if (!byTable.has(t.table)) byTable.set(t.table, []);
     byTable.get(t.table).push(t);
   }
