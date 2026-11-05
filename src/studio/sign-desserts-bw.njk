@@ -8,6 +8,9 @@ pageCss: "/assets/css/studio/sign.css"
 bw: true
 skipDesserts: ["Dessert Bar", "Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"]
 skipKinds: ["Triple Chocolate Chip (2)"]
+signNames:
+  "M&M Brown Butter Chocolate Chip (2)": "M&M Cookies (2)"
+  "Triple Chocolate Chip (2)": "Triple Chocolate Cookies (2)"
 tags: studio
 studioData: ["desserts.json"]
 studioTitle: "Dessert fridge sign — black & white"
@@ -32,7 +35,9 @@ studioOrder: 32
     a taped-up sign comes down). `skipKinds` leaves single kinds off by
     their name in Square, for one Square still counts that isn't in the
     fridge (client 2026-11-05: only the M&M cookies, not the Triple
-    Chocolate Chip). If you find yourself typing a
+    Chocolate Chip). `signNames` gives a kind whose Square name is too
+    long for the sign a shorter one (client 2026-11-05: the cookies); the
+    price is still Square's. If you find yourself typing a
     dessert or a price here, stop. -#}
 <div class="canvas sign sign--bw fd">
     <div class="sign-heading">
@@ -49,7 +54,7 @@ studioOrder: 32
         {%- if k.name not in skipKinds %}
         <li class="sign-row">
             <div class="sign-row-head">
-                <span class="sign-row-name">{{ k.name }}</span>
+                <span class="sign-row-name">{{ signNames[k.name] or k.name }}</span>
                 <span class="sign-row-fill" aria-hidden="true"></span>
                 <span class="sign-row-price">{{ item.price | money }}</span>
             </div>
