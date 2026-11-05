@@ -6,7 +6,7 @@ canvasH: "11in"
 pageSize: "8.5in 11in"
 pageCss: "/assets/css/studio/sign.css"
 bw: true
-skipDesserts: ["Dessert Bar", "Cheesecake"]
+skipDesserts: ["Dessert Bar", "Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"]
 tags: studio
 studioData: ["desserts.json"]
 studioTitle: "Dessert fridge sign — black & white"
@@ -26,7 +26,9 @@ studioOrder: 32
     `skipDesserts` above leaves whole items off: the bars have their own
     sign (sign-dessert-bars-bw.njk), and Cheesecake is off while the cafe
     is out of it (client 2026-10-29: only Plain is counted in Square, so
-    the count alone wouldn't drop it). If you find yourself typing a
+    the count alone wouldn't drop it). Cinnamon Roll and Pecan Sticky Bun
+    are off too (client 2026-11-04: only a few cinnamon rolls, gone before
+    a taped-up sign comes down). If you find yourself typing a
     dessert or a price here, stop. -#}
 <div class="canvas sign sign--bw fd">
     <div class="sign-heading">
@@ -34,7 +36,9 @@ studioOrder: 32
     </div>
 
     <ul class="sign-rows fd-rows">
-        {%- for item in desserts.items %}
+        {#- Dearest first, so the $1.50 cookies go to the bottom (client
+            2026-11-04); same price keeps Square's order. #}
+        {%- for item in desserts.items | sort(true, false, "price") %}
         {%- if item.name not in skipDesserts %}
         {%- set kinds = item.kinds | rejectattr("out") %}
         {%- for k in kinds %}

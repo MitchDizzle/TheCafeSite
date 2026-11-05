@@ -89,6 +89,9 @@ module.exports = function (eleventyConfig) {
   // Monday to Friday of a date's week, for the closed post and door sign.
   eleventyConfig.addFilter("workWeek", require("./src/_lib/specials-caption.js").workWeek);
 
+  // The catering guide numbered and grouped: see _lib/catering.js.
+  eleventyConfig.addFilter("cateringGuide", require("./src/_lib/catering.js").cateringGuide);
+
   // Narrow a list to the items whose `key` equals `value`.
   //
   // Nunjucks 3.2 ships a selectattr, but it IGNORES its test arguments and

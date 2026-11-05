@@ -65,6 +65,11 @@ const byHand = {};
 const markedDone = {};
 const autoOff = new Set(); // ids cleared by autoHandoff, so Undo can say so
 const readySince = {}; // orderId -> ms first seen ready, for autoHandoff (not saved)
+// orderId -> { at, lines: { lineUid: qty }, added: [{ at, lines }] }: a
+// counter order's kitchen items as they were when the board first showed it,
+// and each lot added to the order since (a phone order the customer adds to
+// at the counter before paying). Each lot is a card of its own: lib/addons.js.
+const kitchenLines = {};
 
 const state = {
   // What the kitchen never makes: item names and whole Square categories.
@@ -94,6 +99,7 @@ function loadState() {
     Object.assign(markedReady, saved.markedReady || {});
     Object.assign(byHand, saved.byHand || {});
     Object.assign(markedDone, saved.markedDone || {});
+    Object.assign(kitchenLines, saved.kitchenLines || {});
     state.skipEdited = !!saved.skip;
     state.skip = saved.skip || { items: cfg.skipItems, categories: [] };
     state.undoFloor = saved.undoFloor || null;
@@ -113,10 +119,10 @@ function saveState() {
       if (Date.parse(at) < cutoff) delete map[id];
     }
   }
-  for (const [id, o] of Object.entries(offBoard)) if (Date.parse(o.at) < cutoff) delete offBoard[id];
+  for (const map of [offBoard, kitchenLines]) for (const [id, o] of Object.entries(map)) if (Date.parse(o.at) < cutoff) delete map[id];
   // Demo tickets are practice: never written down, gone when the demo ends.
   const real = (map) => Object.fromEntries(Object.entries(map).filter(([id]) => !isDemo(id)));
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), platesDone: real(platesDone), handedOff: real(handedOff), canceled: real(canceled), sentNow: real(sentNow), keepOnFront: real(keepOnFront), markedReady: real(markedReady), byHand: real(byHand), markedDone: real(markedDone), skip: state.skipEdited ? state.skip : undefined, undoFloor: state.undoFloor, statsFloor: state.statsFloor }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), platesDone: real(platesDone), handedOff: real(handedOff), canceled: real(canceled), sentNow: real(sentNow), keepOnFront: real(keepOnFront), markedReady: real(markedReady), byHand: real(byHand), markedDone: real(markedDone), kitchenLines: real(kitchenLines), skip: state.skipEdited ? state.skip : undefined, undoFloor: state.undoFloor, statsFloor: state.statsFloor }, null, 2));
 }
 
 loadState();
@@ -135,6 +141,6 @@ setSkip(state.skip);
 const skipSummary = () => [...state.skip.categories.map((c) => `all of ${c}`), ...state.skip.items].join(", ") || "nothing";
 
 module.exports = {
-  bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, markedReady, byHand, markedDone, autoOff, readySince,
+  bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, markedReady, byHand, markedDone, autoOff, readySince, kitchenLines,
   state, bump, unbump, saveState, setSkip, skipSets, skipSummary,
 };

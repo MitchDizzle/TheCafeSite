@@ -73,12 +73,36 @@ const MIME = {
 };
 
 /**
+ * Removes a throwaway Chrome profile. Chrome's helper processes can still be
+ * writing to it for a moment after the main one exits (ENOTEMPTY on Windows),
+ * so retry, and if it still won't go, leave it in the temp folder rather than
+ * fail the export over a scratch directory.
+ */
+function removeProfile(dir) {
+  try {
+    fs.rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  } catch (err) {
+    console.warn(`  (left temp profile ${dir}: ${err.code})`);
+  }
+}
+
+/**
  * CI runs as a user whose namespace sandbox Chrome cannot set up, so headless
  * dies on start with no useful message. Only on CI: locally the sandbox costs
  * nothing and there is no reason to drop it.
  */
 function sandboxArgs() {
   return process.env.CI ? ["--no-sandbox", "--disable-dev-shm-usage"] : [];
+}
+
+/**
+ * Edge on Windows can hand itself off to a relaunched copy on start (its
+ * compatibility layer; seen 2026-11-04 after an update) and exit at once, so
+ * the export saw it quit before the screenshot and every piece FAILED. This
+ * flag keeps it in the one process. Chrome doesn't need it.
+ */
+function browserArgs(browser) {
+  return /msedge/i.test(browser) ? ["--edge-skip-compat-layer-relaunch"] : [];
 }
 
 function findBrowser() {
@@ -151,6 +175,7 @@ function shoot(browser, url, outFile, width, height, scale) {
       "--hide-scrollbars",
       "--disable-gpu",
       ...sandboxArgs(),
+      ...browserArgs(browser),
       // Give the Google Fonts request time to land before the shutter; without
       // it the type falls back and the export is silently wrong.
       "--virtual-time-budget=10000",
@@ -161,7 +186,7 @@ function shoot(browser, url, outFile, width, height, scale) {
     const child = spawn(browser, args, { stdio: "ignore" });
     child.on("error", reject);
     child.on("exit", () => {
-      fs.rmSync(profile, { recursive: true, force: true });
+      removeProfile(profile);
       resolve(fs.existsSync(outFile));
     });
   });
@@ -191,6 +216,7 @@ function printPdf(browser, url, outFile) {
       "--no-pdf-header-footer",
       "--disable-gpu",
       ...sandboxArgs(),
+      ...browserArgs(browser),
       // Same reason as the screenshot path: without it the Google Fonts
       // request has not landed and the type falls back silently.
       "--virtual-time-budget=10000",
@@ -201,7 +227,7 @@ function printPdf(browser, url, outFile) {
     const child = spawn(browser, args, { stdio: "ignore" });
     child.on("error", reject);
     child.on("exit", () => {
-      fs.rmSync(profile, { recursive: true, force: true });
+      removeProfile(profile);
       resolve(fs.existsSync(outFile));
     });
   });
