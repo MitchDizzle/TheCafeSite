@@ -112,6 +112,287 @@
       "title": "Strawberry Chicken Salad",
       "alt": "Strawberry chicken salad in a clear to-go container: greens topped with diced chicken, sliced strawberries, tomato and shredded parmesan, with two cups of dressing on the side.",
       "date": "2026-10-07"
+    },
+    {
+      "file": "/assets/photos/chicken-parm-sandwich-3.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Chicken Parm Sandwich",
+      "description": "Served with cheesy potatoes",
+      "includesDrink": true,
+      "alt": "Chicken parm sandwich open on a bun, the breaded chicken under marinara and shredded parmesan, with cheesy hash browns and a pickle spear on a white plate.",
+      "date": "2026-10-08"
+    },
+    {
+      "file": "/assets/photos/meatloaf.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Meatloaf",
+      "description": "Served with mashed potatoes & gravy and green beans",
+      "includesDrink": true,
+      "alt": "Two slices of meatloaf in brown gravy with mashed potatoes and gravy, green beans and a dinner roll on a white plate.",
+      "date": "2026-10-09"
+    },
+    {
+      "file": "/assets/photos/lasagna.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Lasagna",
+      "description": "Served with tossed salad or cooked broccoli",
+      "includesDrink": true,
+      "alt": "A square of beef lasagna with melted cheese and a breadstick on a white plate, with a side in a paper cup.",
+      "date": "2026-10-12"
+    },
+    {
+      "file": "/assets/photos/build-your-own-sandwich.jpg",
+      "item": "Build Your Own Sandwich",
+      "special": false,
+      "variant": null,
+      "title": "Build Your Own Sandwich",
+      "description": "Pick your meats (the curry chicken, walnut tuna and egg salads count as a meat), a cheese and a bread. Served with lettuce, tomato, pickle & onion",
+      "alt": "A sandwich of ham, bacon, cheese and lettuce on toasted white bread, on a white plate beside a cup of soup.",
+      "date": "2026-10-12"
+    },
+    {
+      "file": "/assets/photos/fried-potatoes.jpg",
+      "item": "Fried Potatoes",
+      "special": false,
+      "variant": null,
+      "title": "Fried Potatoes",
+      "description": "* photo not accurate to actual serving size",
+      "alt": "A heaped bowl of skillet-fried potatoes, browned and crisp at the edges.",
+      "date": "2026-10-12"
+    },
+    {
+      "file": "/assets/photos/asian-chicken-wrap-2.jpg",
+      "item": "Asian Chicken Wrap",
+      "special": false,
+      "variant": null,
+      "title": "Asian Chicken Wrap",
+      "description": "Chicken, greens, tomato, almonds & sesame dressing. On a flour (white) tortilla, or choose spinach or tomato wrap",
+      "alt": "Asian chicken wrap cut in half to show the chicken, lettuce and sauce, with a pickle spear on a white plate.",
+      "date": "2026-10-13"
+    },
+    {
+      "file": "/assets/photos/chicken-fried-chicken.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Chicken Fried Chicken",
+      "description": "Served with mashed potatoes & white gravy and corn",
+      "includesDrink": true,
+      "alt": "Chicken fried chicken under white pepper gravy with mashed potatoes and corn, and a dinner roll with butter on the side.",
+      "date": "2026-10-14"
+    },
+    {
+      "file": "/assets/photos/sausage-and-kraut.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Sausage & Kraut",
+      "description": "Served with cheesy potatoes",
+      "includesDrink": true,
+      "alt": "A smoked sausage under sauerkraut with hash browns and a dinner roll on a white plate.",
+      "date": "2026-10-15"
+    },
+    {
+      "file": "/assets/photos/cream-puffs.jpg",
+      "item": "Cream Puffs",
+      "special": false,
+      "variant": null,
+      "title": "Cream Puffs",
+      "description": "$3 - Baked Fresh, limited supply",
+      "alt": "Cream puffs dusted with powdered sugar in clear to-go boxes, stacked on the shelves of the dessert fridge.",
+      "date": "2026-10-19"
+    },
+    {
+      "file": "/assets/photos/ham-steak.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Ham Steak",
+      "description": "Served with sweet potatoes, peas and carrots",
+      "includesDrink": true,
+      "alt": "A thick slice of ham steak with sweet potatoes, peas and carrots, and a dinner roll with butter on a white plate.",
+      "date": "2026-10-19"
+    },
+    {
+      "file": "/assets/photos/chicken-bacon-avocado-wrap.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Chicken Bacon Avocado Wrap",
+      "description": "Served with cheesy potatoes",
+      "includesDrink": true,
+      "alt": "Chicken bacon avocado wrap cut in half on a white plate, with a cup of soup behind it.",
+      "date": "2026-10-20"
+    },
+    {
+      "file": "/assets/photos/cheesecake.jpg",
+      "item": "Cheesecake",
+      "special": false,
+      "variant": null,
+      "title": "Cheesecake",
+      "description": "Pumpkin, Plain, Chocolate Syrup, Caramel Syrup",
+      "alt": "A slice of pumpkin swirl cheesecake in an open clear to-go box.",
+      "date": "2026-10-21"
+    },
+    {
+      "file": "/assets/photos/hot-beef-sandwich.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Hot Beef Sandwich",
+      "description": "Served with mashed potatoes & brown gravy and corn",
+      "includesDrink": true,
+      "alt": "Hot beef sandwich: roast beef between slices of white bread under brown gravy, with mashed potatoes and corn on a white plate.",
+      "date": "2026-10-21"
+    },
+    {
+      "file": "/assets/photos/hawaiian-chicken.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Hawaiian Chicken",
+      "description": "Served with wild rice and broccoli",
+      "includesDrink": true,
+      "alt": "Hawaiian chicken under a sweet orange glaze with pineapple, rice pilaf, broccoli and a dinner roll on a white plate.",
+      "date": "2026-10-22"
+    },
+    {
+      "file": "/assets/photos/cabbage-roll.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Cabbage Roll",
+      "description": "Served with potatoes, green beans, and homestyle roll",
+      "includesDrink": true,
+      "alt": "A cabbage roll topped with tomato sauce, with green beans, boiled potatoes and a biscuit on a white plate.",
+      "date": "2026-10-23"
+    },
+    {
+      "file": "/assets/photos/spaghetti-and-meatballs.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Spaghetti & Meatballs",
+      "description": "Served with Garlic Bread, and a Tossed Salad.",
+      "includesDrink": true,
+      "alt": "Spaghetti and meatballs in marinara topped with shredded parmesan, with a slice of garlic toast on a white plate.",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "/assets/photos/meringue-chocolate-pie.jpg",
+      "item": "Meringue Chocolate Pie",
+      "special": false,
+      "variant": null,
+      "title": "Meringue Chocolate Pie",
+      "alt": "A slice of chocolate meringue pie in an open clear to-go box.",
+      "date": "2026-10-27"
+    },
+    {
+      "file": "/assets/photos/cream-puffs-2.jpg",
+      "item": "Cream Puffs",
+      "special": false,
+      "variant": null,
+      "title": "Cream Puffs",
+      "description": "Regular or Chocolate!",
+      "alt": "A cream puff dusted with powdered sugar and filled with cream, on a small white plate.",
+      "date": "2026-10-27"
+    },
+    {
+      "file": "/assets/photos/pork-tenderloin-sandwich.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Pork Tenderloin Sandwich",
+      "description": "Served with twice baked potato casserole",
+      "includesDrink": true,
+      "alt": "A breaded pork tenderloin on a bun with lettuce, tomato, red onion and pickles, and cheesy mashed potatoes on a white plate.",
+      "date": "2026-10-27"
+    },
+    {
+      "file": "/assets/photos/cheesy-steak-sandwich.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Cheesy Steak Sandwich",
+      "description": "Served with oven browned potatoes",
+      "includesDrink": true,
+      "alt": "A steak sandwich on a hoagie roll covered in melted cheese, with roasted potato rounds and a pickle spear on a white plate.",
+      "date": "2026-10-29"
+    },
+    {
+      "file": "/assets/photos/cinnamon-roll.jpg",
+      "item": "Cinnamon Roll",
+      "special": false,
+      "variant": null,
+      "title": "Cinnamon Roll",
+      "alt": "A glazed cinnamon roll in an open clear to-go box.",
+      "date": "2026-10-30"
+    },
+    {
+      "file": "/assets/photos/pecan-sticky-bun.jpg",
+      "item": "Pecan Sticky Bun",
+      "special": false,
+      "variant": null,
+      "title": "Pecan Sticky Bun",
+      "alt": "A pecan sticky bun drizzled with icing in an open clear to-go box.",
+      "date": "2026-10-30"
+    },
+    {
+      "file": "/assets/photos/kahlua-chicken.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Kahlua Chicken",
+      "description": "Served with wild rice and veggies",
+      "includesDrink": true,
+      "alt": "Kahlua chicken in a creamy mushroom sauce with rice pilaf, mixed vegetables and a dinner roll on a white plate.",
+      "date": "2026-11-02"
+    },
+    {
+      "file": "/assets/photos/macho-nachos.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Macho Nachos",
+      "includesDrink": true,
+      "alt": "Macho nachos in a to-go box: tortilla chips under cheese sauce, seasoned beef, beans, tomatoes, black olives and jalapeños, with cups of salsa and sour cream.",
+      "date": "2026-11-03"
+    },
+    {
+      "file": "/assets/photos/banana-pudding.jpg",
+      "item": "Banana Pudding",
+      "special": false,
+      "variant": null,
+      "title": "Banana Pudding",
+      "alt": "Banana pudding topped with vanilla wafers in an open clear to-go box.",
+      "date": "2026-11-04"
+    },
+    {
+      "file": "/assets/photos/strawberry-trifle.jpg",
+      "item": "Strawberry Trifle",
+      "special": false,
+      "variant": null,
+      "title": "Strawberry Trifle",
+      "description": "Cake, cream, and strawberries",
+      "alt": "Strawberry trifle in an open clear to-go box: cubes of cake under custard and sliced strawberries.",
+      "date": "2026-11-04"
+    },
+    {
+      "file": "/assets/photos/stuffed-pork-chop.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "Stuffed Pork Chop",
+      "description": "Served with scalloped potatoes and green beans",
+      "includesDrink": true,
+      "alt": "A stuffed pork chop with green beans, scalloped potatoes and a dinner roll with butter on a white plate.",
+      "date": "2026-11-04"
     }
   ]
 }
