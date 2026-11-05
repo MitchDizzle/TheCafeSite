@@ -511,3 +511,19 @@ test("a For Here ticket with items to go takes two Dones: plates first, then the
   unbump(t.id);
   assert.ok(!board.platesDone[t.id]);
 });
+
+test("a plate that is one of two shows the one picked, not its long name", () => {
+  const plate = "Cranberry Chicken or Ham Salad Croissant";
+  const t = toTicket(counter({ line_items: [
+    li(1, "Lunch Special", { variation_name: plate, modifiers: [{ name: "Cranberry Ham Salad" }, { name: "On Wheat" }, { name: "Potato Salad" }] }),
+    li(1, "Lunch Special", { variation_name: plate, modifiers: [{ name: "Potato Salad" }] }),
+    li(1, "Lunch Special", { variation_name: "BBQ Ribs", modifiers: [{ name: "No Onion" }] }),
+  ] })).ticket;
+  assert.equal(t.items[0].variation, "Cranberry Ham Salad");
+  assert.deepEqual(t.items[0].mods, ["On Wheat", "Potato Salad"]);
+  assert.equal(t.items[1].variation, plate, "none picked: the long name stays, so the cook asks");
+  assert.equal(t.items[2].variation, "BBQ Ribs");
+  assert.deepEqual(t.items[2].mods, ["No Onion"]);
+  const other = toTicket(counter({ line_items: [li(1, "Breakfast Sandwich", { variation_name: "Ham or Bacon", modifiers: [{ name: "Ham" }] })] })).ticket;
+  assert.equal(other.items[0].variation, "Ham or Bacon", "only the daily items");
+});

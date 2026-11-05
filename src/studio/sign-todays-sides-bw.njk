@@ -6,14 +6,14 @@ canvasH: "11in"
 pageSize: "8.5in 11in"
 pageCss: "/assets/css/studio/sign.css"
 bw: true
-sidesDate: "2026-11-04"
+sidesDate: "2026-11-05"
 tags: studio
 studioWeekly: true
 studioData: ["specials.json"]
 studioTitle: "Today's special sides — black & white"
 studioCategory: "Signs"
 studioSize: "8.5 × 11 in portrait · letter stand-up sign holder"
-studioNote: "A one-day counter sign for a special's sides: a pick of two (2026-10-29: Oven Browned Potatoes or Twice Baked Potato Casserole), or two that both come with the plate and can be doubled up (2026-10-30: Mac & Cheese and Baked Beans; 2026-11-04: Scalloped Potatoes and Green Beans), each also sold separately."
+studioNote: "A one-day counter sign for a special's sides: a pick of two (2026-10-29: Oven Browned Potatoes or Twice Baked Potato Casserole), or two that both come with the plate and can be doubled up (2026-10-30: Mac & Cheese and Baked Beans; 2026-11-04: Scalloped Potatoes and Green Beans), each also sold separately. A plate that is one of two (2026-11-05: Cranberry Chicken Salad or Cranberry Ham Salad Croissant, any bread) shows the two to pick from and the breads, with the regular sides under them."
 studioW: 816
 studioH: 1056
 studioOrder: 34
@@ -33,17 +33,43 @@ studioOrder: 34
     The regular sides box is the Deli Salads (menu.json) and the soup, the
     same swap list as Lunch Special's Side 1 in Square. No logo (client
     2026-10-29: it stands on the counter, so the name is redundant there);
-    the room it took goes to bigger type. -#}
+    the room it took goes to bigger type.
+    A plate that is one of two (client 2026-11-05: Cranberry Chicken Salad
+    or Cranberry Ham Salad on a croissant or any bread) is read from the
+    day's `modifiers` the way the kitchen board reads them (versionsOf,
+    breadsOf): the sign is then "Today's Special", the two in the boxes, the
+    breads under them, and the regular sides below (a choice-of-side day). -#}
 {%- set d = (specials.days | where("date", sidesDate))[0] %}
 {%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
 {%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
-{%- set both = d and d.sides.length > 1 %}
-<div class="canvas sign sign--bw ts{% if both %} ts--both{% endif %}">
+{%- set both = d and d.sides and d.sides.length > 1 %}
+{%- set versions = (d | versionsOf) if d else [] %}
+{%- set breads = (d | breadsOf) if d else [] %}
+{%- set ownBread = (d | plateRest) if (d and versions.length) else "" %}
+<div class="canvas sign sign--bw ts{% if both %} ts--both{% endif %}{% if versions.length %} ts--versions{% endif %}">
     <div class="sign-heading">
-        <h2 class="p-display sign-heading-title">Today&rsquo;s Special Sides</h2>
+        <h2 class="p-display sign-heading-title">Today&rsquo;s Special{% if not versions.length %} Sides{% endif %}</h2>
     </div>
 
-    {%- if d %}
+    {%- if d and versions.length %}
+    <p class="ts-one">Pick <strong>one</strong>:</p>
+    <div class="ts-picks">
+        {%- for v in versions %}
+        {%- if not loop.first %}
+        <p class="ts-or">or</p>
+        {%- endif %}
+        <p class="p-display ts-pick">{{ v }}</p>
+        {%- endfor %}
+    </div>
+    {%- if breads.length %}
+    <p class="ts-more">{% if ownBread %}On a {{ ownBread | lower }}, or any bread:{% else %}On any bread:{% endif %}</p>
+    <p class="ts-breads">{{ breads | join(" · ") }}</p>
+    {%- elif ownBread %}
+    <p class="ts-more">On a {{ ownBread | lower }}</p>
+    {%- endif %}
+    {%- elif d and d.anySide %}
+    <p class="p-display ts-plate">{{ d.special }}</p>
+    {%- elif d %}
     <p class="p-display ts-plate">{{ d.special }}</p>
     {%- if both %}
     <p class="ts-one">comes with <strong>both</strong> sides:</p>
@@ -68,7 +94,7 @@ studioOrder: 34
     <div class="sign-spacer"></div>
     {%- if deli %}
     <section class="sw-choice ts-regular">
-        <p class="p-display sw-choice-title">{% if both %}Or swap a side for any of these{% else %}Or any of our regular sides{% endif %}</p>
+        <p class="p-display sw-choice-title">{% if d and d.anySide %}Comes with one side. Pick from:{% elif both %}Or swap a side for any of these{% else %}Or any of our regular sides{% endif %}</p>
         <ul class="sw-choices">
             {%- for c in deli.choices %}
             <li>{{ c }}</li>

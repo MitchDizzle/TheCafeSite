@@ -88,6 +88,11 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addFilter("distinctBy", require("./src/_lib/specials-caption.js").distinctBy);
   // Monday to Friday of a date's week, for the closed post and door sign.
   eleventyConfig.addFilter("workWeek", require("./src/_lib/specials-caption.js").workWeek);
+  // A plate that is one of two, and the other breads it comes on: its
+  // Specials Modifiers as the kitchen board reads them (_lib/specials-caption.js).
+  eleventyConfig.addFilter("versionsOf", require("./src/_lib/specials-caption.js").versionsOf);
+  eleventyConfig.addFilter("breadsOf", require("./src/_lib/specials-caption.js").breadsOf);
+  eleventyConfig.addFilter("plateRest", require("./src/_lib/specials-caption.js").plateRest);
 
   // The catering guide numbered and grouped: see _lib/catering.js.
   eleventyConfig.addFilter("cateringGuide", require("./src/_lib/catering.js").cateringGuide);

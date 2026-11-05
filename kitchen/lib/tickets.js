@@ -18,6 +18,22 @@ const GONE_FULFILLMENT = new Set(["COMPLETED", "CANCELED", "FAILED"]);
 const NOT_FOOD = new Set(["GIFT_CARD", "CUSTOM_AMOUNT"]);
 
 const itemName = (li) => li.name || li.note || "Custom amount";
+
+// A plate that is one of two ("Cranberry Chicken or Ham Salad Croissant")
+// with the one picked as a Specials Modifier ("Cranberry Ham Salad"): the
+// ticket shows the one picked in place of the plate's long name (client
+// 2026-11-05). The rule is the website's, so the signs pick out the same ones.
+let isVersion;
+try {
+  ({ isVersion } = require("../../src/_lib/specials-caption.js"));
+} catch {
+  isVersion = () => false; // a board copied without the website beside it: the long name stays
+}
+const isDaily = (li) => cfg.dailyItems.some((n) => n.trim().toLowerCase() === itemName(li).trim().toLowerCase());
+function pickedVersion(li, variation, mods) {
+  if (!variation || !isDaily(li)) return null;
+  return mods.find((m) => isVersion(m, variation)) || null;
+}
 const TO_GO_TYPES = /^(PICKUP|DELIVERY|SHIPMENT)$/;
 
 // Online vs. front counter. The Restaurants POS attaches a fulfillment to a
@@ -135,20 +151,24 @@ function toTicket(order) {
     for (const e of ff.entries || []) lineToGo.set(e.line_item_uid, TO_GO_TYPES.test(ff.type));
   }
   const isToGoMod = (m) => /^\s*to[\s-]?go\s*$/i.test(m.name || "");
-  const toItem = (li) => ({
-    qty: Number(li.quantity) || 1,
-    name: itemName(li),
-    variation:
-      li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
-    // Not the usual meat: the usual one's name (the board highlights it).
-    insteadOf: meatSwap(li),
-    // An online order's packets stay on its items: the kitchen bags it all.
-    mods: (li.modifiers || []).filter((m) => !(isPacket(m) && !online) && !isToGoMod(m)).map((m) =>
-      Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name
-    ),
-    note: li.name && li.note ? li.note : null,
-    toGo: (li.modifiers || []).some(isToGoMod) || lineToGo.get(li.uid) === true,
-  });
+  const toItem = (li) => {
+    const variation = li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null;
+    const mods = (li.modifiers || []).filter((m) => !(isPacket(m) && !online) && !isToGoMod(m));
+    const picked = pickedVersion(li, variation, mods.map((m) => m.name));
+    return {
+      qty: Number(li.quantity) || 1,
+      name: itemName(li),
+      variation: picked || variation,
+      // Not the usual meat: the usual one's name (the board highlights it).
+      insteadOf: meatSwap(li),
+      // An online order's packets stay on its items: the kitchen bags it all.
+      mods: mods.filter((m) => m.name !== picked).map((m) =>
+        Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name
+      ),
+      note: li.name && li.note ? li.note : null,
+      toGo: (li.modifiers || []).some(isToGoMod) || lineToGo.get(li.uid) === true,
+    };
+  };
   const food = lines.filter((li) => !NOT_FOOD.has(li.item_type));
   const isSkip = isSkipped;
   // items: what the kitchen makes. front: what the counter adds to the bag.

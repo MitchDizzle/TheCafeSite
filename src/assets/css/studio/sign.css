@@ -399,6 +399,23 @@
     font-size: 0.3in;
 }
 
+/* A plate that is one of two (client 2026-11-05): the two in the boxes,
+   then the breads it can be had on, one line under its own. */
+
+.ts--versions .ts-one {
+    margin-top: 0.3in;
+}
+
+.ts--versions .ts-picks {
+    margin-top: 0.14in;
+}
+
+.ts-breads {
+    font-size: 0.32in;
+    text-align: center;
+    margin-top: 0.04in;
+}
+
 /* ── Macho Nachos toppings (sign-macho-nachos-bw.njk) ──────
    Client 2026-11-03: staff point at it, so each topping is on its own
    line, big enough to pick one out with a finger from across the counter.

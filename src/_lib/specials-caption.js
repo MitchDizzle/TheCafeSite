@@ -105,4 +105,32 @@ function distinctBy(days, key) {
   });
 }
 
-module.exports = { weekRange, dayLines, soupLine, specialSides, latestWeek, workWeek, distinctBy };
+// A plate that is one of two ("Cranberry Chicken Salad or Cranberry Ham
+// Salad Croissant", client 2026-11-05) lists each as a Specials Modifier, so
+// the ticket and online ordering say which. A modifier is one of them when
+// the plate's name has "or" in it and every word of the modifier is in that
+// name; "No Onion", "Add Mayo" and "On Wheat" never are. The same rule picks
+// them out for the kitchen board (it shows the one picked in place of the
+// plate's long name) and for the signs.
+const wordsOf = (s) => String(s || "").toLowerCase().replace(/&/g, " and ").match(/[a-z0-9]+/g) || [];
+const NOT_A_VERSION = /^(no|add|extra|on|sub|light|hold|side)$/;
+function isVersion(mod, plate) {
+  const p = wordsOf(plate);
+  if (!p.includes("or")) return false;
+  const m = wordsOf(String(mod || "").replace(/\s*(?:\+\s*\$?|\$)\s*\d.*$/, ""));
+  return m.length > 0 && !NOT_A_VERSION.test(m[0]) && m.every((w) => w !== "or" && p.includes(w));
+}
+const versionsOf = (d) => ((d && d.modifiers) || []).filter((m) => isVersion(m, d.special));
+// The breads a plate can be had on besides its own, from its "On Wheat"
+// Specials Modifiers: ["Wheat", ...].
+const breadsOf = (d) => ((d && d.modifiers) || []).map((m) => /^on\s+(.+)$/i.exec(String(m).trim())).filter(Boolean).map((x) => x[1]);
+
+// What's left of the plate's name once its versions are taken out: its own
+// bread ("Croissant" of "Cranberry Chicken Salad or Cranberry Ham Salad
+// Croissant"), or "" for a plate that is all versions.
+function plateRest(d) {
+  const used = new Set(versionsOf(d).flatMap(wordsOf).concat("or"));
+  return String((d && d.special) || "").split(/\s+/).filter((w) => w && !wordsOf(w).every((x) => used.has(x))).join(" ");
+}
+
+module.exports = { weekRange, dayLines, soupLine, specialSides, latestWeek, workWeek, distinctBy, isVersion, versionsOf, breadsOf, plateRest };
