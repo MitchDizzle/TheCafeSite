@@ -53,6 +53,9 @@
       "soup": "Italian Wedding",
       "special": "Cranberry Chicken Salad or Cranberry Ham Salad Croissant",
       "anySide": true,
+      "extraSides": [
+        "Twice Baked Potato Salad"
+      ],
       "modifiers": [
         "Cranberry Chicken Salad",
         "Cranberry Ham Salad",

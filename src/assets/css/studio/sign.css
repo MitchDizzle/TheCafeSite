@@ -410,6 +410,12 @@
     margin-top: 0.14in;
 }
 
+.ts-today {
+    font-size: 0.6em;
+    font-style: italic;
+    font-weight: 400;
+}
+
 .ts-breads {
     font-size: 0.32in;
     text-align: center;

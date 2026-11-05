@@ -96,6 +96,12 @@ studioOrder: 34
     <section class="sw-choice ts-regular">
         <p class="p-display sw-choice-title">{% if d and d.anySide %}Comes with one side. Pick from:{% elif both %}Or swap a side for any of these{% else %}Or any of our regular sides{% endif %}</p>
         <ul class="sw-choices">
+            {#- A day's extraSides that aren't the plate's own (those are
+                above, in the boxes): sides not normally carried, first, as
+                Square lists them (client 2026-11-05: Twice Baked Potato Salad). #}
+            {%- for c in (d.extraSides or []) if d and not (d.sides and c in d.sides) %}
+            <li>{{ c }} <small class="ts-today">today only</small></li>
+            {%- endfor %}
             {%- for c in deli.choices %}
             <li>{{ c }}</li>
             {%- endfor %}
