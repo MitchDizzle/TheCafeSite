@@ -51,3 +51,21 @@ test("a photo that isn't kept, or an item not on the list, is refused", () => {
   assert.throws(() => savePlanDays({}, {}, { [tomorrow]: { "Lunch Special": "/assets/photos/nope.jpg" } }, ids()), /isn't on the kitchen PC/);
   assert.throws(() => savePlanDays({}, {}, { [tomorrow]: { "Pancakes": "none" } }, ids()), /isn't on the specials list/);
 });
+
+test("a photo moved to the website is the same photo, so Square doesn't get it again", () => {
+  const { samePhoto } = require("../lib/specials/photos");
+  const fs = require("fs"), os = require("os"), path = require("path");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kitchen-photo-"));
+  const pc = path.join(dir, "2026-10-12-fried-potatoes.jpg");
+  const site = path.join(dir, "fried-potatoes.jpg");
+  const other = path.join(dir, "fried-potatoes-2.jpg");
+  fs.writeFileSync(pc, "the same picture");
+  fs.writeFileSync(site, "the same picture");
+  fs.writeFileSync(other, "a new picture");
+  assert.equal(samePhoto(pc, pc), true);
+  assert.equal(samePhoto(pc, site), true);
+  assert.equal(samePhoto(pc, other), false);
+  assert.equal(samePhoto(path.join(dir, "gone.jpg"), site), false);
+  assert.equal(samePhoto(undefined, site), false);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

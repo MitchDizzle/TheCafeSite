@@ -189,11 +189,32 @@ function applyItemPhotos() {
   return itemsRunning;
 }
 
+// The photo last put on an item, against the one it would get now. The same
+// picture can change address: copied to the website (src/assets/photos/),
+// or moved off this PC to the GitHub backup. Same bytes = the same photo, so
+// it isn't uploaded again over a picture changed in the Dashboard since; the
+// new address is kept from then on.
+const sha1 = (file) => crypto.createHash("sha1").update(fs.readFileSync(file)).digest("hex");
+function samePhoto(was, now) {
+  if (!was) return false;
+  if (was === now) return true;
+  const old = [was, path.join(REPO, "photos", path.basename(was))].find((f) => fs.existsSync(f));
+  try { return !!old && fs.existsSync(now) && sha1(old) === sha1(now); } catch { return false; }
+}
+
 async function applyItemPhotosOnce() {
   if (cfg.itemPhotos === false) return;
   if (Date.now() - itemsFailedAt < RETRY_MINUTES * 6e4) return;
   plan.itemPhotoApplied = plan.itemPhotoApplied || {};
-  const want = Object.entries(itemPhotos()).filter(([key, p]) => plan.itemPhotoApplied[key] !== p.path);
+  let moved = false;
+  const want = Object.entries(itemPhotos()).filter(([key, p]) => {
+    if (plan.itemPhotoApplied[key] === p.path) return false;
+    if (!samePhoto(plan.itemPhotoApplied[key], p.path)) return true;
+    plan.itemPhotoApplied[key] = p.path;
+    moved = true;
+    return false;
+  });
+  if (moved) savePlan();
   if (!want.length) return;
   const done = [];
   try {
@@ -225,4 +246,4 @@ async function applyItemPhotosOnce() {
   if (done.length) console.log(`Menu photos put in Square (${new Date().toLocaleTimeString()}): ${done.join("; ")}.`);
 }
 
-module.exports = { applyPhotos, applyItemPhotos, allPhotos, photoFile, dayPhotos };
+module.exports = { applyPhotos, applyItemPhotos, allPhotos, photoFile, dayPhotos, samePhoto };
