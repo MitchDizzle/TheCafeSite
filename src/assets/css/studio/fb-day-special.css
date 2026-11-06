@@ -1,0 +1,156 @@
+/* ============================================================
+   One day's special and a dessert — Facebook post, 1080 × 1350 px (4:5)
+   Piece: src/studio/fb-day-special.njk (made from the archived Macho Nachos post)
+
+   Built like the weekly specials post (fb-weekly-specials.css): teal bands
+   top and bottom, a cream body, and the accent red only on cream. Two
+   cards, the plate and the dessert, each with its photo once there is one.
+   Shown about 540px wide on a phone, so nothing a customer needs is set
+   under 24px.
+   ============================================================ */
+
+.mn {
+    background: var(--cream);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Masthead band ────────────────────────────────────────── */
+
+.mn-head {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    color: var(--cream);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    /* Facebook's preview trims about 45px off the top and bottom of a 4:5
+       post, so nothing sits that close to either edge. */
+    padding: 70px 60px 26px;
+    border-bottom: 10px solid var(--accent);
+}
+
+.mn-wordmark {
+    --mark-w: 300px;
+}
+
+.mn-range {
+    font-size: 26px;
+    color: var(--mint);
+    margin-top: 12px;
+    /* .p-label tracks 0.18em after the last letter too; half of it back as
+       indent re-centres the line. */
+    text-indent: 0.18em;
+}
+
+/* ── The plate and the dessert ────────────────────────────── */
+
+/* Two rows that share the height, photo beside the words. */
+.mn-body {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 30px;
+    padding: 34px 50px 30px;
+}
+
+.mn-card {
+    display: grid;
+    grid-template-columns: 500px 1fr;
+    min-height: 0;
+    background: #fff;
+    border-radius: 22px;
+    border-left: 10px solid var(--accent);
+    box-shadow: 0 8px 22px rgba(31, 69, 82, 0.16);
+    overflow: hidden;
+}
+
+/* The dessert row puts its photo on the right, so the rows zig-zag. */
+.mn-card--flip {
+    grid-template-columns: 1fr 500px;
+    border-left: 0;
+    border-right: 10px solid var(--accent);
+}
+
+.mn-card--flip .mn-photo {
+    order: 2;
+}
+
+/* Without a photo the words take the whole row. */
+.mn-card:not(:has(.mn-photo)) {
+    grid-template-columns: 1fr;
+}
+
+.mn-photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    object-fit: cover;
+}
+
+.mn-words {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px 24px;
+}
+
+.mn-label {
+    font-size: 24px;
+    color: var(--accent);
+    text-indent: 0.18em;
+}
+
+.mn-name {
+    font-size: 56px;
+    line-height: 1.05;
+    color: var(--teal-dark);
+    margin-top: 8px;
+}
+
+.mn-price {
+    font-size: 38px;
+    color: var(--text-dark);
+    margin-top: 6px;
+}
+
+.mn-detail {
+    font-size: 26px;
+    line-height: 1.3;
+    margin-top: 14px;
+}
+
+/* ── Footer band ──────────────────────────────────────────── */
+
+.mn-foot {
+    background: var(--teal-dark);
+    color: var(--cream);
+    text-align: center;
+    padding: 20px 40px 62px;
+}
+
+.mn-foot-call {
+    font-size: 40px;
+    white-space: nowrap;
+}
+
+.mn-foot-line {
+    font-size: 24px;
+    margin-top: 6px;
+    opacity: 0.88;
+}
+
+.dot { opacity: 0.55; margin: 0 0.3em; }
+
+/* When lunch starts, under the plate's words. */
+.mn-served {
+    font-size: 24px;
+    color: var(--teal);
+    margin-top: 14px;
+    text-indent: 0.18em;
+}
