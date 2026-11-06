@@ -51,6 +51,10 @@ you leave out still show up with their defaults:
 Keys are paths relative to `files/`, with forward slashes. Files inside `files/`
 that start with `.` or `_` are skipped entirely.
 
+A one-off black & white counter sign needs neither: `npm run new-sign --
+<name> "<Heading>"` starts a fill-in sign (front matter only, laid out by
+`layouts/quick-sign.njk`). See STYLE.md, "Counter signs, quickly".
+
 ### 2. Build it as a template — themed, and live
 
 A piece written as a `.njk` file in `src/studio/` uses the site's real palette

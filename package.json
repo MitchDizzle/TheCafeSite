@@ -12,7 +12,8 @@
     "square": "python scripts/square-catalog.py",
     "thumbs": "node scripts/photo-thumbs.js",
     "square-check": "node scripts/square-check.mjs",
-    "test": "node --test \"kitchen/tests/*.test.js\""
+    "test": "node --test \"kitchen/tests/*.test.js\"",
+    "new-sign": "node scripts/new-sign.js"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0"

@@ -192,6 +192,39 @@ The audience skews older, so these are floors, not targets.
 Every one of these is built in `/studio/`. Copy the nearest existing piece
 rather than starting blank. `src/studio/README.md` explains how.
 
+### Counter signs, quickly
+
+A one-off black & white counter sign is a **fill-in sign**: no design work,
+just words in a file (client 2026-11-06).
+
+1. `npm run new-sign -- <name> "<Heading>"` makes `src/studio/sign-<name>-bw.njk`
+   with one of every block in it as an example.
+2. Fill in its `sign:` and delete the blocks it doesn't need. The blocks are
+   rows (name ...... price), a section label, big boxed words, a line of
+   text, a boxed list, and a striped "caution" panel; the top of
+   `src/_includes/layouts/quick-sign.njk` lists them.
+3. `npm run export -- sign-<name>-bw`, look at the PNG, print the PDF at 100%.
+
+The rules it already follows, so they need no thought:
+
+- Letter portrait, black ink only, **no logo** (it stands in the cafe; the
+  name is redundant there). The heading in Playfair, everything else Lato bold.
+- **One job per sign.** A heading that says what it is ("Desserts"), then the
+  things, then at most one instruction.
+- **Prices come from Square**, not the keyboard: `square: "<name as in
+  Square>"`. Type a `price:` only for what Square hasn't got yet, and swap it
+  for `square:` once it has.
+- **Nothing is sized by hand.** A name that would wrap shrinks to one line,
+  and a sign too full for the page shrinks as a whole. If it ends up small,
+  the sign is doing too much: split it.
+- A warning ("not self serve", "do not open") goes in the caution panel at
+  the bottom, short words, with what to do instead ("Ask at the counter").
+
+The daily signs that are already pieces of their own: the dessert fridge
+(`sign-desserts-bw`, from Square), today's special sides
+(`sign-todays-sides-bw`, from specials.json; change its `sidesDate`), the
+dessert bars and the drinks. Use those for those jobs.
+
 ---
 
 ## 7. Facebook posts

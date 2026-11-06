@@ -1,0 +1,143 @@
+---
+layout: layouts/piece.njk
+---
+{#- Fill-in counter sign (client 2026-11-06: "signs we fill out, faster").
+    A sign is a file in src/studio/ with only front matter; this lays it
+    out. Start one with `npm run new-sign -- <name> "<Heading>"`, fill in
+    `sign:`, then `npm run export -- sign-<name>-bw` and print the PDF.
+    The house rules for signs are in STYLE.md, "Counter signs".
+
+    sign:
+      heading: "Desserts"            big title at the top (optional)
+      sub: "Ask at the counter"      a line under it (optional)
+      blocks:                        top to bottom, spread down the page
+        - rows:                      name ........ price, one to a line
+            - square: "Cream Puffs"  name AND price from Square / menu.json
+            - name: "Brownie Delight"
+              priceOf: "Strawberry Trifle"   price borrowed from another
+            - name: "Hot Cocoa"
+              price: 2               typed: only for what Square hasn't got
+            - name: "Corn"           no price at all: leave price off
+        - label: "Treats"            a small heading with a rule above it
+        - boxes: ["Mashed Potatoes", "Corn"]   big words in boxes
+          joiner: "and"              word between boxes (default "or")
+        - text: "Each side is also sold separately."
+          big: true                  (optional) larger, for the one line that matters
+        - list: ["Tossed Salad", "Cup of soup"]
+          title: "Or swap for any of these"   bulleted, in a box
+        - caution: "Not self serve"  striped warning panel with triangles
+          sub: "Please do not open. Ask at the counter."
+
+    Nothing needs sizing by hand: the script at the bottom shrinks a name
+    that would wrap until it fits one line, then shrinks the whole sign
+    until it fits the sheet. Proof the PNG anyway. -#}
+{%- set s = sign or {} %}
+{%- set triangle %}<svg class="dc-icon" viewBox="0 0 100 88" aria-hidden="true"><path d="M50 5 L95 83 H5 Z" fill="#fff" stroke="#000" stroke-width="8" stroke-linejoin="round"/><rect x="45" y="30" width="10" height="30" rx="4" fill="#000"/><circle cx="50" cy="71" r="6" fill="#000"/></svg>{%- endset %}
+<div class="canvas sign sign--bw qs">
+    <div class="qs-fit">
+    {%- if s.heading %}
+    <div class="sign-heading">
+        <h2 class="p-display sign-heading-title qs-heading">{{ s.heading }}</h2>
+        {%- if s.sub %}
+        <p class="qs-sub">{{ s.sub }}</p>
+        {%- endif %}
+    </div>
+    {%- endif %}
+
+    <div class="qs-body">
+    {%- for b in s.blocks or [] %}
+        {%- if b.rows %}
+        <ul class="sign-rows qs-rows">
+            {%- for r in b.rows %}
+            {%- set name = r.name or r.square %}
+            {%- if r.price is number %}
+            {%- set price = r.price %}
+            {%- elif r.priceOf or r.square %}
+            {%- set price = (r.priceOf or r.square) | priceByName(desserts, menu) %}
+            {%- else %}
+            {%- set price = none %}
+            {%- endif %}
+            <li class="sign-row">
+                <div class="sign-row-head">
+                    <span class="sign-row-name"><span class="qs-line">{{ name }}</span></span>
+                    {%- if price is number %}
+                    <span class="sign-row-fill" aria-hidden="true"></span>
+                    <span class="sign-row-price">{{ price | money }}</span>
+                    {%- endif %}
+                </div>
+                {%- if r.note %}
+                <p class="sign-row-sub">{{ r.note }}</p>
+                {%- endif %}
+            </li>
+            {%- endfor %}
+        </ul>
+        {%- elif b.label %}
+        <h3 class="p-display fd-group qs-label">{{ b.label }}</h3>
+        {%- elif b.boxes %}
+        <div class="ts-picks qs-boxes">
+            {%- for x in b.boxes %}
+            {%- if not loop.first %}
+            <p class="ts-or">{{ b.joiner or "or" }}</p>
+            {%- endif %}
+            <p class="p-display ts-pick"><span class="qs-line">{{ x }}</span></p>
+            {%- endfor %}
+        </div>
+        {%- elif b.list %}
+        <section class="sw-choice ts-regular qs-list">
+            {%- if b.title %}
+            <p class="p-display sw-choice-title">{{ b.title }}</p>
+            {%- endif %}
+            <ul class="sw-choices">
+                {%- for x in b.list %}
+                <li>{{ x }}</li>
+                {%- endfor %}
+            </ul>
+        </section>
+        {%- elif b.caution %}
+        <section class="dc-caution">
+            <div class="dc-caution-inner">
+                {{ triangle | safe }}
+                <div class="dc-words">
+                    <p class="p-display dc-title">{{ b.caution }}</p>
+                    {%- if b.sub %}
+                    <p class="dc-sub">{{ b.sub }}</p>
+                    {%- endif %}
+                </div>
+                {{ triangle | safe }}
+            </div>
+        </section>
+        {%- elif b.text %}
+        <p class="qs-text{% if b.big %} qs-text--big{% endif %}">{{ b.text }}</p>
+        {%- endif %}
+    {%- endfor %}
+    </div>
+    </div>
+</div>
+<script>
+/* Fit, so nobody sizes a sign by hand: first every name or box that wraps
+   shrinks until it is one line (to 60%), then if the sign is still taller
+   than the sheet, everything shrinks together until it fits. Runs in the
+   export's headless Chrome before the PNG and PDF are taken. */
+(function () {
+    var canvas = document.querySelector(".qs");
+    if (!canvas) return;
+    document.fonts.ready.then(function () {
+        /* A wrapped inline span has one client rect per line. */
+        document.querySelectorAll(".qs-line").forEach(function (span) {
+            var el = span.parentElement;
+            var base = parseFloat(getComputedStyle(el).fontSize);
+            for (var k = 0.96; k >= 0.6 && span.getClientRects().length > 1; k -= 0.04) {
+                el.style.fontSize = (base * k) + "px";
+            }
+        });
+        var fit = canvas.querySelector(".qs-fit");
+        var cs = getComputedStyle(canvas);
+        var room = canvas.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+        fit.classList.add("qs-fit--measure");
+        for (var z = 1; z >= 0.5 && fit.getBoundingClientRect().height > room; z -= 0.03) {
+            fit.style.zoom = z;
+        }
+        fit.classList.remove("qs-fit--measure");
+    });
+})();
+</script>

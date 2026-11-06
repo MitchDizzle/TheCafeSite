@@ -1159,19 +1159,9 @@
     .dsoup:not(:last-child) { break-after: page; }
 }
 
-/* ── Open fridge sign (sign-desserts-open-fridge-bw.njk) ───
-   Client 2026-11-06: the fridge out in the open, with the cream puffs,
-   banana pudding and trifle, is not self serve. The desserts as on the
-   fridge sign, then a caution panel: hazard-striped frame, a warning
-   triangle each side. */
-
-.dc .sign-heading {
-    margin-top: 0;
-}
-
-.dc .sign-heading-title {
-    font-size: 1in;
-}
+/* ── Caution panel (fill-in signs' `caution:` block) ───────
+   Client 2026-11-06, for the open fridge (not self serve): hazard-striped
+   frame, a warning triangle each side. */
 
 .dc-caution {
     margin-top: 0.3in;
@@ -1211,4 +1201,97 @@
     font-weight: 700;
     line-height: 1.2;
     margin-top: 0.1in;
+}
+
+/* ── Fill-in signs (layouts/quick-sign.njk) ────────────────
+   Built from the pieces above (rows, boxes, swap list, caution panel), so a
+   fill-in sign looks like the hand-made ones. .qs-fit holds everything and
+   is shrunk by the layout's script when it's taller than the sheet; the
+   blocks inside are spread down the page. */
+
+.qs .sign-heading {
+    margin-top: 0;
+}
+
+.qs .sign-heading-title {
+    font-size: 1in;
+}
+
+.qs-sub {
+    font-size: 0.34in;
+    font-style: italic;
+    margin-top: 0.06in;
+}
+
+.qs-fit {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.qs-fit--measure {
+    flex: none;
+}
+
+.qs-fit--measure .qs-body {
+    flex: none;
+    justify-content: flex-start;
+}
+
+.qs-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    gap: 0.3in;
+    margin-top: 0.3in;
+}
+
+.qs-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3in;
+}
+
+.qs-rows .sign-row + .sign-row {
+    margin-top: 0;
+}
+
+.qs-rows .sign-row-name,
+.qs-rows .sign-row-price {
+    font-size: 0.5in;
+}
+
+.qs-rows .sign-row-sub {
+    font-size: 0.3in;
+    font-style: italic;
+}
+
+.qs-label {
+    margin-bottom: -0.1in;
+}
+
+.qs-label.fd-group {
+    font-size: 0.56in;
+    line-height: 1;
+}
+
+.qs-boxes {
+    margin-top: 0;
+}
+
+.qs-text {
+    font-size: 0.36in;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+}
+
+.qs-text--big {
+    font-size: 0.56in;
+}
+
+.qs .dc-caution {
+    margin-top: 0;
 }

@@ -107,6 +107,22 @@ module.exports = function (eleventyConfig) {
     (arr || []).filter((item) => item && item[key] === value)
   );
 
+  // A price by name, for the fill-in signs (layouts/quick-sign.njk): a
+  // dessert or one of its kinds as Square has it (desserts.json), else a
+  // menu.json item with a single price. Undefined when neither has it, so
+  // the sign shows no price rather than a wrong one.
+  eleventyConfig.addFilter("priceByName", (name, desserts, menu) => {
+    for (const item of (desserts && desserts.items) || []) {
+      if (item.name === name || (item.kinds || []).some((k) => k.name === name)) return item.price;
+    }
+    for (const cat of (menu && menu.categories) || []) {
+      for (const item of cat.items || []) {
+        if (item.name === name && typeof item.price === "number") return item.price;
+      }
+    }
+    return undefined;
+  });
+
   // True if an asset exists in src/. Lets a template use real artwork when
   // it is present and fall back to styled text when it is not.
   eleventyConfig.addFilter("hasAsset", (url) => {
