@@ -39,8 +39,7 @@
       "price": 3.5,
       "kinds": [
         {
-          "name": "Banana Pudding",
-          "out": true
+          "name": "Banana Pudding"
         }
       ],
       "lists": []
@@ -84,12 +83,10 @@
       "price": 3.5,
       "kinds": [
         {
-          "name": "Cream Puffs",
-          "out": true
+          "name": "Cream Puffs"
         },
         {
-          "name": "Chocolate Cream Puffs",
-          "out": true
+          "name": "Chocolate Cream Puffs"
         }
       ],
       "lists": []
