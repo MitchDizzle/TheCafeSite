@@ -73,7 +73,12 @@
       "special": "Meatloaf",
       "sides": [
         "Mashed Potatoes & Brown Gravy",
-        "Veggies"
+        "Corn"
+      ],
+      "extraSides": [
+        "Mashed Potatoes & Brown Gravy",
+        "Corn",
+        "Twice Baked Potato Salad"
       ]
     }
   ]

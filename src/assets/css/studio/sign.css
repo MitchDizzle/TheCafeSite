@@ -391,6 +391,14 @@
     padding: 0.09in 0.2in;
 }
 
+/* A long side's name (2026-11-06: Mashed Potatoes & Brown Gravy) wraps
+   at full size and pushes the swap box off the sheet; one line instead. */
+.ts--both .ts-pick--long {
+    font-size: 0.4in;
+    padding-left: 0.1in;
+    padding-right: 0.1in;
+}
+
 .ts--both .ts-or {
     margin: 0;
 }
@@ -1084,7 +1092,9 @@
 }
 
 .ds-soup-price {
-    font-size: 0.46in;
+    font-size: 0.4in;
+    padding-left: 0.1in;
+    padding-right: 0.1in;
     font-weight: 700;
     white-space: nowrap;
 }

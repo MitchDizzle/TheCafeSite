@@ -6,7 +6,7 @@ canvasH: "11in"
 pageSize: "8.5in 11in"
 pageCss: "/assets/css/studio/sign.css"
 bw: true
-sidesDate: "2026-11-05"
+sidesDate: "2026-11-06"
 tags: studio
 studioWeekly: true
 studioData: ["specials.json"]
@@ -82,7 +82,7 @@ studioOrder: 34
         {%- if not loop.first %}
         <p class="ts-or">{{ "and" if both else "or" }}</p>
         {%- endif %}
-        <p class="p-display ts-pick">{{ s }}</p>
+        <p class="p-display ts-pick{% if s.length > 22 %} ts-pick--long{% endif %}">{{ s }}</p>
         {%- endfor %}
     </div>
     {%- if both %}
@@ -99,8 +99,10 @@ studioOrder: 34
             {#- A day's extraSides that aren't the plate's own (those are
                 above, in the boxes): sides not normally carried, first, as
                 Square lists them (client 2026-11-05: Twice Baked Potato Salad). #}
-            {%- for c in (d.extraSides or []) if d and not (d.sides and c in d.sides) %}
+            {%- for c in ((d.extraSides or []) if d else []) %}
+            {%- if not (d.sides and c in d.sides) %}
             <li>{{ c }} <small class="ts-today">today only</small></li>
+            {%- endif %}
             {%- endfor %}
             {%- for c in deli.choices %}
             <li>{{ c }}</li>

@@ -7,7 +7,11 @@ pageSize: "8.5in 11in"
 pageCss: "/assets/css/studio/sign.css"
 bw: true
 skipDesserts: ["Dessert Bar", "Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"]
-skipKinds: ["Triple Chocolate Chip (2)"]
+skipKinds: []
+inKinds: ["Banana Pudding", "Cream Puffs"]
+addDesserts:
+  - name: "Brownie Delight"
+    priceOf: "Strawberry Trifle"
 signNames:
   "M&M Brown Butter Chocolate Chip (2)": "M&M Cookies (2)"
   "Triple Chocolate Chip (2)": "Triple Chocolate Cookies (2)"
@@ -35,7 +39,14 @@ studioOrder: 32
     a taped-up sign comes down). `skipKinds` leaves single kinds off by
     their name in Square, for one Square still counts that isn't in the
     fridge (client 2026-11-05: only the M&M cookies, not the Triple
-    Chocolate Chip). `signNames` gives a kind whose Square name is too
+    Chocolate Chip). `inKinds` shows a kind Square counts at 0 that IS in
+    the fridge, by its name in Square (client 2026-11-06: banana pudding
+    and cream puffs in, Square still at 0); fix the count on the kitchen
+    board and empty it again. `addDesserts` puts on a dessert that isn't
+    in Square yet, at the price of the Square item named in `priceOf`
+    (client 2026-11-06: Brownie Delight, the Strawberry Trifle's price);
+    once it is (Manage -> Desserts -> New dessert), take it off here.
+    `signNames` gives a kind whose Square name is too
     long for the sign a shorter one (client 2026-11-05: the cookies); the
     price is still Square's. If you find yourself typing a
     dessert or a price here, stop. -#}
@@ -47,11 +58,22 @@ studioOrder: 32
     <ul class="sign-rows fd-rows">
         {#- Dearest first, so the $1.50 cookies go to the bottom (client
             2026-11-04); same price keeps Square's order. #}
-        {%- for item in desserts.items | sort(true, false, "price") %}
+        {%- set allItems = desserts.items.slice() %}
+        {%- for a in addDesserts or [] %}
+        {%- set like = (desserts.items | where("name", a.priceOf))[0] %}
+        {%- if like %}
+        {%- set _ = allItems.push({ name: a.name, price: like.price, kinds: [{ name: a.name }], lists: [] }) %}
+        {%- endif %}
+        {%- endfor %}
+        {%- for item in allItems | sort(true, false, "price") %}
         {%- if item.name not in skipDesserts %}
-        {%- set kinds = item.kinds | rejectattr("out") %}
+        {%- set kinds = [] %}
+        {%- for k in item.kinds %}
+        {%- if (not k.out or k.name in inKinds) and k.name not in skipKinds %}
+        {%- set _ = kinds.push(k) %}
+        {%- endif %}
+        {%- endfor %}
         {%- for k in kinds %}
-        {%- if k.name not in skipKinds %}
         <li class="sign-row">
             <div class="sign-row-head">
                 <span class="sign-row-name">{{ signNames[k.name] or k.name }}</span>
@@ -64,7 +86,6 @@ studioOrder: 32
             {%- endfor %}
             {%- endif %}
         </li>
-        {%- endif %}
         {%- endfor %}
         {%- endif %}
         {%- endfor %}
