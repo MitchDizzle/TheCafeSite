@@ -114,3 +114,9 @@ test("Reports: the same days before, and the specials sold by what they were", (
   assert.deepEqual(out.plates.map((p) => [p.name, p.days, p.qty, p.perDay]), [["Meatloaf", 2, 80, 40], ["Lasagna", 1, 20, 20]]);
   assert.deepEqual(out.soups.map((p) => [p.name, p.cups, p.bowls]), [["Chili", 4, 2]]);
 });
+
+test("breakfast ends at 10:30, for saved days too (their meal was set at 11)", () => {
+  const s = summarize([rec("2026-10-19", 10, 29, 10), rec("2026-10-19", 10, 30, 10), rec("2026-10-19", 10, 45, 10)]);
+  assert.equal(s.breakfast, 1);
+  assert.equal(s.lunch, 2);
+});

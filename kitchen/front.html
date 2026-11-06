@@ -707,7 +707,7 @@
     send("/api/reservation-seated", { id });
   });
 
-  // ---- today's numbers (breakfast / lunch split by the 11am cutoff)
+  // ---- today's numbers (breakfast / lunch split at 10:30am)
   function renderStats(st) {
     const el = document.getElementById("today");
     if (!st || !st.orders) { el.hidden = true; return; }
@@ -715,7 +715,7 @@
     const cell = (b, label) => `<div class="stat"><b>${b}</b><span>${label}</span></div>`;
     document.getElementById("stats").innerHTML = [
       cell(st.orders, "orders"),
-      cell(st.breakfast, "breakfast (before 11)"),
+      cell(st.breakfast, "breakfast (before 10:30)"),
       cell(st.lunch, "lunch (11 on)"),
       cell(st.counter, "at the counter"),
       cell(st.online, "online"),

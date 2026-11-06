@@ -247,7 +247,7 @@ function mockHistory(today) {
       at.setHours(pick(hours), Math.floor(rand() * 60), 0, 0);
       const online = rand() < 0.15;
       const items = Array.from({ length: 1 + Math.floor(rand() * 2.5) }, () => ({ name: pick(menu), variation: null, qty: 1 }));
-      orders.push({ id: `MOCKHIST-${date}-${i}`, at: at.toISOString(), meal: at.getHours() < 11 ? "breakfast" : "lunch", online,
+      orders.push({ id: `MOCKHIST-${date}-${i}`, at: at.toISOString(), meal: at.getHours() * 60 + at.getMinutes() < 630 ? "breakfast" : "lunch", online,
         toGo: online || rand() < 0.55, paid: true, sales: mockTotal(items.map((it) => ({ name: it.name, quantity: "1" }))) / 100,
         items, done: true, kitchenMinutes: online ? null : Math.round((4 + rand() * 11) * 10) / 10 });
     }

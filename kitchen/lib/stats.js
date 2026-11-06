@@ -13,7 +13,11 @@ const { NOT_FOOD, itemName, isOnline, isSkipped } = require("./tickets");
 const { mockHistory } = require("./mock");
 const lead = require("./lead");
 
-const BREAKFAST_ENDS = 11; // hour, local time
+// Minutes after midnight, local time: 10:30am (Mitch 2026-11-06; 11am
+// until then). Every split is worked out from an order's time with mealOf,
+// days already saved too, so a report never mixes the two cutoffs.
+const BREAKFAST_ENDS = 10 * 60 + 30;
+const mealOf = (iso) => { const d = new Date(iso); return d.getHours() * 60 + d.getMinutes() < BREAKFAST_ENDS ? "breakfast" : "lunch"; };
 
 // One record per order that counts today, the same orders the numbers are
 // made from. These are what the daily history keeps (see recordHistory), so
@@ -67,7 +71,7 @@ function dayRecords() {
       // name), to find the order in Square from Reports.
       receipt: tender && tender.id ? tender.id.slice(0, 4).toUpperCase() : null,
       at: new Date(when).toISOString(),
-      meal: new Date(when).getHours() < BREAKFAST_ENDS ? "breakfast" : "lunch",
+      meal: mealOf(when),
       online,
       doordash: online ? isDoorDash(o, f) : false,
       toGo: t ? t.toGo : online,
@@ -142,7 +146,7 @@ function summarize(records) {
   const bySize = lead.SIZES.map(() => []);
   let priced = 0;
   for (const r of records) {
-    out[r.meal]++;
+    out[mealOf(r.at)]++;
     out[r.online ? "online" : "counter"]++;
     out[r.toGo ? "toGo" : "forHere"]++;
     if (r.done) out.kitchenDone++;
@@ -311,7 +315,7 @@ function historyReport(from, to, withOrders, days = history.days) {
     const s = summarize(before.flatMap((d) => days[d].orders));
     out.before = { ...prev, days: before.length, orders: s.orders, sales: s.sales, tips: s.tips, avgMinutes: s.avgMinutes, avgTicket: s.avgTicket };
   }
-  if (withOrders) out.orders = dates.flatMap((date) => days[date].orders.map((r) => ({ date, ...r })));
+  if (withOrders) out.orders = dates.flatMap((date) => days[date].orders.map((r) => ({ date, ...r, meal: mealOf(r.at) })));
   return out;
 }
 
