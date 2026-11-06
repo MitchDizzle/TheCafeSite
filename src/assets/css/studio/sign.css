@@ -518,6 +518,12 @@
     font-size: 0.48in;
 }
 
+/* A name over 24 letters drops a size to stay on one line (client
+   2026-11-06: Triple Chocolate Cookies (2)); its price stays full size. */
+.fd-rows .fd-row--long .sign-row-name {
+    font-size: 0.44in;
+}
+
 /* "Treats" (client 2026-11-06): the cookies and bars, under a rule. */
 .fd-group {
     border-top: 0.03in solid currentColor;
@@ -1165,12 +1171,6 @@
 
 .dc .sign-heading-title {
     font-size: 1in;
-}
-
-/* Three rows only, so they take the room the fridge sign's list would. */
-.dc .fd-rows .sign-row-name,
-.dc .fd-rows .sign-row-price {
-    font-size: 0.56in;
 }
 
 .dc-caution {

@@ -9,7 +9,7 @@ bw: true
 skipDesserts: ["Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"]
 treats: ["Cookies", "Dessert Bar"]
 skipKinds: []
-inKinds: ["Banana Pudding", "Cream Puffs"]
+inKinds: ["Banana Pudding", "Cream Puffs", "Chocolate Cream Puffs"]
 addDesserts:
   - name: "Brownie Delight"
     priceOf: "Strawberry Trifle"
@@ -86,7 +86,7 @@ studioOrder: 32
 
     <ul class="sign-rows fd-rows">
         {%- for r in rows | rejectattr("treat") %}
-        <li class="sign-row">
+        <li class="sign-row{% if r.name.length > 24 %} fd-row--long{% endif %}">
             <div class="sign-row-head">
                 <span class="sign-row-name">{{ r.name }}</span>
                 <span class="sign-row-fill" aria-hidden="true"></span>
@@ -100,7 +100,7 @@ studioOrder: 32
         {%- if treatRows.length %}
         <li class="fd-group"><h3 class="p-display fd-group-title">Treats</h3></li>
         {%- for r in treatRows %}
-        <li class="sign-row">
+        <li class="sign-row{% if r.name.length > 24 %} fd-row--long{% endif %}">
             <div class="sign-row-head">
                 <span class="sign-row-name">{{ r.name }}</span>
                 <span class="sign-row-fill" aria-hidden="true"></span>

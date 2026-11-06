@@ -6,13 +6,16 @@ canvasH: "11in"
 pageSize: "8.5in 11in"
 pageCss: "/assets/css/studio/sign.css"
 bw: true
-fridgeKinds: ["Cream Puffs", "Banana Pudding", "Strawberry Trifle"]
+fridgeKinds: ["Cream Puffs", "Chocolate Cream Puffs", "Banana Pudding", "Strawberry Trifle", "Brownie Delight"]
+addDesserts:
+  - name: "Brownie Delight"
+    priceOf: "Strawberry Trifle"
 tags: studio
 studioData: ["desserts.json"]
 studioTitle: "Open fridge desserts sign (not self serve) — black & white"
 studioCategory: "Signs"
 studioSize: "8.5 × 11 in portrait · letter, on the fridge out in the open"
-studioNote: "For the fridge out in the open: the cream puffs, banana pudding and strawberry trifle with their prices from Square, and a caution panel: not self serve, please do not open."
+studioNote: "For the fridge out in the open: the cream puffs (plain and chocolate), banana pudding, strawberry trifle and brownie delight with their prices from Square, and a caution panel: not self serve, please do not open."
 studioW: 816
 studioH: 1056
 studioOrder: 32
@@ -23,11 +26,20 @@ studioOrder: 32
     at its item's price in Square (src/_data/desserts.json, see
     sign-desserts-bw.njk). They show even when Square counts them at 0: the
     sign is for what that fridge holds, not today's stock. A kind not in
-    Square at all is left off. If you find yourself typing a price here,
+    Square at all is left off, unless it is in `addDesserts` (as on
+    sign-desserts-bw.njk: Brownie Delight at the trifle's price until it
+    is in Square; take it off then). If you find yourself typing a price here,
     stop. -#}
+{%- set allItems = desserts.items.slice() %}
+{%- for a in addDesserts or [] %}
+{%- set like = (desserts.items | where("name", a.priceOf))[0] %}
+{%- if like and not (desserts.items | where("name", a.name) | length) %}
+{%- set _ = allItems.push({ name: a.name, price: like.price, kinds: [{ name: a.name }] }) %}
+{%- endif %}
+{%- endfor %}
 {%- set rows = [] %}
 {%- for name in fridgeKinds %}
-{%- for item in desserts.items %}
+{%- for item in allItems %}
 {%- for k in item.kinds %}
 {%- if k.name == name %}
 {%- set _ = rows.push({ name: name, price: item.price }) %}
