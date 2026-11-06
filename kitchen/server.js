@@ -102,6 +102,7 @@ function start() {
   // networkAllowed() in lib/routes.js keep everything else to this PC.
   const HOST = cfg.frontOnNetwork ? "0.0.0.0" : "127.0.0.1";
   startWatchdog();
+  require("./lib/auto-off").start();
   server.listen(cfg.port, HOST, () => {
     console.log(`Kitchen board on http://localhost:${cfg.port}${MOCK ? "  (MOCK ORDERS)" : ""}`);
     startlog.trim();

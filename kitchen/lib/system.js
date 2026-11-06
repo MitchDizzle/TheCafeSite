@@ -24,14 +24,14 @@ function startBatch(step) {
   }).unref();
 }
 
-function power(action) {
+function power(action, why) {
   const what = { close: "closed the board", restart: "restarted the PC", shutdown: "shut down the PC" }[action];
   if (!what) return { ok: false, message: "Unknown action." };
   // Test mode is how the board gets tried on other computers. Shutting one
   // of those down from a test board would be a nasty surprise.
   if (MOCK || DEV) return { ok: false, message: `${MOCK ? "Test mode" : "Development copy"}: this would have ${what}.` };
   if (process.platform !== "win32") return { ok: false, message: "The power menu only works on the Windows kitchen PC." };
-  console.log(`Power menu: ${what} (${new Date().toLocaleTimeString()}).`);
+  console.log(`${why ? `${why[0].toUpperCase()}${why.slice(1)}` : "Power menu"}: ${what} (${new Date().toLocaleTimeString()}).`);
   // Closed on purpose: the watchdog must not reopen it, even if the board
   // checks in once more before its window goes.
   if (action === "close") boardClosed = true;

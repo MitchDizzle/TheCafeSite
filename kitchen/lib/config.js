@@ -33,6 +33,10 @@ const DEFAULTS = {
   // within quietPollSeconds, and Check now on the board checks at once.
   kitchenHours: [5, 14],
   quietPollSeconds: 300,
+  // The PC shuts itself down at this time, Central (HH:MM, 24-hour), unless
+  // it's switched off in the board menu since the PC started (lib/auto-off.js,
+  // client 2026-11-06). "" never.
+  autoOffTime: "21:00",
   sound: true, // new-order chime and lost-connection alarm
   // Pickup orders (and phone orders with a time) go on the kitchen board
   // this long before they're due: 15 covers big and small orders (client

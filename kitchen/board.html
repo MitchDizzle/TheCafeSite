@@ -140,6 +140,9 @@
   .menu svg { width: 1.4rem; height: 1.4rem; flex: none; }
   .menu hr { border: 0; border-top: 1px solid #DDD5C8; margin: 0.3rem 0.4rem; }
   .menu .danger { color: var(--red-dark); }
+  /* Auto off's switch: the state in words at the end of the line. */
+  .menu .auto-off .state { margin-left: auto; padding: 0.1rem 0.55rem; border-radius: 1rem; font-size: 1rem; background: var(--teal); color: var(--cream); }
+  .menu .auto-off[aria-checked="false"] .state { background: #DDD5C8; color: var(--text); }
 
   /* ---- dialogs: settings & help, and every power action's confirmation */
   .scrim {
@@ -544,6 +547,11 @@
           Check for updates
         </button>
         <hr>
+        <button type="button" role="menuitemcheckbox" class="auto-off" data-act="autooff" aria-checked="true" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <span id="auto-off-label">Turn off at 9pm</span>
+          <span class="state" id="auto-off-state">On</span>
+        </button>
         <button type="button" role="menuitem" data-act="close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m9 10 6 6"/><path d="m15 10-6 6"/></svg>
           Close the board
@@ -925,6 +933,8 @@
     demo = data.demo || null;
     renderUndo();
     renderResv(data.reservations);
+    autoOff = data.autoOff || null;
+    renderAutoOff();
 
     // Status banner: Square unreachable, or the last good poll is stale.
     const stale = !data.lastOkAt || Date.now() - Date.parse(data.lastOkAt) > 60000 + (data.pollSeconds || 5) * 1000; // checks slow down after hours
@@ -1186,6 +1196,42 @@
     });
   }
 
+  // ---- auto off (lib/auto-off.js): the PC shuts down at 9pm Central unless
+  // the menu's switch is off. It's on again every time the PC starts. At the
+  // time, a countdown with a big Keep it on, which turns it off for tonight.
+  let autoOff = null;
+  let autoOffShown = null; // the countdown on screen, by when it ends
+  const autoBtn = menuEl.querySelector("[data-act=autooff]");
+  function renderAutoOff() {
+    autoBtn.hidden = !autoOff;
+    if (!autoOff) return;
+    autoBtn.setAttribute("aria-checked", String(autoOff.on));
+    document.getElementById("auto-off-label").textContent = `Turn off at ${autoOff.time}`;
+    document.getElementById("auto-off-state").textContent = autoOff.on ? "On" : "Off";
+    // Over anything else on screen, and back at once if it's closed some
+    // other way (a tap beside it, Escape): only Keep it on stops it.
+    if (autoOff.endsAt && !dialog.querySelector("[data-keep]")) showAutoOff(autoOff.endsAt);
+    if (!autoOff.endsAt && autoOffShown) { autoOffShown = null; if (dialog.querySelector("[data-keep]")) closeAll(); }
+  }
+  function showAutoOff(endsAt) {
+    closeAll();
+    autoOffShown = endsAt;
+    const left = () => Math.max(0, Math.ceil((Date.parse(endsAt) - Date.now()) / 1000));
+    showDialog(`<h2 id="dialog-title">It's ${esc(autoOff.time)}: the kitchen PC turns off in</h2>
+      <p class="count-down" id="count-left">${left()}</p>
+      <p>Still working? Keep it on, and it stays on until it's restarted.</p>
+      <div class="actions"><button type="button" class="primary" data-keep data-focus>Keep it on</button></div>`);
+    countdown = setInterval(() => {
+      const el = document.getElementById("count-left");
+      if (el) el.textContent = left();
+    }, 500);
+  }
+  async function setAutoOff(on) {
+    const r = await ask("/api/auto-off", { on });
+    if (r.ok) { autoOff = r.autoOff; autoOffShown = null; renderAutoOff(); }
+    else message("Didn't change", r.message || "Something went wrong.");
+  }
+
   async function checkForUpdates() {
     showDialog(`<h2 id="dialog-title">Checking for updates…</h2><p>One moment.</p>`);
     const r = await ask("/api/update");
@@ -1256,6 +1302,7 @@
   dialog.addEventListener("click", (e) => {
     if (e.target.closest("[data-reset]")) confirmReset();
     if (e.target.closest("[data-demo]")) toggleDemo();
+    if (e.target.closest("[data-keep]")) { closeAll(); setAutoOff(false); }
   });
 
   powerBtn.addEventListener("click", (e) => {
@@ -1266,6 +1313,7 @@
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (act === "settings") showSettings();
     else if (act === "update") checkForUpdates();
+    else if (act === "autooff" && autoOff) { openMenu(false); setAutoOff(!autoOff.on); }
     else if (POWER[act]) confirmPower(act);
   });
   document.addEventListener("click", (e) => {

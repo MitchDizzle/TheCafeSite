@@ -525,6 +525,12 @@ async function handle(req, res) {
     if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
     return send(res, 200, await checkUpdates("the board"));
   }
+  // The menu's "Turn off at 9pm" switch, and the countdown's Keep it on.
+  if (req.method === "POST" && url.pathname === "/api/auto-off") {
+    if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
+    const { on } = await readBody(req);
+    return send(res, 200, { ok: true, autoOff: require("./auto-off").setOn(on) });
+  }
   if (req.method === "POST" && url.pathname === "/api/power") {
     if (!fromBoard(req)) return send(res, 403, { ok: false, message: "Not from the board." });
     const { action } = await readBody(req);
