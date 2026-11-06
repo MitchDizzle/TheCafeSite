@@ -76,8 +76,10 @@
     font-family: 'Lato', sans-serif;
     font-style: normal;
     font-size: 7.5pt;
-    color: var(--text-dark);
-    opacity: 0.8;
+    /* --text-dark at 80% on white, as a plain colour: `opacity` made Chrome
+       put each label's line in its own transparency group in the PDF, and
+       that PDF crashed browsers' PDF viewers (2026-11-06). */
+    color: #4e5b61;
 }
 
 .bake-ingredients {
