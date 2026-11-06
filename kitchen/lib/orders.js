@@ -5,7 +5,7 @@ const { pageVersions } = require("./pages");
 const { MOCK, MUTE, cfg } = require("./config");
 const { fetchOrders } = require("./square");
 const { live } = require("./live");
-const { bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, autoOff, readySince, state, saveState } = require("./state");
+const { bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, autoOff, readySince, byHand, dueSeen, state, saveState } = require("./state");
 const { splitAdded } = require("./addons");
 const { toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
 const { withMockStates } = require("./square-status");
@@ -132,7 +132,7 @@ async function pollOnce() {
         );
       }
     }
-    if (linesChanged) saveState();
+    if (retimed(live.all) || linesChanged) saveState();
     markSameTable(live.all);
     live.lastOkAt = new Date().toISOString();
     if (live.lastError) console.log("Square connection restored");
@@ -143,6 +143,39 @@ async function pollOnce() {
     if (err.message !== live.lastError) console.error(new Date().toLocaleTimeString(), err.message);
     live.lastError = err.message; // keep showing the last good tickets
   }
+}
+
+// An order whose time was changed in Square (its pickup time, or the time
+// in a counter order's name) after the kitchen or the front had cleared it
+// comes back, as new work for the new time (client 2026-11-06): Done and
+// Handed off are taken off it, on both screens, so it goes on the board
+// again when the new time comes round, or now if that's already close. One
+// still showing just moves to its new time, which every check does anyway.
+// Not deliveries: DoorDash moves its courier's time by itself, and that
+// would bring back food already handed to the Dasher. Not a canceled one.
+// A Ready or picked-up already told to Square stays told. Returns true when
+// anything was written down.
+function retimed(tickets) {
+  let changed = false;
+  for (const t of tickets) {
+    if (t.demo || t.kind === "DELIVERY" || !t.dueAt) continue;
+    const seen = dueSeen[t.id];
+    if (!seen || seen.due !== t.dueAt) {
+      dueSeen[t.id] = { due: t.dueAt, at: new Date().toISOString() };
+      changed = true;
+    }
+    if (!seen || seen.due === t.dueAt || Math.abs(Date.parse(t.dueAt) - Date.parse(seen.due)) < 6e4) continue;
+    if (canceled[t.id]) continue;
+    const was = [bumped[t.id] && "Done", platesDone[t.id] && !bumped[t.id] && "plates done", handedOff[t.id] && "handed off"].filter(Boolean);
+    const at = (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (was.length) {
+      for (const map of [bumped, platesDone, handedOff, byHand, keepOnFront, sentNow, offBoard]) delete map[t.id];
+      autoOff.delete(t.id);
+      delete readySince[t.id];
+    } else if (sentNow[t.id]) delete sentNow[t.id]; // it waits for its new time
+    console.log(`${new Date().toLocaleTimeString()}  order ...${t.id.slice(-4)} (${t.label}): time changed in Square, ${at(seen.due)} -> ${at(t.dueAt)}${was.length ? `; was ${was.join(" and ")}, back on the board for the new time` : ""}`);
+  }
+  return changed;
 }
 
 function snapshot() {
@@ -242,4 +275,4 @@ function resetDay(clearBoard, from) {
   console.log(`Reset for the day from ${from} (${new Date().toLocaleTimeString()})${clearBoard ? ", board cleared" : ""}.`);
 }
 
-module.exports = { poll, pollDelay, watched, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay };
+module.exports = { poll, pollDelay, watched, retimed, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay };
