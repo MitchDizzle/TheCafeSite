@@ -1,0 +1,68 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Open fridge desserts sign, not self serve (black & white)"
+canvasW: "8.5in"
+canvasH: "11in"
+pageSize: "8.5in 11in"
+pageCss: "/assets/css/studio/sign.css"
+bw: true
+fridgeKinds: ["Cream Puffs", "Banana Pudding", "Strawberry Trifle"]
+tags: studio
+studioData: ["desserts.json"]
+studioTitle: "Open fridge desserts sign (not self serve) — black & white"
+studioCategory: "Signs"
+studioSize: "8.5 × 11 in portrait · letter, on the fridge out in the open"
+studioNote: "For the fridge out in the open: the cream puffs, banana pudding and strawberry trifle with their prices from Square, and a caution panel: not self serve, please do not open."
+studioW: 816
+studioH: 1056
+studioOrder: 32
+---
+{#- Open fridge desserts sign (client 2026-11-06): the second dessert
+    fridge stands out in the open, and it is not self serve. `fridgeKinds`
+    above are the kinds on it, by their name in Square, in this order, each
+    at its item's price in Square (src/_data/desserts.json, see
+    sign-desserts-bw.njk). They show even when Square counts them at 0: the
+    sign is for what that fridge holds, not today's stock. A kind not in
+    Square at all is left off. If you find yourself typing a price here,
+    stop. -#}
+{%- set rows = [] %}
+{%- for name in fridgeKinds %}
+{%- for item in desserts.items %}
+{%- for k in item.kinds %}
+{%- if k.name == name %}
+{%- set _ = rows.push({ name: name, price: item.price }) %}
+{%- endif %}
+{%- endfor %}
+{%- endfor %}
+{%- endfor %}
+{%- set triangle %}
+<svg class="dc-icon" viewBox="0 0 100 88" aria-hidden="true"><path d="M50 5 L95 83 H5 Z" fill="#fff" stroke="#000" stroke-width="8" stroke-linejoin="round"/><rect x="45" y="30" width="10" height="30" rx="4" fill="#000"/><circle cx="50" cy="71" r="6" fill="#000"/></svg>
+{%- endset %}
+<div class="canvas sign sign--bw fd dc">
+    <div class="sign-heading">
+        <h2 class="p-display sign-heading-title">Desserts</h2>
+    </div>
+
+    <ul class="sign-rows fd-rows">
+        {%- for r in rows %}
+        <li class="sign-row">
+            <div class="sign-row-head">
+                <span class="sign-row-name">{{ r.name }}</span>
+                <span class="sign-row-fill" aria-hidden="true"></span>
+                <span class="sign-row-price">{{ r.price | money }}</span>
+            </div>
+        </li>
+        {%- endfor %}
+    </ul>
+
+    <section class="dc-caution">
+        <div class="dc-caution-inner">
+            {{ triangle | safe }}
+            <div class="dc-words">
+                <p class="p-display dc-title">Not self serve</p>
+                <p class="dc-sub">Please do not open.<br>Ask at the counter.</p>
+            </div>
+            {{ triangle | safe }}
+        </div>
+    </section>
+</div>

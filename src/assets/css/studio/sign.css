@@ -1,7 +1,8 @@
 /* ============================================================
    Counter signs, 8.5 × 11 in portrait, for letter stand-up sign holders.
    Pieces: sign-drinks(-bw).njk, sign-specials(-bw).njk, sign-todays-sides-bw.njk,
-   sign-desserts-bw.njk, sign-dessert-bars-bw.njk, sign-macho-nachos-bw.njk
+   sign-desserts-bw.njk, sign-desserts-open-fridge-bw.njk, sign-dessert-bars-bw.njk,
+   sign-macho-nachos-bw.njk
    (and the door signs, in their own section below)
    Partials: partials/studio/sign-drinks.njk, partials/studio/sign-specials.njk
 
@@ -515,6 +516,18 @@
 .fd-rows .sign-row-name,
 .fd-rows .sign-row-price {
     font-size: 0.48in;
+}
+
+/* "Treats" (client 2026-11-06): the cookies and bars, under a rule. */
+.fd-group {
+    border-top: 0.03in solid currentColor;
+    padding-top: 0.12in;
+    text-align: center;
+}
+
+.fd-group-title {
+    font-size: 0.56in;
+    line-height: 1;
 }
 
 .fd-rows .sign-row-sub {
@@ -1138,4 +1151,64 @@
     .ds-stack { gap: 0; }
     .ds:not(:last-child),
     .dsoup:not(:last-child) { break-after: page; }
+}
+
+/* ── Open fridge sign (sign-desserts-open-fridge-bw.njk) ───
+   Client 2026-11-06: the fridge out in the open, with the cream puffs,
+   banana pudding and trifle, is not self serve. The desserts as on the
+   fridge sign, then a caution panel: hazard-striped frame, a warning
+   triangle each side. */
+
+.dc .sign-heading {
+    margin-top: 0;
+}
+
+.dc .sign-heading-title {
+    font-size: 1in;
+}
+
+/* Three rows only, so they take the room the fridge sign's list would. */
+.dc .fd-rows .sign-row-name,
+.dc .fd-rows .sign-row-price {
+    font-size: 0.56in;
+}
+
+.dc-caution {
+    margin-top: 0.3in;
+    padding: 0.2in;
+    border-radius: 0.14in;
+    background: repeating-linear-gradient(-45deg, #000 0 0.22in, #fff 0.22in 0.44in);
+}
+
+.dc-caution-inner {
+    background: #fff;
+    border-radius: 0.06in;
+    padding: 0.28in 0.2in 0.32in;
+    display: flex;
+    align-items: center;
+    gap: 0.2in;
+}
+
+.dc-icon {
+    flex: 0 0 1.25in;
+    width: 1.25in;
+    height: 1.1in;
+}
+
+.dc-words {
+    flex: 1;
+    text-align: center;
+}
+
+.dc-title {
+    font-size: 0.66in;
+    line-height: 1.05;
+    text-transform: uppercase;
+}
+
+.dc-sub {
+    font-size: 0.4in;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-top: 0.1in;
 }

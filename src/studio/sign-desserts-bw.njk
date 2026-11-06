@@ -6,7 +6,8 @@ canvasH: "11in"
 pageSize: "8.5in 11in"
 pageCss: "/assets/css/studio/sign.css"
 bw: true
-skipDesserts: ["Dessert Bar", "Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"]
+skipDesserts: ["Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"]
+treats: ["Cookies", "Dessert Bar"]
 skipKinds: []
 inKinds: ["Banana Pudding", "Cream Puffs"]
 addDesserts:
@@ -20,7 +21,7 @@ studioData: ["desserts.json"]
 studioTitle: "Dessert fridge sign — black & white"
 studioCategory: "Signs"
 studioSize: "8.5 × 11 in portrait · letter, taped to the dessert fridge"
-studioNote: "What's in the dessert fridge, one to a line, each with its price, read from Square. The magic bars and rice crispy treats have their own sign."
+studioNote: "What's in the dessert fridge, one to a line, each with its price, read from Square. The cookies, magic bars and rice crispy treats go under Treats at the bottom."
 studioW: 816
 studioH: 1056
 studioOrder: 32
@@ -31,8 +32,10 @@ studioOrder: 32
     board's Manage -> Desserts), so when the desserts change, change them
     there, `npm run build` (or `npm run desserts`), commit desserts.json
     and print a new sheet. A kind Square counts at 0 is left off.
-    `skipDesserts` above leaves whole items off: the bars have their own
-    sign (sign-dessert-bars-bw.njk), and Cheesecake is off while the cafe
+    `treats` puts whole items under a Treats heading at the bottom (client
+    2026-11-06: the cookies and the bars, which also have a sign of their
+    own, sign-dessert-bars-bw.njk). `skipDesserts` above leaves whole
+    items off: Cheesecake is off while the cafe
     is out of it (client 2026-10-29: only Plain is counted in Square, so
     the count alone wouldn't drop it). Cinnamon Roll and Pecan Sticky Bun
     are off too (client 2026-11-04: only a few cinnamon rolls, gone before
@@ -55,39 +58,56 @@ studioOrder: 32
         <h2 class="p-display sign-heading-title">Desserts</h2>
     </div>
 
+    {#- Every row first, then the two groups: dearest first, so the
+        cookies go to the bottom (client 2026-11-04); same price keeps
+        Square's order. #}
+    {%- set allItems = desserts.items.slice() %}
+    {%- for a in addDesserts or [] %}
+    {%- set like = (desserts.items | where("name", a.priceOf))[0] %}
+    {%- if like %}
+    {%- set _ = allItems.push({ name: a.name, price: like.price, kinds: [{ name: a.name }], lists: [] }) %}
+    {%- endif %}
+    {%- endfor %}
+    {%- set rows = [] %}
+    {%- for item in allItems | sort(true, false, "price") %}
+    {%- if item.name not in skipDesserts %}
+    {%- set kinds = [] %}
+    {%- for k in item.kinds %}
+    {%- if (not k.out or k.name in inKinds) and k.name not in skipKinds %}
+    {%- set _ = kinds.push(k) %}
+    {%- endif %}
+    {%- endfor %}
+    {%- for k in kinds %}
+    {%- set _ = rows.push({ name: signNames[k.name] or k.name, price: item.price, lists: (item.lists if loop.last else []), treat: item.name in (treats or []) }) %}
+    {%- endfor %}
+    {%- endif %}
+    {%- endfor %}
+    {%- set treatRows = rows | selectattr("treat") %}
+
     <ul class="sign-rows fd-rows">
-        {#- Dearest first, so the $1.50 cookies go to the bottom (client
-            2026-11-04); same price keeps Square's order. #}
-        {%- set allItems = desserts.items.slice() %}
-        {%- for a in addDesserts or [] %}
-        {%- set like = (desserts.items | where("name", a.priceOf))[0] %}
-        {%- if like %}
-        {%- set _ = allItems.push({ name: a.name, price: like.price, kinds: [{ name: a.name }], lists: [] }) %}
-        {%- endif %}
-        {%- endfor %}
-        {%- for item in allItems | sort(true, false, "price") %}
-        {%- if item.name not in skipDesserts %}
-        {%- set kinds = [] %}
-        {%- for k in item.kinds %}
-        {%- if (not k.out or k.name in inKinds) and k.name not in skipKinds %}
-        {%- set _ = kinds.push(k) %}
-        {%- endif %}
-        {%- endfor %}
-        {%- for k in kinds %}
+        {%- for r in rows | rejectattr("treat") %}
         <li class="sign-row">
             <div class="sign-row-head">
-                <span class="sign-row-name">{{ signNames[k.name] or k.name }}</span>
+                <span class="sign-row-name">{{ r.name }}</span>
                 <span class="sign-row-fill" aria-hidden="true"></span>
-                <span class="sign-row-price">{{ item.price | money }}</span>
+                <span class="sign-row-price">{{ r.price | money }}</span>
             </div>
-            {%- if loop.last %}
-            {%- for l in item.lists %}
+            {%- for l in r.lists %}
             <p class="sign-row-sub">{{ l.name }}: {{ l.options | join(" or ") }}</p>
             {%- endfor %}
-            {%- endif %}
+        </li>
+        {%- endfor %}
+        {%- if treatRows.length %}
+        <li class="fd-group"><h3 class="p-display fd-group-title">Treats</h3></li>
+        {%- for r in treatRows %}
+        <li class="sign-row">
+            <div class="sign-row-head">
+                <span class="sign-row-name">{{ r.name }}</span>
+                <span class="sign-row-fill" aria-hidden="true"></span>
+                <span class="sign-row-price">{{ r.price | money }}</span>
+            </div>
         </li>
         {%- endfor %}
         {%- endif %}
-        {%- endfor %}
     </ul>
 </div>
