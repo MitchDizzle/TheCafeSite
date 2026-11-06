@@ -5,7 +5,7 @@
 // Edit the wording here; edit the food in the JSON. The day lines come from
 // _lib/specials-caption.js.
 
-const { weekRange, dayLines, soupLine, latestWeek } = require("../_lib/specials-caption.js");
+const { weekRange, dayLines, soupLine, latestWeek, withClosed } = require("../_lib/specials-caption.js");
 
 module.exports = {
   eleventyComputed: {
@@ -37,7 +37,8 @@ module.exports = {
         // The town up front: Facebook shows the post well beyond Leavenworth.
         `Lunch specials at The Café in ${site.address.locality}, ${site.address.region}, ${weekRange(week)}. From 11am${price ? `, ${price} each` : ""}${data.specials.includesDrink ? ", with a drink" : ""}.`,
         // A day that costs something else says so on its own line.
-        ...dayLines(week).map((line, i) => (week[i].price && week[i].price !== data.specials.price ? `${line} (${dollars(week[i].price)})` : line)),
+        // A closed day (site.json closedDays) gets its own "Closed for" line.
+        ...((rows) => dayLines(rows).map((line, i) => (rows[i].price && rows[i].price !== data.specials.price ? `${line} (${dollars(rows[i].price)})` : line)))(withClosed(week, site.closedDays)),
         ...[choiceLine, soupLine(week)].filter(Boolean),
         [
           `${site.address.street}, ${site.address.locality}, ${site.address.region}`,

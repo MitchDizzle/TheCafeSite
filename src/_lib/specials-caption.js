@@ -49,6 +49,7 @@ function specialSides(d, bare) {
 // and Z soup" run together.
 function dayLines(week) {
   return week.map((d) => {
+    if (d.closed) return `${words(d.date, { weekday: "long" })}: Closed for ${d.closed}`;
     const sides = specialSides(d);
     return `${words(d.date, { weekday: "long" })}: ${d.special}${sides ? ` ${sides}` : ""}`;
   });
@@ -85,6 +86,21 @@ function latestWeek(days) {
   if (!sorted.length) return [];
   const monday = mondayOf(sorted[sorted.length - 1].date);
   return sorted.filter((d) => mondayOf(d.date) === monday);
+}
+
+// A week's days with the cafe's closed days (site.json closedDays) put in
+// their place, so the weekly post and its caption say "Wednesday: Closed for
+// Veterans Day" rather than skipping the day (2026-11-11). A closed day is
+// { date, closed: "Veterans Day" }; only Monday to Friday of that week, and
+// never a day that has a special of its own.
+function withClosed(week, closedDays) {
+  if (!week || !week.length) return [];
+  const have = new Set(week.map((d) => d.date));
+  const days = workWeek(week[0].date);
+  const closed = (closedDays || [])
+    .filter((c) => days.includes(c.date) && !have.has(c.date))
+    .map((c) => ({ date: c.date, closed: c.name }));
+  return [...week, ...closed].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 // A week's days with repeats dropped, for the board signs, which carry no
@@ -133,4 +149,4 @@ function plateRest(d) {
   return String((d && d.special) || "").split(/\s+/).filter((w) => w && !wordsOf(w).every((x) => used.has(x))).join(" ");
 }
 
-module.exports = { weekRange, dayLines, soupLine, specialSides, latestWeek, workWeek, distinctBy, isVersion, versionsOf, breadsOf, plateRest };
+module.exports = { weekRange, dayLines, soupLine, specialSides, latestWeek, workWeek, withClosed, distinctBy, isVersion, versionsOf, breadsOf, plateRest };

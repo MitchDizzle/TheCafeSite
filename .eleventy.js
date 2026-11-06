@@ -83,6 +83,8 @@ module.exports = function (eleventyConfig) {
   // pieces: `specials.days | latestWeek`. See _lib/specials-caption.js.
   eleventyConfig.addFilter("latestWeek", require("./src/_lib/specials-caption.js").latestWeek);
   // "with your choice of side" / "with A and B": see specialSides there.
+  // The week with site.json's closed days put in their place (weekly post).
+  eleventyConfig.addFilter("withClosed", require("./src/_lib/specials-caption.js").withClosed);
   eleventyConfig.addFilter("specialSides", require("./src/_lib/specials-caption.js").specialSides);
   // The week with repeated plates (or soups) dropped, for the day-free board signs.
   eleventyConfig.addFilter("distinctBy", require("./src/_lib/specials-caption.js").distinctBy);

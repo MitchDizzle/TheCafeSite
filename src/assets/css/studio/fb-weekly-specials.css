@@ -257,3 +257,14 @@
 }
 
 .dot { opacity: 0.55; margin: 0 0.3em; }
+
+/* A day the cafe is closed (site.json closedDays): the words across the
+   plate and soup columns, in italic so it doesn't read as a plate. */
+.wk-row--closed .wk-special-cell {
+    grid-column: 2 / -1;
+}
+
+.wk-row--closed .wk-special {
+    font-style: italic;
+    color: var(--accent);
+}

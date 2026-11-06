@@ -80,6 +80,36 @@
         "Carrots",
         "Twice Baked Potato Salad"
       ]
+    },
+    {
+      "date": "2026-11-09",
+      "soup": "Chicken Noodle",
+      "special": "French Dip",
+      "anySide": true
+    },
+    {
+      "date": "2026-11-10",
+      "soup": "Broccoli Cheese",
+      "special": "Pulled Pork Sandwich",
+      "anySide": true
+    },
+    {
+      "date": "2026-11-12",
+      "soup": "Turkey Chili",
+      "special": "Brisket",
+      "sides": [
+        "Cheesy Potatoes",
+        "Corn Casserole"
+      ]
+    },
+    {
+      "date": "2026-11-13",
+      "soup": "Potato Cheese",
+      "special": "Hot Turkey Sandwich",
+      "sides": [
+        "Mashed Potatoes",
+        "Green Beans"
+      ]
     }
   ]
 }

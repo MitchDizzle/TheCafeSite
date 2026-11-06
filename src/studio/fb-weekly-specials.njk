@@ -103,7 +103,17 @@ studioOrder: 22
         </div>
 
         <div class="wk-table">
-            {%- for d in week %}
+            {#- withClosed puts a closed day (site.json closedDays) in its place:
+                "Closed for Veterans Day" across the row, no soup. -#}
+            {%- for d in week | withClosed(site.closedDays) %}
+            {%- if d.closed %}
+            <div class="wk-row wk-row--closed">
+                <p class="p-display wk-dayname">{{ d.date | dayDate("short") }}</p>
+                <div class="wk-special-cell">
+                    <p class="p-display wk-special">Closed for {{ d.closed }}</p>
+                </div>
+            </div>
+            {%- else %}
             {%- set sides = d | specialSides(true) %}
             <div class="wk-row">
                 <p class="p-display wk-dayname">{{ d.date | dayDate("short") }}</p>
@@ -119,6 +129,7 @@ studioOrder: 22
                 </div>
                 {%- endif %}
             </div>
+            {%- endif %}
             {%- endfor %}
         </div>
         </div>
