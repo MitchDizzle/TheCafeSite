@@ -241,9 +241,11 @@ dessert bars and the drinks. Use those for those jobs.
 - **Each day's sides on one line** (client 2026-10-09).
 - **The caption** is written by code (`fb-weekly-specials.11tydata.js`)
   from the same data as the picture, so the two can't disagree. Its order is:
-  the opening line with the town, dates, time and price; one line per day;
-  the sides line; the soups line ("sold separately"); then address · hours ·
-  phone · order link.
+  the opening line with the town, dates, time and price, ending "Soups are
+  sold separately."; one line per day, the plate then that day's soup
+  ("Monday: French Dip with choice of side · Soup: Chicken Noodle": one list
+  of days, never a second list of soups, client 2026-11-07); the sides line;
+  then address · hours · phone · order link.
 - **Routine:** add next week to `specials.json`, run `npm run build`, upload,
   then post the PNG and copy the caption from `/studio/downloads/`.
 

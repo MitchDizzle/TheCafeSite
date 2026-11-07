@@ -135,8 +135,17 @@
 
 /* Photo post: the picture being made, then the form under it. */
 .pp { display: grid; gap: 0.8rem; }
-.pp-canvas { width: 100%; max-width: 30rem; height: auto; justify-self: center; border-radius: 0.4rem; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); touch-action: none; cursor: grab; }
-.pp-photo-btn { display: block; text-align: center; font-weight: 800; font-size: 1.1rem; padding: 0.8rem; border: 2px dashed var(--teal); border-radius: 0.55rem; color: var(--teal-dark); cursor: pointer; }
+/* The picture: never taller than about half the screen, so the whole post
+   shows with room under it on a phone. It scrolls the page like anything
+   else until "Move or zoom the photo" is on (.pp--adjust); then a drag on it
+   moves the photo, and the zoom sliders show. */
+.pp-canvas { width: min(100%, 30rem, calc(50vh * 1080 / 1250)); width: min(100%, 30rem, calc(50dvh * 1080 / 1250)); height: auto; justify-self: center; border-radius: 0.4rem; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); touch-action: pan-y; }
+.pp--adjust .pp-canvas { touch-action: none; cursor: grab; outline: 3px solid var(--teal); outline-offset: 2px; }
+.pp:not(.pp--adjust) .pp-adjust-only { display: none; }
+.pp-adjust-btn { justify-self: center; }
+.pp:not(.pp--adjust) .pp-shot:not(:has(.pp-label)) { display: none; }
+.pp--adjust .pp-adjust-btn { background: var(--teal); color: var(--cream); }
+.pp-photo-btn { position: relative; display: block; text-align: center; font-weight: 800; font-size: 1.1rem; padding: 0.8rem; border: 2px dashed var(--teal); border-radius: 0.55rem; color: var(--teal-dark); cursor: pointer; }
 .pp-photo-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .pp-shot { display: grid; gap: 0.5rem; }
 .pp-shot-head { margin: 0.3rem 0 0; font-weight: 800; color: var(--teal-dark); }
@@ -145,7 +154,7 @@
 .m-field textarea { resize: vertical; }
 .m-field input[type="range"] { padding: 0; border: 0; }
 .pp-result img { display: block; width: 100%; max-width: 30rem; margin: 0 auto 0.6rem; border-radius: 0.4rem; -webkit-touch-callout: default; }
-.pp-caption { width: 100%; font: inherit; font-size: 0.98rem; padding: 0.5rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
+.pp-caption { width: 100%; box-sizing: border-box; font: inherit; font-size: 1rem; padding: 0.5rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
 
 /* Reports: a date range, its numbers, by day, and the items. */
 .r-range { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: end; }

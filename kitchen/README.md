@@ -416,7 +416,7 @@ Makes the Facebook dish post (a 1080 × 1250 picture) on the phone, from a photo
 1. **Take or choose a photo.** The phone's camera or photo library.
 2. **What's in the photo:** today's special or soup (from Specials, with the words written there or its sides), "A special" to type one in, or any item in Square (its category, name and description come from Square).
 3. **Change any of the words:** the name, the line above it, the words under the photo, and **Drink included** for a special. The picture redraws as you type.
-4. **Frame it:** drag the picture to move it, and zoom with the slider. The post shows a square of it.
+4. **Frame it:** press **Move or zoom the photo**, drag the picture to move it and zoom with the slider, then **Done moving** (until then the picture scrolls the page like the rest of it, so a thumb going down the form never moves the photo). The post shows a square of it.
    - **Two kinds of one item** (regular and chocolate cream puffs): **Add a second photo** puts the two side by side, each with its own zoom, its own drag and a **Name on it** ("Regular", "Chocolate") on a tab at its foot. **Swap them** changes sides; **Back to one photo** drops the right one. Only the **left** photo is kept for the website and becomes the item's picture in Square; the right one is in the Facebook picture only.
 5. **Make the picture.** Press and hold it to save it to the phone's photos (or Download), and **Copy caption**: with the order link, hours and menu link.
 

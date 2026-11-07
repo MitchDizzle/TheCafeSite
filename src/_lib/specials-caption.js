@@ -44,22 +44,21 @@ function specialSides(d, bare) {
   return bare ? words.charAt(0).toUpperCase() + words.slice(1) : `with ${words}`;
 }
 
-// One line per day: the plate only, read as a list (no full stops). The soup
-// is a separate item, so it gets its own line (soupLine), never "X with Y
-// and Z soup" run together.
+// One line per day, read as a list (no full stops): the plate, then that
+// day's soup after a dot, "Monday: French Dip with chips · Soup: Chicken
+// Noodle". The soup is a separate item, so it is never run into the plate
+// ("X with Y and Z soup"); the caption says once that soups are sold
+// separately. One list of days, not a second list of soups (client
+// 2026-11-07: two lists of days read as confusing).
 function dayLines(week) {
   return week.map((d) => {
-    if (d.closed) return `${words(d.date, { weekday: "long" })}: Closed for ${d.closed}`;
+    const day = words(d.date, { weekday: "long" });
+    if (d.closed) return `${day}: Closed for ${d.closed}`;
     const sides = specialSides(d);
-    return `${words(d.date, { weekday: "long" })}: ${d.special}${sides ? ` ${sides}` : ""}`;
+    const plate = d.special ? `${d.special}${sides ? ` ${sides}` : ""}` : "";
+    const soup = d.soup ? `Soup: ${d.soup}` : "";
+    return `${day}: ${[plate, soup].filter(Boolean).join(" · ")}`;
   });
-}
-
-// The week's soups on one line, apart from the plates, with short day names.
-function soupLine(week) {
-  const soups = week.filter((d) => d.soup)
-    .map((d) => `${words(d.date, { weekday: "short" })} ${d.soup}`);
-  return soups.length ? `Soups (sold separately): ${soups.join(", ")}` : "";
 }
 
 // The Monday of a YYYY-MM-DD date's week, as YYYY-MM-DD.
@@ -149,4 +148,4 @@ function plateRest(d) {
   return String((d && d.special) || "").split(/\s+/).filter((w) => w && !wordsOf(w).every((x) => used.has(x))).join(" ");
 }
 
-module.exports = { weekRange, dayLines, soupLine, specialSides, latestWeek, workWeek, withClosed, distinctBy, isVersion, versionsOf, breadsOf, plateRest };
+module.exports = { weekRange, dayLines, specialSides, latestWeek, workWeek, withClosed, distinctBy, isVersion, versionsOf, breadsOf, plateRest };

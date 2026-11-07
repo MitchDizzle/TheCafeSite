@@ -262,7 +262,7 @@
     SITE = r.site;
     // shots: one photo, or two side by side. Only the first is kept for the
     // website and Square; the second is in the post only.
-    pp = { setup: r, fontsOk, shots: [], keep: true, choice: "", title: "", kicker: "", desc: "", drink: false, special: false, price: null, sizes: false, item: null };
+    pp = { setup: r, fontsOk, shots: [], adjust: false, keep: true, choice: "", title: "", kicker: "", desc: "", drink: false, special: false, price: null, sizes: false, item: null };
     const t = r.today;
     choosePhotoSubject(t.special ? "special" : t.soup ? "soup" : "other");
     showPhotoEditor();
@@ -302,12 +302,20 @@
     const shotFields = pp.shots.map((s, i) => `<div class="pp-shot">
         ${two ? `<p class="pp-shot-head">${i ? "Right photo" : "Left photo (the one kept for Square and the website)"}</p>
         <label class="m-field">Name on it<input type="text" class="pp-label" data-shot="${i}" value="${esc(s.label)}" maxlength="24" placeholder="${i ? "Chocolate" : "Regular"}"></label>` : ""}
-        <label class="m-field">Zoom (drag the picture to move it)<input type="range" class="pp-zoom" data-shot="${i}" min="1" max="3" step="0.01" value="${s.zoom}"></label>
+        <label class="m-field pp-adjust-only">${two ? (i ? "Zoom the right photo" : "Zoom the left photo") : "Zoom"}<input type="range" class="pp-zoom" data-shot="${i}" min="1" max="3" step="0.01" value="${s.zoom}"></label>
       </div>`).join("");
+    // Moving and zooming is a mode (client 2026-11-07): on a phone the
+    // picture fills the screen's width, so if dragging it always moved the
+    // photo, and the zoom sliders were always under it, a thumb scrolling
+    // down the form kept grabbing one or the other. Until "Move or zoom the
+    // photo" is pressed, the picture scrolls the page like the rest of it.
+    const adjustBtn = pp.shots.length ? `<button type="button" class="m-btn pp-adjust-btn" id="pp-adjust" aria-pressed="${pp.adjust ? "true" : "false"}">${pp.adjust ? "Done moving" : "Move or zoom the photo"}</button>
+        <p class="m-note pp-adjust-only">Drag the picture to move ${two ? "the photo under your finger" : "the photo"}.</p>` : "";
     screen({ title: "Photo post", back: true,
-      body: `<div class="pp">
+      body: `<div class="pp${pp.adjust ? " pp--adjust" : ""}">
         ${fileBtn(0, pp.shots.length ? (two ? "Change the left photo" : "Take or choose another photo") : "📷 Take or choose a photo")}
         <canvas id="pp-canvas" class="pp-canvas" width="1080" height="1250" aria-label="The post as it will look"></canvas>
+        ${adjustBtn}
         ${shotFields}
         ${pp.shots.length === 1 ? fileBtn(1, "＋ Add a second photo, side by side (two kinds)") : ""}
         ${two ? `${fileBtn(1, "Change the right photo")}
@@ -362,6 +370,14 @@
       }
     });
     box.addEventListener("click", (e) => {
+      // Toggled in place, not re-drawn, so the panel keeps its scroll.
+      if (e.target.id === "pp-adjust") {
+        pp.adjust = !pp.adjust;
+        box.classList.toggle("pp--adjust", pp.adjust);
+        e.target.textContent = pp.adjust ? "Done moving" : "Move or zoom the photo";
+        e.target.setAttribute("aria-pressed", pp.adjust ? "true" : "false");
+        return;
+      }
       if (e.target.id === "pp-swap") pp.shots.reverse();
       else if (e.target.id === "pp-one") pp.shots.length = 1;
       else return;
@@ -372,7 +388,7 @@
     // pixels scaled to the canvas.
     let drag = null;
     canvas.addEventListener("pointerdown", (e) => {
-      if (!pp.shots.length) return;
+      if (!pp.shots.length || !pp.adjust) return;
       const k = canvas.width / canvas.clientWidth;
       const px = (e.clientX - canvas.getBoundingClientRect().left) * k;
       const fr = frames(pp.shots.length);
