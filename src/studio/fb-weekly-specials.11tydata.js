@@ -25,7 +25,9 @@ module.exports = {
       // the counter. The order link is our own /order (src/order.njk), which
       // forwards to the ordering page, like the printed QR codes: it reads
       // better than the ordering page's own address and survives a change
-      // of it.
+      // of it. Since 2026-11-07 the caption names no link at all: Facebook
+      // caps posts with links unless the Page pays for Meta Verified, and the
+      // picture already prints the web address.
       // The sides, every week: what "with choice of side" means, and what
       // can be swapped in on any other special (client 2026-10-09).
       const sides = (data.menu.categories.find((c) => c.id === "sides") || { items: [] })
@@ -45,7 +47,7 @@ module.exports = {
           `${site.address.street}, ${site.address.locality}, ${site.address.region}`,
           `Open ${o.hoursDays}, ${hours}`,
           site.phoneOrders ? `Call ${site.phone} to order ahead` : null,
-          site.ordering.url ? `Order online at ${site.social.website}/order` : null,
+          site.ordering.url ? "Order online through our website" : null,
         ].filter(Boolean).join(" · "),
       ];
     },

@@ -32,11 +32,13 @@ module.exports = {
         ...data.asked.map((a) => `${a.ask}? ${a.reply}.`),
         `Still working on: ${listed(data.working.map(lowerFirst))}.`,
         // Asks everyone, good or bad, and offers nothing: Google's rules.
-        `Every card is counted, good and bad, at ${site.social.website}/feedback. Keep telling us: survey cards are at the counter, or go to ${site.social.website}/survey. A Google review, good or bad, helps people find us too: ${site.social.website}/review`,
+        // No web links (client 2026-11-07): Facebook caps posts with links
+        // unless the Page pays for Meta Verified; the picture has the address.
+        "Every card is counted, good and bad, on the Our feedback page of our website. Keep telling us: survey cards are at the counter, and the survey is on our website too. A Google review, good or bad, helps people find us: look up The Café in Leavenworth on Google.",
         [
           `${site.address.street}, ${site.address.locality}, ${site.address.region}`,
           `Open ${o.hoursDays}, ${hours}`,
-          site.ordering.url ? `Order online at ${site.social.website}/order` : null,
+          site.ordering.url ? "Order online through our website" : null,
         ].filter(Boolean).join(" · "),
       ];
     },

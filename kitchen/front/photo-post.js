@@ -245,7 +245,9 @@
       const price = pp.price != null ? ` ${pp.sizes ? "From " : ""}$${pp.price.toFixed(2)}` : "";
       lines.push(`${pp.title}${desc ? `: ${desc}` : ""}.${price}`);
     }
-    lines.push(`Open ${SITE.hours} · Order online at ${SITE.order} · Menu: ${SITE.menu}`);
+    // No web links (client 2026-11-07): Facebook caps posts with links
+    // unless the Page pays for Meta Verified. The picture has the address.
+    lines.push(`Open ${SITE.hours} · Order online or see the menu on our website`);
     return lines.join("\n\n");
   }
 

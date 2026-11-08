@@ -245,7 +245,7 @@ dessert bars and the drinks. Use those for those jobs.
   sold separately."; one line per day, the plate then that day's soup
   ("Monday: French Dip with choice of side · Soup: Chicken Noodle": one list
   of days, never a second list of soups, client 2026-11-07); the sides line;
-  then address · hours · phone · order link.
+  then address · hours · phone · "Order online through our website".
 - **Routine:** add next week to `specials.json`, run `npm run build`, upload,
   then post the PNG and copy the caption from `/studio/downloads/`.
 
@@ -264,6 +264,10 @@ the day has passed, the post starts "Outdated. Thank You", like the weekly posts
   body wherever red text is needed.
 - Copy the post's wording into the caption too; don't rely on text that
   exists only inside the picture.
+- **No web links in a caption** (client 2026-11-07): Facebook caps how many
+  posts with links the Page can make unless it pays for Meta Verified. Say
+  "on our website" and let the picture carry the address (lvcafetogo.com),
+  which doesn't count. A post that truly needs a link is a call for Mitch.
 
 ---
 

@@ -64,7 +64,7 @@ module.exports = {
         [
           `${site.address.street}, ${site.address.locality}, ${site.address.region}`,
           `Open ${weekday} ${hours}`,
-          site.ordering.url ? `Order online at ${site.social.website}/order` : null,
+          site.ordering.url ? "Order online through our website" : null,
         ].filter(Boolean).join(" · "),
       ].filter(Boolean);
     },
