@@ -127,11 +127,15 @@
      Manage as a full-screen sheet, and nothing wider than the screen. */
   @media (max-width: 36rem) {
     html { font-size: 16px; }
-    .bar { padding-left: max(0.8rem, env(safe-area-inset-left)); padding-right: max(0.8rem, env(safe-area-inset-right)); }
+    .bar { row-gap: 0.3rem; padding-left: max(0.8rem, env(safe-area-inset-left)); padding-right: max(0.8rem, env(safe-area-inset-right)); }
+    /* Title, counts and clock on one line, the buttons under them: the bar
+       stays put while scrolling, so every line it takes is a line of orders. */
     .bar h1 { font-size: 1.1rem; }
-    .bar .spacer { flex-basis: 0; }
-    .bar .counts { order: 2; flex-basis: 100%; font-size: 0.9rem; }
-    .bar .clock { order: 1; margin-left: auto; font-size: 1.15rem; }
+    .bar h1 .wide { display: none; }
+    .bar .spacer { display: none; }
+    .bar .counts { order: 1; font-size: 0.9rem; }
+    .bar .clock { order: 2; margin-left: auto; font-size: 1.15rem; }
+    .bar::after { content: ""; order: 2; flex-basis: 100%; }
     .bar .undo-wrap, .bar #manage, .bar #sound { order: 3; }
     .bar button { padding: 0.45rem 0.7rem; }
     .undo-wrap { position: static; }
@@ -287,7 +291,7 @@
 </head>
 <body>
   <div class="bar">
-    <h1>Front · Orders</h1>
+    <h1><span class="wide">Front · </span>Orders</h1>
     <span class="counts" id="counts"></span>
     <span class="spacer"></span>
     <div class="undo-wrap" id="undo-wrap" hidden>
@@ -676,8 +680,10 @@
   // line, and the website's requests waiting for an answer another.
   const resvEl = document.getElementById("resv");
   let resvHtml = "";
+  let lastResv = null; // for the Reservations tile's count in Manage
   const clockWords = (t) => { const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h < 12 ? "am" : "pm"}`; };
   function renderResv(rv) {
+    lastResv = rv || null;
     if (!rv) { resvEl.hidden = true; return; }
     const now = Date.now();
     const close = rv.today.filter((r) => ["soon", "now", "held"].includes(r.phase));
@@ -887,29 +893,57 @@
   }
   document.getElementById("manage").addEventListener("click", () => openManage());
 
-  // ---- 2. The menu, grouped by how often each job comes up (2026-10-09):
-  // the daily ones first, the rest under them.
+  // ---- 2. The menu (Mitch 2026-11-08: twelve long rows were a lot of
+  // scrolling on a phone). The everyday jobs are four big tiles that are
+  // always there; the rest fold away under Numbers and Tools, each heading
+  // naming what's inside. Which of the two are open is kept on this device.
+  const MENU_OPEN_KEY = "front-menu-open";
+  const menuOpen = {
+    get() { try { return JSON.parse(localStorage.getItem(MENU_OPEN_KEY) || "{}"); } catch { return {}; } },
+    set(sec, open) { const o = menuOpen.get(); o[sec] = open; try { localStorage.setItem(MENU_OPEN_KEY, JSON.stringify(o)); } catch {} },
+  };
+  const ICONS = {
+    plan: '<path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2"/>',
+    reservations: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    desserts: '<path d="M5 11h14l-1.5 9h-11z"/><path d="M7 11a5 5 0 0 1 10 0"/><path d="M12 6V4"/>',
+    photo: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    numbers: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    tools: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+  };
+  const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
   function showMenu() {
+    const tile = (act, title, sub, badge) => `<button type="button" class="m-tile" data-act="${act}">
+      ${icon(act)}<b>${title}${badge ? ` <span class="m-badge">${badge}</span>` : ""}</b><small>${sub}</small></button>`;
     const row = (act, title, sub, warn) => `<button type="button" class="m-row${warn ? " warn" : ""}" data-act="${act}">
       <span><b>${title}</b><small>${sub}</small></span><span class="m-chev" aria-hidden="true">›</span></button>`;
+    const open = menuOpen.get();
+    const section = (sec, title, inside, rows) => `<details class="m-sec" data-sec="${sec}"${open[sec] ? " open" : ""}>
+      <summary>${icon(sec)}<span><b>${title}</b><small>${inside}</small></span></summary>
+      <div class="m-sec-rows">${rows.join("")}</div></details>`;
+    const requests = (lastResv && lastResv.requests) || 0;
     screen({ title: "Manage", back: false,
       body: `<div class="m-menu">
-        <h3 class="m-group">Every day</h3>
-        ${row("plan", "Specials", "Today's and the days ahead. Each day goes into Square by itself that morning.")}
-        ${row("reservations", "Reservations", "Tables booked ahead: take one by phone, and accept the website's requests.")}
-        ${row("photo", "Photo post", "Take a photo of the special or any item and make its Facebook picture here.")}
-        ${row("desserts", "Desserts", "What's in, how many are left, and the photo online ordering shows.")}
-        <h3 class="m-group">Now and then</h3>
-        ${row("saved", "Saved photos", "The photos Photo post kept on the kitchen PC. Delete test shots, or move them all to GitHub.")}
-        ${row("report", "Reports", "Orders, sales, kitchen times and items for any range of days.")}
-        ${row("survey", "Survey", "The customer survey's answers, cards and website: import a typed-up sheet, read the comments, and make the summary for the website.")}
-        ${row("today", "Today on the phone", "Sales so far against last week, busiest hours, what's selling, and the open orders. Add it to your home screen.")}
-        ${row("skip", "Leave off kitchen tickets", "Items and categories that go on the front's list instead.")}
-        ${row("backup", "Back up now", "Copy the orders, specials plan and photos to the backup now. Sales carry on.")}
-        ${row("update", "Check for updates", "Install a new version of the board, if there is one.")}
-        ${row("reset", "Reset for the day", "After testing: start today's numbers and the Undo lists fresh.", true)}
+        <div class="m-tiles">
+          ${tile("plan", "Specials", "Today and the days ahead")}
+          ${tile("reservations", "Reservations", requests ? `${requests} request${requests === 1 ? "" : "s"} to answer` : "Book a table, answer requests", requests)}
+          ${tile("desserts", "Desserts", "What's in, how many left")}
+          ${tile("photo", "Photo post", "A dish's Facebook picture")}
+        </div>
+        ${section("numbers", "Numbers", "Today's report · Reports · Survey", [
+          row("today", "Today's report", "Sales so far against last week, and what's selling"),
+          row("report", "Reports", "Sales, kitchen times and items, any days"),
+          row("survey", "Survey", "Answers, comments, the website's summary"),
+        ])}
+        ${section("tools", "Tools", "Kitchen tickets · Saved photos · Backup · Updates · Reset", [
+          row("skip", "Leave off kitchen tickets", "Items the front adds instead"),
+          row("saved", "Saved photos", "Delete test shots, move them to GitHub"),
+          row("backup", "Back up now", "Orders, specials plan and photos. Sales carry on."),
+          row("update", "Check for updates", "Install a new version of the board"),
+          row("reset", "Reset for the day", "After testing: today's numbers and Undo start fresh", true),
+        ])}
       </div>`,
       buttons: [savedPin.get() ? { label: "Forget the PIN here", act: "forget" } : null, { label: "Close", act: "close" }].filter(Boolean) });
+    for (const d of dialog.querySelectorAll(".m-sec")) d.addEventListener("toggle", () => menuOpen.set(d.dataset.sec, d.open));
   }
 
   // ---- Reset for the day: its own screen, because it can't be undone.

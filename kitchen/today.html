@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Café · Today</title>
-<!-- The owner's phone page: how the day is going (sales, orders, the same
-     weekday before, busiest hours, what's selling), then what's on the board
-     right now. Read-only: nothing here presses Done or Handed off. The
-     numbers are behind the PIN (updatePin); the orders are the front page's.
-     Away from the shop it opens through Tailscale (README, "On the owner's
-     phone, away from the shop"). -->
+<title>Today's report</title>
+<!-- Today's report (Manage -> Today's report): how the day is going (sales,
+     orders, the same weekday before, busiest hours, what's selling), then
+     what's on the board right now. On a phone one column; on the PC two
+     (Mitch 2026-11-08: it's used on the PC as well). Read-only: nothing here
+     presses Done or Handed off. The numbers are behind the PIN (updatePin);
+     the orders are the front page's. Away from the shop it opens through
+     Tailscale (README, "Away from the shop: Tailscale"). -->
 <meta name="theme-color" content="#1F4552">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -44,6 +45,15 @@
   .alert[hidden] { display: none; }
   main { max-width: 40rem; margin: 0 auto; padding: 0.8rem max(0.9rem, env(safe-area-inset-right)) max(3rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left)); }
   h2 { margin: 1.6rem 0 0.5rem; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  /* On the PC: the numbers on the left, the reservations and the board on
+     the right, instead of one phone-width column in the middle. */
+  @media (min-width: 64rem) {
+    main { max-width: 78rem; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 0 2rem; align-items: start; padding-left: 1.5rem; padding-right: 1.5rem; }
+    .col-side { position: sticky; top: 3.6rem; max-height: calc(100vh - 4.4rem); overflow-y: auto; padding-bottom: 1rem; }
+    .col-side > h2:first-child { margin-top: 0.4rem; }
+    .foot { grid-column: 1 / -1; }
+  }
+  @media (max-width: 63.99rem) { .bar .wide { display: none; } }
   .card { background: var(--paper); border: 1px solid var(--line); border-radius: 0.6rem; padding: 0.9rem 1rem; }
   .muted { color: var(--muted); }
   .small { font-size: 0.85rem; }
@@ -122,19 +132,21 @@
 </head>
 <body>
   <div class="bar">
-    <h1>Today</h1>
+    <h1>Today<span class="wide">'s report</span></h1>
     <span class="as-of" id="as-of"></span>
+    <a href="#" id="front-bar" class="wide">Front page</a>
     <button type="button" id="refresh" aria-label="Refresh now">↻</button>
   </div>
   <div class="alert" id="alert" hidden></div>
   <main>
+   <div class="col-main">
     <section id="lock" class="card" hidden>
       <form class="pin" id="pin-form">
         <label for="pin"><b>Enter the PIN</b> to see the day's numbers (the Manage PIN).</label>
         <input id="pin" type="password" inputmode="numeric" autocomplete="off">
         <p class="error" id="pin-msg" hidden></p>
         <div class="row">
-          <label><input type="checkbox" id="pin-keep" checked> Remember on this phone</label>
+          <label><input type="checkbox" id="pin-keep" checked> Remember on this device</label>
           <span style="flex:1"></span>
           <button type="submit">Show</button>
         </div>
@@ -163,14 +175,17 @@
       <h2>Most ordered today</h2>
       <div class="card" id="top"></div>
     </div>
+   </div>
 
+   <div class="col-side">
     <h2>Reservations</h2>
     <div class="card resv" id="resv"><p class="muted">Reading…</p></div>
 
     <h2>On the board now <span id="board-count"></span></h2>
     <div class="orders" id="orders"><p class="muted">Reading…</p></div>
+   </div>
 
-    <p class="muted small" style="margin-top:2rem">From the kitchen board's own count: Square's Net sales (after discounts, without tax or tips), on the day an order is made (Square counts the day it's paid). Refunds aren't taken off. Tips are on top, for the whole day so far. Canceled, test and demo orders aren't counted. Square's Dashboard has the official sales.
+    <p class="muted small foot" style="margin-top:2rem">From the kitchen board's own count: Square's Net sales (after discounts, without tax or tips), on the day an order is made (Square counts the day it's paid). Refunds aren't taken off. Tips are on top, for the whole day so far. Canceled, test and demo orders aren't counted. Square's Dashboard has the official sales.
       <br><a href="#" id="front-link">The front page</a> · <a href="#" id="forget" hidden>Forget the PIN here</a></p>
   </main>
 
@@ -182,6 +197,7 @@
   const api = (p) => (key ? `${p}?key=${encodeURIComponent(key)}` : p);
   document.head.appendChild(Object.assign(document.createElement("link"), { rel: "manifest", href: api("/today.webmanifest") }));
   document.getElementById("front-link").href = api("/front");
+  document.getElementById("front-bar").href = api("/front");
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
