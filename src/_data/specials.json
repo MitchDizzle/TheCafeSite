@@ -85,7 +85,9 @@
       "date": "2026-11-09",
       "soup": "Chicken Noodle",
       "special": "French Dip",
-      "anySide": true,
+      "sides": [
+        "Oven Baked Potatoes"
+      ],
       "extraSides": [
         "Oven Baked Potatoes"
       ]
