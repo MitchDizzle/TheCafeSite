@@ -326,3 +326,4 @@ Run through this list before anything goes out.
 | Name, phone, address, hours, links | `src/_data/site.json` |
 | Item names, prices, diet marks | `src/_data/menu.json` (read its `_note` keys) |
 | Making a new piece, exporting, uploading | `src/studio/README.md` |
+| The kitchen board's screens (same palette and fonts; red buttons, but never red on an order card, where it means late) | `kitchen/kitchen.css`, `kitchen/README.md` "The look" |

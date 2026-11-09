@@ -19,6 +19,9 @@
 <link rel="apple-touch-icon" href="/front-icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/front-icon-192.png">
 <link rel="stylesheet" href="/kitchen.css">
+<!-- The house fonts (kitchen.css): loaded without holding the page up. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@700&display=swap" media="print" onload="this.media='all'">
 <style>
   /* Phone first: one column, the money at the top, big enough to read at a
      glance. Wider screens just get a wider column. */
@@ -31,9 +34,11 @@
     padding-top: max(0.6rem, env(safe-area-inset-top));
     padding-left: max(1rem, env(safe-area-inset-left));
     padding-right: max(1rem, env(safe-area-inset-right));
-    background: var(--teal-dark); color: var(--cream);
+    background: var(--teal-dark); background: var(--brand-ground); color: var(--cream);
   }
-  .bar h1 { margin: 0; font-size: 1.1rem; }
+  .bar h1 { display: flex; align-items: center; gap: 0.6rem; margin: 0; font-family: var(--font-head); font-size: 1.15rem; line-height: 1; }
+  .bar h1 .wordmark { height: 1.6rem; }
+  .bar h1 .label { font-family: var(--font-body); font-size: 0.9rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
   .bar .as-of { margin-left: auto; font-size: 0.85rem; opacity: 0.9; text-align: right; }
   .bar button, .bar a {
     font: inherit; font-weight: 700; font-size: 0.9rem;
@@ -44,7 +49,7 @@
   .alert.practice { background: #E7D9F3; color: #3D1A5C; }
   .alert[hidden] { display: none; }
   main { max-width: 40rem; margin: 0 auto; padding: 0.8rem max(0.9rem, env(safe-area-inset-right)) max(3rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left)); }
-  h2 { margin: 1.6rem 0 0.5rem; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  h2 { margin: 1.6rem 0 0.5rem; font-family: var(--font-head); font-size: 1.2rem; line-height: 1.2; color: var(--text); }
   /* On the PC: the numbers on the left, the reservations and the board on
      the right, instead of one phone-width column in the middle. */
   @media (min-width: 64rem) {
@@ -132,7 +137,7 @@
 </head>
 <body>
   <div class="bar">
-    <h1>Today<span class="wide">'s report</span></h1>
+    <h1><span id="brand" class="wide">The Café</span><span class="label">Today<span class="wide">'s report</span></span></h1>
     <span class="as-of" id="as-of"></span>
     <a href="#" id="front-bar" class="wide">Front page</a>
     <button type="button" id="refresh" aria-label="Refresh now">↻</button>
@@ -200,6 +205,11 @@
   document.getElementById("front-bar").href = api("/front");
 
   const $ = (id) => document.getElementById(id);
+  // The wordmark in the bar, on the PC (kitchen.css). A phone has no room.
+  fetch("/front-wordmark.svg").then((r) => (r.ok ? r.text() : Promise.reject())).then((svg) => {
+    $("brand").innerHTML = svg.replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/<svg([^>]*?) width="[^"]*" height="[^"]*"/, '<svg$1 class="wordmark" role="img" aria-label="The Café"');
+  }).catch(() => {});
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const money = (n) => (n == null ? "–" : `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
   const fmtTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });

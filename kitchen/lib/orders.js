@@ -5,7 +5,7 @@ const { pageVersions } = require("./pages");
 const { MOCK, MUTE, cfg } = require("./config");
 const { fetchOrders } = require("./square");
 const { live } = require("./live");
-const { bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, autoOff, readySince, byHand, dueSeen, state, saveState } = require("./state");
+const { bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, pinned, autoOff, readySince, byHand, dueSeen, state, saveState } = require("./state");
 const { splitAdded } = require("./addons");
 const { toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
 const { withMockStates } = require("./square-status");
@@ -199,8 +199,8 @@ function snapshot() {
 // front, and a list of finished orders hides the ones that aren't. Never an
 // unpaid order (money is still owed), never an online order the front hasn't
 // marked ready in Square (that's what texts the customer), and never one
-// brought back with Undo. Timed from when it turned ready: the kitchen's
-// Done, or for anything else the first poll that saw it ready.
+// brought back with Undo or pinned. Timed from when it turned ready: the
+// kitchen's Done, or for anything else the first poll that saw it ready.
 function autoHandoff() {
   if (!cfg.autoHandoffMinutes) return;
   const now = Date.now();
@@ -209,7 +209,7 @@ function autoHandoff() {
     const ready = readyAt(t);
     if (!ready) { delete readySince[t.id]; continue; }
     if (!readySince[t.id]) readySince[t.id] = bumped[t.id] ? Date.parse(bumped[t.id]) : now;
-    if (handedOff[t.id] || canceled[t.id] || keepOnFront[t.id]) continue;
+    if (handedOff[t.id] || canceled[t.id] || keepOnFront[t.id] || pinned[t.id]) continue;
     // Online orders wait for a person while the board tells Square: their
     // Handed off is what marks them picked up there.
     if (t.unpaid || (t.kind !== "COUNTER" && (cfg.squareStatus || !t.squareReady))) continue;
@@ -225,15 +225,18 @@ function autoHandoff() {
 }
 
 // /front: ready orders first, oldest-ready at the top (the one waiting
-// longest on the counter), then what's still cooking in board order.
+// longest on the counter), then what's still cooking in board order. A
+// pinned order goes first in its own list, the earliest pinned first.
 function frontSnapshot() {
   const now = Date.now();
   const orders = live.all
     .filter((t) => !frontHiddenReason(t, now))
     // holdUntil is cleared at once for one sent to the kitchen, not at the next poll of Square.
-    .map((t) => ({ ...t, holdUntil: sentNow[t.id] ? null : t.holdUntil, readyAt: readyAt(t), platesDone: platesDone[t.id] || null, autoSquare: !!cfg.squareStatus && !t.demo }))
+    .map((t) => ({ ...t, holdUntil: sentNow[t.id] ? null : t.holdUntil, readyAt: readyAt(t), platesDone: platesDone[t.id] || null, autoSquare: !!cfg.squareStatus && !t.demo, pinned: pinned[t.id] || null }))
     .sort((a, b) => {
       if (!!a.readyAt !== !!b.readyAt) return a.readyAt ? -1 : 1;
+      if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+      if (a.pinned) return Date.parse(a.pinned) - Date.parse(b.pinned);
       if (a.readyAt) return Date.parse(a.readyAt) - Date.parse(b.readyAt);
       return Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt);
     });
@@ -253,7 +256,7 @@ function startDemo() {
 
 function endDemo() {
   live.demo = null;
-  for (const map of [bumped, platesDone, offBoard, handedOff, canceled, sentNow]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
+  for (const map of [bumped, platesDone, offBoard, handedOff, canceled, sentNow, pinned]) for (const id of Object.keys(map)) if (isDemo(id)) delete map[id];
   console.log(`Demo ended (${new Date().toLocaleTimeString()}).`);
 }
 

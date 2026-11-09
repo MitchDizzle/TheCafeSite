@@ -5,11 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kitchen Orders</title>
 <link rel="stylesheet" href="/kitchen.css">
+<!-- The house fonts (kitchen.css): loaded without holding the board up, so
+     it opens at once with the internet down, in the system font. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@700&display=swap" media="print" onload="this.media='all'">
 <style>
-  /* Sizes scale with the screen like /menu-board. Colours are in kitchen.css. */
+  /* Sizes scale with the screen like /menu-board. Colours are in kitchen.css:
+     House style's fonts and ground, and otherwise the board as it was, as
+     colour here means time. */
   html { font-size: clamp(14px, 1.15vw, 26px); }
   body {
-    background: var(--ground);
+    background: var(--ground) var(--board-ground) fixed;
     -webkit-user-select: none;
     user-select: none;
   }
@@ -26,6 +32,7 @@
     gap: 1.25rem;
     padding: 0.5rem 1.25rem;
     background: var(--teal-dark);
+    background: var(--brand-ground);
     color: var(--cream);
   }
   .bar-left, .bar-right { display: flex; align-items: center; gap: 1rem; min-width: 0; }
@@ -284,6 +291,11 @@
      top bar: nobody needs it mid-rush, and a quiet moment is when a new
      cook looks around. */
   .empty-keys { margin-top: 1.5rem; font-size: 1.3rem; color: #7F9AA3; line-height: 2.2; }
+  /* The wordmark on the empty board: a quiet moment, so the house look. */
+  .empty .brand { display: flex; justify-content: center; margin-bottom: 1.6rem; }
+  .empty .brand .wordmark { height: 4.2rem; opacity: 0.9; }
+  .empty .brand:empty { display: none; }
+  .empty p:first-of-type { font-family: var(--font-head); font-weight: 700; }
 
   .ticket {
     display: flex;
@@ -754,9 +766,19 @@
     document.getElementById("count").innerHTML = [n ? `${n} open` : "", today ? `<span class="today">${today} today</span>` : ""].filter(Boolean).join(" · ");
   }
 
+  // The wordmark for the empty board (kitchen.css draws it in the house
+  // colours). Nothing until it's fetched; the board never waits for it.
+  let wordmarkSvg = "";
+  fetch("/front-wordmark.svg").then((r) => (r.ok ? r.text() : Promise.reject())).then((svg) => {
+    wordmarkSvg = svg.replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/<svg([^>]*?) width="[^"]*" height="[^"]*"/, '<svg$1 class="wordmark" role="img" aria-label="The Café"');
+    const brand = board.querySelector(".empty .brand");
+    if (brand) brand.innerHTML = wordmarkSvg;
+  }).catch(() => {});
+
   function render(fresh) {
     if (!tickets.length) {
-      board.innerHTML = `<div class="empty"><p>No open orders</p>
+      board.innerHTML = `<div class="empty"><div class="brand">${wordmarkSvg}</div><p>No open orders</p>
         <p class="empty-keys keys"><b>1</b>–<b>9</b> done &nbsp; <b>⌫</b> or <b>0</b> undo &nbsp; <b>+</b> <b>−</b> scroll &nbsp; <b>⏎</b> check Square now</p></div>`;
     } else {
       assignSlots();

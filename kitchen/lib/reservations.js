@@ -416,4 +416,4 @@ function mockList() {
 
 load();
 
-module.exports = { fromSheet, book, load, startReservations, syncNow, saveReservation, actOn, markSeated, screenView, manageView, reservationsLine, phase, clean };
+module.exports = { callScript, google, fromSheet, book, load, startReservations, syncNow, saveReservation, actOn, markSeated, screenView, manageView, reservationsLine, phase, clean };

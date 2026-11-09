@@ -127,13 +127,14 @@ To make every run on your computer a development run, set it once for good: `set
 The same orders for the counter, on any laptop, tablet or phone on the cafe wifi: `http://<kitchen PC name>:8090/front`. The board program prints the exact address when it starts, and `/check` shows it too. Bookmark it by the PC's name, not its IP address, because the router can change the address.
 
 - **Not paid:** an order with no payment on it has a red band with how much is due, and a **Canceled** button next to Handed off. Canceled takes it off the kitchen board too; Undo in the top bar brings it back to both.
-- **Ready** (green, on top): the kitchen pressed Done, so the food is coming out. It chimes once the laptop's **Sound** button is on.
+- **Ready** (green, on top): the kitchen pressed Done, so the food is coming out. It chimes once the **speaker** in the top bar is on; a muted speaker is slashed through and amber.
 - **Cooking:** still on the kitchen board. A pickup counts down to its pickup time; a counter order counts up from when it was rung.
 - **Add from the front:** a counter sale's skip-list items (drinks, chips) and any condiment packets: what the counter puts in the bag. A Square modifier with **"packet"** in its name ("Ketchup packet") is moved off the kitchen ticket and onto this list, totalled across the order. Online and DoorDash orders have no such list: the kitchen bags them whole. Tap a line to tick it off while bagging. Ticks are kept on that device only.
 - **Online orders** say whether they've been marked ready in Square ("Marking it ready in Square…" for the few seconds after Done). With `squareStatus` on, **Handed off** is what marks them picked up in Square; an order stays on the front page until someone presses it.
 - **An online or DoorDash order of only drinks or chips** goes on the kitchen board like any other order (those items on the ticket), and shows as Cooking here until the kitchen presses Done. A counter sale of only those doesn't show anywhere, because it's handed over as it's rung up.
 - **Handed off** clears an order from the front page only; it never touches the kitchen board. **Undo** in the top bar lists today's hand-offs; click one to bring it back.
-- **Ready orders clear themselves** after 10 minutes if nobody presses Handed off (`autoHandoffMinutes`; the Ready heading says so). They go on Undo, marked "cleared by itself", and one brought back stays until it's handed off by hand. Two kinds never clear themselves: a **not paid** order, and an **online or DoorDash order** (its Handed off tells Square it was picked up; with `squareStatus` off, only one not yet marked ready in Square).
+- **Pin and minimize** (the two small buttons on each card's top right; Mitch 2026-11-08, for a big order that isn't picked up straight away). **Pin** puts the order first in its list (Ready or Cooking), marks it PINNED and stops it clearing itself; it's kept on the kitchen PC, so every device shows it, until it's unpinned or handed off. **Minimize** folds the card to its name, status and one line (how many items, from the front, not paid, a note); tap the card to open it again. Minimized is per device, like the ticks.
+- **Ready orders clear themselves** after 10 minutes if nobody presses Handed off (`autoHandoffMinutes`; the Ready heading says so). They go on Undo, marked "cleared by itself", and one brought back stays until it's handed off by hand, as does a pinned one. Two kinds never clear themselves: a **not paid** order, and an **online or DoorDash order** (its Handed off tells Square it was picked up; with `squareStatus` off, only one not yet marked ready in Square).
 - **Today**, under the orders: how many orders so far, breakfast vs lunch (before or after 10:30am, by when it was rung up or due; 11am until 2026-11-06, and saved days are split at 10:30 too), counter vs online, average and longest time in the kitchen (from when it went on the kitchen board to Done, so a pickup or phone order for later counts from 15 minutes before its time and a DoorDash order from when it stopped waiting for a Dasher; if a ticket is undone and Done again, the time it sat cleared doesn't count. Until 2026-10-21 counter orders only, from when they were rung), and the most ordered items. Canceled orders and unpaid open checks aren't counted. Sales and comparisons with other days are on the owner's phone page, `/today` (below).
 
 Only the front page, its Handed off and Undo, the PIN-protected Manage actions and Today's report (`/today`) answer other devices. The kitchen board, `/check`, Done, the power menu and updates answer the kitchen PC alone.
@@ -183,7 +184,7 @@ Settings in `config.json`, both optional:
 | `photoPlaceholders` | `placeholders/soup-of-the-day.png` for Soup of the Day only | The picture for each daily item on a day its dish has no photo. Leave an item out to show nothing of ours on those days. Lunch Special is left out (see "Photos in Square"); `"Lunch Special": "placeholders/lunch-special.png"` puts its card back. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
-| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu: the everyday four (Specials, Reservations, Desserts, Photo post) are tiles at the top, and the rest fold away under **Numbers** (Today's report, Reports, Survey) and **Tools** (Leave off kitchen tickets, Saved photos, Back up now, Check for updates, Reset for the day); a phone remembers which of the two are open (Mitch 2026-11-08). Back returns to the menu; closing the panel forgets the PIN, unless **Remember on this device** was ticked. With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), delete test shots or move the photos to GitHub in **Saved photos** (see Photo post), **Back up now** (the backup below, on demand; the board and orders carry on while it runs), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update, installed quietly as on the board; see Settings above) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below), or open **Today's report** (see "Today's report"). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu: the everyday four (Specials, Reservations, Desserts, Photo post) are tiles at the top, and the rest fold away under **Numbers** (Today's report, Emailed report, Reports, Survey) and **Tools** (Leave off kitchen tickets, Saved photos, Back up now, Check for updates, Reset for the day); a phone remembers which of the two are open (Mitch 2026-11-08). Back returns to the menu; closing the panel forgets the PIN, unless **Remember on this device** was ticked. With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), delete test shots or move the photos to GitHub in **Saved photos** (see Photo post), **Back up now** (the backup below, on demand; the board and orders carry on while it runs), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update, installed quietly as on the board; see Settings above) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below), show, print or email the **Emailed report** (see below), or open **Today's report** (see "Today's report"). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
 
 ## Today's report (`/today`)
 
@@ -253,9 +254,9 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `board.html` | The kitchen screen. |
 | `front.html` | The front page for the counter (`/front`). |
 | `today.html` | Today's report (`/today`), for the PC or the owner's phone: the day's numbers, the reservations and the open orders. |
-| `google-script\Code.gs` | The reservations' Google Apps Script, pasted into the cafe's Google Sheet (see "Reservations"). Not run on this PC. |
-| `front\` | The front page's Manage jobs, one file each (Specials, Reservations, Photo post, Saved photos, Reports, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
-| `kitchen.css` | The colours and base styles both screens share. |
+| `google-script\Code.gs` | The reservations' Google Apps Script, pasted into the cafe's Google Sheet (see "Reservations"); it also sends the emailed report. Not run on this PC. |
+| `front\` | The front page's Manage jobs, one file each (Specials, Reservations, Photo post, Saved photos, Reports, Emailed report, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
+| `kitchen.css` | The colours, fonts and base styles every screen shares: House style (see "The look"). |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `data\` | This PC's own files, made by the board; gitignored, never touched by an update (see "The data folder and backups"). |
 | `wordmark.svg` | The Café wordmark drawn into Photo post's pictures. |
@@ -448,6 +449,31 @@ Two downloads for a report made elsewhere (a spreadsheet opens them):
 - **Every order (CSV):** one row per order, with its items, the receipt number, where from (counter, online, DoorDash) and the wait at the front.
 
 A day the board never ran is missing; Square's own reports still have its sales. Sales are Square's Net sales (see `/today` above); tips are on their own line (with how many orders had one), and "collected" beside them is what customers paid, tax and tips in, which is what the board counted as sales until 2026-10-27. The CSVs have both. It's the only place the kitchen times exist, so it's copied every day; set `backupDir` to keep a copy off the PC (see "The data folder and backups").
+
+## The emailed report (Manage on the front page)
+
+**The day's report at 2:10pm, and the week's on Friday** (Mitch 2026-11-08: Square sends a summary, but Terry wants one with everything, to print). It goes to the cafe's email (theabcafe@gmail.com) as a page to read, with the same page attached as a PDF to print. It has:
+
+- net sales, orders, average ticket and tips, against the same day last week (the week before, for the week's), and a usual day of the last few weeks;
+- **counter, online pickup and DoorDash** side by side (orders, net sales, average, share), and breakfast against lunch;
+- **DoorDash:** orders, sales and share, the kitchen's time and how long Dashers waited at the counter, and each DoorDash order (time, items, sale, kitchen, wait). With `doordashFeePercent` in `config.json` (DoorDash's commission, say `25`) it also says about how much of that is DoorDash's;
+- online pickups: the kitchen's time and how long they sat on the counter for the customer;
+- the specials sold (Lunch Special by what it was, soup cups and bowls), the kitchen's times (by order size, the slowest three), orders and sales hour by hour, the day's tables, and **everything sold**;
+- the week's has a line per day as well (orders, sales, average, tips, breakfast / lunch, online, DoorDash, kitchen time) and the specials day by day.
+
+Made from the daily history, so it counts what Reports and Today's report count; Square's Dashboard has the official sales. A day with no orders (closed) sends nothing.
+
+**Manage → Numbers → Emailed report** shows the report for any day or week, to read or **Print** (from the PC: Chrome's print), and **Email it now**. Under **When it's emailed, and to whom**: the day's and the week's each on or off, the time, and up to five more addresses (Terry's, say). Saved on the kitchen PC; `reportTime` and `reportTo` in `config.json` are only where it starts. The week's goes on the week's last open day (`openDays`).
+
+If the PC was off at 2:10, or Google didn't answer, it goes as soon as it can: tried every 10 minutes, and the next day still (up to three days for a day's, a week for the week's). Never for a day before this update, so the first one is the first 2:10 after it. Test mode and a development copy (`start-dev.bat`) never send it by themselves. `/check` says when the last one went, or why it didn't.
+
+**It goes through the reservations' Google script**, so it needs `reservationsKey` (see "Reservations"), and **the script needs this version of `Code.gs`**: paste it in again and deploy a new version (see "After a change to `Code.gs`" there). Until then, Email it now says Google doesn't know the action. Google allows about 100 emails a day from a free account; the report is one or two.
+
+## The look (House style)
+
+Picked 2026-11-08 from four looks (CafeWork `KDS-THEMES.html`): the website's, brought to the screens. The wordmark in the front page's and Today's report's bars and on the empty kitchen board, on the website's teal gradient; Playfair Display for headings and Lato for everything else; red for Manage's buttons, as on the website. The order cards keep their own colours (green Handed off, red only for late, not paid and allergies), and on the kitchen board colour still means time.
+
+The fonts come from Google Fonts, loaded so a screen never waits for them: with the internet down, a screen opens in the system font. The colours are named for their job in `kitchen.css` (`--surface`, `--action`, `--brand-ground`…), so a dark mode is a second set of those.
 
 ## Survey (Manage on the front page)
 

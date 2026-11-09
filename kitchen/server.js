@@ -56,6 +56,7 @@
  *   desserts.js, photo-post.js   Manage -> Desserts and Photo post
  *   reservations.js   Manage -> Reservations, the website's table requests
  *                     (through google-script/Code.gs), the screens' list
+ *   report.js         the day's and the week's report, emailed at 2:10pm
  *   mock.js           test mode's and the demo's made-up orders
  *   check.js          /check, and the front page's addresses
  *   system.js         power menu, updates, watchdog
@@ -132,6 +133,7 @@ function start() {
     setInterval(syncSquare, 2000);
     startBackups();
     startReservations();
+    require("./lib/report").start();
   });
 }
 

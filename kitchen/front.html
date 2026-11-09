@@ -16,11 +16,14 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/front-icon-192.png">
 <link rel="stylesheet" href="/kitchen.css">
 <link rel="stylesheet" href="/front/manage.css">
+<!-- The house fonts (kitchen.css): loaded without holding the page up. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@700&display=swap" media="print" onload="this.media='all'">
 <style>
   /* The counter's view of the kitchen board, for a laptop or tablet on the
      cafe wifi. Read at arm's length, not across a kitchen, so sizes are
-     ordinary page sizes, not the board's. System fonts for the same reason
-     as the board: nothing to load from the internet. */
+     ordinary page sizes, not the board's. House style (kitchen.css): the
+     wordmark on the teal gradient, Playfair headings, Lato. */
   html { font-size: 17px; }
   body { background: var(--cream); }
 
@@ -37,9 +40,12 @@
     padding-left: max(1.2rem, env(safe-area-inset-left));
     padding-right: max(1.2rem, env(safe-area-inset-right));
     background: var(--teal-dark);
+    background: var(--brand-ground);
     color: var(--cream);
   }
-  .bar h1 { margin: 0; font-size: 1.25rem; }
+  .bar h1 { display: flex; align-items: center; gap: 0.6rem; margin: 0; font-family: var(--font-head); font-size: 1.25rem; line-height: 1; }
+  .bar h1 .wordmark { height: 1.75rem; }
+  .bar h1 .wide { font-family: var(--font-body); font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
   .bar .counts { font-size: 1rem; opacity: 0.9; }
   .bar .spacer { flex: 1; }
   .bar .clock { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -93,7 +99,13 @@
   .today .stat b { display: block; font-size: 1.6rem; }
   .today .stat span { color: var(--muted); font-size: 0.9rem; }
   .today .top { margin-top: 0.7rem; color: var(--muted); }
+  /* Sound: a speaker, slashed through while muted (Mitch 2026-11-08). Off
+     is amber as well, so a silent front page is noticed. */
+  .bar #sound { display: grid; place-items: center; width: 2.7rem; height: 2.35rem; padding: 0; }
+  .bar #sound svg { width: 1.45rem; height: 1.45rem; }
+  .bar #sound .muted-only { display: none; }
   .bar button.sound-off { border-color: var(--amber); color: var(--amber); }
+  .bar #sound.sound-off .muted-only { display: inline; }
 
   .alert { padding: 0.6rem 1.2rem; background: var(--amber); color: #1A1A1A; font-weight: 700; }
   .alert[hidden] { display: none; }
@@ -108,11 +120,11 @@
 
   main { padding: 1rem 1.2rem max(3rem, env(safe-area-inset-bottom)); max-width: 90rem; margin: 0 auto; }
   h2 {
-    margin: 1.2rem 0 0.6rem;
-    font-size: 0.95rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
+    margin: 1.3rem 0 0.6rem;
+    font-family: var(--font-head);
+    font-size: 1.3rem;
+    line-height: 1.2;
+    color: var(--text);
   }
   .list {
     display: grid;
@@ -121,7 +133,7 @@
     align-items: start;
   }
   .empty { color: var(--muted); font-size: 1.1rem; margin: 0.4rem 0 0; }
-  .h-note { font-weight: 400; letter-spacing: 0; text-transform: none; font-size: 0.9rem; }
+  .h-note { font-family: var(--font-body); font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 
   /* Phone: the bar's buttons on their own row under the title and clock,
      Manage as a full-screen sheet, and nothing wider than the screen. */
@@ -151,7 +163,7 @@
   .order {
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 0.5rem;
+    border-radius: 0.6rem;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
@@ -159,13 +171,36 @@
      the front calls out, so it never gets cut short for the type line. */
   .order header {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 0.6rem;
-    padding: 0.55rem 0.8rem;
+    padding: 0.55rem 0.5rem 0.55rem 0.8rem;
     border-bottom: 1px solid var(--line);
   }
-  .order .name { display: block; font-size: 1.2rem; font-weight: 800; overflow-wrap: anywhere; }
+  /* Pin and minimize (Mitch 2026-11-08: a big order that isn't picked up
+     straight away). Pin keeps an order at the top of its list and stops it
+     clearing itself; it's the kitchen PC's, so every device shows it.
+     Minimize folds a card to its header and one line, on this device only. */
+  .card-tools { display: flex; gap: 0.15rem; }
+  .card-tools button {
+    display: grid; place-items: center;
+    width: 2.3rem; height: 2.3rem; padding: 0;
+    border: 0; border-radius: 0.4rem;
+    background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .card-tools button:hover { background: var(--hover); color: var(--teal-dark); }
+  .card-tools button:focus-visible { outline: 3px solid var(--teal); outline-offset: 1px; }
+  .card-tools svg { width: 1.3rem; height: 1.3rem; }
+  .card-tools [data-pin][aria-pressed="true"] { background: var(--teal-dark); color: var(--cream); }
+  .pin-tag { display: inline-block; padding: 0 0.35rem; margin-right: 0.35rem; border-radius: 0.25rem; background: var(--teal-dark); color: var(--cream); font-weight: 900; }
+  .order.pinned { box-shadow: inset 0 0.25rem 0 var(--teal-dark), 0 1px 3px rgba(0, 0, 0, 0.06); }
+  .order .brief { display: none; padding: 0.45rem 0.8rem 0.55rem; color: var(--muted); font-size: 0.95rem; }
+  .order .brief b { color: var(--text); }
+  .order .brief b.brief-due { color: var(--red-dark); }
+  .order.mini > .section, .order.mini > .actions { display: none; }
+  .order.mini .brief { display: block; }
+  .order.mini header { border-bottom: 0; cursor: pointer; }
+  .order .name { display: block; font-family: var(--font-head); font-size: 1.25rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
   .order .kind { display: block; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
   /* A long status ("Plates out 11:52 AM · to go cooking") wraps on its own
      side rather than squeezing the name into a sliver. */
@@ -182,7 +217,7 @@
 
   .section { padding: 0.5rem 0.8rem; }
   .section + .section { border-top: 1px dashed var(--line); }
-  .label { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.25rem; }
+  .label { font-size: 0.72rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); margin-bottom: 0.25rem; }
   .items { list-style: none; margin: 0; padding: 0; }
   .items li { display: grid; grid-template-columns: 1.8rem 1fr; padding: 0.15rem 0; }
   .qty { font-weight: 800; }
@@ -283,7 +318,7 @@
   .resv-item .notes { color: var(--muted); }
   .resv-item .when { margin-left: auto; font-weight: 800; color: var(--teal-dark); white-space: nowrap; }
   .resv-item.now .when { color: #8A5A0B; }
-  .resv-item button { font: inherit; font-weight: 800; padding: 0.35rem 0.9rem; border: 2px solid var(--teal); border-radius: 0.4rem; background: var(--teal); color: var(--cream); cursor: pointer; }
+  .resv-item button { font: inherit; font-weight: 800; padding: 0.35rem 0.9rem; border: 2px solid var(--action); border-radius: 0.4rem; background: var(--action); color: #fff; cursor: pointer; }
   .resv-line { margin: 0; color: var(--teal-dark); font-size: 0.95rem; }
   .resv-line button { font: inherit; font-weight: 800; padding: 0.2rem 0.6rem; border: 2px solid var(--red); border-radius: 0.4rem; background: var(--paper); color: var(--red-dark); cursor: pointer; }
   .test-tag { display: inline-block; padding: 0 0.4rem; margin-right: 0.4rem; border-radius: 0.25rem; background: #DDE3E6; color: var(--text); font-weight: 900; }
@@ -291,7 +326,7 @@
 </head>
 <body>
   <div class="bar">
-    <h1><span class="wide">Front · </span>Orders</h1>
+    <h1><span id="brand">The Café</span><span class="wide">Front</span></h1>
     <span class="counts" id="counts"></span>
     <span class="spacer"></span>
     <div class="undo-wrap" id="undo-wrap" hidden>
@@ -299,7 +334,13 @@
       <div class="undo-menu" id="undo-menu" role="menu" hidden></div>
     </div>
     <button type="button" id="manage" title="Specials, photos, reports and more (needs the PIN)">Manage</button>
-    <button type="button" id="sound">Sound on</button>
+    <button type="button" id="sound" aria-pressed="true" aria-label="Sound is on: tap to mute" title="Sound is on: tap to mute">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <defs><mask id="sound-gap"><rect width="24" height="24" fill="#fff"/><path class="muted-only" d="M3.5 3.5l17 17" stroke="#000" stroke-width="5"/></mask></defs>
+        <g mask="url(#sound-gap)"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9.5 9.5 0 0 1 0 13"/></g>
+        <path class="muted-only" d="M3.5 3.5l17 17"/>
+      </svg>
+    </button>
     <span class="clock" id="clock"></span>
   </div>
   <div class="alert" id="alert" hidden></div>
@@ -355,14 +396,29 @@
   }
   let ticks = loadTicks();
 
+  // ---- minimized cards, per device like the ticks (pins are the PC's)
+  const MINI_KEY = "front-mini";
+  let mini = {};
+  try { mini = JSON.parse(localStorage.getItem(MINI_KEY) || "{}"); } catch {}
+  const saveMini = () => { try { localStorage.setItem(MINI_KEY, JSON.stringify(mini)); } catch {} };
+
+  // ---- the wordmark in the bar, drawn in the house colours (kitchen.css)
+  fetch("/front-wordmark.svg").then((r) => (r.ok ? r.text() : Promise.reject())).then((svg) => {
+    document.getElementById("brand").innerHTML = svg.replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/<svg([^>]*?) width="[^"]*" height="[^"]*"/, '<svg$1 class="wordmark" role="img" aria-label="The Café"');
+  }).catch(() => {});
+
   // ---- sound: a chime when an order turns ready. Off until a click turns
   // it on, because browsers block sound on a page nobody has touched.
   let soundOn = false;
   try { soundOn = localStorage.getItem("front-sound") === "1"; } catch {}
   let audio;
   function renderSound() {
-    soundBtn.textContent = soundOn ? "Sound on" : "Sound off";
+    const label = soundOn ? "Sound is on: tap to mute" : "Sound is off: tap to turn it on";
     soundBtn.classList.toggle("sound-off", !soundOn);
+    soundBtn.setAttribute("aria-pressed", String(soundOn));
+    soundBtn.setAttribute("aria-label", label);
+    soundBtn.title = label;
   }
   function chime() {
     if (!soundOn) return;
@@ -424,8 +480,27 @@
     }).join("")}</ul>`;
   }
 
+  const TOOL_ICONS = {
+    pin: '<path d="M9 3h6l-1 6 3.5 3.5V15h-11v-2.5L10 9z"/><path d="M12 15v6"/>',
+    fold: '<path d="M6 15l6-6 6 6"/>',
+    unfold: '<path d="M6 9l6 6 6-6"/>',
+  };
+  const toolIcon = (name, filled) => `<svg viewBox="0 0 24 24" fill="${filled ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TOOL_ICONS[name]}</svg>`;
+  // A minimized card's one line: how big it is, and anything still to do.
+  function briefHtml(o) {
+    const n = (list) => list.reduce((sum, it) => sum + it.qty, 0);
+    const kitchen = n(o.items), front = n(o.front);
+    const bits = [`<b>${kitchen} item${kitchen === 1 ? "" : "s"}</b> from the kitchen`];
+    if (front) bits.push(`${front} from the front`);
+    if (o.unpaid) bits.push(`<b class="brief-due">not paid${o.due ? ` ($${o.due.toFixed(2)})` : ""}</b>`);
+    if (o.holdUntil && Date.now() < Date.parse(o.holdUntil)) bits.push("waiting for its Dasher");
+    if (o.note) bits.push("has a note");
+    return `<div class="brief">${bits.join(" · ")}. Tap to show it all.</div>`;
+  }
+
   function orderHtml(o) {
     const ready = !!o.readyAt;
+    const folded = !!mini[o.id];
     const online = o.kind !== "COUNTER";
     // With squareStatus on, the board marks it ready in Square itself a few
     // seconds after Done, and picked up when it's handed off here.
@@ -435,11 +510,16 @@
         ? `<div class="square pending">Marking it ready in Square…</div>`
         : `<div class="square todo">Mark it ready in Square Order Manager to text the customer.</div>`) : "";
     return `
-      <article class="order ${ready ? "ready" : "cooking"}${o.unpaid ? " unpaid" : ""}${o.demo ? " demo" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
+      <article class="order ${ready ? "ready" : "cooking"}${o.unpaid ? " unpaid" : ""}${o.demo ? " demo" : ""}${o.pinned ? " pinned" : ""}${folded ? " mini" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
         <header>
-          <span><span class="name">${esc(label(o))}${o.tableOf ? ` <span class="dining here">${o.tableOf.n} of ${o.tableOf.of}</span>` : ""}${o.addOn ? '<span class="added-tag">+ added</span>' : ""}</span><span class="kind">${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${o.test ? '<span class="test-tag">TEST</span>' : ""}${esc(kindLabel(o))}${diningHtml(o)}</span></span>
+          <span><span class="name">${esc(label(o))}${o.tableOf ? ` <span class="dining here">${o.tableOf.n} of ${o.tableOf.of}</span>` : ""}${o.addOn ? '<span class="added-tag">+ added</span>' : ""}</span><span class="kind">${o.pinned ? '<span class="pin-tag" title="Pinned: stays at the top until Handed off, and never clears itself">PINNED</span>' : ""}${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${o.test ? '<span class="test-tag">TEST</span>' : ""}${esc(kindLabel(o))}${diningHtml(o)}</span></span>
           <span class="status" data-status></span>
+          <span class="card-tools">
+            <button type="button" data-pin aria-pressed="${o.pinned ? "true" : "false"}" aria-label="${o.pinned ? "Unpin" : "Pin to the top"}" title="${o.pinned ? "Unpin" : "Pin to the top: it stays until Handed off"}">${toolIcon("pin", o.pinned)}</button>
+            <button type="button" data-fold aria-expanded="${folded ? "false" : "true"}" aria-label="${folded ? "Show the whole order" : "Minimize"}" title="${folded ? "Show the whole order" : "Minimize"}">${toolIcon(folded ? "unfold" : "fold")}</button>
+          </span>
         </header>
+        ${briefHtml(o)}
         ${o.unpaid ? `<div class="section unpaid-band">Not paid${o.due ? `: $${o.due.toFixed(2)} due` : ""}
           <small>Collect when they pick up. If the sale fell through, press Canceled to take it off the kitchen board too.</small></div>` : ""}
         ${o.holdUntil && Date.now() < Date.parse(o.holdUntil) ? `<div class="section dasher-band">
@@ -538,6 +618,8 @@
     const ids = new Set(orders.map((o) => o.id));
     for (const id of Object.keys(ticks)) if (!ids.has(id)) delete ticks[id];
     saveTicks(ticks);
+    for (const id of Object.keys(mini)) if (!ids.has(id)) delete mini[id];
+    saveMini();
 
     render();
   }
@@ -611,6 +693,22 @@
     const card = e.target.closest(".order");
     if (!card) return;
     const id = card.dataset.id;
+    if (e.target.closest("[data-pin]")) {
+      // The PC keeps it (every device shows the pin); shown here at once.
+      const o = orders.find((x) => x.id === id);
+      if (!o) return;
+      o.pinned = !o.pinned;
+      render();
+      send("/api/front-pin", { id, on: o.pinned });
+      return;
+    }
+    if (e.target.closest("[data-fold]") || (card.classList.contains("mini") && e.target.closest("header, .brief"))) {
+      if (mini[id]) delete mini[id];
+      else mini[id] = 1;
+      saveMini();
+      render();
+      return;
+    }
     if (e.target.closest(".cancel-unpaid")) {
       // Off both screens; Undo in the top bar brings it back.
       orders = orders.filter((o) => o.id !== id);
@@ -824,7 +922,8 @@
   }
 
   // What the Manage jobs in front/*.js (Specials, Reservations, Photo post,
-  // Reports, Survey, Desserts, Saved photos, Leave off kitchen tickets) share with this page. Each file is
+  // Reports, Emailed report, Survey, Desserts, Saved photos, Leave off
+  // kitchen tickets) share with this page. Each file is
   // loaded after this script and registers its menu row's job in tools
   // (and any of its own buttons in acts) under the row's data-act name.
   const listWords = (a) => (a.length < 2 ? a.join("") : `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`);
@@ -929,8 +1028,9 @@
           ${tile("desserts", "Desserts", "What's in, how many left")}
           ${tile("photo", "Photo post", "A dish's Facebook picture")}
         </div>
-        ${section("numbers", "Numbers", "Today's report · Reports · Survey", [
+        ${section("numbers", "Numbers", "Today's report · Emailed report · Reports · Survey", [
           row("today", "Today's report", "Sales so far against last week, and what's selling"),
+          row("mail-report", "Emailed report", "The day's and the week's, to print. When it's emailed, and to whom"),
           row("report", "Reports", "Sales, kitchen times and items, any days"),
           row("survey", "Survey", "Answers, comments, the website's summary"),
         ])}
@@ -992,5 +1092,6 @@
 <script src="/front/desserts.js"></script>
 <script src="/front/leave-off.js"></script>
 <script src="/front/saved-photos.js"></script>
+<script src="/front/mail-report.js"></script>
 </body>
 </html>

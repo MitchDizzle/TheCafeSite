@@ -1,8 +1,32 @@
-/* The colours and base styles both screens share: the kitchen board
-   (board.html) and the front page (front.html). Each page's own sizes and
-   layout are in the page. The website's palette, plus amber and green for
-   the kitchen's own signals. System fonts on purpose: neither screen may
-   depend on Google Fonts loading to be readable. */
+/* The colours and base styles every screen shares: the kitchen board
+   (board.html), the front page and Manage (front.html, front/*.js) and
+   Today's report (today.html). Each page's own sizes and layout are in the
+   page.
+
+   House style (picked 2026-11-08, CafeWork KDS-THEMES.html): the website's
+   look brought to the screens. The website's palette and its two fonts,
+   Playfair Display for headings and Lato for everything else; the wordmark
+   in the bars; the teal gradient behind them; red for buttons, as on the
+   website.
+
+   The fonts come from Google Fonts, loaded so they never hold a page up
+   (each page's <link media="print" onload>): until they arrive, or if the
+   internet is down, the system font stands in and every screen still reads.
+   Chrome keeps them once loaded.
+
+   Colours are named for their job, so a different look (a dark mode) is a
+   new set of these, not a hunt through every page:
+     --surface, --card, --ink, --ink-muted, --line   paper and text
+     --brand-ground                                   the bars (gradient)
+     --action, --action-dark                          buttons and links
+   and the kitchen's own signals, the same in every look:
+     --amber   time only: a ticket getting late, a pickup due soon
+     --red     late, not paid, allergies (on the board and the order cards)
+     --new     a ticket that just arrived (the mint)
+     --green   ready, handed off
+   Red is a button colour in Manage and Today's report but never on an
+   order card, where it means late or not paid: Handed off stays green.
+   Teal is for grounds; red never goes on teal (1.3:1). */
 :root {
   --cream: #FAF7F2;
   --paper: #FFFFFF;
@@ -11,8 +35,8 @@
   --ground: #15323C; /* behind the kitchen board's tickets */
   --red: #C0392F;
   --red-dark: #A02F26;
-  --amber: #E8A33D; /* time only: a ticket getting late, a pickup due soon */
-  --new: #8ED9D4; /* a ticket that just arrived (the mint) */
+  --amber: #E8A33D;
+  --new: #8ED9D4;
   --alarm-light: #F28B82; /* a problem, drawn on the teal bar */
   --mint: #8ED9D4;
   --green: #2E7D4F;
@@ -20,11 +44,36 @@
   --text: #22323A;
   --muted: #5B6B72;
   --line: #E3DDD3;
+
+  /* Jobs */
+  --surface: var(--cream);
+  --card: var(--paper);
+  --ink: var(--text);
+  --ink-muted: var(--muted);
+  --brand-ground: linear-gradient(135deg, #1F4552 0%, #2C5E70 55%, #3C7183 100%);
+  --board-ground: linear-gradient(180deg, #1F4552 0%, #15323C 70%);
+  --action: var(--red);
+  --action-dark: var(--red-dark);
+  --hover: #F6F2EB;
+
+  --font-head: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-body: Lato, "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
 }
 * { box-sizing: border-box; }
 body {
   margin: 0;
   min-height: 100vh;
   color: var(--text);
-  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
+  /* Playfair's numbers dip below the line by default ("#0001" reads as
+     letters); lining figures, like Lato's, everywhere. The font shorthand
+     resets this, so pages set Playfair with font-family, not font. */
+  font-variant-numeric: lining-nums;
 }
+
+/* The wordmark in a bar: cream letters, a teal-dark outline and the red
+   offset shadow, as on the website's hero. Drawn from /front-wordmark.svg
+   by the page; the words stay as text until it's in. */
+.wordmark { display: block; height: 1.7rem; width: auto; overflow: visible; }
+.wordmark path { fill: var(--cream); stroke: var(--teal-dark); stroke-width: 2.1; paint-order: stroke; }
+.wordmark { filter: drop-shadow(1.2px 1.6px 0 #C0392F); }

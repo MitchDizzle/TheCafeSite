@@ -434,4 +434,7 @@ function todayView(now = new Date(), records = dayRecords(), days = history.days
     later: later.length ? brief(later) : null, lastWeek, usual, week };
 }
 
-module.exports = { statsToday, recordHistory, recordHistoryNow, historyReport, todayView, summarize, netSales, previousRange, specialsSold };
+// The saved days themselves, for the emailed report (lib/report.js).
+const historyDays = () => history.days;
+
+module.exports = { statsToday, recordHistory, recordHistoryNow, historyReport, todayView, summarize, netSales, previousRange, specialsSold, historyDays, mealOf, shiftDate, BREAKFAST_ENDS };

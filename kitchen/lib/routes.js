@@ -7,7 +7,7 @@ const { DIR, DEV, cfg } = require("./config");
 const { localDate, dayWords } = require("./util");
 const { live } = require("./live");
 const { catalog, loadCatalog, modifierListsByName } = require("./catalog");
-const { bump, handedOff, canceled, sentNow, byHand, keepOnFront, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
+const { bump, handedOff, canceled, sentNow, byHand, keepOnFront, pinned, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
 const { poll, watched, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay } = require("./orders");
 const { recordHistoryNow, historyReport, todayView } = require("./stats");
 const surveys = require("./surveys");
@@ -76,7 +76,7 @@ function isLocal(req) {
 
 // What another device on the wifi (or the owner's phone over Tailscale) may
 // reach: the front page, the phone page (/today) and their own actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/send-to-kitchen", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated"]);
+const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/send-to-kitchen", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated", "/api/front-pin", "/api/front-mail-report", "/api/front-mail-report-save", "/api/front-mail-report-doc", "/api/front-mail-report-send"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -103,6 +103,7 @@ const STATIC = {
   "/front/leave-off.js": "front/leave-off.js",
   "/front/saved-photos.js": "front/saved-photos.js",
   "/front/reservations.js": "front/reservations.js",
+  "/front/mail-report.js": "front/mail-report.js",
 };
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
@@ -203,6 +204,16 @@ async function handle(req, res) {
     handedOff[id] = at;
     saveState();
     console.log(`Front page: unpaid order ...${id.slice(-4)} canceled (${new Date().toLocaleTimeString()}).`);
+    return send(res, 200, frontSnapshot());
+  }
+  // Pin on the front page: first in its list on every device, and it never
+  // clears itself. No PIN, like Handed off.
+  if (req.method === "POST" && url.pathname === "/api/front-pin") {
+    const { id, on } = await readBody(req);
+    if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
+    if (on) pinned[id] = pinned[id] || new Date().toISOString();
+    else delete pinned[id];
+    saveState();
     return send(res, 200, frontSnapshot());
   }
   // A DoorDash order still waiting for its Dasher, onto the kitchen board
@@ -448,6 +459,37 @@ async function handle(req, res) {
       if (url.pathname === "/api/front-survey-website") return send(res, 200, { ok: true, stats: surveys.websiteStats() });
     } catch (err) {
       return send(res, 200, { ok: false, message: `Couldn't read that: ${err.message}` });
+    }
+  }
+  // Manage -> Numbers -> Emailed report, behind the PIN: when it goes and to
+  // whom (and saving that), the report itself to show or print, and
+  // emailing it now (lib/report.js).
+  if (req.method === "POST" && url.pathname.startsWith("/api/front-mail-report")) {
+    const report = require("./report");
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    try {
+      if (url.pathname === "/api/front-mail-report") return send(res, 200, { ok: true, ...report.status() });
+      if (url.pathname === "/api/front-mail-report-save") {
+        report.saveSettings(body.settings || {});
+        return send(res, 200, { ok: true, message: "Saved.", ...report.status() });
+      }
+      const kind = body.kind === "week" ? "week" : "day";
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(body.date || "") ? body.date : localDate();
+      if (url.pathname === "/api/front-mail-report-doc") {
+        recordHistoryNow();
+        const r = report.reportFor(kind, date);
+        if (!r) return send(res, 200, { ok: false, message: kind === "week" ? "No orders saved that week." : "No orders saved that day." });
+        return send(res, 200, { ok: true, subject: report.subjectOf(r), html: report.renderHtml(r, { page: true }) });
+      }
+      if (url.pathname === "/api/front-mail-report-send") {
+        const sent = await report.email(kind, date, "Manage");
+        return send(res, 200, { ok: true, message: `Emailed to ${sent.to}: "${sent.subject}".` });
+      }
+    } catch (err) {
+      console.error(`Emailed report: ${err.message}`);
+      return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't work: ${err.message}` });
     }
   }
   // The phone page's numbers, behind the PIN like Reports: sales are the
