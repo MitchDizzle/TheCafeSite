@@ -9,6 +9,15 @@
   const short = (date) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
   let lastDay = null; // the last day with orders before today, from the kitchen PC
+  // Black & white (Mitch 2026-11-09: save the colour ink), remembered on this
+  // device. It sets html.bw on the page (lib/report.js has its styles).
+  let bw = false;
+  try { bw = localStorage.getItem("report-bw") === "1"; } catch {}
+  function paintBw() {
+    const frame = document.getElementById("pr-frame");
+    const doc = frame && frame.contentDocument;
+    if (doc && doc.documentElement) doc.documentElement.classList.toggle("bw", bw);
+  }
   function picks() {
     const now = new Date();
     now.setHours(12, 0, 0, 0);
@@ -32,6 +41,7 @@
           <label class="m-field">From<input type="date" id="pr-from" value="${esc(from)}" required></label>
           <label class="m-field">To<input type="date" id="pr-to" value="${esc(to)}" required></label>
         </form>
+        <label class="check m-check pr-bw"><input type="checkbox" id="pr-bw"${bw ? " checked" : ""}><span>Black &amp; white (saves the colour ink)</span></label>
         <div id="pr-out"><p class="m-busy">Making the report…</p></div>`,
       buttons: [{ label: "Print", act: "pr-print", kind: "primary" }] });
     dialog.querySelector("#pr-picks").addEventListener("click", (e) => {
@@ -41,6 +51,11 @@
     dialog.querySelector("#pr-dates").addEventListener("change", () => {
       const a = document.getElementById("pr-from").value, b = document.getElementById("pr-to").value;
       if (a && b) open(a <= b ? a : b, a <= b ? b : a);
+    });
+    dialog.querySelector("#pr-bw").addEventListener("change", (e) => {
+      bw = e.target.checked;
+      try { localStorage.setItem("report-bw", bw ? "1" : "0"); } catch {}
+      paintBw();
     });
     show(from, to);
   }
@@ -55,7 +70,9 @@
     }
     if (!r.ok) { out.innerHTML = `<p class="m-error">${esc(r.message)}</p>`; return; }
     out.innerHTML = `<iframe class="pr-frame" id="pr-frame" title="${esc(r.title)}"></iframe>`;
-    document.getElementById("pr-frame").srcdoc = r.html;
+    const frame = document.getElementById("pr-frame");
+    frame.addEventListener("load", paintBw);
+    frame.srcdoc = r.html;
   }
 
   Front.acts["pr-print"] = () => {

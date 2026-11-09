@@ -458,6 +458,8 @@ A day the board never ran is missing; Square's own reports still have its sales.
 
 **A day, a week or any dates on one printed page** (Mitch 2026-11-08: Square sends a summary, but Terry wants one with everything, to print). **Manage → Numbers → Print a report**: pick **Today**, **Last day open**, **This week**, **Last week**, **This month**, **Last month**, or any two dates, check the page shown, and press **Print** (on the PC, Chrome's print; any printer). It opens on today, or on the last day open when today has no orders yet.
 
+**Black & white** (the tick above the page, Mitch 2026-11-09) prints it in black ink only, to save the colour ink: black type, grey rules and bars, no shaded boxes. The PC remembers it. For no colour ink at all, also pick Color → Black and white in Chrome's print box (a grey can still be mixed from colour inks).
+
 It always fits one letter page: when there's a lot (a month, a long list of items), the page shrinks to fit. It has:
 
 - net sales, orders, average ticket and tips, against the same day last week (for several days, the same stretch before: the week before, or the month before for a month), and a usual day of the last few weeks;

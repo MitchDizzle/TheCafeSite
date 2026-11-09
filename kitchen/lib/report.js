@@ -288,6 +288,15 @@ table.hours td:last-child { width: 38%; vertical-align: middle; }
 .items div { display: flex; gap: 6px; padding: 1px 0; border-bottom: 1px solid #EEE9E0; break-inside: avoid; }
 .items b { min-width: 2.2em; text-align: right; }
 .foot { margin-top: 8px; padding-top: 4px; border-top: 1px solid #E3DDD3; font-size: 8.5px; color: #5B6B72; }
+/* Black & white (Print a report's switch, html.bw; Mitch 2026-11-09: save
+   the colour ink): black type, neutral greys for the rules and bars (a warm
+   grey is mixed from colour ink), no shaded boxes. */
+html.bw body, html.bw h1, html.bw h2, html.bw .hd .kind, html.bw .hd .made, html.bw .big span, html.bw .big em,
+html.bw em.up, html.bw em.down, html.bw .small, html.bw .usual, html.bw th, html.bw .foot { color: #000; }
+html.bw .hd, html.bw th, html.bw tr.total td { border-color: #000; }
+html.bw td, html.bw .items div, html.bw .foot { border-color: #BBB; }
+html.bw .big > div { background: none; border: 1px solid #000; }
+html.bw .bar { background: #777; }
 `;
 // Zoom the page to fit one letter page (10.2in of height inside the
 // margins), keeping a little spare for the printer; never below MIN.
