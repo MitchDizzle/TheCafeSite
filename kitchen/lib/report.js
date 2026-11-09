@@ -226,22 +226,31 @@ function hoursHtml(r) {
 
 function specialsHtml(r) {
   const sp = r.specials;
-  if (!sp.plates.length && !sp.soups.length) return "";
-  const soup = (c) => [c.cups && `${c.cups} cup${c.cups === 1 ? "" : "s"}`, c.bowls && `${c.bowls} bowl${c.bowls === 1 ? "" : "s"}`].filter(Boolean).join(", ");
+  if (!sp.plates.length && !sp.soups.length && !sp.soupSides) return "";
+  // Cups and bowls sold on their own, then the cups picked as the special's
+  // side (Mitch 2026-11-09: count them, but not as a sale of the soup).
+  const soup = (c) => [c.cups && `${c.cups} cup${c.cups === 1 ? "" : "s"}`, c.bowls && `${c.bowls} bowl${c.bowls === 1 ? "" : "s"}`,
+    c.sides && `${c.sides} as a side`].filter(Boolean).join(", ");
+  // A day's sides not put with a soup (no soup sold on its own that day, or two).
+  const loose = (d) => (d.soupSides && !Object.values(d.soups).some((c) => c.sides) ? d.soupSides : 0);
+  const sidesNote = sp.soupSides ? `<p class="small">"As a side": cups picked as the Lunch Special's side, not sold on their own.</p>` : "";
   if (r.single) {
+    const d = sp.days[0] || { soupSides: 0, soups: {} };
     return `<h2>Specials</h2>` + [...sp.plates.map((x) => `<p><b>Lunch Special, ${esc(x.name)}:</b> ${x.qty} sold</p>`),
-      ...sp.soups.map((x) => `<p><b>Soup, ${esc(x.name)}:</b> ${soup(x)}</p>`)].join("");
+      ...sp.soups.map((x) => `<p><b>Soup, ${esc(x.name)}:</b> ${soup(x)}</p>`),
+      loose(d) ? `<p><b>Soup, as a side:</b> ${loose(d)}</p>` : ""].join("") + sidesNote;
   }
   if (sp.days.length <= 10) {
     return `<h2>Specials</h2>` + table(["Day", "Lunch Special", "Soup"], sp.days.map((d) => ({ cells: [tinyDate(d.date),
       Object.entries(d.plates).map(([n, q]) => `${esc(n)} (${q})`).join(", ") || "–",
-      Object.entries(d.soups).map(([n, c]) => `${esc(n)} (${soup(c)})`).join(", ") || "–"] })), { cls: "left" });
+      [...Object.entries(d.soups).map(([n, c]) => `${esc(n)} (${soup(c)})`), loose(d) ? `Soup (${loose(d)} as a side)` : ""].filter(Boolean).join(", ") || "–"] })), { cls: "left" })
+      + sidesNote;
   }
   // A long stretch: each plate and soup once, best sellers a day first.
   return `<h2>Specials, best sellers a day first</h2>` + table(["", "Days on", "Sold", "A day"], [
     ...sp.plates.slice(0, 8).map((x) => ({ cells: [`Lunch Special, ${esc(x.name)}`, x.days, x.qty, x.perDay] })),
-    ...sp.soups.slice(0, 6).map((x) => ({ cells: [`Soup, ${esc(x.name)}`, x.days, x.qty, x.perDay] })),
-  ]);
+    ...sp.soups.slice(0, 6).map((x) => ({ cells: [`Soup, ${esc(x.name)}${x.sides ? ` (+${x.sides} as a side)` : ""}`, x.days, x.qty, x.perDay] })),
+  ]) + (sp.soupSides ? `<p class="small">Soup as the Lunch Special's side: ${sp.soupSides} cups in all, not counted as sold.</p>` : "");
 }
 
 function rowsHtml(r) {

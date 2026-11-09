@@ -4,10 +4,21 @@ on:
   push:
     branches:
       - main
-    # The kitchen board ships from main too, but is not part of the site:
-    # a push that only changes kitchen/ needs no deploy.
+    # A push that only changes what isn't part of the site needs no deploy:
+    # the kitchen board (it ships from main too, but the kitchen PC pulls it
+    # from git), Claude's settings, the docs at the top (CLAUDE.md, STYLE.md) and the folders kept out of the
+    # build (CLAUDE.md, Build). Anything else deploys. To skip one on purpose,
+    # put [skip ci] in the commit message (GitHub's own flag; the newest
+    # commit of the push decides). specials.json is in src/, so it always
+    # deploys: the kitchen PC reads the specials from the live site.
     paths-ignore:
       - 'kitchen/**'
+      - '.claude/**'
+      - '*.md'
+      - 'archive/**'
+      - 'personal/**'
+      - 'social/**'
+      - 'square/**'
 
 # One deploy at a time. A push runs once, for its newest commit, however many
 # commits it carries. Pushes close together queue rather than overlap on the

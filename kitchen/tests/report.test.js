@@ -18,7 +18,7 @@ const day = (orders) => ({ savedAt: "", orders });
 const days = {
   "2026-11-09": day([
     rec("2026-11-09", 7, 30, 10, { tip: 2 }),
-    rec("2026-11-09", 11, 0, 30, { items: [{ name: "Lunch Special", variation: "Meatloaf", qty: 2 }, { name: "Soup of the Day", variation: "Cup · Chicken Noodle", qty: 1 }], kitchenItems: 3 }),
+    rec("2026-11-09", 11, 0, 30, { items: [{ name: "Lunch Special", variation: "Meatloaf", qty: 2 }, { name: "Soup of the Day", variation: "Cup · Chicken Noodle", qty: 1 }], kitchenItems: 3, soupSides: 1 }),
     rec("2026-11-09", 11, 30, 20, { online: true, doordash: true, kitchenMinutes: 12, waitMinutes: 4 }),
     rec("2026-11-09", 12, 15, 40, { online: true, doordash: false }),
   ]),
@@ -67,6 +67,9 @@ test("a week: day by day, against the week before", () => {
   const html = report.renderHtml(r);
   assert.match(html, /Weekly report/);
   assert.match(html, /Day by day/);
+  // A cup picked as the special's side is counted with the day's soup, apart from the cup sold.
+  assert.equal(r.specials.soupSides, 1);
+  assert.match(html, /Chicken Noodle \(1 cup, 1 as a side\)/);
   assert.equal(report.titleOf(r).when, "Mon, Nov 9 to Sun, Nov 15, 2026");
 });
 
@@ -86,4 +89,15 @@ test("a long stretch goes week by week, and any two dates work either way round"
   assert.equal(r.rows.reduce((a, x) => a + x.orders, 0), r.totals.orders);
   assert.match(report.renderHtml(r), /Week by week/);
   assert.equal(report.titleOf(r).kind, "Report");
+});
+
+test("the soup picked as the Lunch Special's side is counted from Square's modifiers, per plate", () => {
+  const { soupSidesOf } = require("../lib/stats");
+  const o = { line_items: [
+    { name: "Lunch Special", quantity: "2", modifiers: [{ name: "Soup of the Day", quantity: "1" }, { name: "Tossed Salad" }] },
+    { name: "Lunch Special", quantity: "1", modifiers: [{ name: "Cottage Cheese" }] },
+    { name: "Soup of the Day", quantity: "1", variation_name: "Cup" },
+  ] };
+  assert.equal(soupSidesOf(o), 2);
+  assert.equal(soupSidesOf({ line_items: [{ name: "Reuben Sandwich", quantity: "1" }] }), 0);
 });

@@ -13,7 +13,7 @@ The owner often works between serving customers and types requests in parts as n
 Project planning, decisions, and the task backlog live OUTSIDE this public repo at `E:\GitHub\CafeWork\` (private repo) — read `PLAN.md` there first, take tasks from `TASKS.md`. Never commit business/planning details, pricing strategy, or outreach scripts to this repo.
 
 ## Branches
-- **`main` is what's live.** A push to `main` deploys the website (GitHub Actions; a push touching only `kitchen/` doesn't), and the kitchen PC pulls `main` when it starts or on Check for updates.
+- **`main` is what's live.** A push to `main` deploys the website (GitHub Actions; a push touching only `kitchen/`, `.claude/`, the top-level `.md` docs or the folders kept out of the build doesn't, and `[skip ci]` in the commit message skips one on purpose), and the kitchen PC pulls `main` when it starts or on Check for updates.
 - **`dev` is where work happens.** Commit there, test locally (`npm start` for the site, `kitchen/start-dev.bat` for the board), and merge `dev` into `main` to ship both. Don't commit straight to `main` unless asked.
 - **`kitchen-board` is retired** (merged 2026-10-08). It is kept pointing at `main` only so a kitchen PC still on it moves over by itself; don't work on it.
 - **Check the branch before every commit** (`git status -sb`): the owner switches branches in his own terminal during a session.

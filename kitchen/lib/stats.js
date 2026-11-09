@@ -89,6 +89,7 @@ function dayRecords() {
         variation: li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
         qty: Number(li.quantity) || 1,
       })),
+      soupSides: soupSidesOf(o),
       done: !!(bumped[o.id] || platesDone[o.id]),
       // What the kitchen made (5 x a wrap is 5; drinks and chips at the
       // front aren't), for the time by order size (lib/lead.js).
@@ -99,6 +100,14 @@ function dayRecords() {
   }
   return out;
 }
+
+// Cups of the day's soup picked as a Lunch Special's side (its side lists
+// end in "Soup of the Day" when the website sets soupSide, client
+// 2026-10-13): counted apart from the soup sold on its own (Mitch
+// 2026-11-09). A modifier's quantity is per plate, so it's times the plates.
+const soupSidesOf = (o) => (o.line_items || []).filter((li) => /^lunch special$/i.test(itemName(li)))
+  .reduce((n, li) => n + (Number(li.quantity) || 1) * (li.modifiers || []).filter((m) => /^soup of the day$/i.test((m.name || "").trim()))
+    .reduce((a, m) => a + (m.quantity != null ? Number(m.quantity) || 0 : 1), 0), 0);
 
 const isDoorDash = (o, f) => /doordash/i.test(`${(o.source && o.source.name) || ""} ${(f && f.delivery_details && f.delivery_details.courier_provider_name) || ""}`);
 
@@ -253,25 +262,33 @@ function writeHistory() {
   fs.renameSync(HISTORY_FILE + ".tmp", HISTORY_FILE);
 }
 
-// Days saved before the board kept Net sales and tips (2026-10-27) get them from
+// Days saved before the board kept Net sales and tips (2026-10-27), or the
+// soup picked as the special's side (2026-11-09), get them from
 // Square once, by order id, a hundred orders a call, so Reports and /today
 // compare like with like. Runs at start; an order Square can't find keeps
 // its total.
 async function fillNet() {
   const { square, resolveLocations } = require("./square");
   const todo = new Map();
-  for (const day of Object.values(history.days)) for (const r of day.orders) if ((r.net === undefined || r.tip === undefined) && r.id) todo.set(r.id, r);
+  const special = (r) => (r.items || []).some((i) => /^lunch special$/i.test(i.name));
+  for (const day of Object.values(history.days)) for (const r of day.orders) {
+    if (r.soupSides === undefined && !special(r)) r.soupSides = 0; // nothing to look up
+    if ((r.net === undefined || r.tip === undefined || r.soupSides === undefined) && r.id) todo.set(r.id, r);
+  }
   if (!todo.size) return;
   const ids = [...todo.keys()];
   const [location_id] = await resolveLocations();
   let filled = 0;
   for (let i = 0; i < ids.length; i += 100) {
     const { orders = [] } = await square("POST", "/orders/batch-retrieve", { location_id, order_ids: ids.slice(i, i + 100) });
-    for (const o of orders) Object.assign(todo.get(o.id), { net: netSales(o), tip: tipOf(o) }), filled++;
+    for (const o of orders) Object.assign(todo.get(o.id), { net: netSales(o), tip: tipOf(o), soupSides: soupSidesOf(o) }), filled++;
   }
-  for (const r of todo.values()) if (r.net === undefined) Object.assign(r, { net: null, tip: null });
+  for (const r of todo.values()) {
+    if (r.net === undefined) Object.assign(r, { net: null, tip: null });
+    if (r.soupSides === undefined) r.soupSides = null; // Square couldn't find it: not counted
+  }
   writeHistory();
-  console.log(`Stats history: Net sales and tips filled in for ${filled} earlier order(s)`);
+  console.log(`Stats history: Net sales, tips and soup sides filled in for ${filled} earlier order(s)`);
 }
 if (!MOCK) setTimeout(() => fillNet().catch((err) => console.error(`Stats history: ${err.message}`)), 10000).unref();
 
@@ -343,7 +360,7 @@ function previousRange(from, to) {
 function specialsSold(days) {
   const plates = new Map();
   const soups = new Map();
-  const out = { days: [], plates: [], soups: [] };
+  const out = { days: [], plates: [], soups: [], soupSides: 0 };
   const tally = (map, name, date, n, cupOrBowl) => {
     const e = map.get(name) || { name, dates: new Set(), qty: 0, cups: 0, bowls: 0 };
     e.dates.add(date);
@@ -352,7 +369,8 @@ function specialsSold(days) {
     map.set(name, e);
   };
   for (const { date, orders } of days) {
-    const day = { date, plates: {}, soups: {} };
+    const day = { date, plates: {}, soups: {}, soupSides: 0 };
+    for (const r of orders) day.soupSides += Number(r.soupSides) || 0;
     for (const r of orders) for (const it of r.items) {
       const v = it.variation || "";
       if (/^lunch special$/i.test(it.name) && v) {
@@ -367,9 +385,17 @@ function specialsSold(days) {
         tally(soups, m[2], date, it.qty, kind);
       }
     }
-    if (Object.keys(day.plates).length || Object.keys(day.soups).length) out.days.push(day);
+    // The soup picked as a side is that day's soup: put with it when the day
+    // had one soup sold on its own.
+    const names = Object.keys(day.soups);
+    if (day.soupSides && names.length === 1) {
+      day.soups[names[0]].sides = day.soupSides;
+      soups.get(names[0]).sides = (soups.get(names[0]).sides || 0) + day.soupSides;
+    }
+    out.soupSides += day.soupSides;
+    if (Object.keys(day.plates).length || Object.keys(day.soups).length || day.soupSides) out.days.push(day);
   }
-  const ranked = (map) => [...map.values()].map((e) => ({ name: e.name, days: e.dates.size, qty: e.qty, cups: e.cups, bowls: e.bowls, perDay: Math.round((e.qty / e.dates.size) * 10) / 10 }))
+  const ranked = (map) => [...map.values()].map((e) => ({ name: e.name, days: e.dates.size, qty: e.qty, cups: e.cups, bowls: e.bowls, sides: e.sides || 0, perDay: Math.round((e.qty / e.dates.size) * 10) / 10 }))
     .sort((a, b) => b.perDay - a.perDay || a.name.localeCompare(b.name));
   out.plates = ranked(plates);
   out.soups = ranked(soups);
@@ -441,4 +467,4 @@ function todayView(now = new Date(), records = dayRecords(), days = history.days
 // The saved days themselves, for the emailed report (lib/report.js).
 const historyDays = () => history.days;
 
-module.exports = { statsToday, recordHistory, recordHistoryNow, historyReport, todayView, summarize, netSales, previousRange, specialsSold, historyDays, mealOf, shiftDate, BREAKFAST_ENDS };
+module.exports = { statsToday, recordHistory, recordHistoryNow, historyReport, todayView, summarize, netSales, soupSidesOf, previousRange, specialsSold, historyDays, mealOf, shiftDate, BREAKFAST_ENDS };
