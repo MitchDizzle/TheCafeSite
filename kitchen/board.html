@@ -258,13 +258,22 @@
     align-items: start;
     padding: 1rem 1.25rem 2rem;
   }
-  /* Packed like bricks (Mitch 2026-11-08): each ticket spans as many 4px
-     rows as it's tall (packBoard), so a short ticket sits under a short one
-     instead of below the tallest in its row, and more fits on the screen. */
-  .board.packed { grid-auto-rows: 4px; row-gap: 0; }
-  /* A cleared ticket's spot, for the few seconds before the tickets after it
-     move up (see NUMBERS FOLLOW THE WAIT). Faint, so it never reads as an
-     order. */
+  /* Below the two numbered rows: the tickets without a number yet, and
+     pinned ones, packed like bricks (Mitch 2026-11-08): each spans as many
+     4px rows as it's tall (packExtra), so a short ticket sits under a short
+     one and the page stays short. Same columns as the rows above. */
+  .extra {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    grid-auto-rows: 4px;
+    column-gap: 1rem;
+    align-items: start;
+  }
+  .extra-head { grid-column: 1 / -1; padding-top: 0.2rem; border-top: 0.15rem dashed #3E5961; color: #9FB7BF; font-size: 1.05rem; font-weight: 700; }
+  /* A numbered spot whose ticket was cleared: it stays empty until its whole
+     row is clear (see ROWS THAT MOVE UP TOGETHER). Faint, so it never reads
+     as an order. */
   .slot-free {
     display: grid;
     place-items: center;
@@ -301,6 +310,16 @@
     box-shadow: 0 0.2rem 0.6rem rgba(0, 0, 0, 0.35);
   }
   .ticket.new { animation: arrive 1.2s ease-out 3; }
+  /* Crossed off with the mouse: made already (the cold part of a big
+     order, say). Still there to read, just faded and struck through. */
+  .items > li[data-mark] { cursor: pointer; }
+  .items > li.marked { opacity: 0.4; }
+  .items > li.marked .item, .items > li.marked .variation, .items > li.marked .mods { text-decoration: line-through; text-decoration-thickness: 0.12rem; }
+  /* Pinned (click the time): no clock, a plain header, below the rows. */
+  .timer { cursor: pointer; }
+  .ticket.pinned header { background: #566E76; color: var(--cream); }
+  .timer .pin-mark { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .timer .pin-mark svg { width: 1.3rem; height: 1.3rem; }
   /* Moved up to a new number (the board tidied itself): one white pulse. */
   .ticket.moved { animation: moved 1s ease-out 2; }
   @keyframes moved { 50% { box-shadow: 0 0 0 0.4rem rgba(255, 255, 255, 0.75); } }
@@ -638,74 +657,85 @@
   let stats = null; // the day so far, from the server
   let demo = null; // { startedAt, until } while practice orders are showing
 
-  // NUMBERS FOLLOW THE WAIT (Mitch 2026-11-08; until then a ticket kept its
-  // number and its place until it was done, client 2026-10-19). The board
-  // reads oldest first from the top left, and the number keys follow: 1 is
-  // the order waiting longest, so nothing old is left below the screen for
-  // a cook to miss. A table's or a group's orders sit together
+  // ROWS THAT MOVE UP TOGETHER (Mitch 2026-11-08; until then a cleared
+  // number's spot went to the next new order, client 2026-10-19). The top
+  // two rows of the board are the numbered spots: 1–4 and 5–8 at four
+  // across (9 is never used). A ticket keeps its number and its spot until
+  // it's done, and a new order takes the spot after the last one taken,
+  // never a gap above it, so the board reads oldest first. When the whole
+  // first row is clear, the second row moves up into it (5 becomes 1, 6
+  // becomes 2…, each in its own column, with one white pulse) and the next
+  // orders fill the second row. It waits until nobody has touched the board
+  // for SETTLE_MS, so a cook pressing 4 then 5 never has 5 change under
+  // them. Tickets past the numbered spots pack in below (packExtra), oldest
+  // first, for the mouse, until a row frees up; a pinned ticket goes there
+  // too, so it never holds a row up. Undo puts a ticket back in its old
+  // spot while that's still free. Remembered on this screen, so a reload
+  // keeps them. A table's or a group's orders come one after another
   // (keepTablesTogether in lib/tickets.js).
-  //
-  // Not instantly: a cleared ticket leaves a faint gap, and a new order goes
-  // on the end, until the board has been left alone for SETTLE_MS (no key,
-  // no tap, nothing cleared). Then the tickets after a gap move up and take
-  // the next numbers, with one white pulse so a cook sees they moved. A
-  // cook pressing 3, 4, 5 one after another never has a number change under
-  // them. Undo puts a ticket back on its old number while that's still free.
-  // Remembered on this screen, so a reload keeps them.
   const SETTLE_MS = 6000;
   let slots = {};
   try { slots = JSON.parse(localStorage.getItem("kb-slots") || "{}"); } catch {}
-  const lastSlot = {}; // id -> the number it had when it was cleared
+  const lastSlot = {}; // id -> the spot it had when it was cleared
   let clearedAt = 0;
-  let moved = new Set(); // renumbered by the last tidy-up, for the pulse
-  // 1, 2, 3… down the board's order, nothing skipped.
-  const tidy = () => tickets.every((t, i) => (i < 9 ? slots[t.id] === i + 1 : !slots[t.id]));
+  let moved = new Set(); // moved up by the last row move, for the pulse
+  let perRow = 4; // tickets across on this screen (render measures it)
+  const numbered = () => Math.min(9, perRow * 2);
   const settled = () => Date.now() - Math.max(lastTouch, clearedAt) >= SETTLE_MS;
+  const takesSpot = (t) => !t.pinned;
+  // The first row is clear and the second has tickets: time to move up.
+  const rowMoveDue = () => { const used = Object.values(slots); return used.length > 0 && !used.some((n) => n <= perRow); };
+  function measureRow() {
+    const cols = getComputedStyle(board).gridTemplateColumns.split(" ").filter((x) => x && x !== "none").length;
+    if (cols > 0) perRow = cols;
+  }
   function assignSlots() {
-    const ids = new Set(tickets.map((t) => t.id));
-    for (const id of Object.keys(slots)) {
-      if (ids.has(id)) continue;
-      lastSlot[id] = slots[id];
+    const ids = new Set(tickets.filter(takesSpot).map((t) => t.id));
+    for (const [id, n] of Object.entries(slots)) {
+      if (ids.has(id) && n <= numbered()) continue;
+      lastSlot[id] = n;
       delete slots[id];
       clearedAt = Date.now();
     }
     moved = new Set();
-    if (settled() && !tidy()) {
-      const before = { ...slots };
-      for (const id of Object.keys(slots)) delete slots[id];
-      tickets.slice(0, 9).forEach((t, i) => { slots[t.id] = i + 1; });
-      for (const t of tickets) if (before[t.id] && before[t.id] !== slots[t.id]) moved.add(t.id);
-    } else {
-      const used = new Set(Object.values(slots));
-      let top = Math.max(0, ...used);
-      for (const t of tickets) {
-        if (slots[t.id]) continue;
-        const back = lastSlot[t.id];
-        if (back && !used.has(back)) { slots[t.id] = back; used.add(back); continue; }
-        if (top < 9) { slots[t.id] = ++top; used.add(top); }
-      }
+    if (rowMoveDue() && settled()) {
+      while (rowMoveDue()) for (const id of Object.keys(slots)) { slots[id] -= perRow; moved.add(id); }
+    }
+    const used = new Set(Object.values(slots));
+    let last = Math.max(0, ...used);
+    for (const t of tickets) {
+      if (!takesSpot(t) || slots[t.id]) continue;
+      const back = lastSlot[t.id];
+      if (back && back <= numbered() && !used.has(back)) { slots[t.id] = back; used.add(back); last = Math.max(last, back); continue; }
+      if (last < numbered()) { slots[t.id] = ++last; used.add(last); }
     }
     try { localStorage.setItem("kb-slots", JSON.stringify(slots)); } catch {}
   }
 
-  // Packed like bricks (see .board.packed): each ticket spans the 4px rows
-  // its height needs, measured again whenever its height changes. Still in
-  // order: each goes in the first space after the one before it.
+  // The packed tickets below the rows: each spans the 4px rows its height
+  // needs, measured again whenever its height changes. Still in order: each
+  // goes in the first space after the one before it.
   const ROW_PX = 4;
   const sizer = new ResizeObserver((entries) => {
     for (const e of entries) fitCell(e.target);
     showMore();
   });
   function fitCell(el) {
-    const gap = parseFloat(getComputedStyle(board).columnGap) || 16;
+    const gap = parseFloat(getComputedStyle(board).rowGap) || 16;
     el.style.gridRowEnd = `span ${Math.max(1, Math.ceil((el.getBoundingClientRect().height + gap) / ROW_PX))}`;
   }
-  function packBoard() {
+  function packExtra() {
     sizer.disconnect();
-    board.classList.toggle("packed", tickets.length > 0);
-    if (!tickets.length) return;
-    for (const el of board.children) { fitCell(el); sizer.observe(el); }
+    const extra = board.querySelector(".extra");
+    if (!extra) return;
+    for (const el of extra.children) { fitCell(el); sizer.observe(el); }
   }
+
+  // Items crossed off with the mouse, by ticket: kept on this screen, gone
+  // with the ticket.
+  let marks = {};
+  try { marks = JSON.parse(localStorage.getItem("kb-marks") || "{}"); } catch {}
+  const saveMarks = () => { try { localStorage.setItem("kb-marks", JSON.stringify(marks)); } catch {} };
 
   // A table's tag beside the name ("Table 7 1 of 2"); a big group's on the
   // line under it, where there's room ("GROUP 2 of 4", "GROUP 2 · 1 of 3"
@@ -770,14 +800,20 @@
     for (const card of board.querySelectorAll(".ticket")) {
       const t = tickets.find((x) => x.id === card.dataset.id);
       if (!t) continue;
-      const a = age(t, now);
+      const a = t.pinned ? { cls: "", pin: true } : age(t, now);
       card.classList.remove("warn", "late", "later");
       if (a.cls) card.classList.add(a.cls);
+      if (a.pin) {
+        const html = `<span class="pin-mark">${PIN_SVG}PINNED</span><small>no clock</small>`;
+        const el = card.querySelector(".timer");
+        if (el.innerHTML !== html) el.innerHTML = html;
+        continue;
+      }
       card.classList.toggle("is-fresh", now - (seenAt.get(t.id) || 0) < FRESH_MS);
       card.querySelector(".timer").innerHTML = `${a.pre ? `<span class="pre">${a.pre}</span>` : ""}${esc(a.text)}<small>${a.sub}</small>`;
     }
-    // Left alone long enough: the tickets after a gap move up.
-    if (tickets.length && settled() && !tidy()) render(new Set());
+    // The first row cleared and the board left alone long enough: move up.
+    if (tickets.length && rowMoveDue() && settled()) render(new Set());
     // Scrolled down and then left: back to the top after a minute, where the
     // oldest orders are.
     if (window.scrollY > 0 && now - lastTouch > 60000 && scrim.hidden && menuEl.hidden) window.scrollTo({ top: 0 });
@@ -834,34 +870,24 @@
     if (brand) brand.innerHTML = wordmarkSvg;
   }).catch(() => {});
 
-  function render(fresh) {
-    if (!tickets.length) {
-      board.innerHTML = `<div class="empty"><div class="brand">${wordmarkSvg}</div><p>No open orders</p>
-        <p class="empty-keys keys"><b>1</b>–<b>9</b> done &nbsp; <b>⌫</b> or <b>0</b> undo &nbsp; <b>+</b> <b>−</b> scroll &nbsp; <b>⏎</b> check Square now</p></div>`;
-    } else {
-      assignSlots();
-      // Numbered tickets in their number's place, a gap for a number cleared
-      // a moment ago, then any without a number (more than nine).
-      const bySlot = new Map(tickets.filter((t) => slots[t.id]).map((t) => [slots[t.id], t]));
-      const top = Math.max(0, ...bySlot.keys());
-      const cells = [];
-      for (let n = 1; n <= top; n++) cells.push(bySlot.get(n) || n);
-      for (const t of tickets) if (!slots[t.id]) cells.push(t);
-      board.innerHTML = cells.map((t) => typeof t === "number"
-        ? `<div class="slot-free" aria-hidden="true">${t}</div>`
-        : `
-        <article class="ticket${fresh.has(t.id) ? " new" : ""}${moved.has(t.id) ? " moved" : ""}${t.demo ? " demo" : ""}" data-id="${esc(t.id)}">
+  const PIN_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l-1 6 3.5 3.5V15h-11v-2.5L10 9z"/><path d="M12 15v6" fill="none"/></svg>';
+  function ticketHtml(t, fresh, key, style) {
+    // Each item by its place on the ticket, so a cross stays on its line.
+    const shown = t.items.map((it, i) => ({ it, mark: `${i}:${it.name}` })).filter(({ it }) => !t.platesDone || it.toGo);
+    const crossed = marks[t.id] || {};
+    return `
+        <article class="ticket${fresh.has(t.id) ? " new" : ""}${moved.has(t.id) ? " moved" : ""}${t.demo ? " demo" : ""}${t.pinned ? " pinned" : ""}" data-id="${esc(t.id)}"${style ? ` style="${style}"` : ""}>
           <header>
-            <span class="key">${slots[t.id] || ""}</span>
+            <span class="key">${key}</span>
             <span class="who">
               <span class="name">${esc(label(t))}${tableTag(t)}${t.addOn ? '<span class="added-tag">+ ADDED</span>' : ""}</span>
               <span class="kind">${groupTag(t)}${t.demo ? '<span class="demo-tag">DEMO</span>' : ""}<span class="fresh-tag">NEW</span>${t.test ? '<span class="test-tag">TEST</span>' : ""}${t.unpaid ? '<span class="unpaid-tag">NOT PAID</span>' : ""}${t.toGo ? '<span class="dining">TO GO</span>' : '<span class="dining here">FOR HERE</span>'}${esc(kindLabel(t))}</span>
             </span>
-            <span class="timer"></span>
+            <span class="timer" title="${t.pinned ? "Pinned: click to put the clock back" : "Click to pin: no clock, and it moves below the numbered rows"}"></span>
           </header>
           <ul class="items">
-            ${(t.platesDone ? t.items.filter((it) => it.toGo) : t.items).map((it, i, list) => `${it.toGo && !(list[i - 1] || {}).toGo ? `<li class="togo-split"><span class="dining">TO GO</span> ${t.platesDone ? "plates are out; these to go" : "make these to go"}</li>` : ""}
-              <li>
+            ${shown.map(({ it, mark }, i, list) => `${it.toGo && !(list[i - 1] || { it: {} }).it.toGo ? `<li class="togo-split"><span class="dining">TO GO</span> ${t.platesDone ? "plates are out; these to go" : "make these to go"}</li>` : ""}
+              <li data-mark="${esc(mark)}"${crossed[mark] ? ' class="marked"' : ""} title="Click to cross it off (made already); click again to bring it back">
                 <span class="qty${it.qty > 1 ? " many" : ""}">${it.qty > 1 ? `${it.qty}×` : it.qty}</span>
                 <div>
                   <div class="item">${esc(it.name)}</div>
@@ -873,9 +899,39 @@
           </ul>
           ${t.note ? noteHtml(t.note) : ""}
           <button class="done" type="button">${!t.platesDone && t.items.some((it) => it.toGo) ? "Plates done" : "Done"}</button>
-        </article>`).join("");
+        </article>`;
+  }
+
+  function render(fresh) {
+    if (!tickets.length) {
+      board.innerHTML = `<div class="empty"><div class="brand">${wordmarkSvg}</div><p>No open orders</p>
+        <p class="empty-keys keys"><b>1</b>–<b>8</b> done &nbsp; <b>⌫</b> or <b>0</b> undo &nbsp; <b>+</b> <b>−</b> scroll &nbsp; <b>⏎</b> check Square now</p></div>`;
+    } else {
+      measureRow();
+      assignSlots();
+      for (const id of Object.keys(marks)) if (!tickets.some((t) => t.id === id)) delete marks[id];
+      saveMarks();
+      // The numbered spots, each in its row and column (a faint box for one
+      // cleared), then everything else packed below: waiting ones oldest
+      // first, then the pinned ones.
+      const bySlot = new Map(tickets.filter((t) => slots[t.id]).map((t) => [slots[t.id], t]));
+      const last = Math.max(0, ...bySlot.keys());
+      const at = (n) => `grid-row:${Math.ceil(n / perRow)};grid-column:${((n - 1) % perRow) + 1}`;
+      const cells = [];
+      for (let n = 1; n <= last; n++) {
+        const t = bySlot.get(n);
+        cells.push(t ? ticketHtml(t, fresh, n, at(n)) : `<div class="slot-free" style="${at(n)}" aria-hidden="true">${n}</div>`);
+      }
+      const rest = [...tickets.filter((t) => !slots[t.id] && !t.pinned), ...tickets.filter((t) => t.pinned)];
+      if (rest.length) {
+        const waiting = rest.filter((t) => !t.pinned).length;
+        cells.push(`<div class="extra" style="grid-row:${last > perRow ? 3 : last ? 2 : 1}">
+          <div class="extra-head">${waiting ? `Next: ${waiting} without a number yet (Done with the mouse, or they get one when a row clears)` : "Pinned: no clock, Done with the mouse"}</div>
+          ${rest.map((t) => ticketHtml(t, fresh, "", "")).join("")}</div>`);
+      }
+      board.innerHTML = cells.join("");
     }
-    packBoard();
+    packExtra();
     renderCount();
     tick();
     showMore();
@@ -1138,7 +1194,30 @@
 
   board.addEventListener("click", (e) => {
     const btn = e.target.closest(".done");
-    if (btn) bump(btn.closest(".ticket").dataset.id);
+    if (btn) return bump(btn.closest(".ticket").dataset.id);
+    const card = e.target.closest(".ticket");
+    if (!card) return;
+    const id = card.dataset.id;
+    // An item: crossed off, or back.
+    const line = e.target.closest("li[data-mark]");
+    if (line) {
+      const m = (marks[id] = marks[id] || {});
+      if (m[line.dataset.mark]) delete m[line.dataset.mark];
+      else m[line.dataset.mark] = 1;
+      saveMarks();
+      line.classList.toggle("marked", !!m[line.dataset.mark]);
+      return;
+    }
+    // The time: pinned (no clock, out of the rows), or back. The PC keeps
+    // it, so the front page shows it pinned too.
+    if (e.target.closest(".timer")) {
+      const t = tickets.find((x) => x.id === id);
+      if (!t) return;
+      t.pinned = t.pinned ? null : new Date().toISOString();
+      lastJson = "";
+      render(new Set());
+      fetch("/api/front-pin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, on: !!t.pinned }) }).catch(() => {});
+    }
   });
   undoBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -1310,7 +1389,7 @@
     const last = lastOkAt ? fmtTime(lastOkAt) : "not yet";
     showDialog(`<h2 id="dialog-title">Settings &amp; help</h2>
       <div class="keys-table keys">
-        <span><b>1</b>–<b>9</b></span><span>Done on that ticket</span>
+        <span><b>1</b>–<b>8</b></span><span>Done on that ticket</span>
         <span><b>⌫</b> <b>0</b></span><span>Undo. Press again to go further back.</span>
         <span><b>+</b> <b>−</b></span><span>Scroll down / up</span>
         <span><b>⏎</b></span><span>Check Square now</span>
@@ -1388,7 +1467,7 @@
   // Built to run from a number pad alone (spill-resistant; the mouse is for
   // precision). Matched on e.code as well as e.key so the keys work with Num
   // Lock on or off — with it off, Numpad1 sends "End", not "1".
-  //   1–9               Done on that ticket
+  //   1–8               Done on that ticket (9 does nothing)
   //   Backspace or 0    Undo (press again to go further back)
   //   − / +             scroll up / down
   //   Enter             check Square now

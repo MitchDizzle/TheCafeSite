@@ -182,7 +182,7 @@ function snapshot() {
   const now = Date.now();
   const tickets = keepTablesTogether(live.all
     .filter((t) => !hiddenReason(t, now))
-    .map((t) => ({ ...t, platesDone: platesDone[t.id] || null }))
+    .map((t) => ({ ...t, platesDone: platesDone[t.id] || null, pinned: pinned[t.id] || null }))
     .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt)));
   // The WAIT UNTIL row: what comes on the board next, soonest first.
   const waiting = live.all

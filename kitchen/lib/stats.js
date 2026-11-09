@@ -8,7 +8,7 @@ const path = require("path");
 const { DATA, MOCK } = require("./config");
 const { startOfToday, localDate } = require("./util");
 const { live } = require("./live");
-const { bumped, platesDone, offBoard, byHand, state } = require("./state");
+const { bumped, platesDone, offBoard, byHand, pinned, state } = require("./state");
 const { NOT_FOOD, itemName, isOnline, isSkipped } = require("./tickets");
 const { mockHistory } = require("./mock");
 const lead = require("./lead");
@@ -50,9 +50,13 @@ function dayRecords() {
     // 2026-10-21, timed from when they were rung). Time a ticket sat
     // cleared before an Undo doesn't count. A For Here ticket with items to
     // go is timed to its plates (the first Done): the bag comes later.
+    // A pinned order (the front page's pin, or the time clicked on the
+    // board: a big order started early, an old order's add-on) has no clock,
+    // so it counts in no time: neither the kitchen's nor the wait.
+    const pinnedOrder = !!pinned[o.id] || Object.keys(pinned).some((k) => k.startsWith(`${o.id}+`));
     let kitchenMinutes = null;
     const doneAt = platesDone[o.id] || bumped[o.id];
-    if (t && doneAt) {
+    if (t && doneAt && !pinnedOrder) {
       const m = (Date.parse(doneAt) - Date.parse(t.boardAt || o.created_at) - ((offBoard[o.id] && offBoard[o.id].ms) || 0)) / 6e4;
       if (m >= 0 && m < 240) kitchenMinutes = Math.round(m * 10) / 10;
     }
@@ -60,7 +64,7 @@ function dayRecords() {
     // person (not the automatic hand-off). For DoorDash it's the Dasher's
     // wait, kept apart from the kitchen's time (from 2026-11-02).
     let waitMinutes = null;
-    if (online && doneAt && byHand[o.id]) {
+    if (online && doneAt && byHand[o.id] && !pinnedOrder) {
       const m = (Date.parse(byHand[o.id]) - Date.parse(doneAt)) / 6e4;
       if (m >= 0 && m < 240) waitMinutes = Math.round(m * 10) / 10;
     }
