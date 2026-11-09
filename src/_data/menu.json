@@ -216,7 +216,7 @@
         },
         {
           "name": "Reuben Sandwich",
-          "description": "Corn beef, Swiss cheese & thousand island dressing on grilled rye",
+          "description": "Corned beef, Swiss cheese & thousand island dressing on grilled rye",
           "defaultBread": "Rye",
           "price": 10.00
         }

@@ -59,7 +59,7 @@ B = "Breakfast"
 fillings = cats["breakfast"]["note"]  # build-your-own filling list
 bg = item("breakfast", "Full / Half Biscuit & Gravy")
 add("Biscuit & Gravy", B, [("Full", bg["prices"][0]), ("Half", bg["prices"][1])],
-    "Served until 12pm.")
+    "Full is two biscuits, half is one. Served until 11am.")
 i = item("breakfast", "Big Breakfast")
 # Spelled out for Square rather than taken from menu.json's short line: eggs
 # are cooked any style but poached (the Eggs modifier, client 2026-09-30), the
@@ -69,7 +69,7 @@ i = item("breakfast", "Big Breakfast")
 # `squareBase` ($8), the Meat list adds $2 for bacon, sausage or ham and
 # nothing for No Meat. The menus still say $10, the price with meat.
 one("Big Breakfast", B, i.get("squareBase", i["price"]),
-    "2 eggs your way, potatoes, choice of bacon, sausage or ham, and white toast. Served until 12pm.",
+    "2 eggs your way, potatoes, white toast and your choice of 2 sausage patties, 5 slices of bacon or 4 slices of ham. Served until 11am.",
     skip_detail=False)
 one("Burrito", B, item("breakfast", "Burrito")["price"],
     "Build your own: bacon, sausage, ham, cheese, onion, bell pepper, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 12pm.",
@@ -87,7 +87,8 @@ BS = "Breakfast Sides"
 # the same list as the Breakfast Sandwich, so "toast" always says white,
 # wheat or 12 grain. It used to be Toast / Biscuit / English Muffin
 # variations, which left the toast's bread unsaid (client 2026-10-08).
-one("Toast, Biscuit or English Muffin", BS, item("breakfast_sides", "Toast, Biscuit or English Muffin")["price"])
+# Named "Breakfast Toast" in Square; toast is two slices (client 2026-11-09).
+one("Breakfast Toast", BS, item("breakfast_sides", "Toast, Biscuit or English Muffin")["price"], "Toast is two slices.")
 # Fried Potatoes opens its detail screen: it carries the Add Cheese list
 # (client 2026-10-11), like the Side of Eggs below.
 for n, label in [("Bacon (4 slices)", "Bacon (4 slices)"), ("Sausage (2 patties)", "Sausage (2 patties)"),
