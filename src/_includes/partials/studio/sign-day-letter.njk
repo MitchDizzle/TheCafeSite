@@ -13,7 +13,65 @@
 {%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
 {%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
 <div class="ds-stack">
-{%- if d %}
+{%- if d and onePage %}
+    {#- One page for the front counter (client 2026-11-09: two holders
+        there, one for the sides sign he points at while taking orders, so
+        everything else goes on this one): the plate, the soup and the
+        desserts, no swap list (the sides sign has it). -#}
+    {%- set sides = d | specialSides(true) %}
+    {%- set fridge = (collections.studio | where("fileSlug", "sign-desserts-bw"))[0] %}
+    {%- set drows = [] %}
+    {%- if fridge %}
+    {%- from "partials/studio/dessert-rows.njk" import collect %}
+    {{- collect(desserts, fridge.data, drows) }}
+    {%- endif %}
+    <div class="canvas sign dl dl--one">
+        <header class="dl-top">
+            <p class="p-display dl-head ink-accent">Today&rsquo;s Special</p>
+            <p class="dl-when ink-teal">Lunch special &amp; soup from 11am</p>
+        </header>
+
+        <section class="dl1-block">
+            <p class="p-display dl1-name{% if d.special.length > 24 %} dl1-name--long{% endif %} ink-teal">{{ d.special }}</p>
+            {%- if sides %}
+            <p class="dl1-detail">{{ sides }}</p>
+            {%- endif %}
+            {%- if specials.includesDrink %}
+            <p class="dl-drink dl1-drink ink-accent">Includes a drink</p>
+            {%- endif %}
+        </section>
+
+        {%- if d.soup %}
+        <section class="dl1-block dl1-block--rule">
+            <p class="p-label dl-label dl1-label ink-accent">Soup of the Day</p>
+            <p class="p-display dl1-name dl1-name--soup{% if d.soup.length > 20 %} dl1-name--long{% endif %} ink-teal">{{ d.soup }}</p>
+            {%- if soupCat and soupCat.items %}
+            <p class="dl1-detail">{% for s in soupCat.items %}{% if not loop.first %} &middot; {% endif %}{{ s.name }} {{ s.price | money }}{% endfor %}</p>
+            {%- endif %}
+            {%- if d.soupNote %}
+            <p class="dl-note dl1-note">{{ d.soupNote }}</p>
+            {%- endif %}
+        </section>
+        {%- endif %}
+
+        {%- if drows.length %}
+        <section class="dl1-block dl1-block--rule dl1-desserts">
+            <p class="p-label dl-label dl1-label ink-accent">Desserts</p>
+            <ul class="dl1-rows{% if drows.length > 6 %} dl1-rows--most{% elif drows.length > 3 %} dl1-rows--more{% endif %}">
+                {%- for r in drows %}
+                <li class="sign-row">
+                    <div class="sign-row-head">
+                        <span class="sign-row-name ink-teal">{{ r.name }}</span>
+                        <span class="sign-row-fill" aria-hidden="true"></span>
+                        <span class="sign-row-price ink-accent">{{ r.price | money }}</span>
+                    </div>
+                </li>
+                {%- endfor %}
+            </ul>
+        </section>
+        {%- endif %}
+    </div>
+{%- elif d %}
     {%- set sides = d | specialSides(true) %}
     <div class="canvas sign dl">
         <header class="dl-top">

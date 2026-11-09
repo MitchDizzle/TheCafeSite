@@ -16,7 +16,7 @@ the words right, proof once, send the PDF.
 | Today's desserts / dessert fridge | `sign-desserts-bw` | Run `npm run desserts` first (reads Square). Then front matter only: `skipDesserts`, `skipKinds` (in Square, not in the fridge), `inKinds` (in the fridge, Square says 0), `addDesserts` (not in Square yet, `priceOf` another item), `signNames`, `treats` |
 | The open fridge (not self serve) | `sign-desserts-open-fridge-bw` | Its `sign:` rows |
 | Today's special sides | `sign-todays-sides-bw` | `sidesDate` to today; the day's `sides` / `extraSides` in `src/_data/specials.json` (two sides that come with the plate = two entries, both also in `extraSides`; a "today only" extra side = `extraSides` only) |
-| Day's special & soup on letter (colour printer, light on ink) | `sign-day-letter` | `signDate` to the day; prints the plate on page 1, the soup on page 2 (with its `soupNote`), from `specials.json`; page 3 is the desserts, the same rows as `sign-desserts-bw` (edit its front matter, not this one; `dessertPage: false` drops it) |
+| Day's special, soup & desserts on letter (colour printer, light on ink; the front counter, beside the sides sign) | `sign-day-letter` | `signDate` to the day. `onePage: true` (the usual): the plate, the soup and the desserts on one page, no swap list. `onePage: false`: the plate on page 1, the soup on page 2 (with its `soupNote`), from `specials.json`; page 3 is the desserts, the same rows as `sign-desserts-bw` (edit its front matter, not this one; `dessertPage: false` drops it) |
 | Magic bars & rice crispy treats | `sign-dessert-bars-bw` | Nothing; it reads Square |
 | Anything else, one-off | a fill-in sign | `npm run new-sign -- <name> "<Heading>"`, fill in `sign:` |
 

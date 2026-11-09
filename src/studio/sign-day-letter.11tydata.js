@@ -4,7 +4,7 @@ module.exports = {
   eleventyComputed: {
     studioH: (data) => {
       const d = ((data.specials && data.specials.days) || []).find((x) => x.date === data.signDate);
-      const n = (d && d.soup ? 2 : 1) + (data.dessertPage ? 1 : 0);
+      const n = data.onePage ? 1 : (d && d.soup ? 2 : 1) + (data.dessertPage ? 1 : 0);
       return n * 1056 + (n - 1) * 24;
     },
   },
