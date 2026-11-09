@@ -191,7 +191,7 @@ function snapshot() {
     .sort((a, b) => Date.parse(a.waitUntil) - Date.parse(b.waitUntil));
   return { tickets, waiting, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, sound: cfg.sound && !MUTE, lastCleared: lastCleared(),
     clearedList: boardCleared(), stats: statsToday(), demo: live.demo, pollSeconds: pollEvery, nextPollAt, checking: !!polling,
-    reservations: screenView(), autoOff: require("./auto-off").view(), pageVersion: pageVersions.board };
+    autoOff: require("./auto-off").view(), pageVersion: pageVersions.board };
 }
 
 // A ready order nobody pressed Handed off for clears itself off the front

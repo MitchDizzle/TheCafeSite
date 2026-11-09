@@ -373,10 +373,10 @@ Each morning the board also puts a photo of the day's dish on **Lunch Special** 
 
 ## Reservations (Manage on the front page)
 
-Tables booked ahead, for any number of people (client 2026-10-19). The paper book can stay; this is so the board and the counter see what's coming. Everyone still orders and pays at the counter, so a big table's checks are as separate as anyone's.
+Tables booked ahead, for any number of people (client 2026-10-19). The paper book can stay; this is so the counter sees what's coming. Everyone still orders and pays at the counter, so a big table's checks are as separate as anyone's.
 
 **Where they show**
-- **The kitchen board and the top of the front page:** a table booked for today shows from 90 minutes before its time (`reservationAheadMinutes`): "Table for 12 · Johnson · 11:30am · in 40 min". It turns amber 15 minutes before and stays until the hold runs out (20 minutes after its time, `holdMinutes` in the website's `site.json`), or until the front presses **Seated** (no PIN, like Handed off). The rest of today's tables are one line under it.
+- **The top of the front page** (not the kitchen board, since 2026-11-08: clutter for the cooks): a table booked for today shows from 90 minutes before its time (`reservationAheadMinutes`): "Table for 12 · Johnson · 11:30am · in 40 min". It turns amber 15 minutes before and stays until the hold runs out (20 minutes after its time, `holdMinutes` in the website's `site.json`), or until the front presses **Seated** (no PIN, like Handed off). The rest of today's tables are one line under it.
 - **The front page** also shows a red button when the website has sent requests nobody has answered yet; it opens Reservations.
 - **`/today`** on the owner's phone lists today's tables and the next two weeks'.
 - **Email, from Google** (once it's set up, below): the cafe's inbox gets every website request as it comes in, and a list of the day's tables at 5am on any day that has some. Customers with an email address get the confirmation, any change, and a reminder at 3pm the day before.

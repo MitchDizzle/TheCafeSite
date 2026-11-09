@@ -24,8 +24,9 @@
 // Without reservationsKey in config.json there is no Google: the book is
 // this PC's alone and nothing is emailed.
 //
-// The screens get screenView(): today's tables and the next two weeks', with
-// no phone numbers or emails (the front page answers anyone on the wifi).
+// The front page and Today's report get screenView(): today's tables and the
+// next two weeks', with no phone numbers or emails (the front page answers
+// anyone on the wifi). The kitchen board shows none (Mitch 2026-11-08).
 // Those are in manageView(), behind the PIN.
 const fs = require("fs");
 const path = require("path");

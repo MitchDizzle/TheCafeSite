@@ -148,8 +148,9 @@ const DEFAULTS = {
   // reservationsUrl overrides it.
   reservationsKey: "",
   reservationsUrl: "",
-  // A table booked for today shows on the board and at the top of the front
-  // page from this many minutes before its time.
+  // A table booked for today gets its own row at the top of the front page
+  // from this many minutes before its time. (Not on the kitchen board, Mitch
+  // 2026-11-08: the cooks don't need it.)
   reservationAheadMinutes: 90,
   // DoorDash's commission, in percent, for the printed report's "about $X
   // to DoorDash" line (lib/report.js). 0 leaves the line out.
