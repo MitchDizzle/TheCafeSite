@@ -50,7 +50,8 @@ one tap. Everything that needs a choice opens the detail screen.
 
 Some descriptions say more in Square than on the printed menu, because Square
 is where the choice is made: the Big Breakfast reads "2 eggs your way…"
-(the Eggs list below), sandwiches name their default bread.
+(the Eggs list below), sandwiches name their default bread, and the Omelet
+and Side of Eggs say the eggs are fresh cracked (client 2026-11-09).
 
 **Not in the file on purpose:** dietary marks (GF/V) — not kitchen-confirmed,
 see `dietsConfirmed` in `menu.json`; the consumer advisory; any tax setup

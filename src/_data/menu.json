@@ -30,6 +30,7 @@
       "items": [
         {
           "_note_prices": "One line, two sizes. `prices` renders as '$9.00 / $11.00' in the same order as the sizes in the name — 2 egg first, 3 egg second — so the mapping is implied rather than labelled twice.",
+          "_note_fresh": "Square's description says the eggs are fresh cracked (client 2026-11-09); the menus leave it off for room.",
           "name": "2 / 3 Egg Omelet",
           "description": "Pick fillings above. With toast.",
           "dietOnRequest": ["V", "GF"],
@@ -74,7 +75,7 @@
         { "name": "Sausage (2 patties)", "price": 3.00 },
         { "name": "Fried Potatoes", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Side of Gravy", "price": 2.00 },
-        { "name": "1 / 2 / 3 Eggs", "_note": "Added 2026-10-06: $1.75 an egg. No description on purpose: the tri-fold's breakfast flap had one row left, and a description line would put the dietary key inside a desktop printer's unprintable margin. `prices` follows the sizes in the name, like the omelet. In Square it is one item, Side of Eggs, with 1 Egg / 2 Eggs / 3 Eggs sizes and the Eggs style list.", "diet": ["V", "GF"], "prices": [1.75, 3.50, 5.25] }
+        { "name": "Side of Eggs", "_note": "Added 2026-10-06: $1.75 an egg. Named \"1 / 2 / 3 Eggs\" with three prices until 2026-11-09, when the client renamed it Side of Eggs, priced each, to save a line on the menus. `priceUnit` prints after the price (\"$1.75 each\"). No description on purpose: the tri-fold's breakfast flap had one row left. In Square it is one item, Side of Eggs, with 1 Egg / 2 Eggs / 3 Eggs variations at 1, 2 and 3 times this price (scripts/square-catalog.py) and the Eggs style list; its Square description says the eggs are fresh cracked (client 2026-11-09, Square only).", "diet": ["V", "GF"], "price": 1.75, "priceUnit": "each" }
       ]
     },
     {

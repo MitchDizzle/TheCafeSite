@@ -76,7 +76,7 @@ one("Burrito", B, item("breakfast", "Burrito")["price"],
     skip_detail=False)
 om = item("breakfast", "2 / 3 Egg Omelet")
 add("Omelet", B, [("2 Egg", om["prices"][0]), ("3 Egg", om["prices"][1])],
-    "Build your own: bacon, sausage, ham, cheese, onion, bell pepper, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa and toast. Served until 12pm.")
+    "Made with fresh cracked eggs. Build your own: bacon, sausage, ham, cheese, onion, bell pepper, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa and toast. Served until 12pm.")
 i = item("breakfast", "Breakfast Sandwich")
 # Meat is a +$1 add-on in Square (client 2026-10-06), as on the Big Breakfast.
 one("Breakfast Sandwich", B, i.get("squareBase", i["price"]), i["description"] + " Served until 12pm.", skip_detail=False)
@@ -94,9 +94,11 @@ one("Breakfast Toast", BS, item("breakfast_sides", "Toast, Biscuit or English Mu
 for n, label in [("Bacon (4 slices)", "Bacon (4 slices)"), ("Sausage (2 patties)", "Sausage (2 patties)"),
                  ("Fried Potatoes", "Fried Potatoes"), ("Side of Gravy", "Side of Gravy")]:
     one(label, BS, item("breakfast_sides", n)["price"], skip_detail=False if n == "Fried Potatoes" else None)
-eg = item("breakfast_sides", "1 / 2 / 3 Eggs")
-add("Side of Eggs", BS, [(f"{n} Egg{'s' if n > 1 else ''}", p) for n, p in zip((1, 2, 3), eg["prices"])],
-    "Cooked your way.", skip_detail=False)
+# Priced per egg on the menus ("$1.75 each", client 2026-11-09); Square keeps
+# the 1 / 2 / 3 Egg variations. "Fresh cracked" is Square only, as on the omelet.
+eg = item("breakfast_sides", "Side of Eggs")
+add("Side of Eggs", BS, [(f"{n} Egg{'s' if n > 1 else ''}", round(eg["price"] * n, 2)) for n in (1, 2, 3)],
+    "Fresh cracked eggs, cooked your way.", skip_detail=False)
 
 # ── Wraps (flat price from the category sizing line) ───────
 W = "Wraps"

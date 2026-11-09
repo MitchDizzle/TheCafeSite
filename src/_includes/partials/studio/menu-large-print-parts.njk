@@ -77,7 +77,7 @@
                 <span class="menu-item-fill" aria-hidden="true"></span>
                 {%- endif %}
                 {%- if item.price %}
-                <span class="menu-item-price p-body">{{ item.price | money }}</span>
+                <span class="menu-item-price p-body">{{ item.price | money }}{% if item.priceUnit %} {{ item.priceUnit }}{% endif %}</span>
                 {%- elif item.prices %}
                 <span class="menu-item-price p-body">
                     {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
