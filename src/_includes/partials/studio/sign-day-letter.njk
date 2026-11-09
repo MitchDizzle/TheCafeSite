@@ -1,0 +1,66 @@
+{#- One day's lunch special and soup of the day on letter paper, a page
+    each (client 2026-11-09: the 11 × 17 poster printer isn't available, so
+    the board signs go through the office colour printer for now, which
+    must not burn ink). The day is `signDate` in the piece's front matter.
+
+    Same words as the board signs (sign-day-specials.njk): "Today's
+    Special", no day or date, so a sheet goes up again when the plate comes
+    back; the Deli Salads to pick or swap in. Ink-light: white ground,
+    coloured TYPE and thin rules only, no filled panel or box anywhere.
+    Sized down from the 11 × 17 sheet by about the width ratio. -#}
+{%- set d = (specials.days | where("date", signDate))[0] %}
+{%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
+{%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
+{%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
+<div class="ds-stack">
+{%- if d %}
+    {%- set sides = d | specialSides(true) %}
+    <div class="canvas sign dl">
+        <header class="dl-top">
+            <p class="p-display dl-head ink-accent">Today&rsquo;s Special</p>
+            <p class="dl-when ink-teal">Lunch special from 11am</p>
+        </header>
+
+        <div class="dl-main">
+            <p class="p-display dl-special{% if d.special.length > 32 %} dl-special--longer{% elif d.special.length > 20 %} dl-special--long{% endif %} ink-teal">{{ d.special }}</p>
+            {%- if sides %}
+            <p class="dl-sides">{{ sides }}</p>
+            {%- endif %}
+            {%- if specials.includesDrink %}
+            <p class="dl-drink ink-accent">Includes a drink</p>
+            {%- endif %}
+        </div>
+
+        {%- if deli and sides %}
+        <section class="dl-swap">
+            <p class="p-label dl-label ink-accent">{% if d.anySide %}Pick your side{% else %}Swap a side for any of these{% endif %}</p>
+            <ul class="dl-swap-list">
+                {%- for c in deli.choices %}
+                <li>{{ c }}</li>
+                {%- endfor %}
+                {%- if specials.soupSide %}
+                <li>Cup of the soup of the day</li>
+                {%- endif %}
+            </ul>
+        </section>
+        {%- endif %}
+    </div>
+
+    {%- if d.soup %}
+    <div class="canvas sign dl dl--soup">
+        <header class="dl-top">
+            <p class="p-display dl-head ink-accent">Soup of the Day</p>
+            <p class="dl-when ink-teal">From 11am</p>
+        </header>
+        <div class="dl-main">
+            <p class="p-display dl-soup{% if d.soup.length > 16 %} dl-soup--long{% endif %} ink-teal">{{ d.soup }}</p>
+            {%- if soupCat and soupCat.items %}
+            <p class="dl-sides">{% for s in soupCat.items %}{% if not loop.first %} &middot; {% endif %}{{ s.name }} {{ s.price | money }}{% endfor %}</p>
+            {%- endif %}
+        </div>
+    </div>
+    {%- endif %}
+{%- else %}
+    <div class="canvas sign dl"><p class="dl-sides">No special in specials.json for {{ signDate }}.</p></div>
+{%- endif %}
+</div>

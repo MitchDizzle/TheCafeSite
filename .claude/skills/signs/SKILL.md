@@ -16,6 +16,7 @@ the words right, proof once, send the PDF.
 | Today's desserts / dessert fridge | `sign-desserts-bw` | Run `npm run desserts` first (reads Square). Then front matter only: `skipDesserts`, `skipKinds` (in Square, not in the fridge), `inKinds` (in the fridge, Square says 0), `addDesserts` (not in Square yet, `priceOf` another item), `signNames`, `treats` |
 | The open fridge (not self serve) | `sign-desserts-open-fridge-bw` | Its `sign:` rows |
 | Today's special sides | `sign-todays-sides-bw` | `sidesDate` to today; the day's `sides` / `extraSides` in `src/_data/specials.json` (two sides that come with the plate = two entries, both also in `extraSides`; a "today only" extra side = `extraSides` only) |
+| Day's special & soup on letter (colour printer, light on ink) | `sign-day-letter` | `signDate` to the day; prints the plate on page 1, the soup on page 2, from `specials.json` |
 | Magic bars & rice crispy treats | `sign-dessert-bars-bw` | Nothing; it reads Square |
 | Anything else, one-off | a fill-in sign | `npm run new-sign -- <name> "<Heading>"`, fill in `sign:` |
 

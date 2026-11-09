@@ -2,7 +2,7 @@
    Counter signs, 8.5 × 11 in portrait, for letter stand-up sign holders.
    Pieces: sign-drinks(-bw).njk, sign-specials(-bw).njk, sign-todays-sides-bw.njk,
    sign-desserts-bw.njk, sign-desserts-open-fridge-bw.njk, sign-dessert-bars-bw.njk,
-   sign-macho-nachos-bw.njk
+   sign-macho-nachos-bw.njk, sign-day-letter.njk
    (and the door signs, in their own section below)
    Partials: partials/studio/sign-drinks.njk, partials/studio/sign-specials.njk
 
@@ -1294,4 +1294,110 @@
 
 .qs .dc-caution {
     margin-top: 0;
+}
+
+/* ── Day's special & soup on letter (sign-day-letter.njk) ──
+   The board signs on letter portrait, a page each, for the office colour
+   printer (client 2026-11-09). Light on ink: coloured type and thin rules,
+   nothing filled. About 0.77 of the 11 × 17 sizes (the width ratio). */
+.sign.dl {
+    padding: 0.5in 0.55in 0.55in;
+}
+
+.dl-top {
+    text-align: center;
+    border-bottom: 0.03in solid var(--accent);
+    padding-bottom: 0.14in;
+}
+
+.dl-head {
+    font-size: 0.9in;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.dl-when {
+    font-size: 0.38in;
+    font-weight: 700;
+    margin-top: 0.08in;
+}
+
+.dl-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0.25in 0;
+}
+
+.dl-special,
+.dl-soup {
+    font-size: 1.1in;
+    line-height: 1.05;
+}
+
+.dl-special--long,
+.dl-soup--long {
+    font-size: 0.85in;
+}
+
+.dl-special--longer {
+    font-size: 0.66in;
+}
+
+.dl-sides {
+    font-size: 0.48in;
+    line-height: 1.2;
+    font-weight: 700;
+    margin-top: 0.22in;
+}
+
+.dl-drink {
+    margin-top: 0.3in;
+    padding: 0.05in 0.3in;
+    border: 0.025in solid var(--accent);
+    border-radius: 999px;
+    font-size: 0.38in;
+    font-weight: 900;
+}
+
+.dl-label {
+    font-size: 0.32in;
+    white-space: nowrap;
+}
+
+.dl-swap {
+    border: 0.025in solid var(--teal);
+    border-radius: 0.12in;
+    padding: 0.16in 0.3in 0.2in;
+    text-align: center;
+}
+
+.dl-swap-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 0.35in;
+    row-gap: 0.02in;
+    margin-top: 0.08in;
+    font-size: 0.36in;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.dl-swap-list li {
+    white-space: nowrap;
+}
+
+.dl-swap-list li::before {
+    content: "\2022";
+    color: var(--accent);
+    margin-right: 0.12in;
+}
+
+@media print {
+    .dl:not(:last-child) { break-after: page; }
 }
