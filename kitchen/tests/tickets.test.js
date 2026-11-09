@@ -140,6 +140,30 @@ test("a ticket named TEST is marked as a practice order", () => {
 
 // ---------------------------------------------------------------- to go or for here
 
+test("an item whose note says to go goes under the TO GO line on a For Here ticket", () => {
+  // 2026-11-09: the POS's per-item To Go never reaches Square's Orders API.
+  const here = [{ uid: "f1", type: "IN_STORE", state: "COMPLETED" }];
+  const t = ticketOf(counter({ ticket_name: "24", fulfillments: here, line_items: [
+    li(1, "Healthy Plate"),
+    li(1, "Lunch Special", { note: "to go" }),
+    li(1, "Patty Melt", { note: "No onion, to go" }),
+    li(1, "Philly Steak Sandwich", { note: "TO-GO" }),
+    li(1, "Reuben Sandwich", { note: "Togo please" }),
+    li(1, "Cheeseburger", { note: "Toasted bun" }),
+  ] }));
+  assert.equal(t.toGo, false);
+  const by = Object.fromEntries(t.items.map((it) => [it.name, it]));
+  for (const name of ["Lunch Special", "Patty Melt", "Philly Steak Sandwich", "Reuben Sandwich"]) assert.equal(by[name].toGo, true, name);
+  assert.equal(by["Lunch Special"].note, null);
+  assert.equal(by["Patty Melt"].note, "No onion");
+  assert.equal(by["Philly Steak Sandwich"].note, null);
+  assert.equal(by["Reuben Sandwich"].note, "please");
+  assert.equal(by["Healthy Plate"].toGo, undefined);
+  assert.equal(by.Cheeseburger.toGo, undefined);
+  assert.equal(by.Cheeseburger.note, "Toasted bun");
+  assert.deepEqual(t.items.slice(-4).map((it) => it.name).sort(), ["Lunch Special", "Patty Melt", "Philly Steak Sandwich", "Reuben Sandwich"], "the to-go items last");
+});
+
 test("To Go on the POS is a PICKUP fulfillment; For Here is IN_STORE; none is for here", () => {
   assert.equal(ticketOf(counter()).toGo, true);
   assert.equal(ticketOf(counter({ fulfillments: [{ type: "IN_STORE", state: "COMPLETED" }] })).toGo, false);

@@ -151,6 +151,14 @@ function toTicket(order) {
     for (const e of ff.entries || []) lineToGo.set(e.line_item_uid, TO_GO_TYPES.test(ff.type));
   }
   const isToGoMod = (m) => /^\s*to[\s-]?go\s*$/i.test(m.name || "");
+  // The POS's per-item dining option never reaches the Orders API (checked
+  // 2026-11-09: 48 orders, no split fulfillment, nothing per item), so an
+  // item to go on a For Here ticket is said in its note: "to go", alone or
+  // with the rest of the note ("No onion, to go"). The words come off the
+  // note; the item goes under the TO GO line.
+  const TO_GO_NOTE = /(^|[\s,;.\-–(])to[\s-]?go(?=$|[\s,;.!)])/i;
+  const noteToGo = (li) => TO_GO_NOTE.test(li.note || "");
+  const noteWithoutToGo = (note) => note.replace(TO_GO_NOTE, "$1").replace(/^[\s,;.\-–]+|[\s,;.\-–]+$/g, "").replace(/\s*,\s*,\s*/g, ", ").replace(/\(\s*\)/g, "").trim() || null;
   const toItem = (li) => {
     const variation = li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null;
     const mods = (li.modifiers || []).filter((m) => !(isPacket(m) && !online) && !isToGoMod(m));
@@ -165,8 +173,8 @@ function toTicket(order) {
       mods: mods.filter((m) => m.name !== picked).map((m) =>
         Number(m.quantity) > 1 ? `${m.name} ×${Number(m.quantity)}` : m.name
       ),
-      note: li.name && li.note ? li.note : null,
-      toGo: (li.modifiers || []).some(isToGoMod) || lineToGo.get(li.uid) === true,
+      note: li.name && li.note ? noteWithoutToGo(li.note) : null,
+      toGo: (li.modifiers || []).some(isToGoMod) || noteToGo(li) || lineToGo.get(li.uid) === true,
     };
   };
   const food = lines.filter((li) => !NOT_FOOD.has(li.item_type));
