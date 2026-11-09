@@ -164,6 +164,18 @@ test("an item whose note says to go goes under the TO GO line on a For Here tick
   assert.deepEqual(t.items.slice(-4).map((it) => it.name).sort(), ["Lunch Special", "Patty Melt", "Philly Steak Sandwich", "Reuben Sandwich"], "the to-go items last");
 });
 
+test("to go in a note, however it's typed", () => {
+  const here = [{ uid: "f1", type: "IN_STORE", state: "COMPLETED" }];
+  const item = (note) => ticketOf(counter({ fulfillments: here, line_items: [li(1, "Healthy Plate"), li(1, "Patty Melt", { note })] }))
+    .items.find((it) => it.name === "Patty Melt");
+  for (const note of ["to go", "To Go", "TO-GO", "togo", "2go", "2 go", "2-Go", "t/go", "to/go", "no onion 2go", "2go, no onion", "(to go)"]) {
+    assert.equal(item(note).toGo, true, note);
+  }
+  assert.equal(item("no onion 2go").note, "no onion");
+  assert.equal(item("2go, no onion").note, "no onion");
+  for (const note of ["no tomato", "potato gone", "2 good", "toast", "going light on mayo", "12go"]) assert.equal(item(note).toGo, undefined, note);
+});
+
 test("To Go on the POS is a PICKUP fulfillment; For Here is IN_STORE; none is for here", () => {
   assert.equal(ticketOf(counter()).toGo, true);
   assert.equal(ticketOf(counter({ fulfillments: [{ type: "IN_STORE", state: "COMPLETED" }] })).toGo, false);

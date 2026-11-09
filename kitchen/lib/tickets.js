@@ -153,10 +153,11 @@ function toTicket(order) {
   const isToGoMod = (m) => /^\s*to[\s-]?go\s*$/i.test(m.name || "");
   // The POS's per-item dining option never reaches the Orders API (checked
   // 2026-11-09: 48 orders, no split fulfillment, nothing per item), so an
-  // item to go on a For Here ticket is said in its note: "to go", alone or
-  // with the rest of the note ("No onion, to go"). The words come off the
+  // item to go on a For Here ticket is said in its note: "to go" (or 2go,
+  // togo...), alone or with the rest of the note ("No onion, to go"). The words come off the
   // note; the item goes under the TO GO line.
-  const TO_GO_NOTE = /(^|[\s,;.\-–(])to[\s-]?go(?=$|[\s,;.!)])/i;
+  // "to go", "to-go", "togo", "2go", "2 go", "2-go", "t/go", "to/go".
+  const TO_GO_NOTE = /(^|[\s,;.\-–(])(?:to|2|t)[\s\-/]?go(?=$|[\s,;.!)])/i;
   const noteToGo = (li) => TO_GO_NOTE.test(li.note || "");
   const noteWithoutToGo = (note) => note.replace(TO_GO_NOTE, "$1").replace(/^[\s,;.\-–]+|[\s,;.\-–]+$/g, "").replace(/\s*,\s*,\s*/g, ", ").replace(/\(\s*\)/g, "").trim() || null;
   const toItem = (li) => {
