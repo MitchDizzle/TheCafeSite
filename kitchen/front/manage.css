@@ -363,12 +363,7 @@
 .sv-imports .m-mini { font: inherit; font-size: 0.88rem; font-weight: 700; padding: 0.3rem 0.65rem; border: 1.5px solid var(--red); border-radius: 999px; background: transparent; color: var(--red-dark); cursor: pointer; }
 #sv-preview .m-btn { margin-top: 0.6rem; }
 
-/* Emailed report: the report itself, as it's emailed and printed. */
-.mr-date { margin: 0.5rem 0 0.7rem; max-width: 14rem; }
-.mr-frame { display: block; width: 100%; height: 58vh; min-height: 22rem; border: 1px solid var(--line); border-radius: 0.45rem; background: #fff; }
-.mr-set { margin-top: 1rem; }
-.mr-form { display: grid; gap: 0.6rem; }
-.mr-form .m-field { max-width: 24rem; }
-.mr-form textarea { font: inherit; font-size: 1rem; color: var(--text); padding: 0.45rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; resize: vertical; }
-.mr-form textarea:focus { outline: none; border-color: var(--teal); }
-.mr-form .m-btn { justify-self: start; }
+/* Print a report: the page as it prints, scaled down to the panel. */
+.pr-dates { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; margin: 0.6rem 0 0.8rem; }
+.pr-dates .m-field { flex: 1 1 9rem; max-width: 13rem; }
+.pr-frame { display: block; width: 100%; height: 62vh; min-height: 24rem; border: 1px solid var(--line); border-radius: 0.45rem; background: #E9E4DA; }

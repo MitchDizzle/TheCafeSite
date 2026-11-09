@@ -1,5 +1,6 @@
-// The emailed report (lib/report.js): what the day's and the week's say,
-// and when they're due. Run: node --test kitchen/tests/
+// The printed report (lib/report.js): what a day's, a week's and a long
+// stretch's say, and that the page is made to fit one letter page.
+// Run: node --test kitchen/tests/
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 require("./board.js");
@@ -13,7 +14,7 @@ const rec = (date, h, m, net, extra = {}) => ({
 });
 const day = (orders) => ({ savedAt: "", orders });
 
-// Monday 2026-11-09 and the Monday before.
+// Monday 2026-11-09 and Tuesday, and the Monday before.
 const days = {
   "2026-11-09": day([
     rec("2026-11-09", 7, 30, 10, { tip: 2 }),
@@ -25,8 +26,9 @@ const days = {
   "2026-11-10": day([rec("2026-11-10", 9, 0, 15)]),
 };
 
-test("the day's report: counter, online and DoorDash apart, breakfast and lunch, specials, against last week", () => {
-  const r = report.dayReport("2026-11-09", days);
+test("a day: counter, online and DoorDash apart, breakfast and lunch, specials, against last week", () => {
+  const r = report.buildReport("2026-11-09", "2026-11-09", days);
+  assert.equal(r.single, true);
   assert.equal(r.totals.orders, 4);
   assert.equal(r.totals.sales, 100);
   assert.equal(r.totals.tips, 2);
@@ -34,59 +36,50 @@ test("the day's report: counter, online and DoorDash apart, breakfast and lunch,
   assert.deepEqual(r.meals.map((m) => [m.meal, m.orders, m.net]), [["breakfast", 1, 10], ["lunch", 3, 90]]);
   assert.equal(r.doordash.list.length, 1);
   assert.equal(r.doordash.list[0].waitMinutes, 4);
-  assert.equal(r.lastWeek.date, "2026-11-02");
-  assert.equal(r.lastWeek.sales, 80);
+  assert.equal(r.before.label, "last Monday");
+  assert.equal(r.before.sales, 80);
   assert.deepEqual(r.specials.plates.map((x) => [x.name, x.qty]), [["Meatloaf", 2]]);
-  assert.deepEqual(r.specials.soups.map((x) => [x.name, x.cups]), [["Chicken Noodle", 1]]);
   const html = report.renderHtml(r);
   assert.match(html, /Daily report/);
-  assert.match(html, /DoorDash/);
+  assert.match(html, /Monday, November 9, 2026/);
   assert.match(html, /▲ \$20\.00 \(25%\) over last Monday/);
   assert.match(html, /Lunch Special, Meatloaf:<\/b> 2 sold/);
-  assert.match(report.subjectOf(r), /^The Café, Mon, Nov 9: \$100\.00, 4 orders$/);
-  assert.match(report.renderHtml(r, { page: true }), /^<!DOCTYPE html>/);
-  assert.equal(report.dayReport("2026-11-08", days), null); // nothing that day
+  assert.match(html, /Dasher wait/);
+  // One letter page: the page size, and the script that zooms it to fit.
+  assert.match(html, /@page \{ size: letter portrait/);
+  assert.match(html, /10\.2 \* 96/);
+  assert.equal(report.buildReport("2026-11-08", "2026-11-08", days), null); // nothing that day
+  assert.equal(report.lastDayBefore("2026-11-10", days), "2026-11-09");
 });
 
-test("the week's report: day by day, against the week before", () => {
-  const r = report.weekReport("2026-11-11", days);
-  assert.equal(r.from, "2026-11-09");
-  assert.equal(r.last, "2026-11-10");
-  assert.deepEqual(r.perDay.map((d) => [d.date, d.orders, d.doordash]), [["2026-11-09", 4, 1], ["2026-11-10", 1, 0]]);
+test("a week: day by day, against the week before", () => {
+  const r = report.buildReport("2026-11-09", "2026-11-15", days);
+  assert.equal(r.week, true);
+  assert.deepEqual(r.dates, ["2026-11-09", "2026-11-10"]);
+  assert.deepEqual(r.rows.map((d) => [d.date, d.orders, d.doordash]), [["2026-11-09", 4, 1], ["2026-11-10", 1, 0]]);
   assert.equal(r.totals.sales, 115);
+  assert.equal(r.before.label, "the week before");
   assert.equal(r.before.sales, 80);
-  assert.match(report.renderHtml(r), /Day by day/);
-  assert.match(report.subjectOf(r), /week of Nov 9/);
+  const html = report.renderHtml(r);
+  assert.match(html, /Weekly report/);
+  assert.match(html, /Day by day/);
+  assert.equal(report.titleOf(r).when, "Mon, Nov 9 to Sun, Nov 15, 2026");
 });
 
-const cst = (date, t) => new Date(`${date}T${t}:00-06:00`);
-
-test("due: the day's after the time on a day with orders, the week's on its last open day, nothing from before the start", () => {
-  report._set({ started: "2026-11-09", settings: { daily: true, weekly: true, time: "14:10", to: [] } });
-  assert.deepEqual(report.due(cst("2026-11-09", "14:05"), days), []);
-  assert.deepEqual(report.due(cst("2026-11-09", "14:10"), days), [{ kind: "day", date: "2026-11-09" }]);
-  // The next morning, with Monday's never sent: Monday's still goes; Tuesday's waits for 2:10.
-  assert.deepEqual(report.due(cst("2026-11-10", "08:00"), days), [{ kind: "day", date: "2026-11-09" }]);
-  // Friday at 2:10: the week (the days that had orders), and nothing for a Friday with none.
-  report._set({ started: "2026-11-09", settings: { daily: true, weekly: true, time: "14:10", to: [] }, sent: { "day:2026-11-09": "x", "day:2026-11-10": "x" } });
-  assert.deepEqual(report.due(cst("2026-11-13", "14:12"), days), [{ kind: "week", date: "2026-11-13" }]);
-  report._set({ started: "2026-11-09", settings: { daily: true, weekly: true, time: "14:10", to: [] }, sent: { "day:2026-11-09": "x", "day:2026-11-10": "x", "week:2026-11-09": "x" } });
-  assert.deepEqual(report.due(cst("2026-11-13", "14:12"), days), []);
-  // Started after Monday: Monday's is never owed.
-  report._set({ started: "2026-11-10", settings: { daily: true, weekly: false, time: "14:10", to: [] } });
-  assert.deepEqual(report.due(cst("2026-11-10", "15:00"), days), [{ kind: "day", date: "2026-11-10" }]);
-  // Switched off.
-  report._set({ started: "2026-11-09", settings: { daily: false, weekly: false, time: "14:10", to: [] } });
-  assert.deepEqual(report.due(cst("2026-11-13", "15:00"), days), []);
-  report._set({});
-});
-
-test("Manage's settings: addresses checked, a time or none", () => {
-  report._set({});
-  assert.throws(() => report.saveSettings({ daily: true, to: "terry@example" }), /doesn't look like an email/);
-  assert.throws(() => report.saveSettings({ daily: true, time: "2pm" }), /Pick a time/);
-  const s = report.saveSettings({ daily: true, weekly: false, time: "14:30", to: "Terry@Example.com\nterry@example.com, dalton@example.com" });
-  assert.deepEqual(s, { daily: true, weekly: false, time: "14:30", to: ["terry@example.com", "dalton@example.com"] });
-  assert.equal(report.lastOpenDay("2026-11-09"), "2026-11-13"); // config.example's open days: Monday to Friday
-  report._set({});
+test("a long stretch goes week by week, and any two dates work either way round", () => {
+  const many = {};
+  for (let i = 0; i < 40; i++) {
+    const d = new Date(2026, 9, 1 + i, 12);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    const date = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+    many[date] = day([rec(date, 9, 0, 10)]);
+  }
+  const r = report.buildReport("2026-11-09", "2026-10-01", many);
+  assert.equal(r.from, "2026-10-01");
+  assert.equal(r.week, false);
+  assert.equal(r.byWeek, true);
+  assert.equal(r.rows[0].label, "Week of Sep 28");
+  assert.equal(r.rows.reduce((a, x) => a + x.orders, 0), r.totals.orders);
+  assert.match(report.renderHtml(r), /Week by week/);
+  assert.equal(report.titleOf(r).kind, "Report");
 });

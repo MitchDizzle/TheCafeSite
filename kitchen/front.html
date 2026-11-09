@@ -922,7 +922,7 @@
   }
 
   // What the Manage jobs in front/*.js (Specials, Reservations, Photo post,
-  // Reports, Emailed report, Survey, Desserts, Saved photos, Leave off
+  // Reports, Print a report, Survey, Desserts, Saved photos, Leave off
   // kitchen tickets) share with this page. Each file is
   // loaded after this script and registers its menu row's job in tools
   // (and any of its own buttons in acts) under the row's data-act name.
@@ -1028,9 +1028,9 @@
           ${tile("desserts", "Desserts", "What's in, how many left")}
           ${tile("photo", "Photo post", "A dish's Facebook picture")}
         </div>
-        ${section("numbers", "Numbers", "Today's report · Emailed report · Reports · Survey", [
+        ${section("numbers", "Numbers", "Today's report · Print a report · Reports · Survey", [
           row("today", "Today's report", "Sales so far against last week, and what's selling"),
-          row("mail-report", "Emailed report", "The day's and the week's, to print. When it's emailed, and to whom"),
+          row("print-report", "Print a report", "A day, a week or any dates, on one page"),
           row("report", "Reports", "Sales, kitchen times and items, any days"),
           row("survey", "Survey", "Answers, comments, the website's summary"),
         ])}
@@ -1092,6 +1092,6 @@
 <script src="/front/desserts.js"></script>
 <script src="/front/leave-off.js"></script>
 <script src="/front/saved-photos.js"></script>
-<script src="/front/mail-report.js"></script>
+<script src="/front/print-report.js"></script>
 </body>
 </html>

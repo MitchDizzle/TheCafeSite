@@ -76,7 +76,7 @@ function isLocal(req) {
 
 // What another device on the wifi (or the owner's phone over Tailscale) may
 // reach: the front page, the phone page (/today) and their own actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/send-to-kitchen", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated", "/api/front-pin", "/api/front-mail-report", "/api/front-mail-report-save", "/api/front-mail-report-doc", "/api/front-mail-report-send"]);
+const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/send-to-kitchen", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated", "/api/front-pin", "/api/front-print-report"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -103,7 +103,7 @@ const STATIC = {
   "/front/leave-off.js": "front/leave-off.js",
   "/front/saved-photos.js": "front/saved-photos.js",
   "/front/reservations.js": "front/reservations.js",
-  "/front/mail-report.js": "front/mail-report.js",
+  "/front/print-report.js": "front/print-report.js",
 };
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
@@ -461,36 +461,24 @@ async function handle(req, res) {
       return send(res, 200, { ok: false, message: `Couldn't read that: ${err.message}` });
     }
   }
-  // Manage -> Numbers -> Emailed report, behind the PIN: when it goes and to
-  // whom (and saving that), the report itself to show or print, and
-  // emailing it now (lib/report.js).
-  if (req.method === "POST" && url.pathname.startsWith("/api/front-mail-report")) {
+  // Manage -> Numbers -> Print a report, behind the PIN: the page for a
+  // day, a week or any dates, to show and print (lib/report.js), and the
+  // last day with orders before today, for its "Last day open".
+  if (req.method === "POST" && url.pathname === "/api/front-print-report") {
     const report = require("./report");
     const body = await readBody(req);
     const refused = pinRefusal(body.pin);
     if (refused) return send(res, 200, { ok: false, message: refused });
-    try {
-      if (url.pathname === "/api/front-mail-report") return send(res, 200, { ok: true, ...report.status() });
-      if (url.pathname === "/api/front-mail-report-save") {
-        report.saveSettings(body.settings || {});
-        return send(res, 200, { ok: true, message: "Saved.", ...report.status() });
-      }
-      const kind = body.kind === "week" ? "week" : "day";
-      const date = /^\d{4}-\d{2}-\d{2}$/.test(body.date || "") ? body.date : localDate();
-      if (url.pathname === "/api/front-mail-report-doc") {
-        recordHistoryNow();
-        const r = report.reportFor(kind, date);
-        if (!r) return send(res, 200, { ok: false, message: kind === "week" ? "No orders saved that week." : "No orders saved that day." });
-        return send(res, 200, { ok: true, subject: report.subjectOf(r), html: report.renderHtml(r, { page: true }) });
-      }
-      if (url.pathname === "/api/front-mail-report-send") {
-        const sent = await report.email(kind, date, "Manage");
-        return send(res, 200, { ok: true, message: `Emailed to ${sent.to}: "${sent.subject}".` });
-      }
-    } catch (err) {
-      console.error(`Emailed report: ${err.message}`);
-      return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't work: ${err.message}` });
-    }
+    const day = /^\d{4}-\d{2}-\d{2}$/;
+    const today = localDate();
+    const from = day.test(body.from || "") ? body.from : today;
+    const to = day.test(body.to || "") ? body.to : from;
+    recordHistoryNow();
+    const r = report.buildReport(from, to);
+    const base = { today, lastDay: report.lastDayBefore(today) };
+    if (!r) return send(res, 200, { ok: false, ...base, message: from === to ? "No orders saved that day." : "No orders saved in those days." });
+    const t = report.titleOf(r);
+    return send(res, 200, { ok: true, ...base, title: `${t.kind}, ${t.when}`, html: report.renderHtml(r) });
   }
   // The phone page's numbers, behind the PIN like Reports: sales are the
   // owner's business, not the counter's.
