@@ -11,7 +11,7 @@ studioData: ["desserts.json"]
 studioTitle: "Open fridge desserts sign (not self serve) — black & white"
 studioCategory: "Signs"
 studioSize: "8.5 × 11 in portrait · letter, on the fridge out in the open"
-studioNote: "For the fridge out in the open (client 2026-11-06): the cream puffs (plain and chocolate), banana pudding, strawberry trifle and brownie delight with their prices from Square, and a caution panel: not self serve, please do not open. A fill-in sign: change the rows in its front matter."
+studioNote: "For the fridge out in the open (client 2026-11-06): what is in that fridge, with prices from Square, and a caution panel: not self serve, please do not open. A fill-in sign: change the rows in its front matter."
 studioW: 816
 studioH: 1056
 studioOrder: 32
@@ -19,17 +19,16 @@ studioOrder: 32
 # when Square counts them at 0: the sign is for what that fridge holds.
 # Brownie Delight borrows the trifle's price until it is in Square; make it
 # `square: "Brownie Delight"` then.
-# 2026-11-09: the caution alone while everything in that fridge was sold out;
-# the rows came back the same day (client).
+# 2026-11-09 (client): only the lemon layered dessert and the bread pudding
+# are in that fridge. The usual rows, to put back when they're made:
+#   Cream Puff, Chocolate Cream Puff, Banana Pudding, Strawberry Trifle,
+#   Brownie Delight (each a `square:` row).
 sign:
   heading: "Desserts"
   blocks:
     - rows:
-        - square: "Cream Puff"
-        - square: "Chocolate Cream Puff"
-        - square: "Banana Pudding"
-        - square: "Strawberry Trifle"
-        - square: "Brownie Delight"
+        - square: "Lemon Layered Dessert"
+        - square: "Bread Pudding"
     - caution: "Not self serve"
       sub: "Please do not open. Ask at the counter."
 ---
