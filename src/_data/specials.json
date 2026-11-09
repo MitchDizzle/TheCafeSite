@@ -85,7 +85,10 @@
       "date": "2026-11-09",
       "soup": "Chicken Noodle",
       "special": "French Dip",
-      "anySide": true
+      "anySide": true,
+      "extraSides": [
+        "Oven Baked Potatoes"
+      ]
     },
     {
       "date": "2026-11-10",
