@@ -76,6 +76,14 @@ function tablesOn(dates) {
   return { tables: list.length, people: list.reduce((a, r) => a + (Number(r.party) || 0), 0) };
 }
 
+// The sales tax Square added to DoorDash orders: what's left of the order
+// after the net and the tip. DoorDash collects and pays that tax itself
+// (Kansas's marketplace law; its payout export says "tax remitted by
+// DoorDash", "passed to merchant" $0.00; checked 2026-11-09), so it's in
+// Square's tax total but isn't the cafe's to send in.
+const doordashTax = (records) => round2(records.filter((r) => r.doordash)
+  .reduce((a, r) => a + Math.max(0, (r.sales || 0) - netOf(r) - (r.tip || 0)), 0));
+
 const feePercent = () => Math.max(0, Math.min(50, Number(cfg.doordashFeePercent) || 0));
 
 // The report for the days from..to (one day when they're the same): null
@@ -87,12 +95,13 @@ function buildReport(from, to, all = days()) {
   const records = dates.flatMap((d) => all[d].orders);
   const s = stats.summarize(records);
   const single = from === to;
+  const ddTax = doordashTax(records);
   const r = {
     from, to, single, dates, madeAt: new Date().toISOString(),
     week: !single && from === mondayOf(from) && (to === shift(from, 6) || to === shift(from, 4)),
-    totals: { ...brief(s), collected: s.collected, tipped: s.tipped },
+    totals: { ...brief(s), collected: round2(s.collected - ddTax), tipped: s.tipped },
     channels: channels(records), meals: meals(records), hours: hours(records, dates.length),
-    doordash: { ...(s.handoff ? s.handoff.doordash : {}), fee: feePercent() }, online: s.handoff ? s.handoff.online : null,
+    doordash: { ...(s.handoff ? s.handoff.doordash : {}), fee: feePercent(), tax: ddTax }, online: s.handoff ? s.handoff.online : null,
     kitchen: { avgMinutes: s.avgMinutes, longestMinutes: s.longestMinutes, done: s.kitchenDone, bySize: s.bySize.filter((b) => b.orders), slowest: s.slowest },
     toGo: s.toGo, forHere: s.forHere,
     specials: stats.specialsSold(dates.map((date) => ({ date, orders: all[date].orders }))),
@@ -180,6 +189,7 @@ function doordashHtml(r) {
       lines.push(`At ${d.fee}% commission: about ${money(fee)} to DoorDash, ${money(dd.net - fee)} to the cafe.`);
     }
     out += `<p>${lines.join(" ")}</p>`;
+    if (d.tax) out += `<p><b>Sales tax:</b> DoorDash pays it on its orders. ${money(d.tax)} of Square's tax is on these orders and isn't the cafe's to send in.</p>`;
     if (d.list && d.list.length) {
       out += table(["Time", "Items", "Net", "Kitchen", "Dasher wait"], d.list.map((o) => ({ cells: [clock(o.at), o.items, money(o.net), mins(o.kitchenMinutes), mins(o.waitMinutes)] })));
     }
@@ -343,7 +353,7 @@ ${r.single ? "" : rowsHtml(r)}
   <div>${hoursHtml(r)}${specialsHtml(r)}${kitchenHtml(r)}</div>
 </div>
 ${itemsHtml(r)}
-<p class="foot">Collected in all, tax and tips in: ${money(t.collected)}. From the kitchen board's own count of Square's orders: net sales are after discounts and before tax and tips, on the day an order is made (Square counts the day it's paid); refunds aren't taken off; canceled, test and demo orders aren't counted. Kitchen times are from the kitchen board to Done. Square's Dashboard has the official sales.</p>`;
+<p class="foot">Collected in all, tax and tips in: ${money(t.collected)}${r.doordash.tax ? " (not DoorDash's sales tax, which DoorDash pays)" : ""}. From the kitchen board's own count of Square's orders: net sales are after discounts and before tax and tips, on the day an order is made (Square counts the day it's paid); refunds aren't taken off; canceled, test and demo orders aren't counted. Kitchen times are from the kitchen board to Done. Square's Dashboard has the official sales.</p>`;
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(`The Café ${kind.toLowerCase()}, ${when}`)}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@700&display=swap">

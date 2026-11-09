@@ -45,6 +45,10 @@ test("a day: counter, online and DoorDash apart, breakfast and lunch, specials, 
   assert.match(html, /▲ \$20\.00 \(25%\) over last Monday/);
   assert.match(html, /Lunch Special, Meatloaf:<\/b> 2 sold/);
   assert.match(html, /Dasher wait/);
+  // DoorDash pays the sales tax on its orders: Square's on the $20 one is $2.
+  assert.equal(r.doordash.tax, 2);
+  assert.equal(r.totals.collected, 108); // 110 in Square, less DoorDash's $2 of tax
+  assert.match(html, /\$2\.00 of Square's tax is on these orders/);
   // One letter page: the page size, and the script that zooms it to fit.
   assert.match(html, /@page \{ size: letter portrait/);
   assert.match(html, /10\.2 \* 96/);
