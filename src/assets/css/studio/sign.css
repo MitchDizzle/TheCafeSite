@@ -1401,3 +1401,16 @@
 @media print {
     .dl:not(:last-child) { break-after: page; }
 }
+
+/* A colour sign printed light on ink (`inkLight`, sign-mast.njk): the solid
+   teal logo over a thin red rule instead of the black one. */
+.sign:not(.sign--bw) .sign-title-ink {
+    border-bottom: 0.025in solid var(--accent);
+}
+
+/* A day the cafe is closed (site.json closedDays) on the specials sign: the
+   words across the plate and soup columns, in italic. */
+.sw-row--closed .sw-closed {
+    grid-column: 2 / -1;
+    font-style: italic;
+}

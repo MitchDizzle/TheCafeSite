@@ -90,7 +90,7 @@ BS = "Breakfast Sides"
 one("Toast, Biscuit or English Muffin", BS, item("breakfast_sides", "Toast, Biscuit or English Muffin")["price"])
 # Fried Potatoes opens its detail screen: it carries the Add Cheese list
 # (client 2026-10-11), like the Side of Eggs below.
-for n, label in [("Bacon (4 slices)", "Bacon (4 slices)"), ("Sausage Patty", "Sausage Patty"),
+for n, label in [("Bacon (4 slices)", "Bacon (4 slices)"), ("Sausage (2 patties)", "Sausage (2 patties)"),
                  ("Fried Potatoes", "Fried Potatoes"), ("Side of Gravy", "Side of Gravy")]:
     one(label, BS, item("breakfast_sides", n)["price"], skip_detail=False if n == "Fried Potatoes" else None)
 eg = item("breakfast_sides", "1 / 2 / 3 Eggs")
