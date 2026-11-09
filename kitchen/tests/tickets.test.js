@@ -434,6 +434,22 @@ test("DoorDash is timed from when it goes on the kitchen board, not from the Das
   assert.equal(storefront.countFrom, null, "a pickup still goes by its time");
 });
 
+test("a Dasher who drops a DoorDash order doesn't take it off the kitchen board", () => {
+  const o = doordash({ id: "DOORDASHDROP", created_at: minutesFromNow(-4) });
+  o.fulfillments[0].delivery_details.note = "Courier Name: Sam";
+  const first = ticketOf(o);
+  assert.equal(hiddenReason(first, Date.now()), null);
+  delete o.fulfillments[0].delivery_details.note; // dropped, no one named yet
+  const dropped = ticketOf(o);
+  assert.equal(dropped.holdUntil, null);
+  assert.equal(hiddenReason(dropped, Date.now()), null, "still on the board");
+  assert.equal(dropped.countFrom, first.countFrom, "its timer keeps going");
+  o.fulfillments[0].delivery_details.note = "Courier Name: Alex";
+  const next = ticketOf(o);
+  assert.equal(next.courier, "Alex");
+  assert.equal(next.countFrom, first.countFrom);
+});
+
 test("a DoorDash Storefront pickup waits for no Dasher: it goes on like an online pickup", () => {
   // As Square sent Heather's on 2026-11-03: placed 8:27 for 8:37, held till 8:42 for a Dasher.
   const o = online({ id: "DDSTOREFRONT01", created_at: minutesFromNow(-10), source: { name: "DoorDash - Storefront" },

@@ -307,10 +307,11 @@ function onBoardAt(order, { dueAt, doordash, courier, leadMins }) {
   let at = created;
   if (doordash) {
     at = created + cfg.dasherWaitMinutes * 6e4;
-    if (courier) {
-      if (!courierSeen.has(order.id)) courierSeen.set(order.id, Date.now());
-      at = Math.min(at, courierSeen.get(order.id));
-    }
+    if (courier && !courierSeen.has(order.id)) courierSeen.set(order.id, Date.now());
+    // Once on, it stays on: a Dasher who drops the order can leave it with
+    // no courier named until DoorDash finds another (client 2026-11-09), and
+    // the food is already being made.
+    if (courierSeen.has(order.id)) at = Math.min(at, courierSeen.get(order.id));
   }
   const byDue = dueAt ? Date.parse(dueAt) - (leadMins || cfg.showAheadMinutes) * 6e4 : -Infinity;
   const forDasher = doordash && at >= byDue;
