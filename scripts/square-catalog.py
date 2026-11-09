@@ -59,7 +59,7 @@ B = "Breakfast"
 fillings = cats["breakfast"]["note"]  # build-your-own filling list
 bg = item("breakfast", "Full / Half Biscuit & Gravy")
 add("Biscuit & Gravy", B, [("Full", bg["prices"][0]), ("Half", bg["prices"][1])],
-    "Full is two biscuits, half is one. Served until 11am.")
+    "Full is two biscuits, half is one. Served until 12pm.")
 i = item("breakfast", "Big Breakfast")
 # Spelled out for Square rather than taken from menu.json's short line: eggs
 # are cooked any style but poached (the Eggs modifier, client 2026-09-30), the

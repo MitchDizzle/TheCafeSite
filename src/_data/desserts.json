@@ -26,10 +26,12 @@
       "price": 1.5,
       "kinds": [
         {
-          "name": "Magic Bar"
+          "name": "Magic Bar",
+          "out": true
         },
         {
-          "name": "M&M Rice Crispy Treat"
+          "name": "M&M Rice Crispy Treat",
+          "out": true
         }
       ],
       "lists": []
@@ -46,11 +48,23 @@
       "lists": []
     },
     {
+      "name": "Bread Pudding",
+      "price": 3.5,
+      "kinds": [
+        {
+          "name": "Bread Pudding",
+          "out": true
+        }
+      ],
+      "lists": []
+    },
+    {
       "name": "Brownie Delight",
       "price": 3.5,
       "kinds": [
         {
-          "name": "Brownie Delight"
+          "name": "Brownie Delight",
+          "out": true
         }
       ],
       "lists": []
@@ -94,10 +108,12 @@
       "price": 3.5,
       "kinds": [
         {
-          "name": "Cream Puff"
+          "name": "Cream Puff",
+          "out": true
         },
         {
-          "name": "Chocolate Cream Puff"
+          "name": "Chocolate Cream Puff",
+          "out": true
         }
       ],
       "lists": []
@@ -128,7 +144,8 @@
       "price": 3.5,
       "kinds": [
         {
-          "name": "Strawberry Trifle"
+          "name": "Strawberry Trifle",
+          "out": true
         }
       ],
       "lists": []
