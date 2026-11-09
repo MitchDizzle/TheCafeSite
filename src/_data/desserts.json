@@ -119,6 +119,17 @@
       "lists": []
     },
     {
+      "name": "Lemon Layered Dessert",
+      "price": 3.5,
+      "kinds": [
+        {
+          "name": "Lemon Layered Dessert",
+          "out": true
+        }
+      ],
+      "lists": []
+    },
+    {
       "name": "Meringue Chocolate Pie",
       "price": 3.5,
       "kinds": [
