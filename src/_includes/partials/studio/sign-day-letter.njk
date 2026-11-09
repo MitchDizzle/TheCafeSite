@@ -57,7 +57,39 @@
             {%- if soupCat and soupCat.items %}
             <p class="dl-sides">{% for s in soupCat.items %}{% if not loop.first %} &middot; {% endif %}{{ s.name }} {{ s.price | money }}{% endfor %}</p>
             {%- endif %}
+            {%- if d.soupNote %}
+            <p class="dl-note">{{ d.soupNote }}</p>
+            {%- endif %}
         </div>
+    </div>
+    {%- endif %}
+
+    {#- The desserts, for the counter: the dessert fridge sign's rows, from
+        its own front matter (found in collections.studio), so the two
+        always agree. Left off if that sign isn't built (archived). #}
+    {%- set fridge = (collections.studio | where("fileSlug", "sign-desserts-bw"))[0] if dessertPage else null %}
+    {%- if fridge %}
+    {%- from "partials/studio/dessert-rows.njk" import collect %}
+    {%- set drows = [] %}
+    {{- collect(desserts, fridge.data, drows) }}
+    <div class="canvas sign dl dl--desserts">
+        <header class="dl-top">
+            <p class="p-display dl-head ink-accent">Desserts</p>
+            <p class="dl-when ink-teal">Ask at the counter</p>
+        </header>
+        <ul class="dl-rows">
+            {%- for r in drows %}
+            <li class="sign-row{% if r.name.length > 18 %} dl-row--long{% endif %}">
+                <div class="sign-row-head">
+                    <span class="sign-row-name ink-teal">{{ r.name }}</span>
+                    <span class="sign-row-fill" aria-hidden="true"></span>
+                    <span class="sign-row-price ink-accent">{{ r.price | money }}</span>
+                </div>
+            </li>
+            {%- else %}
+            <li class="dl-sides">Ask at the counter what's in today.</li>
+            {%- endfor %}
+        </ul>
     </div>
     {%- endif %}
 {%- else %}

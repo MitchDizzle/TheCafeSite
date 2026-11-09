@@ -19,16 +19,17 @@ studioOrder: 32
 # when Square counts them at 0: the sign is for what that fridge holds.
 # Brownie Delight borrows the trifle's price until it is in Square; make it
 # `square: "Brownie Delight"` then.
+# 2026-11-09: everything in that fridge is sold out, so the sign is the
+# caution alone; put these rows back (under `blocks:`) when they're made:
+#   - rows:
+#       - square: "Cream Puff"
+#       - square: "Chocolate Cream Puff"
+#       - square: "Banana Pudding"
+#       - square: "Strawberry Trifle"
+#       - square: "Brownie Delight"
 sign:
   heading: "Desserts"
   blocks:
-    - rows:
-        - square: "Cream Puff"
-        - square: "Chocolate Cream Puff"
-        - square: "Banana Pudding"
-        - square: "Strawberry Trifle"
-        - name: "Brownie Delight"
-          priceOf: "Strawberry Trifle"
     - caution: "Not self serve"
       sub: "Please do not open. Ask at the counter."
 ---

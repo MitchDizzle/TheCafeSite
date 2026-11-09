@@ -1398,6 +1398,40 @@
     margin-right: 0.12in;
 }
 
+/* The soup's note ("Made with our homemade noodles.", soupNote). */
+.dl-note {
+    font-size: 0.36in;
+    line-height: 1.25;
+    font-style: italic;
+    margin-top: 0.28in;
+}
+
+/* The desserts page: the fridge sign's rows, a size up, spread down the
+   page; teal names, red prices, the dotted leader between. */
+.dl-rows {
+    flex: 1;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    padding: 0.2in 0;
+}
+
+.dl-rows .sign-row + .sign-row {
+    margin-top: 0;
+}
+
+.dl-rows .sign-row-name,
+.dl-rows .sign-row-price {
+    font-size: 0.56in;
+}
+
+/* A name over 18 letters drops to the fridge sign's size, to stay on one
+   line ("Lemon Layered Dessert"); its price stays full size. */
+.dl-rows .dl-row--long .sign-row-name {
+    font-size: 0.46in;
+}
+
 @media print {
     .dl:not(:last-child) { break-after: page; }
 }
