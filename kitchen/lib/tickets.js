@@ -234,6 +234,11 @@ function toTicket(order) {
   // How far ahead of its due time it goes on: more for a bigger order.
   const leadMins = dueAt ? leadMinutes(items.reduce((n, it) => n + it.qty, 0)) : null;
   const { boardAt, forDasher } = onBoardAt(order, { dueAt, doordash, courier, leadMins });
+  // A DoorDash delivery put on when its Dasher was named (or after
+  // dasherWaitMinutes, or sent from the front) is timed from then, like a
+  // counter sale, not against the Dasher's time (client 2026-11-09: one came
+  // up already "11 min late"). One scheduled for later still goes by its time.
+  const countFrom = doordash && (forDasher || !!sentNow[order.id]) ? boardAt : null;
   // To go or for here. The Restaurants POS records the dining option as the
   // fulfillment: "To Go" is PICKUP, "For Here" is IN_STORE. To Go is the
   // POS default, so a table number wins: someone sitting down with a number
@@ -271,6 +276,7 @@ function toTicket(order) {
     // from; holdUntil is that time while a DoorDash order waits for a Dasher.
     boardAt,
     leadMinutes: leadMins,
+    countFrom,
     holdUntil: forDasher && !courier && !sentNow[order.id] && Date.parse(boardAt) > Date.now() ? boardAt : null,
     courier,
     items,

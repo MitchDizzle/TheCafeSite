@@ -613,8 +613,9 @@
 <script>
 (() => {
   // How long before a ticket's header turns amber / red, in minutes.
-  // Counter orders age from when they were rung up; pickup orders from when
-  // they're due (amber when due soon, red once past due).
+  // Counter orders age from when they were rung up, DoorDash deliveries from
+  // when they went on the board; pickup orders from when they're due (amber
+  // when due soon, red once past due).
   const COUNTER_WARN = 8, COUNTER_LATE = 15;
   const PICKUP_WARN = 10; // minutes before due
   const POLL_MS = 1000; // this PC's own board program, not Square: cheap
@@ -762,6 +763,13 @@
   function age(t, now) {
     // Plates out, the to-go part still to make: not timed, it comes later.
     if (t.platesDone) return { cls: "later", text: "To go", sub: `plates out ${clock(t.platesDone)}` };
+    // A DoorDash delivery counts up from when it went on this board, like a
+    // counter sale; the Dasher's time is only the line under it.
+    if (t.countFrom) {
+      const since = now - Date.parse(t.countFrom);
+      const cls = since >= COUNTER_LATE * 6e4 ? "late" : since >= COUNTER_WARN * 6e4 ? "warn" : "";
+      return { cls, text: mmss(since), sub: t.dueAt ? `Dasher ${clock(t.dueAt)}` : "in kitchen" };
+    }
     if (t.dueAt) {
       const until = Date.parse(t.dueAt) - now;
       // The time it's due, not a countdown: a countdown looked just like a
