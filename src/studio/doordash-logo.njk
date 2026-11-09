@@ -1,0 +1,31 @@
+---
+layout: layouts/piece.njk
+title: "The Café — DoorDash store logo (1080 × 1080)"
+canvasW: "1080px"
+canvasH: "1080px"
+pageCss: "/assets/css/studio/doordash-logo.css"
+
+tags: studio
+studioPinned: true
+studioTitle: "DoorDash store logo"
+studioCategory: "Square"
+studioSize: "1080 × 1080 px · DoorDash crops it to a circle"
+studioNote: "The store logo DoorDash shows beside the cafe's name (client 2026-11-09: our own wordmark, as on the kitchen board). Upload the PNG in the DoorDash Merchant Portal (Store > Store details, Logo; Business Admin or higher). DoorDash takes the centre square and shows it as a small circle, so it is the wordmark alone, inside the circle, nothing small to read."
+studioW: 1080
+studioH: 1080
+studioOrder: 72
+---
+{#- Same wordmark, outline and teal ground as the Facebook profile picture
+    (fb-profile.njk) and the site's hero, so the cafe looks the same on
+    DoorDash as everywhere else. No "Leavenworth, Kansas" line: DoorDash
+    shows the logo at about 60 px, where it can't be read. -#}
+<div class="canvas ddlogo">
+    <div class="ddlogo-content">
+        <div class="wordmark wordmark--light wordmark--hero ddlogo-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <div class="ddlogo-filigree">
+            {% include "partials/studio/filigree.njk" %}
+        </div>
+    </div>
+</div>
