@@ -512,7 +512,7 @@
     return `
       <article class="order ${ready ? "ready" : "cooking"}${o.unpaid ? " unpaid" : ""}${o.demo ? " demo" : ""}${o.pinned ? " pinned" : ""}${folded ? " mini" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
         <header>
-          <span><span class="name">${esc(label(o))}${o.tableOf ? ` <span class="dining here">${o.tableOf.n} of ${o.tableOf.of}</span>` : ""}${o.addOn ? '<span class="added-tag">+ added</span>' : ""}</span><span class="kind">${o.pinned ? '<span class="pin-tag" title="Pinned: stays at the top until Handed off, and never clears itself">PINNED</span>' : ""}${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${o.test ? '<span class="test-tag">TEST</span>' : ""}${esc(kindLabel(o))}${diningHtml(o)}</span></span>
+          <span><span class="name">${esc(label(o))}${o.group || o.tableOf ? ` <span class="dining here">${[o.group ? `Group${o.group !== "1" ? ` ${o.group}` : ""}` : "", o.tableOf ? `${o.tableOf.n} of ${o.tableOf.of}` : ""].filter(Boolean).join(" · ")}</span>` : ""}${o.addOn ? '<span class="added-tag">+ added</span>' : ""}</span><span class="kind">${o.pinned ? '<span class="pin-tag" title="Pinned: stays at the top until Handed off, and never clears itself">PINNED</span>' : ""}${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${o.test ? '<span class="test-tag">TEST</span>' : ""}${esc(kindLabel(o))}${diningHtml(o)}</span></span>
           <span class="status" data-status></span>
           <span class="card-tools">
             <button type="button" data-pin aria-pressed="${o.pinned ? "true" : "false"}" aria-label="${o.pinned ? "Unpin" : "Pin to the top"}" title="${o.pinned ? "Unpin" : "Pin to the top: it stays until Handed off"}">${toolIcon("pin", o.pinned)}</button>

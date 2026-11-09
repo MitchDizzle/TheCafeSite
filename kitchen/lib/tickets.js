@@ -209,8 +209,15 @@ function toTicket(order) {
   const due = order.net_amount_due_money && order.net_amount_due_money.amount;
   // The ticket name the counter typed. A bare number is a table number (the
   // cafe hands them out to people eating in); TEST marks a practice order.
+  // A number and G ("21G", "21 G") is one of a big group, each with their
+  // own number (Mitch 2026-11-08): the number is theirs, the G says group,
+  // so the kitchen sends the group's food out together and the runner still
+  // knows whose plate is whose. A second group at the same time is G2. Not
+  // a letter of the group's choosing: "11a" and "1p" are already times.
   const ticketName = (order.ticket_name || "").trim();
-  const table = !online && /^\d{1,3}$/.test(ticketName) ? ticketName : null;
+  const grouped = !online ? /^(\d{1,3})\s*g(\d{1,2})?$/i.exec(ticketName) : null;
+  const table = !online && /^\d{1,3}$/.test(ticketName) ? ticketName : grouped ? grouped[1] : null;
+  const group = grouped ? String(Number(grouped[2] || 1)) : null;
   // A counter order with a time in its name is due then, like a pickup.
   const wanted = !online && !table ? timeInName(ticketName, order.created_at) : null;
   const test = /^test\b/i.test(ticketName);
@@ -255,6 +262,7 @@ function toTicket(order) {
     shortId: order.id.slice(-4).toUpperCase(),
     label: table ? `Table ${table}` : (recipient && recipient.display_name) || (wanted ? wanted.rest : ticketName) || `#${receipt || order.id.slice(-4).toUpperCase()}`,
     table,
+    group,
     test,
     source: (order.source && order.source.name) || null,
     createdAt: order.created_at,
@@ -381,10 +389,12 @@ function orderDetail(o) {
 
 // Two or more orders rung under one table number: the counter rings people
 // sitting together as separate orders, for speed. Each gets tableOf
-// { n, of } ("1 of 2", in the order they were rung), so the kitchen sends
-// them out together. Orders count as one table when each was rung within
-// SAME_TABLE_MINUTES of the one before: a number handed out again later in
-// the day starts a new group. An order canceled at the front doesn't count.
+// { n, of, key } ("1 of 2", in the order they were rung; key is the first
+// one's id), so the kitchen sends them out together. Orders count as one
+// table when each was rung within SAME_TABLE_MINUTES of the one before: a
+// number handed out again later in the day starts a new group. A big
+// group's orders ("21G", "22G", "23G") go by their G instead, each keeping
+// its own number. An order canceled at the front doesn't count.
 const SAME_TABLE_MINUTES = 15;
 function markSameTable(list) {
   const byTable = new Map();
@@ -392,13 +402,14 @@ function markSameTable(list) {
     delete t.tableOf;
     // Items added to an order (lib/addons.js) are that order's, not another table's.
     if (!t.table || canceled[t.id] || t.addOn) continue;
-    if (!byTable.has(t.table)) byTable.set(t.table, []);
-    byTable.get(t.table).push(t);
+    const key = t.group ? `group ${t.group}` : t.table;
+    if (!byTable.has(key)) byTable.set(key, []);
+    byTable.get(key).push(t);
   }
   for (const group of byTable.values()) {
     group.sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
     let run = [];
-    const close = () => { if (run.length > 1) run.forEach((t, i) => { t.tableOf = { n: i + 1, of: run.length }; }); };
+    const close = () => { if (run.length > 1) run.forEach((t, i) => { t.tableOf = { n: i + 1, of: run.length, key: run[0].id }; }); };
     for (const t of group) {
       const prev = run[run.length - 1];
       if (prev && Date.parse(t.createdAt) - Date.parse(prev.createdAt) > SAME_TABLE_MINUTES * 6e4) { close(); run = []; }
@@ -408,4 +419,20 @@ function markSameTable(list) {
   }
 }
 
-module.exports = { NOT_FOOD, itemName, isOnline, isSkipped, toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt, orderDetail };
+// The kitchen board's order, oldest first, with a table's or a group's
+// orders together: each one after the first of its table, wherever it was
+// rung, so they're made side by side and go out together.
+function keepTablesTogether(list) {
+  const out = [];
+  const placed = new Set();
+  for (const t of list) {
+    if (placed.has(t.id)) continue;
+    out.push(t);
+    placed.add(t.id);
+    if (!t.tableOf) continue;
+    for (const u of list) if (!placed.has(u.id) && u.tableOf && u.tableOf.key === t.tableOf.key) { out.push(u); placed.add(u.id); }
+  }
+  return out;
+}
+
+module.exports = { NOT_FOOD, itemName, isOnline, isSkipped, toTicket, markSameTable, keepTablesTogether, hiddenReason, waitUntil, frontHiddenReason, readyAt, orderDetail };

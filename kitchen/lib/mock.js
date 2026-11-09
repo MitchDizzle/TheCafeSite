@@ -355,6 +355,10 @@ function demoOrders(start) {
     counter(3, -3, "Bob", [li(2, "Cheeseburger", { modifiers: [{ name: "No onion" }, { name: "Ketchup packet" }] })]),
     online(4, -25, 6, "Marge", [li(1, "Reuben Sandwich"), li(1, "Soup of the Day", { variation_name: "Cup" })], "Peanut allergy"),
     online(5, -5, 40, "Dee", [li(1, "Chef Salad", { variation_name: "Full", modifiers: [{ name: "Ranch" }] }), li(1, "Bottle Juice", { variation_name: "Apple" })], "Extra napkins\nDressing on the side!\nWill call when outside"),
+    // A big group, each with their own number: 21G, 22G, 23G (GROUP · 1 of 3...).
+    counter(6, -7, "21G", [li(1, "Reuben Sandwich")]),
+    counter(7, -6, "22G", [li(1, "Grilled Cheese"), li(1, "Soup of the Day", { variation_name: "Cup" })]),
+    counter(8, -4, "23G", [li(1, "Chef Salad", { variation_name: "Half" })]),
   ];
   const later = [
     ["Sue", [li(1, "Philly Steak Sandwich")]],

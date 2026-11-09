@@ -205,6 +205,10 @@
     box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.5);
   }
   .more[hidden] { display: none; }
+  /* Something cut off below is getting late: the pill says so in its colour,
+     as amber and red mean time. */
+  .more.warn { background: var(--amber); color: #1A1A1A; }
+  .more.late { background: var(--red); color: #fff; }
 
   /* WAIT UNTIL: orders that go on the board later (a pickup or phone order
      due in more than 15 min, a DoorDash order waiting for its Dasher),
@@ -254,9 +258,13 @@
     align-items: start;
     padding: 1rem 1.25rem 2rem;
   }
-  /* A number whose ticket was cleared keeps its place on the board, so
-     nobody else's ticket moves into it (client 2026-10-19). The next new
-     order fills it. Faint, so it never reads as an order. */
+  /* Packed like bricks (Mitch 2026-11-08): each ticket spans as many 4px
+     rows as it's tall (packBoard), so a short ticket sits under a short one
+     instead of below the tallest in its row, and more fits on the screen. */
+  .board.packed { grid-auto-rows: 4px; row-gap: 0; }
+  /* A cleared ticket's spot, for the few seconds before the tickets after it
+     move up (see NUMBERS FOLLOW THE WAIT). Faint, so it never reads as an
+     order. */
   .slot-free {
     display: grid;
     place-items: center;
@@ -293,8 +301,11 @@
     box-shadow: 0 0.2rem 0.6rem rgba(0, 0, 0, 0.35);
   }
   .ticket.new { animation: arrive 1.2s ease-out 3; }
+  /* Moved up to a new number (the board tidied itself): one white pulse. */
+  .ticket.moved { animation: moved 1s ease-out 2; }
+  @keyframes moved { 50% { box-shadow: 0 0 0 0.4rem rgba(255, 255, 255, 0.75); } }
   @keyframes arrive { 50% { box-shadow: 0 0 0 0.45rem var(--new); } }
-  @media (prefers-reduced-motion: reduce) { .ticket.new { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .ticket.new, .ticket.moved { animation: none; } }
   /* NEW stays for a minute, not just the three pulses: without sound, a
      cook who was facing the grill when it arrived still has to spot it.
      Mint, never amber: a cook must tell "new" from "getting late". */
@@ -365,6 +376,9 @@
   /* Items added to an order the kitchen already had (lib/addons.js): their
      own card, named like the order, so it's clear they go with it. */
   .added-tag { background: var(--new); color: #0E2A33; box-shadow: inset 0 0 0 0.12rem #0E2A33; }
+  /* One of a big group, each with their own number ("21G"): first on the
+     line under the name, so all of the group's tickets read alike. */
+  .group-tag { display: inline-block; padding: 0 0.45rem; margin-right: 0.45rem; border-radius: 0.3rem; background: #fff; color: #1A1A1A; font-weight: 900; white-space: nowrap; }
 
   /* A flash around the edge of the whole screen when an order arrives, for
      the same reason: something visible from anywhere in the kitchen. */
@@ -624,29 +638,81 @@
   let stats = null; // the day so far, from the server
   let demo = null; // { startedAt, until } while practice orders are showing
 
-  // STABLE NUMBERS AND PLACES. A ticket keeps its number key from the
-  // moment it arrives until it's done, and the number is its place on the
-  // board: when 2 is cleared, 1 and 3 stay exactly where they are and 2's
-  // spot sits empty (client 2026-10-19). A cook working on 3 who looks back
-  // must find it where it was, with 3 on it, and pressing 3 must still clear
-  // it. A new order takes the lowest free number, and so the first gap.
+  // NUMBERS FOLLOW THE WAIT (Mitch 2026-11-08; until then a ticket kept its
+  // number and its place until it was done, client 2026-10-19). The board
+  // reads oldest first from the top left, and the number keys follow: 1 is
+  // the order waiting longest, so nothing old is left below the screen for
+  // a cook to miss. A table's or a group's orders sit together
+  // (keepTablesTogether in lib/tickets.js).
+  //
+  // Not instantly: a cleared ticket leaves a faint gap, and a new order goes
+  // on the end, until the board has been left alone for SETTLE_MS (no key,
+  // no tap, nothing cleared). Then the tickets after a gap move up and take
+  // the next numbers, with one white pulse so a cook sees they moved. A
+  // cook pressing 3, 4, 5 one after another never has a number change under
+  // them. Undo puts a ticket back on its old number while that's still free.
   // Remembered on this screen, so a reload keeps them.
+  const SETTLE_MS = 6000;
   let slots = {};
   try { slots = JSON.parse(localStorage.getItem("kb-slots") || "{}"); } catch {}
+  const lastSlot = {}; // id -> the number it had when it was cleared
+  let clearedAt = 0;
+  let moved = new Set(); // renumbered by the last tidy-up, for the pulse
+  // 1, 2, 3… down the board's order, nothing skipped.
+  const tidy = () => tickets.every((t, i) => (i < 9 ? slots[t.id] === i + 1 : !slots[t.id]));
+  const settled = () => Date.now() - Math.max(lastTouch, clearedAt) >= SETTLE_MS;
   function assignSlots() {
     const ids = new Set(tickets.map((t) => t.id));
-    for (const id of Object.keys(slots)) if (!ids.has(id)) delete slots[id];
-    const used = new Set(Object.values(slots));
-    for (const t of tickets) {
-      if (slots[t.id]) continue;
-      let n = 1;
-      while (used.has(n) && n <= 9) n++;
-      if (n > 9) continue; // no free key: it gets one when one frees up
-      slots[t.id] = n;
-      used.add(n);
+    for (const id of Object.keys(slots)) {
+      if (ids.has(id)) continue;
+      lastSlot[id] = slots[id];
+      delete slots[id];
+      clearedAt = Date.now();
+    }
+    moved = new Set();
+    if (settled() && !tidy()) {
+      const before = { ...slots };
+      for (const id of Object.keys(slots)) delete slots[id];
+      tickets.slice(0, 9).forEach((t, i) => { slots[t.id] = i + 1; });
+      for (const t of tickets) if (before[t.id] && before[t.id] !== slots[t.id]) moved.add(t.id);
+    } else {
+      const used = new Set(Object.values(slots));
+      let top = Math.max(0, ...used);
+      for (const t of tickets) {
+        if (slots[t.id]) continue;
+        const back = lastSlot[t.id];
+        if (back && !used.has(back)) { slots[t.id] = back; used.add(back); continue; }
+        if (top < 9) { slots[t.id] = ++top; used.add(top); }
+      }
     }
     try { localStorage.setItem("kb-slots", JSON.stringify(slots)); } catch {}
   }
+
+  // Packed like bricks (see .board.packed): each ticket spans the 4px rows
+  // its height needs, measured again whenever its height changes. Still in
+  // order: each goes in the first space after the one before it.
+  const ROW_PX = 4;
+  const sizer = new ResizeObserver((entries) => {
+    for (const e of entries) fitCell(e.target);
+    showMore();
+  });
+  function fitCell(el) {
+    const gap = parseFloat(getComputedStyle(board).columnGap) || 16;
+    el.style.gridRowEnd = `span ${Math.max(1, Math.ceil((el.getBoundingClientRect().height + gap) / ROW_PX))}`;
+  }
+  function packBoard() {
+    sizer.disconnect();
+    board.classList.toggle("packed", tickets.length > 0);
+    if (!tickets.length) return;
+    for (const el of board.children) { fitCell(el); sizer.observe(el); }
+  }
+
+  // A table's tag beside the name ("Table 7 1 of 2"); a big group's on the
+  // line under it, where there's room ("GROUP 2 of 4", "GROUP 2 · 1 of 3"
+  // for a second group).
+  const tableTag = (t) => (!t.group && t.tableOf ? `<span class="table-tag">${t.tableOf.n} of ${t.tableOf.of}</span>` : "");
+  const groupTag = (t) => (t.group
+    ? `<span class="group-tag">GROUP${t.group !== "1" ? ` ${t.group} ·` : ""}${t.tableOf ? ` ${t.tableOf.n} of ${t.tableOf.of}` : ""}</span>` : "");
   let lastOkAt = null;
   let down = false; // currently showing a connection problem
 
@@ -710,6 +776,12 @@
       card.classList.toggle("is-fresh", now - (seenAt.get(t.id) || 0) < FRESH_MS);
       card.querySelector(".timer").innerHTML = `${a.pre ? `<span class="pre">${a.pre}</span>` : ""}${esc(a.text)}<small>${a.sub}</small>`;
     }
+    // Left alone long enough: the tickets after a gap move up.
+    if (tickets.length && settled() && !tidy()) render(new Set());
+    // Scrolled down and then left: back to the top after a minute, where the
+    // oldest orders are.
+    if (window.scrollY > 0 && now - lastTouch > 60000 && scrim.hidden && menuEl.hidden) window.scrollTo({ top: 0 });
+    showMore();
   }
 
   // ---- rendering
@@ -768,8 +840,8 @@
         <p class="empty-keys keys"><b>1</b>–<b>9</b> done &nbsp; <b>⌫</b> or <b>0</b> undo &nbsp; <b>+</b> <b>−</b> scroll &nbsp; <b>⏎</b> check Square now</p></div>`;
     } else {
       assignSlots();
-      // Numbered tickets in their number's place, a gap for each free number
-      // before the last one used, then any without a number (more than nine).
+      // Numbered tickets in their number's place, a gap for a number cleared
+      // a moment ago, then any without a number (more than nine).
       const bySlot = new Map(tickets.filter((t) => slots[t.id]).map((t) => [slots[t.id], t]));
       const top = Math.max(0, ...bySlot.keys());
       const cells = [];
@@ -778,12 +850,12 @@
       board.innerHTML = cells.map((t) => typeof t === "number"
         ? `<div class="slot-free" aria-hidden="true">${t}</div>`
         : `
-        <article class="ticket${fresh.has(t.id) ? " new" : ""}${t.demo ? " demo" : ""}" data-id="${esc(t.id)}">
+        <article class="ticket${fresh.has(t.id) ? " new" : ""}${moved.has(t.id) ? " moved" : ""}${t.demo ? " demo" : ""}" data-id="${esc(t.id)}">
           <header>
             <span class="key">${slots[t.id] || ""}</span>
             <span class="who">
-              <span class="name">${esc(label(t))}${t.tableOf ? `<span class="table-tag">${t.tableOf.n} of ${t.tableOf.of}</span>` : ""}${t.addOn ? '<span class="added-tag">+ ADDED</span>' : ""}</span>
-              <span class="kind">${t.demo ? '<span class="demo-tag">DEMO</span>' : ""}<span class="fresh-tag">NEW</span>${t.test ? '<span class="test-tag">TEST</span>' : ""}${t.unpaid ? '<span class="unpaid-tag">NOT PAID</span>' : ""}${t.toGo ? '<span class="dining">TO GO</span>' : '<span class="dining here">FOR HERE</span>'}${esc(kindLabel(t))}</span>
+              <span class="name">${esc(label(t))}${tableTag(t)}${t.addOn ? '<span class="added-tag">+ ADDED</span>' : ""}</span>
+              <span class="kind">${groupTag(t)}${t.demo ? '<span class="demo-tag">DEMO</span>' : ""}<span class="fresh-tag">NEW</span>${t.test ? '<span class="test-tag">TEST</span>' : ""}${t.unpaid ? '<span class="unpaid-tag">NOT PAID</span>' : ""}${t.toGo ? '<span class="dining">TO GO</span>' : '<span class="dining here">FOR HERE</span>'}${esc(kindLabel(t))}</span>
             </span>
             <span class="timer"></span>
           </header>
@@ -803,6 +875,7 @@
           <button class="done" type="button">${!t.platesDone && t.items.some((it) => it.toGo) ? "Plates done" : "Done"}</button>
         </article>`).join("");
     }
+    packBoard();
     renderCount();
     tick();
     showMore();
@@ -862,12 +935,16 @@
     // Counts tickets that are cut off, not just ones wholly off screen: a
     // ticket whose last item is hidden is as easy to get wrong as a missing one.
     const floor = waitingEl.hidden ? window.innerHeight : waitingEl.getBoundingClientRect().top;
-    const below = [...board.querySelectorAll(".ticket")].filter(
-      (c) => c.getBoundingClientRect().bottom > floor + 2
-    ).length;
+    const cut = [...board.querySelectorAll(".ticket")].filter((c) => c.getBoundingClientRect().bottom > floor + 2);
+    const below = cut.length;
+    const late = cut.filter((c) => c.classList.contains("late")).length;
+    const warn = cut.filter((c) => c.classList.contains("warn")).length;
     moreEl.style.bottom = waitingEl.hidden ? "" : `calc(${window.innerHeight - floor}px + 1rem)`;
     moreEl.hidden = !below;
-    moreEl.textContent = `▼ ${below} order${below === 1 ? "" : "s"} continue${below === 1 ? "s" : ""} below (press +)`;
+    moreEl.classList.toggle("late", late > 0);
+    moreEl.classList.toggle("warn", !late && warn > 0);
+    const text = `▼ ${below} order${below === 1 ? "" : "s"} continue${below === 1 ? "s" : ""} below${late ? ` · ${late} LATE` : warn ? ` · ${warn} getting late` : ""} (press +)`;
+    if (moreEl.textContent !== text) moreEl.textContent = text;
   }
   window.addEventListener("scroll", showMore, { passive: true });
   window.addEventListener("resize", showMore);

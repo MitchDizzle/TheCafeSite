@@ -489,6 +489,23 @@ test("orders rung under one table number are tagged 1 of 2, 2 of 2; the number l
   assert.deepEqual(tag, { A0000000001: "1/2", B0000000002: "2/2", C0000000003: null, D0000000004: null, E0000000005: null });
 });
 
+test("a big group, each with their own number: 21G, 22G, 23G are tagged as one group and sit together on the board; G2 is another group; 11a is still a time", () => {
+  const { keepTablesTogether } = require("../lib/tickets");
+  const at = (id, min, name) => toTicket(counter({ id, ticket_name: name, created_at: minutesFromNow(min) })).ticket;
+  const kim = at("A0000000001", -10, "21G");
+  assert.equal(kim.label, "Table 21");
+  assert.equal(kim.group, "1");
+  assert.equal(kim.toGo, false);
+  assert.equal(at("Z0000000009", -10, "21 g2").group, "2");
+  assert.equal(at("Y0000000008", -10, "11a").group, null); // a phone order due at 11am, as before
+  const list = [kim, at("B0000000002", -9, "Pat"), at("C0000000003", -8, "22G"), at("D0000000004", -7, "30G2"), at("E0000000005", -6, "23 G"), at("F0000000006", -5, "31g2")];
+  markSameTable(list);
+  const tag = Object.fromEntries(list.map((t) => [t.id, t.tableOf ? `${t.tableOf.n}/${t.tableOf.of}` : null]));
+  assert.deepEqual(tag, { A0000000001: "1/3", B0000000002: null, C0000000003: "2/3", D0000000004: "1/2", E0000000005: "3/3", F0000000006: "2/2" });
+  // The board: each group's orders right after its first, in the order rung.
+  assert.deepEqual(keepTablesTogether(list).map((t) => t.id), ["A0000000001", "C0000000003", "E0000000005", "B0000000002", "D0000000004", "F0000000006"]);
+});
+
 test("a For Here ticket with items to go takes two Dones: plates first, then the to-go part; Undo steps back one", () => {
   const { bump, unbump } = require("../lib/state");
   const t = toTicket(counter({

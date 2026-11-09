@@ -7,7 +7,7 @@ const { fetchOrders } = require("./square");
 const { live } = require("./live");
 const { bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, pinned, autoOff, readySince, byHand, dueSeen, state, saveState } = require("./state");
 const { splitAdded } = require("./addons");
-const { toTicket, markSameTable, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
+const { toTicket, markSameTable, keepTablesTogether, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
 const { withMockStates } = require("./square-status");
 const { statsToday, recordHistory } = require("./stats");
 const { DEMO_MINUTES, isDemo, mockOrders, demoOrders } = require("./mock");
@@ -180,10 +180,10 @@ function retimed(tickets) {
 
 function snapshot() {
   const now = Date.now();
-  const tickets = live.all
+  const tickets = keepTablesTogether(live.all
     .filter((t) => !hiddenReason(t, now))
     .map((t) => ({ ...t, platesDone: platesDone[t.id] || null }))
-    .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt));
+    .sort((a, b) => Date.parse(a.dueAt || a.createdAt) - Date.parse(b.dueAt || b.createdAt)));
   // The WAIT UNTIL row: what comes on the board next, soonest first.
   const waiting = live.all
     .map((t) => ({ ...t, waitUntil: waitUntil(t, now) }))
