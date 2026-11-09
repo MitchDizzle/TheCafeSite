@@ -67,6 +67,9 @@
                     {%- for s in soupCat.items %}<span class="sizing-pair">{{ s.name }} {{ s.price | money }}</span>{% if not loop.last %} &middot; {% endif %}{% endfor -%}
                 </p>
                 {%- endif %}
+                {%- if d.soupNote %}
+                <p class="ts-detail">{{ d.soupNote }}</p>
+                {%- endif %}
             </div>
             {%- endif %}
         </div>

@@ -29,8 +29,9 @@ function onlineDay(day, hidden) {
   return { ...day, sides };
 }
 
-// note: the website's day `note` (plan.siteNotes), after the plate.
-function dayDescription(name, day, hidden, note) {
+// note: the website's day `note` (plan.siteNotes), after the plate; soupNote:
+// its `soupNote` (plan.siteSoupNotes), after the soup.
+function dayDescription(name, day, hidden, note, soupNote) {
   const plain = cleanWords(cfg.descriptions[name]);
   const what = day && day.items[name] && cleanText(day.items[name].today);
   if (!what) return plain;
@@ -46,6 +47,7 @@ function dayDescription(name, day, hidden, note) {
     }
   } else {
     words.push(`${what}.`);
+    if (soupNote && siteFieldFor(name) === "soup") words.push(/[.!?]$/.test(soupNote) ? soupNote : `${soupNote}.`);
   }
   if (plain) words.push(plain);
   return words.join(" ");
@@ -57,7 +59,7 @@ async function applyDescriptions(today, day) {
   const names = cfg.dailyItems.filter((n) => typeof cfg.descriptions[n] === "string");
   if (!names.length) return null;
   const hidden = counterOnlyOn(today);
-  const want = Object.fromEntries(names.map((n) => [n, dayDescription(n, day, hidden, plan.siteNotes[today])]));
+  const want = Object.fromEntries(names.map((n) => [n, dayDescription(n, day, hidden, plan.siteNotes[today], (plan.siteSoupNotes || {})[today])]));
   const sig = JSON.stringify(want);
   const last = plan.descApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
