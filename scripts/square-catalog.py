@@ -126,8 +126,8 @@ for i in cats["sandwiches"]["items"]:
 BYO = cats["build_sandwich"]
 # A half can't be made on a croissant, and Square can't take the croissant off
 # one size, so the description says what the kitchen does instead (client
-# 2026-10-12): it's made on white. The printed menus say it shorter (the
-# category note, "No croissant on a half.").
+# 2026-10-12): it's made on white. The printed menus say it on the bread
+# itself, "Croissant (not on a half)" (client 2026-11-09).
 add("Build Your Own Sandwich", C, [(i["name"], i["price"]) for i in BYO["items"]],
     "Pick your meats (the curry chicken, walnut tuna and egg salads count as a meat), a cheese and a bread. "
     "Served with lettuce, tomato, pickle & onion. A half sandwich can't be made on a croissant: "
