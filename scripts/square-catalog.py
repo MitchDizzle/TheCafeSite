@@ -69,7 +69,7 @@ i = item("breakfast", "Big Breakfast")
 # `squareBase` ($8), the Meat list adds $2 for bacon, sausage or ham and
 # nothing for No Meat. The menus still say $10, the price with meat.
 one("Big Breakfast", B, i.get("squareBase", i["price"]),
-    "2 eggs your way, potatoes, white toast and your choice of 2 sausage patties, 5 slices of bacon or 4 slices of ham. Served until 11am.",
+    "2 fresh cracked eggs your way, potatoes, white toast and your choice of 2 sausage patties, 5 slices of bacon or 4 slices of ham. Served until 11am.",
     skip_detail=False)
 one("Burrito", B, item("breakfast", "Burrito")["price"],
     "Build your own: bacon, sausage, ham, cheese, onion, bell pepper, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa. Served until 12pm.",
@@ -79,7 +79,10 @@ add("Omelet", B, [("2 Egg", om["prices"][0]), ("3 Egg", om["prices"][1])],
     "Made with fresh cracked eggs. Build your own: bacon, sausage, ham, cheese, onion, bell pepper, tomato, jalapeno, potato, mushroom, olives. Served with sour cream or salsa and toast. Served until 12pm.")
 i = item("breakfast", "Breakfast Sandwich")
 # Meat is a +$1 add-on in Square (client 2026-10-06), as on the Big Breakfast.
-one("Breakfast Sandwich", B, i.get("squareBase", i["price"]), i["description"] + " Served until 12pm.", skip_detail=False)
+# "Fresh cracked" is Square only, as on the Big Breakfast, Omelet and Side of
+# Eggs (client 2026-11-09); the menus keep the shorter line.
+one("Breakfast Sandwich", B, i.get("squareBase", i["price"]),
+    i["description"].replace("One egg", "One fresh cracked egg", 1) + " Served until 12pm.", skip_detail=False)
 
 # ── Breakfast sides ────────────────────────────────────────
 BS = "Breakfast Sides"
