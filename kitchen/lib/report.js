@@ -138,11 +138,11 @@ const at12 = (d) => new Date(`${d}T12:00:00`);
 const weekday = (d) => at12(d).toLocaleDateString("en-US", { weekday: "long" });
 const longDate = (d) => at12(d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 const shortDate = (d) => at12(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+const tinyDate = (d) => `${at12(d).toLocaleDateString("en-US", { weekday: "short" })} ${Number(d.slice(5, 7))}/${Number(d.slice(8))}`;
 const dayOnly = (d) => at12(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const clock = (iso) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 const hourName = (h) => `${h % 12 || 12}${h < 12 ? "am" : "pm"}`;
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-const breakfastEnds = () => { const m = stats.BREAKFAST_ENDS; const h = Math.floor(m / 60); return `${h % 12 || 12}:${String(m % 60).padStart(2, "0")}${h < 12 ? "am" : "pm"}`; };
 
 // Up or down against before, in words and an arrow, never colour alone.
 function vs(now, then, words, isMoney) {
@@ -169,9 +169,11 @@ function channelHtml(r) {
   return `<h2>Where the orders came from</h2>` + table(["", "Orders", "Net sales", "Avg", "Share"], [
     ...r.channels.map((c) => ({ cells: [c.name, c.orders, money(c.net), money(c.avgTicket), `${c.share}%`] })),
     { total: true, cells: ["All", all.orders, money(all.net), money(r.totals.avgTicket), "100%"] },
-  ]) + table(["", "Orders", "Net sales"], r.meals.map((m) => ({
-    cells: [m.meal === "breakfast" ? `Breakfast, before ${breakfastEnds()}` : `Lunch, ${breakfastEnds()} on`, m.orders, money(m.net)] })), { cls: "meals" })
-    + `<p class="small">${r.toGo} to go · ${r.forHere} for here.</p>`;
+    // Breakfast and lunch under the same heads (the hours never change, so
+    // no "before 10:30am": Mitch 2026-11-09, no excess text).
+    ...r.meals.map((m) => ({ cells: [m.meal === "breakfast" ? "Breakfast" : "Lunch", m.orders, money(m.net),
+      m.orders ? money(m.net / m.orders) : "–", all.net ? `${Math.round((m.net / all.net) * 100)}%` : "–"] })),
+  ]) + `<p class="small">${r.toGo} to go · ${r.forHere} for here.</p>`;
 }
 
 function doordashHtml(r) {
@@ -183,7 +185,7 @@ function doordashHtml(r) {
   else {
     const lines = [`<b>${plural(dd.orders, "order")}</b>, ${money(dd.net)} (${dd.share}% of sales), ${money(dd.avgTicket)} average.`];
     if (d.kitchenMinutes != null) lines.push(`Kitchen ${d.kitchenMinutes} min (median).`);
-    if (d.waitMinutes != null) lines.push(`Dashers waited ${d.waitMinutes} min at the counter (median of ${d.waited}).`);
+    if (d.waitMinutes != null) lines.push(`Dashers waited ${d.waitMinutes} min at the counter.`);
     if (d.fee) {
       const fee = round2((dd.net * d.fee) / 100);
       lines.push(`At ${d.fee}% commission: about ${money(fee)} to DoorDash, ${money(dd.net - fee)} to the cafe.`);
@@ -206,8 +208,9 @@ function kitchenHtml(r) {
   let out = `<h2>The kitchen</h2><p>${k.avgMinutes != null
     ? `${k.avgMinutes} min on average from the board to Done; longest ${k.longestMinutes} min.`
     : "No kitchen times saved."}</p>`;
-  if (k.bySize.length) out += table(["Order size", "Orders", "Median", "Average"], k.bySize.map((b) => ({ cells: [b.label, b.orders, mins(b.medianMinutes), mins(b.avgMinutes)] })));
-  if (k.slowest && k.slowest.length) {
+  // By order size on one line (room for bigger type, Mitch 2026-11-09).
+  if (k.bySize.length) out += `<p>By order size (median): ${k.bySize.map((b) => `${esc(b.label)} ${mins(b.medianMinutes)} (${b.orders})`).join(" · ")}.</p>`;
+  if (r.single && k.slowest && k.slowest.length) {
     out += `<p class="small">Slowest: ${k.slowest.map((o) => `${r.single ? "" : `${shortDate(localDate(new Date(o.at)))} `}${clock(o.at)}, ${mins(o.kitchenMinutes)} (${esc(o.items.slice(0, 2).join(", "))}${o.items.length > 2 ? ", …" : ""})`).join("; ")}.</p>`;
   }
   return out;
@@ -230,7 +233,7 @@ function specialsHtml(r) {
       ...sp.soups.map((x) => `<p><b>Soup, ${esc(x.name)}:</b> ${soup(x)}</p>`)].join("");
   }
   if (sp.days.length <= 10) {
-    return `<h2>Specials</h2>` + table(["Day", "Lunch Special", "Soup"], sp.days.map((d) => ({ cells: [shortDate(d.date),
+    return `<h2>Specials</h2>` + table(["Day", "Lunch Special", "Soup"], sp.days.map((d) => ({ cells: [tinyDate(d.date),
       Object.entries(d.plates).map(([n, q]) => `${esc(n)} (${q})`).join(", ") || "–",
       Object.entries(d.soups).map(([n, c]) => `${esc(n)} (${soup(c)})`).join(", ") || "–"] })), { cls: "left" });
   }
@@ -265,7 +268,7 @@ const PAGE_CSS = `
 html, body { margin: 0; }
 body { background: #E9E4DA; color: #22323A; font-family: Lato, "Segoe UI", Arial, sans-serif; font-size: 11px; line-height: 1.35; font-variant-numeric: lining-nums tabular-nums; }
 .sheet { width: 8.5in; min-height: 11in; margin: 12px auto; padding: 0.4in; box-sizing: border-box; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.18); zoom: var(--screen-zoom, 1); }
-.rp { width: 7.7in; zoom: var(--fit, 1); }
+.rp { width: var(--w, 7.7in); zoom: var(--fit, 1); }
 @media print {
   body { background: #fff; }
   .sheet { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; zoom: 1; }
@@ -285,19 +288,20 @@ em.up { color: #2E7D4F; } em.down { color: #A02F26; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
 h2 { margin: 10px 0 3px; font-size: 13px; line-height: 1.2; }
 p { margin: 0 0 4px; }
-.small, .usual { font-size: 9.5px; color: #5B6B72; }
+.small, .usual { font-size: 10px; color: #5B6B72; }
 table { width: 100%; border-collapse: collapse; margin: 0 0 4px; }
-th { padding: 2px 4px; border-bottom: 1.5px solid #1F4552; font-size: 8.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #5B6B72; text-align: right; }
+th { padding: 2px 4px; border-bottom: 1.5px solid #1F4552; font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #5B6B72; text-align: right; }
 td { padding: 2px 4px; border-bottom: 1px solid #E8E2D8; text-align: right; vertical-align: top; }
 th:first-child, td:first-child, table.left td, table.left th { text-align: left; }
+table.left td:first-child { white-space: nowrap; }
 tr.total td { font-weight: 700; border-top: 1px solid #1F4552; }
 table.hours td:last-child { width: 38%; vertical-align: middle; }
 .bar { display: block; height: 7px; background: #2C5E70; border-radius: 0 2px 2px 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .big > div { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .items { columns: 4; column-gap: 16px; }
-.items div { display: flex; gap: 6px; padding: 1px 0; border-bottom: 1px solid #EEE9E0; break-inside: avoid; }
+.items div { display: flex; gap: 6px; padding: 0; line-height: 1.3; border-bottom: 1px solid #EEE9E0; break-inside: avoid; }
 .items b { min-width: 2.2em; text-align: right; }
-.foot { margin-top: 8px; padding-top: 4px; border-top: 1px solid #E3DDD3; font-size: 8.5px; color: #5B6B72; }
+.foot { margin-top: 8px; padding-top: 4px; border-top: 1px solid #E3DDD3; font-size: 9px; color: #5B6B72; }
 /* Black & white (Print a report's switch, html.bw; Mitch 2026-11-09: save
    the colour ink): black type, neutral greys for the rules and bars (a warm
    grey is mixed from colour ink), no shaded boxes. */
@@ -308,17 +312,25 @@ html.bw td, html.bw .items div, html.bw .foot { border-color: #BBB; }
 html.bw .big > div { background: none; border: 1px solid #000; }
 html.bw .bar { background: #777; }
 `;
-// Zoom the page to fit one letter page (10.2in of height inside the
-// margins), keeping a little spare for the printer; never below MIN.
+// Size the page to FILL one letter page (10.2in of height inside the
+// margins, a little spare kept for the printer): bigger type when there's
+// room, up to MAX (Mitch 2026-11-09: a week's came out small with a third of
+// the page empty), smaller when there's a lot, never below MIN. Zooming by f
+// also widens, so the content is laid out at 7.7in / f and zoomed back to
+// 7.7in; the f that fits is found by halving, measured at zoom 1.
 const FIT_JS = `
 (() => {
   const root = document.documentElement, rp = document.querySelector(".rp");
-  const PAGE = 10.2 * 96 * 0.97, MIN = 0.5;
+  const PAGE = 10.2 * 96 * 0.985, WIDTH = 7.7 * 96, MIN = 0.5, MAX = 1.6;
+  const tall = (f) => { root.style.setProperty("--w", (WIDTH / f).toFixed(1) + "px"); return rp.getBoundingClientRect().height * f; };
   function fit() {
     root.style.setProperty("--fit", 1);
     root.style.setProperty("--screen-zoom", 1);
-    const h = rp.getBoundingClientRect().height;
-    root.style.setProperty("--fit", h > PAGE ? Math.max(MIN, PAGE / h).toFixed(3) : 1);
+    let lo = MIN, hi = MAX;
+    if (tall(hi) <= PAGE) lo = hi;
+    else for (let i = 0; i < 14; i++) { const f = (lo + hi) / 2; if (tall(f) <= PAGE) lo = f; else hi = f; }
+    tall(lo);
+    root.style.setProperty("--fit", lo.toFixed(3));
     root.style.setProperty("--screen-zoom", Math.min(1, (root.clientWidth - 16) / (8.5 * 96)).toFixed(3));
   }
   fit();
@@ -334,8 +346,7 @@ function renderHtml(r) {
   const cmp = b ? [vs(t.sales, b.sales, b.label, true), vs(t.orders, b.orders, b.label), vs(t.avgTicket, b.avgTicket, b.label, true), vs(t.tips, b.tips, b.label, true)] : [];
   const notes = [
     r.single && r.usual ? `A usual ${weekday(r.from)} (last ${r.usual.weeks} weeks): ${r.usual.orders} orders, ${money(r.usual.sales)}.` : "",
-    !r.single ? `${plural(r.dates.length, "day")} open.` : "",
-    !r.single && b ? `${esc(b.label[0].toUpperCase() + b.label.slice(1))}: ${b.orders} orders, ${money(b.sales)} (${plural(b.days, "day")} open).` : "",
+    !r.single && b ? `${esc(b.label[0].toUpperCase() + b.label.slice(1))}: ${b.orders} orders, ${money(b.sales)}.` : "",
     r.reservations.tables ? `Reservations: ${plural(r.reservations.tables, "table")}, ${plural(r.reservations.people, "person", "people")}.` : "",
   ].filter(Boolean).join(" ");
   const big = [[money(t.sales), "net sales", cmp[0]], [t.orders, "orders", cmp[1]], [money(t.avgTicket), "average ticket", cmp[2]],
@@ -343,17 +354,17 @@ function renderHtml(r) {
   const body = `
 <header class="hd">
   <div><h1>The Café</h1><div class="kind">${kind}</div></div>
-  <div><div class="when">${esc(when)}</div><div class="made">Printed from the kitchen board ${esc(new Date(r.madeAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))}</div></div>
+  <div><div class="when">${esc(when)}</div><div class="made">Printed ${esc(new Date(r.madeAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))}</div></div>
 </header>
 <div class="big">${big.map(([v, label, sub]) => `<div><b>${v}</b><span>${label}</span>${sub || ""}</div>`).join("")}</div>
 ${notes ? `<p class="usual">${notes}</p>` : ""}
 ${r.single ? "" : rowsHtml(r)}
 <div class="cols">
-  <div>${channelHtml(r)}${doordashHtml(r)}</div>
-  <div>${hoursHtml(r)}${specialsHtml(r)}${kitchenHtml(r)}</div>
+  <div>${channelHtml(r)}${doordashHtml(r)}${r.single ? "" : kitchenHtml(r)}</div>
+  <div>${hoursHtml(r)}${specialsHtml(r)}${r.single ? kitchenHtml(r) : ""}</div>
 </div>
 ${itemsHtml(r)}
-<p class="foot">Collected in all, tax and tips in: ${money(t.collected)}${r.doordash.tax ? " (not DoorDash's sales tax, which DoorDash pays)" : ""}. From the kitchen board's own count of Square's orders: net sales are after discounts and before tax and tips, on the day an order is made (Square counts the day it's paid); refunds aren't taken off; canceled, test and demo orders aren't counted. Kitchen times are from the kitchen board to Done. Square's Dashboard has the official sales.</p>`;
+<p class="foot">Collected, tax and tips in: ${money(t.collected)}${r.doordash.tax ? " (less DoorDash's sales tax)" : ""}. Net sales are after discounts, before tax and tips, by the day ordered; refunds aren't taken off. The kitchen board's own count; Square's Dashboard has the official sales.</p>`;
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(`The Café ${kind.toLowerCase()}, ${when}`)}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@700&display=swap">
