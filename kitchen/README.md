@@ -477,6 +477,8 @@ Made from the daily history, so it counts what Reports and Today's report count;
 
 **The day's report is emailed at 2:10pm** on every day with orders (Mitch 2026-11-10: so Terry can print it when he needs it). It goes to the cafe's email (theabcafe@gmail.com) and up to five more addresses: the email is a short summary to read on a phone (net sales, orders, average, tips against last week; counter, online, DoorDash, breakfast, lunch; kitchen time), and **the page above is attached as a PDF**, so printing it from a phone or any PC gives the same one letter page. A day with no orders (closed) sends nothing.
 
+**The subject always starts `[Cafe Report]`**, then Daily, Weekly or Dates, the day, net sales and orders: `[Cafe Report] Daily · Mon, Nov 9 · $752.69, 47 orders` (Mitch 2026-11-10: so Gmail can label them). To label them in Gmail: search box → Show search options → Subject `"Cafe Report"` → Create filter → Apply the label (new label "Cafe Report") → Create filter. `"Cafe Report Daily"` catches only the day's.
+
 The PDF is made on the kitchen PC by Chrome (or Edge), printing the page headless with a profile of its own, so the board's window is never touched; `CHROME_PATH` names it if it isn't in the usual place. Without Chrome the page goes as an `.html` file instead, to open in a browser and print.
 
 **Manage → Numbers → Print a report → Emailed every day** (the fold under the page): the day's on or off, the week's too (on the week's last open day, off unless ticked), the time, **Black & white PDF** (on unless unticked), and the other addresses (Terry's, say). Saved on the kitchen PC; `reportTime` and `reportTo` in `config.json` are only where it starts. **Email it** at the bottom sends the report on screen now, any day or dates.

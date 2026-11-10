@@ -392,10 +392,15 @@ function lastDayBefore(date, all = days()) {
 // The emailed report (lib/report-mail.js): the email itself is a short
 // summary to read on a phone, with the page above attached as a PDF to
 // print. Inline styles and tables only: mail apps drop most of a page's CSS.
+// Always starts with "[Cafe Report]" and the kind (Mitch 2026-11-10: a
+// subject Gmail can label by): a filter on Subject "Cafe Report" catches
+// every one, "Cafe Report Daily" only the day's. Plain "Cafe", no accent, so
+// it's easy to type in the filter.
 function subjectOf(r) {
   const t = r.totals;
+  const kind = r.single ? "Daily" : r.week ? "Weekly" : "Dates";
   const when = r.single ? shortDate(r.from) : r.week ? `week of ${dayOnly(r.from)}` : `${dayOnly(r.from)} to ${dayOnly(r.to)}`;
-  return `The Café, ${when}: ${money(t.sales)}, ${plural(t.orders, "order")}`;
+  return `[Cafe Report] ${kind} · ${when} · ${money(t.sales)}, ${plural(t.orders, "order")}`;
 }
 
 function emailVs(now, then, words, isMoney) {

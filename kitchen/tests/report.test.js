@@ -109,7 +109,8 @@ const { cfg } = require("../lib/config");
 
 test("the email: subject and summary say the day's numbers", () => {
   const r = report.buildReport("2026-11-09", "2026-11-09", days);
-  assert.match(report.subjectOf(r), /^The Café, Mon, Nov 9: \$100\.00, 4 orders$/);
+  assert.match(report.subjectOf(r), /^\[Cafe Report\] Daily · Mon, Nov 9 · \$100\.00, 4 orders$/);
+  assert.match(report.subjectOf(report.buildReport("2026-11-09", "2026-11-15", days)), /^\[Cafe Report\] Weekly · week of Nov 9 · /);
   const html = report.emailHtml(r);
   assert.match(html, /\$100\.00/);
   assert.match(html, /attached as a PDF/);
