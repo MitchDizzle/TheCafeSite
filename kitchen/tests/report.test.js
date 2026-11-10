@@ -101,3 +101,54 @@ test("the soup picked as the Lunch Special's side is counted from Square's modif
   assert.equal(soupSidesOf(o), 2);
   assert.equal(soupSidesOf({ line_items: [{ name: "Reuben Sandwich", quantity: "1" }] }), 0);
 });
+
+// The emailed report (lib/report-mail.js): what's due when, and the email's
+// own summary.
+const mail = require("../lib/report-mail");
+const { cfg } = require("../lib/config");
+
+test("the email: subject and summary say the day's numbers", () => {
+  const r = report.buildReport("2026-11-09", "2026-11-09", days);
+  assert.match(report.subjectOf(r), /^The Café, Mon, Nov 9: \$100\.00, 4 orders$/);
+  const html = report.emailHtml(r);
+  assert.match(html, /\$100\.00/);
+  assert.match(html, /attached as a PDF/);
+  assert.match(report.emailHtml(r, { pdf: false }), /open it in Chrome/);
+  assert.match(report.emailText(r), /Counter: 2 orders, \$40\.00 \(40%\)/);
+  assert.match(report.renderHtml(r, { bw: true }), /<html lang="en" class="bw">/);
+});
+
+test("the day's goes after its time, once, never for a day before the update", () => {
+  const open = cfg.openDays;
+  cfg.openDays = [1, 2, 3, 4, 5];
+  const before = new Date("2026-11-09T19:00:00Z"); // 1:00pm Central
+  const after = new Date("2026-11-09T20:30:00Z"); // 2:30pm Central
+  mail._set({ started: "2026-11-09", settings: { daily: true, weekly: false, bw: true, time: "14:10", to: [] } });
+  assert.deepEqual(mail.due(before, days), []);
+  assert.deepEqual(mail.due(after, days), [{ kind: "day", from: "2026-11-09", to: "2026-11-09" }]);
+  mail._set({ started: "2026-11-09", settings: { daily: true, weekly: false, bw: true, time: "14:10", to: [] }, sent: { "day:2026-11-09": "x" } });
+  assert.deepEqual(mail.due(after, days), []);
+  // The next day, a missed day is still owed; one before the update isn't.
+  mail._set({ started: "2026-11-03", settings: { daily: true, weekly: false, bw: true, time: "14:10", to: [] } });
+  assert.deepEqual(mail.due(new Date("2026-11-10T20:30:00Z"), days).map((j) => j.from), ["2026-11-09", "2026-11-10"]);
+  // Switched off: nothing.
+  mail._set({ started: "2026-11-03", settings: { daily: false, weekly: false, bw: true, time: "14:10", to: [] } });
+  assert.deepEqual(mail.due(after, days), []);
+  cfg.openDays = open;
+});
+
+test("the week's, when ticked, goes on its last open day", () => {
+  const open = cfg.openDays;
+  cfg.openDays = [1, 2, 3, 4, 5];
+  mail._set({ started: "2026-11-09", settings: { daily: false, weekly: true, bw: true, time: "14:10", to: [] } });
+  assert.deepEqual(mail.due(new Date("2026-11-12T20:30:00Z"), days), []); // Thursday
+  assert.deepEqual(mail.due(new Date("2026-11-13T20:30:00Z"), days), [{ kind: "week", from: "2026-11-09", to: "2026-11-15" }]);
+  assert.equal(mail.lastOpenDay("2026-11-09"), "2026-11-13");
+  cfg.openDays = open;
+});
+
+test("addresses are checked before they're saved", () => {
+  mail._set({});
+  assert.throws(() => mail.saveSettings({ to: "terry@example" }), /doesn't look like an email/);
+  assert.throws(() => mail.saveSettings({ time: "25:00" }), /Pick a time/);
+});

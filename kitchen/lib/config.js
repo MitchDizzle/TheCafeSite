@@ -152,6 +152,13 @@ const DEFAULTS = {
   // from this many minutes before its time. (Not on the kitchen board, Mitch
   // 2026-11-08: the cooks don't need it.)
   reservationAheadMinutes: 90,
+  // The emailed report (lib/report-mail.js): the day's at this time
+  // (Central, HH:MM, 24-hour) on every day with orders, to the cafe's email
+  // and these. Where it starts: once it's saved in Manage -> Numbers ->
+  // Print a report, "Emailed every day", that is what's used. Sent through
+  // the reservations Google script, so it needs reservationsKey.
+  reportTime: "14:10",
+  reportTo: [],
   // DoorDash's commission, in percent, for the printed report's "about $X
   // to DoorDash" line (lib/report.js). 0 leaves the line out.
   doordashFeePercent: 0,
@@ -159,7 +166,7 @@ const DEFAULTS = {
 
 // Settings that are the cafe's own and have no meaningful default: never
 // flagged as "differs from the default".
-const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems", "openDays", "autoHandoffMinutes", "backupDir", "backupRepo", "reservationsKey", "reservationsUrl", "doordashFeePercent"]);
+const OWN = new Set(["accessToken", "locationIds", "skipItems", "frontKey", "updatePin", "dailyItems", "dessertItems", "openDays", "autoHandoffMinutes", "backupDir", "backupRepo", "reservationsKey", "reservationsUrl", "reportTime", "reportTo", "doordashFeePercent"]);
 
 // What's worth knowing about config.json, in plain words. Written to the
 // program window at startup and shown on /check.

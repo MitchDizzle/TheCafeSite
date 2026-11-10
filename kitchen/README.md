@@ -189,7 +189,7 @@ Settings in `config.json`, both optional:
 | `photoPlaceholders` | `placeholders/soup-of-the-day.png` for Soup of the Day only | The picture for each daily item on a day its dish has no photo. Leave an item out to show nothing of ours on those days. Lunch Special is left out (see "Photos in Square"); `"Lunch Special": "placeholders/lunch-special.png"` puts its card back. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
-| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu: the everyday four (Specials, Reservations, Desserts, Photo post) are tiles at the top, and the rest fold away under **Numbers** (Today's report, Print a report, Reports, Survey) and **Tools** (Leave off kitchen tickets, Saved photos, Back up now, Check for updates, Reset for the day); a phone remembers which of the two are open (Mitch 2026-11-08). Back returns to the menu; closing the panel forgets the PIN, unless **Remember on this device** was ticked. With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), delete test shots or move the photos to GitHub in **Saved photos** (see Photo post), **Back up now** (the backup below, on demand; the board and orders carry on while it runs), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update, installed quietly as on the board; see Settings above) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below), **Print a report** (see below), or open **Today's report** (see "Today's report"). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu: the everyday four (Specials, Reservations, Desserts, Photo post) are tiles at the top, and the rest fold away under **Numbers** (Today's report, Print a report and its daily email, Reports, Survey) and **Tools** (Leave off kitchen tickets, Saved photos, Back up now, Check for updates, Reset for the day); a phone remembers which of the two are open (Mitch 2026-11-08). Back returns to the menu; closing the panel forgets the PIN, unless **Remember on this device** was ticked. With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), delete test shots or move the photos to GitHub in **Saved photos** (see Photo post), **Back up now** (the backup below, on demand; the board and orders carry on while it runs), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update, installed quietly as on the board; see Settings above) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below), **Print a report** (see below), or open **Today's report** (see "Today's report"). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
 
 ## Today's report (`/today`)
 
@@ -259,7 +259,7 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `board.html` | The kitchen screen. |
 | `front.html` | The front page for the counter (`/front`). |
 | `today.html` | Today's report (`/today`), for the PC or the owner's phone: the day's numbers, the reservations and the open orders. |
-| `google-script\Code.gs` | The reservations' Google Apps Script, pasted into the cafe's Google Sheet (see "Reservations"). Not run on this PC. |
+| `google-script\Code.gs` | The reservations' Google Apps Script, pasted into the cafe's Google Sheet (see "Reservations"); it also sends the emailed report. Not run on this PC. |
 | `front\` | The front page's Manage jobs, one file each (Specials, Reservations, Photo post, Saved photos, Reports, Print a report, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
 | `kitchen.css` | The colours, fonts and base styles every screen shares: House style (see "The look"). |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
@@ -471,7 +471,19 @@ It always fills one letter page, edge to edge: the type grows when there's room 
 - orders and sales hour by hour, the specials sold (Lunch Special by what it was, soup cups and bowls), the kitchen's times (by order size, the slowest three), the tables booked, and **everything sold**;
 - for several days, a line per day (orders, sales, average, tips, breakfast / lunch, counter, online, DoorDash, kitchen time), or per week for more than 23 days, and the specials day by day.
 
-Made from the daily history, so it counts what Reports and Today's report count; Square's Dashboard has the official sales. A day the board never ran isn't in it. (It was built to email itself at 2:10pm first, commit 38bd57b; print only for now.)
+Made from the daily history, so it counts what Reports and Today's report count; Square's Dashboard has the official sales. A day the board never ran isn't in it.
+
+### Emailed every day
+
+**The day's report is emailed at 2:10pm** on every day with orders (Mitch 2026-11-10: so Terry can print it when he needs it). It goes to the cafe's email (theabcafe@gmail.com) and up to five more addresses: the email is a short summary to read on a phone (net sales, orders, average, tips against last week; counter, online, DoorDash, breakfast, lunch; kitchen time), and **the page above is attached as a PDF**, so printing it from a phone or any PC gives the same one letter page. A day with no orders (closed) sends nothing.
+
+The PDF is made on the kitchen PC by Chrome (or Edge), printing the page headless with a profile of its own, so the board's window is never touched; `CHROME_PATH` names it if it isn't in the usual place. Without Chrome the page goes as an `.html` file instead, to open in a browser and print.
+
+**Manage → Numbers → Print a report → Emailed every day** (the fold under the page): the day's on or off, the week's too (on the week's last open day, off unless ticked), the time, **Black & white PDF** (on unless unticked), and the other addresses (Terry's, say). Saved on the kitchen PC; `reportTime` and `reportTo` in `config.json` are only where it starts. **Email it** at the bottom sends the report on screen now, any day or dates.
+
+If the PC was off at 2:10, or Google didn't answer, it goes as soon as it can: tried every 10 minutes, and the next days still (up to three days for a day's, a week for the week's). Never for a day before this update, so the first one is the first 2:10 after it. Test mode never emails, and a development copy (`start-dev.bat`) doesn't by itself. `/check` says when the last one went, or why it didn't.
+
+**It goes through the reservations' Google script**, so it needs `reservationsKey` (see "Reservations"), and **the script needs this version of `Code.gs`** (its `report` action): paste it in again and deploy a new version (see "After a change to `Code.gs`" there). Until then, Email it says "Unknown action." Google allows about 100 emails a day from a free account; the report is one.
 
 ## The look (House style)
 

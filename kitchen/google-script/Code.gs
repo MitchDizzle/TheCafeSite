@@ -13,8 +13,10 @@
  *     and an email to the cafe;
  *   - the kitchen PC (with the key in its config.json): "pull" the new
  *     requests, "ack" them once saved, "save" a reservation as Manage ->
- *     Reservations has it now (and email the customer when asked). The PC
- *     only ever calls out, so it stays closed to the internet.
+ *     Reservations has it now (and email the customer when asked), and
+ *     "report": the day's report, emailed to the cafe with the PDF the PC
+ *     made attached, to print (kitchen/lib/report-mail.js). The PC only
+ *     ever calls out, so it stays closed to the internet.
  *   - two daily timers made by setup(): the cafe's morning list (5am) and the
  *     customers' reminder the day before (3pm).
  *
@@ -220,6 +222,7 @@ function pcAction_(b) {
   const key = PropertiesService.getScriptProperties().getProperty("KEY");
   if (!key || String(b.key || "") !== key) return { ok: false, message: "Wrong key." };
   if (b.action === "ping") return { ok: true };
+  if (b.action === "report") return sendReport_(b);
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -281,6 +284,32 @@ function pcAction_(b) {
 }
 
 // ---------------------------------------------------------------- emails
+
+// The kitchen PC's report: to the cafe, and up to five more addresses set
+// in Manage on the front page. The email is a short summary; the full page
+// is attached as the PDF the PC printed (pdfBase64), or as the page itself
+// (page) when the PC had no Chrome to print it. Like "save", the PC sends
+// the same report again when the answer gets lost, so `op` makes sure it
+// goes once.
+function sendReport_(b) {
+  const cache = CacheService.getScriptCache();
+  const opKey = b.op ? "op-" + String(b.op).slice(0, 60) : "";
+  const before = opKey && cache.get(opKey);
+  if (before) return JSON.parse(before);
+  const valid = /^[^@\s,;]+@[^@\s,;]+\.[^@\s,;]+$/;
+  const extra = (Array.isArray(b.to) ? b.to : []).map((a) => String(a).trim().toLowerCase()).filter((a) => valid.test(a) && a !== CAFE.email).slice(0, 5);
+  const to = [CAFE.email, ...extra].join(",");
+  const mail = { to, subject: String(b.subject || `${CAFE.name} report`).slice(0, 200), body: String(b.text || ""), htmlBody: String(b.html || ""), name: `${CAFE.name} kitchen board` };
+  if (b.pdfBase64) {
+    mail.attachments = [Utilities.newBlob(Utilities.base64Decode(String(b.pdfBase64)), MimeType.PDF, String(b.pdf || "report.pdf").slice(0, 80))];
+  } else if (b.page) {
+    mail.attachments = [Utilities.newBlob(String(b.page), "text/html", String(b.pageName || "report.html").slice(0, 80))];
+  }
+  MailApp.sendEmail(mail);
+  const answer = { ok: true, to: to.split(",").join(", ") };
+  if (opKey) cache.put(opKey, JSON.stringify(answer), 21600);
+  return answer;
+}
 
 function emailCustomer_(r, kind) {
   const first = String(r.name).split(" ")[0];

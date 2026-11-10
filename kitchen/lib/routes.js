@@ -76,7 +76,7 @@ function isLocal(req) {
 
 // What another device on the wifi (or the owner's phone over Tailscale) may
 // reach: the front page, the phone page (/today) and their own actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/send-to-kitchen", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated", "/api/front-pin", "/api/front-print-report"]);
+const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/send-to-kitchen", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated", "/api/front-pin", "/api/front-print-report", "/api/front-mail-report", "/api/front-mail-report-save", "/api/front-mail-report-send"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -487,6 +487,32 @@ async function handle(req, res) {
     if (!r) return send(res, 200, { ok: false, ...base, message: from === to ? "No orders saved that day." : "No orders saved in those days." });
     const t = report.titleOf(r);
     return send(res, 200, { ok: true, ...base, title: `${t.kind}, ${t.when}`, html: report.renderHtml(r) });
+  }
+  // Print a report's "Emailed every day", behind the PIN: when it goes and
+  // to whom (and saving that), and emailing the report shown now
+  // (lib/report-mail.js).
+  if (req.method === "POST" && url.pathname.startsWith("/api/front-mail-report")) {
+    const mail = require("./report-mail");
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    try {
+      if (url.pathname === "/api/front-mail-report") return send(res, 200, { ok: true, ...mail.status() });
+      if (url.pathname === "/api/front-mail-report-save") {
+        mail.saveSettings(body.settings || {});
+        return send(res, 200, { ok: true, message: "Saved.", ...mail.status() });
+      }
+      if (url.pathname === "/api/front-mail-report-send") {
+        const day = /^\d{4}-\d{2}-\d{2}$/;
+        const from = day.test(body.from || "") ? body.from : localDate();
+        const to = day.test(body.to || "") ? body.to : from;
+        const sent = await mail.email(from <= to ? from : to, from <= to ? to : from, "Manage");
+        return send(res, 200, { ok: true, message: `Emailed to ${sent.to}${sent.pdf ? "" : " (as a page: no PDF, Chrome wasn't found)"}.` });
+      }
+    } catch (err) {
+      console.error(`Emailed report: ${err.message}`);
+      return send(res, 200, { ok: false, message: err.plain ? err.message : `Didn't go: ${err.message}` });
+    }
   }
   // The phone page's numbers, behind the PIN like Reports: sales are the
   // owner's business, not the counter's.

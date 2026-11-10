@@ -9,8 +9,9 @@
 // and everything else sold, against the same day (or stretch) before.
 //
 // Made from the daily history (lib/stats.js), so it counts what Today's
-// report and Reports count. (It was emailed at 2:10pm first, commit
-// 38bd57b; print only for now, Mitch 2026-11-08.)
+// report and Reports count. lib/report-mail.js emails the same page as a PDF
+// every day (Mitch 2026-11-10), with a short summary as the email itself
+// (emailHtml below).
 const stats = require("./stats");
 const reservations = require("./reservations");
 const lead = require("./lead");
@@ -348,7 +349,7 @@ const FIT_JS = `
   addEventListener("beforeprint", fit);
 })();`;
 
-function renderHtml(r) {
+function renderHtml(r, { bw = false } = {}) {
   const t = r.totals;
   const { kind, when } = titleOf(r);
   const b = r.before;
@@ -374,7 +375,7 @@ ${r.single ? "" : rowsHtml(r)}
 </div>
 ${itemsHtml(r)}
 <p class="foot">Collected, tax and tips in: ${money(t.collected)}${r.doordash.tax ? " (less DoorDash's sales tax)" : ""}. Net sales are after discounts, before tax and tips, by the day ordered; refunds aren't taken off. The kitchen board's own count; Square's Dashboard has the official sales.</p>`;
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  return `<!DOCTYPE html><html lang="en"${bw ? ' class="bw"' : ""}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(`The Café ${kind.toLowerCase()}, ${when}`)}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Playfair+Display:wght@700&display=swap">
 <style>${PAGE_CSS}</style></head>
@@ -386,4 +387,68 @@ function lastDayBefore(date, all = days()) {
   return Object.keys(all).filter((d) => d < date && all[d].orders.length).sort().pop() || null;
 }
 
-module.exports = { buildReport, renderHtml, titleOf, lastDayBefore, MAX_DAY_ROWS };
+// ---------------------------------------------------------------- the email
+
+// The emailed report (lib/report-mail.js): the email itself is a short
+// summary to read on a phone, with the page above attached as a PDF to
+// print. Inline styles and tables only: mail apps drop most of a page's CSS.
+function subjectOf(r) {
+  const t = r.totals;
+  const when = r.single ? shortDate(r.from) : r.week ? `week of ${dayOnly(r.from)}` : `${dayOnly(r.from)} to ${dayOnly(r.to)}`;
+  return `The Café, ${when}: ${money(t.sales)}, ${plural(t.orders, "order")}`;
+}
+
+function emailVs(now, then, words, isMoney) {
+  if (then == null || now == null) return "";
+  const diff = round2(now - then);
+  if (Math.abs(diff) < (isMoney ? 0.5 : 1)) return `same as ${words}`;
+  return `${diff > 0 ? "▲" : "▼"} ${isMoney ? money(Math.abs(diff)) : Math.abs(diff)} ${diff > 0 ? "over" : "under"} ${words}`;
+}
+
+function emailHtml(r, { pdf = true } = {}) {
+  const t = r.totals, b = r.before;
+  const { kind, when } = titleOf(r);
+  const ink = "#22323A", muted = "#5B6B72", head = "#1F4552", line = "#E3DDD3";
+  const cell = (v, right, bold) => `<td style="padding:4px 8px;border-bottom:1px solid ${line};text-align:${right ? "right" : "left"};${bold ? "font-weight:700;" : ""}">${v}</td>`;
+  const big = [[money(t.sales), "net sales", b && emailVs(t.sales, b.sales, b.label, true)], [t.orders, "orders", b && emailVs(t.orders, b.orders, b.label)],
+    [money(t.avgTicket), "average ticket", b && emailVs(t.avgTicket, b.avgTicket, b.label, true)], [money(t.tips), "tips", b && emailVs(t.tips, b.tips, b.label, true)]];
+  const rows = [
+    ...r.channels.map((c) => [c.name, c.orders, money(c.net), `${c.share}%`]),
+    ...r.meals.map((m) => [m.meal === "breakfast" ? "Breakfast" : "Lunch", m.orders, money(m.net), t.sales ? `${Math.round((m.net / t.sales) * 100)}%` : "–"]),
+  ];
+  const k = r.kitchen;
+  const extra = [
+    k.avgMinutes != null ? `Kitchen: ${mins(k.avgMinutes)} average, longest ${mins(k.longestMinutes)}.` : "",
+    r.doordash.waitMinutes != null ? `Dashers waited ${mins(r.doordash.waitMinutes)} at the counter (median).` : "",
+    r.reservations.tables ? `Reservations: ${plural(r.reservations.tables, "table")}.` : "",
+  ].filter(Boolean).join(" ");
+  return `<div style="max-width:560px;margin:0 auto;font-family:Lato,'Segoe UI',Arial,sans-serif;font-size:14px;line-height:1.4;color:${ink}">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:700;color:${head}">The Café</p>
+<p style="margin:2px 0 12px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A02F26">${esc(kind)} · ${esc(when)}</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:0 0 12px">
+${big.map(([v, label, sub]) => `<tr><td style="padding:3px 0;width:42%;font-size:20px;font-weight:900">${v}</td><td style="padding:3px 0;color:${muted}">${label}${sub ? `<br><span style="font-size:12px">${esc(sub)}</span>` : ""}</td></tr>`).join("")}
+</table>
+<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:0 0 10px;font-size:13px">
+<tr>${["", "Orders", "Net sales", "Share"].map((h, i) => `<th style="padding:4px 8px;border-bottom:2px solid ${head};font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:${muted};text-align:${i ? "right" : "left"}">${h}</th>`).join("")}</tr>
+${rows.map((row) => `<tr>${row.map((v, i) => cell(esc(v), i > 0, i === 0)).join("")}</tr>`).join("")}
+</table>
+${extra ? `<p style="margin:0 0 10px">${esc(extra)}</p>` : ""}
+<p style="margin:14px 0 0;padding-top:8px;border-top:1px solid ${line};font-size:12px;color:${muted}">${pdf
+    ? "The whole report is attached as a PDF: open it and print, it fits one letter page."
+    : "The whole report is attached as a page: open it in Chrome and print, it fits one letter page."} The kitchen board's own count; Square's Dashboard has the official sales.</p>
+</div>`;
+}
+
+// The email's plain-text part, for a mail app that shows no HTML.
+function emailText(r) {
+  const t = r.totals, b = r.before;
+  const { kind, when } = titleOf(r);
+  return [`The Café · ${kind}, ${when}`, "",
+    `Net sales ${money(t.sales)} · ${plural(t.orders, "order")} · average ${money(t.avgTicket)} · tips ${money(t.tips)}`,
+    b ? `${b.label[0].toUpperCase() + b.label.slice(1)}: ${money(b.sales)}, ${plural(b.orders, "order")}` : "", "",
+    ...r.channels.map((c) => `${c.name}: ${c.orders} orders, ${money(c.net)} (${c.share}%)`),
+    ...r.meals.map((m) => `${m.meal === "breakfast" ? "Breakfast" : "Lunch"}: ${m.orders} orders, ${money(m.net)}`), "",
+    "The whole report is attached, to print."].filter((l, i, a) => l !== "" || a[i - 1] !== "").join("\n");
+}
+
+module.exports = { buildReport, renderHtml, titleOf, lastDayBefore, subjectOf, emailHtml, emailText, MAX_DAY_ROWS };
