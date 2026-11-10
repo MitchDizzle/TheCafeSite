@@ -338,7 +338,15 @@
       </div>`,
       buttons: [{ label: "Make the picture", act: "pp-make", kind: "primary" }] });
     const canvas = document.getElementById("pp-canvas");
-    const redraw = () => drawPost(canvas, pp);
+    let drag = null;
+    // While a photo is being dragged, dashed lines through the middle of its
+    // frame, so it's plain when the dish is centred. Only on this preview:
+    // the finished post is drawn without them.
+    const redraw = () => {
+      drawPost(canvas, pp);
+      if (drag) drawGuides(canvas, frames(pp.shots.length)[drag.i]);
+    };
+    fitCanvas();
     redraw();
     const box = dialog.querySelector(".pp");
     box.addEventListener("input", (e) => {
@@ -387,8 +395,7 @@
       showPhotoEditor();
     });
     // Drag to move a photo: the one under the finger, the drag in screen
-    // pixels scaled to the canvas.
-    let drag = null;
+    // pixels scaled to the canvas (drag is declared above, with redraw).
     canvas.addEventListener("pointerdown", (e) => {
       if (!pp.shots.length || !pp.adjust) return;
       const k = canvas.width / canvas.clientWidth;
@@ -397,6 +404,7 @@
       const i = pp.shots.length > 1 && px > fr[1].x ? 1 : 0;
       drag = { i, x: e.clientX, y: e.clientY, cx: pp.shots[i].cx, cy: pp.shots[i].cy };
       canvas.setPointerCapture(e.pointerId);
+      redraw();
     });
     canvas.addEventListener("pointermove", (e) => {
       if (!drag) return;
@@ -409,9 +417,41 @@
       s.cy = clamp(drag.cy - ((e.clientY - drag.y) * k) / (s.img.height * sc), s.img.height, f.h);
       redraw();
     });
-    const end = () => { drag = null; };
+    const end = () => { if (!drag) return; drag = null; redraw(); };
     canvas.addEventListener("pointerup", end);
     canvas.addEventListener("pointercancel", end);
+  }
+
+  // The preview no taller than the panel shows at once, with whatever is
+  // above it (the photo button), so the whole post is in view while a photo
+  // is moved (Mitch 2026-11-04: it ran off the bottom of the screen).
+  function fitCanvas() {
+    const canvas = document.getElementById("pp-canvas");
+    const body = canvas && canvas.closest(".m-body");
+    if (!body) return;
+    const cs = getComputedStyle(body);
+    const above = canvas.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - parseFloat(cs.paddingTop);
+    const room = body.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - above;
+    canvas.style.maxWidth = `${Math.max(200, Math.floor((room * canvas.width) / canvas.height))}px`;
+  }
+  addEventListener("resize", fitCanvas);
+
+  function drawGuides(canvas, f) {
+    const ctx = canvas.getContext("2d");
+    ctx.save();
+    ctx.lineWidth = 3;
+    ctx.setLineDash([18, 12]);
+    for (const [color, offset] of [["rgba(0, 0, 0, 0.55)", 0], ["rgba(255, 255, 255, 0.95)", 15]]) {
+      ctx.strokeStyle = color;
+      ctx.lineDashOffset = offset;
+      ctx.beginPath();
+      ctx.moveTo(f.x + f.w / 2, f.y);
+      ctx.lineTo(f.x + f.w / 2, f.y + f.h);
+      ctx.moveTo(f.x, f.y + f.h / 2);
+      ctx.lineTo(f.x + f.w, f.y + f.h / 2);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   // The photo, turned upright and re-drawn: what's drawn into the post, and
