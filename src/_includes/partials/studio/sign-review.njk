@@ -9,9 +9,10 @@
     never "Enjoyed your visit?", and nothing is ever offered with it.
 
     THE STEPS are spelled out because this audience skews older: the camera
-    is not an obvious place to start. The link opens the cafe's Google page,
-    not a sign-in page (site.json, _comment_reviews). Google still wants an
-    account to post one, so the foot tells anyone without one to say it at the
+    is not an obvious place to start. The link opens Google's review box with
+    the stars (site.json, _comment_reviews; until 2026-11-10 it opened a
+    Google search, so step 3 said to scroll down). Google wants an account
+    to post one, so the foot tells anyone without one to say it at the
     counter (the paper survey card it used to offer ended 2026-11-02). -#}
 <div class="canvas sign sign--review{% if bw %} sign--bw{% endif %}">
     {% include "partials/studio/sign-mast.njk" %}
@@ -28,7 +29,7 @@
     <ol class="p-body sign-review-steps">
         <li>Open your phone&rsquo;s camera and point it at the square</li>
         <li>Tap the link that pops up</li>
-        <li>Scroll down to the stars, tap one, and write a few words</li>
+        <li>Tap the stars and write a few words</li>
     </ol>
     <p class="p-display sign-survey-url ink-teal">{{ site.social.website }}/review</p>
 
