@@ -169,9 +169,11 @@
      Manage as a full-screen sheet, and nothing wider than the screen. */
   @media (max-width: 36rem) {
     html { font-size: 16px; }
-    /* Columns 0.5rem apart, Undo's name cut short: the four buttons stay on
-       one row on a narrow phone, the sound one no longer on a row of its own
-       (Mitch 2026-11-10, a 360px-wide phone). */
+    /* The buttons on one row whatever the Undo name (Mitch 2026-11-10: the
+       sound button wrapped onto a row of its own on a 360px-wide phone, and
+       the name's length varies). Filter, Manage and sound sit at the right,
+       always in the same place; Undo gets the room left of them and cuts a
+       long name short with "…" (a basis of 0, so it never wraps the row). */
     .bar { row-gap: 0.3rem; column-gap: 0.5rem; padding-left: max(0.8rem, env(safe-area-inset-left)); padding-right: max(0.8rem, env(safe-area-inset-right)); }
     /* Title, counts and clock on one line, the buttons under them: the bar
        stays put while scrolling, so every line it takes is a line of orders. */
@@ -183,7 +185,9 @@
     .bar::after { content: ""; order: 2; flex-basis: 100%; }
     .bar .undo-wrap, .bar .filter-wrap, .bar #manage, .bar #sound { order: 3; }
     .bar button { padding: 0.45rem 0.6rem; }
-    .bar #undo { max-width: 7.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar .undo-wrap { flex: 1 1 0; min-width: 0; }
+    .bar #undo { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar .filter-wrap { margin-left: auto; }
     .undo-wrap, .filter-wrap { position: static; }
     .filter-menu { left: 0.5rem; right: 0.5rem; width: auto; top: auto; margin-top: 0.4rem; }
     .undo-menu { left: 0.5rem; right: 0.5rem; top: auto; margin-top: 0.4rem; }
