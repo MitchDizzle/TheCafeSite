@@ -134,23 +134,35 @@
   }
   .empty { color: var(--muted); font-size: 1.1rem; margin: 0.4rem 0 0; }
 
-  /* Show: All, To go, DoorDash... (client 2026-11-10: a third person on
-     their phone sees just the bags they're packing). Per device, like the
-     ticks; ?show=doordash in the address opens on one. Clear goes back to All. */
-  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin: 0.2rem 0 0; }
-  .filters .f-label { font-weight: 800; color: var(--muted); margin-right: 0.1rem; }
-  .filters button {
-    font: inherit; font-weight: 800; font-size: 1rem;
-    padding: 0.45rem 0.9rem; min-height: 2.6rem;
-    border: 2px solid var(--teal-dark); border-radius: 999px;
-    background: var(--paper); color: var(--teal-dark); cursor: pointer;
+  /* Filter (client 2026-11-10: a third person on their phone sees just the
+     bags they're packing): a button in the bar opening a small menu, pick
+     one and Apply, or Clear for all. Per device, like the ticks;
+     ?show=doordash in the address opens on one. While one is on, the button
+     says which, in cream, so a filtered page is noticed. */
+  .filter-wrap { position: relative; }
+  .bar #filter-btn.on { background: var(--cream); color: var(--teal-dark); }
+  .filter-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.4rem);
+    z-index: 10;
+    width: min(18rem, calc(100vw - 2rem));
+    padding: 0.5rem;
+    background: var(--paper);
+    color: var(--text);
+    border-radius: 0.45rem;
+    box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.3);
   }
-  .filters button .n { font-weight: 400; opacity: 0.8; }
-  .filters button[aria-pressed="true"] { background: var(--teal-dark); color: var(--cream); }
-  .filters button.f-clear { border-color: var(--red); color: var(--red-dark); }
-  .filters button.f-clear[hidden] { display: none; }
-  .filter-note { margin: 0.5rem 0 0; padding: 0.4rem 0.7rem; background: #E3EEF1; border-radius: 0.4rem; color: var(--teal-dark); font-weight: 700; }
-  .filter-note[hidden] { display: none; }
+  .filter-menu[hidden] { display: none; }
+  .filter-menu .f-head { margin: 0.1rem 0.4rem 0.35rem; font-weight: 800; color: var(--muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .filter-menu label { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.5rem; border-radius: 0.35rem; font-weight: 700; cursor: pointer; }
+  .filter-menu label:hover { background: #F1ECE3; }
+  .filter-menu input { width: 1.2rem; height: 1.2rem; margin: 0; accent-color: var(--teal-dark); }
+  .filter-menu .n { margin-left: auto; font-weight: 400; color: var(--muted); }
+  .filter-menu .f-foot { display: flex; gap: 0.5rem; margin-top: 0.4rem; padding-top: 0.5rem; border-top: 1px solid var(--line); }
+  .bar .filter-menu .f-foot button { flex: 1; padding: 0.5rem; }
+  .bar .filter-menu .f-clear { border-color: var(--red); color: var(--red-dark); }
+  .bar .filter-menu .f-apply { border-color: var(--teal-dark); background: var(--teal-dark); color: var(--cream); }
   .h-note { font-family: var(--font-body); font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 
   /* Phone: the bar's buttons on their own row under the title and clock,
@@ -166,9 +178,10 @@
     .bar .counts { order: 1; font-size: 0.9rem; }
     .bar .clock { order: 2; margin-left: auto; font-size: 1.15rem; }
     .bar::after { content: ""; order: 2; flex-basis: 100%; }
-    .bar .undo-wrap, .bar #manage, .bar #sound { order: 3; }
+    .bar .undo-wrap, .bar .filter-wrap, .bar #manage, .bar #sound { order: 3; }
     .bar button { padding: 0.45rem 0.7rem; }
-    .undo-wrap { position: static; }
+    .undo-wrap, .filter-wrap { position: static; }
+    .filter-menu { left: 0.5rem; right: 0.5rem; width: auto; top: auto; margin-top: 0.4rem; }
     .undo-menu { left: 0.5rem; right: 0.5rem; top: auto; margin-top: 0.4rem; }
     main { padding-left: 0.8rem; padding-right: 0.8rem; }
     .scrim { padding: 0; place-items: stretch; }
@@ -368,6 +381,10 @@
       <button type="button" id="undo" aria-haspopup="menu" aria-expanded="false">↶ Undo</button>
       <div class="undo-menu" id="undo-menu" role="menu" hidden></div>
     </div>
+    <div class="filter-wrap" id="filter-wrap">
+      <button type="button" id="filter-btn" aria-haspopup="dialog" aria-expanded="false">Filter</button>
+      <div class="filter-menu" id="filter-menu" role="dialog" aria-label="Filter the orders" hidden></div>
+    </div>
     <button type="button" id="manage" title="Specials, photos, reports and more (needs the PIN)">Manage</button>
     <button type="button" id="sound" aria-pressed="true" aria-label="Sound is on: tap to mute" title="Sound is on: tap to mute">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -381,8 +398,6 @@
   <div class="alert" id="alert" hidden></div>
   <section class="resv" id="resv" aria-label="Reservations today" hidden></section>
   <main>
-    <div class="filters" id="filters" role="group" aria-label="Show"></div>
-    <p class="filter-note" id="filter-note" hidden></p>
     <h2>Ready <span class="h-note" id="auto-note"></span></h2>
     <div class="list" id="ready"></div>
     <h2>Cooking</h2>
@@ -619,29 +634,41 @@
     history.replaceState(null, "", u);
   }
   if (!FILTERS.some((f) => f.id === filter)) filter = "all";
-  const filtersEl = document.getElementById("filters");
-  const filterNoteEl = document.getElementById("filter-note");
-  let filtersHtml = "";
+  const filterBtn = document.getElementById("filter-btn");
+  const filterMenu = document.getElementById("filter-menu");
   function setFilter(id) {
     filter = id;
     try { localStorage.setItem(FILTER_KEY, id); } catch {}
     render();
   }
-  filtersEl.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-filter]");
-    if (b) setFilter(b.dataset.filter);
+  // The menu is drawn when it opens (counts as of then), not on every poll,
+  // so a pick isn't lost while choosing.
+  function openFilterMenu(open) {
+    if (open) {
+      filterMenu.innerHTML = `<div class="f-head">Show</div>${FILTERS.map((x) => `
+        <label><input type="radio" name="show" value="${x.id}"${x.id === filter ? " checked" : ""}>${x.name}<span class="n">${orders.filter(x.test).length}</span></label>`).join("")}
+        <div class="f-foot"><button type="button" class="f-clear">Clear</button><button type="button" class="f-apply">Apply</button></div>`;
+    }
+    filterMenu.hidden = !open;
+    filterBtn.setAttribute("aria-expanded", String(open));
+  }
+  filterBtn.addEventListener("click", () => openFilterMenu(filterMenu.hidden));
+  filterMenu.addEventListener("click", (e) => {
+    if (e.target.closest(".f-clear")) { openFilterMenu(false); setFilter("all"); }
+    else if (e.target.closest(".f-apply")) {
+      const picked = filterMenu.querySelector("input[name=show]:checked");
+      openFilterMenu(false);
+      setFilter(picked ? picked.value : "all");
+    }
   });
+  document.addEventListener("click", (e) => {
+    if (!filterMenu.hidden && !e.target.closest(".filter-wrap")) openFilterMenu(false);
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !filterMenu.hidden) openFilterMenu(false); });
   function renderFilters() {
     const f = FILTERS.find((x) => x.id === filter);
-    // Rebuilt only when it changes, so a poll never swaps a button out from under a tap.
-    const html = `<span class="f-label">Show</span>${FILTERS.map((x) => {
-      const n = x.id === "all" ? "" : ` <span class="n">${orders.filter(x.test).length}</span>`;
-      return `<button type="button" data-filter="${x.id}" aria-pressed="${x.id === filter}">${x.name}${n}</button>`;
-    }).join("")}<button type="button" class="f-clear" data-filter="all"${filter === "all" ? " hidden" : ""}>✕ Clear</button>`;
-    if (html !== filtersHtml) filtersEl.innerHTML = filtersHtml = html;
-    const hiddenN = orders.length - orders.filter(f.test).length;
-    filterNoteEl.hidden = filter === "all";
-    filterNoteEl.textContent = `Showing ${f.name} only${hiddenN ? `: ${hiddenN} other order${hiddenN === 1 ? "" : "s"} hidden` : ""}. Clear to see them all.`;
+    filterBtn.textContent = filter === "all" ? "Filter" : `Filter: ${f.name}`;
+    filterBtn.classList.toggle("on", filter !== "all");
     return f;
   }
 
