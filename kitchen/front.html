@@ -133,6 +133,24 @@
     align-items: start;
   }
   .empty { color: var(--muted); font-size: 1.1rem; margin: 0.4rem 0 0; }
+
+  /* Show: All, To go, DoorDash... (client 2026-11-10: a third person on
+     their phone sees just the bags they're packing). Per device, like the
+     ticks; ?show=doordash in the address opens on one. Clear goes back to All. */
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin: 0.2rem 0 0; }
+  .filters .f-label { font-weight: 800; color: var(--muted); margin-right: 0.1rem; }
+  .filters button {
+    font: inherit; font-weight: 800; font-size: 1rem;
+    padding: 0.45rem 0.9rem; min-height: 2.6rem;
+    border: 2px solid var(--teal-dark); border-radius: 999px;
+    background: var(--paper); color: var(--teal-dark); cursor: pointer;
+  }
+  .filters button .n { font-weight: 400; opacity: 0.8; }
+  .filters button[aria-pressed="true"] { background: var(--teal-dark); color: var(--cream); }
+  .filters button.f-clear { border-color: var(--red); color: var(--red-dark); }
+  .filters button.f-clear[hidden] { display: none; }
+  .filter-note { margin: 0.5rem 0 0; padding: 0.4rem 0.7rem; background: #E3EEF1; border-radius: 0.4rem; color: var(--teal-dark); font-weight: 700; }
+  .filter-note[hidden] { display: none; }
   .h-note { font-family: var(--font-body); font-weight: 400; font-size: 0.9rem; color: var(--muted); }
 
   /* Phone: the bar's buttons on their own row under the title and clock,
@@ -363,6 +381,8 @@
   <div class="alert" id="alert" hidden></div>
   <section class="resv" id="resv" aria-label="Reservations today" hidden></section>
   <main>
+    <div class="filters" id="filters" role="group" aria-label="Show"></div>
+    <p class="filter-note" id="filter-note" hidden></p>
     <h2>Ready <span class="h-note" id="auto-note"></span></h2>
     <div class="list" id="ready"></div>
     <h2>Cooking</h2>
@@ -573,11 +593,66 @@
       </article>`;
   }
 
+  // ---- Show: one kind of order at a time
+  const isDoorDash = (o) => /doordash/i.test(o.source || "");
+  const FILTERS = [
+    { id: "all", name: "All", test: () => true },
+    // To go: a to-go order, or a For Here one with items to go (its to-go
+    // part is at the bottom of its list, under the To go line).
+    { id: "togo", name: "To go", test: (o) => o.toGo || [...o.items, ...o.front].some((it) => it.toGo) },
+    { id: "doordash", name: "DoorDash", test: isDoorDash },
+    { id: "online", name: "Online", test: (o) => o.kind !== "COUNTER" && !isDoorDash(o) },
+    { id: "here", name: "For here", test: (o) => !o.toGo },
+  ];
+  const FILTER_KEY = "front-filter";
+  let filter = "all";
+  try { filter = localStorage.getItem(FILTER_KEY) || "all"; } catch {}
+  const asked = (new URLSearchParams(location.search).get("show") || "").toLowerCase().replace(/[^a-z]/g, "");
+  if (FILTERS.some((f) => f.id === asked)) {
+    filter = asked;
+    try { localStorage.setItem(FILTER_KEY, asked); } catch {}
+  }
+  // Used once: taken off the address, so a reload keeps what was picked since.
+  if (asked) {
+    const u = new URL(location.href);
+    u.searchParams.delete("show");
+    history.replaceState(null, "", u);
+  }
+  if (!FILTERS.some((f) => f.id === filter)) filter = "all";
+  const filtersEl = document.getElementById("filters");
+  const filterNoteEl = document.getElementById("filter-note");
+  let filtersHtml = "";
+  function setFilter(id) {
+    filter = id;
+    try { localStorage.setItem(FILTER_KEY, id); } catch {}
+    render();
+  }
+  filtersEl.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-filter]");
+    if (b) setFilter(b.dataset.filter);
+  });
+  function renderFilters() {
+    const f = FILTERS.find((x) => x.id === filter);
+    // Rebuilt only when it changes, so a poll never swaps a button out from under a tap.
+    const html = `<span class="f-label">Show</span>${FILTERS.map((x) => {
+      const n = x.id === "all" ? "" : ` <span class="n">${orders.filter(x.test).length}</span>`;
+      return `<button type="button" data-filter="${x.id}" aria-pressed="${x.id === filter}">${x.name}${n}</button>`;
+    }).join("")}<button type="button" class="f-clear" data-filter="all"${filter === "all" ? " hidden" : ""}>✕ Clear</button>`;
+    if (html !== filtersHtml) filtersEl.innerHTML = filtersHtml = html;
+    const hiddenN = orders.length - orders.filter(f.test).length;
+    filterNoteEl.hidden = filter === "all";
+    filterNoteEl.textContent = `Showing ${f.name} only${hiddenN ? `: ${hiddenN} other order${hiddenN === 1 ? "" : "s"} hidden` : ""}. Clear to see them all.`;
+    return f;
+  }
+
   function render() {
-    const ready = orders.filter((o) => o.readyAt);
-    const cooking = orders.filter((o) => !o.readyAt);
-    readyEl.innerHTML = ready.length ? ready.map(orderHtml).join("") : `<p class="empty">Nothing ready yet.</p>`;
-    cookingEl.innerHTML = cooking.length ? cooking.map(orderHtml).join("") : `<p class="empty">Nothing cooking.</p>`;
+    const f = renderFilters();
+    const shown = orders.filter(f.test);
+    const ready = shown.filter((o) => o.readyAt);
+    const cooking = shown.filter((o) => !o.readyAt);
+    const which = filter === "all" ? "" : ` ${f.name}`;
+    readyEl.innerHTML = ready.length ? ready.map(orderHtml).join("") : `<p class="empty">Nothing${which} ready yet.</p>`;
+    cookingEl.innerHTML = cooking.length ? cooking.map(orderHtml).join("") : `<p class="empty">Nothing${which} cooking.</p>`;
     document.getElementById("counts").textContent = orders.length
       ? `${ready.length} ready · ${cooking.length} cooking` : "";
     tick();
