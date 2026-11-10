@@ -1,6 +1,6 @@
 # TheCafeSite — Claude instructions
 
-Static site for The Cafe (breakfast, lunch & catering, Leavenworth KS), built with **Eleventy 3 + Nunjucks**. Mirrors the setup of the `mtch.tech` project at `E:\ScriptsGit\mtch.tech` — check there first when a convention is unclear.
+Static site for The Cafe (breakfast, lunch & catering, Leavenworth KS), built with **Eleventy 3 + Nunjucks**. Mirrors the setup of the `mtch.tech` project (where it is on each PC: the table under Planning & tasks) — check there first when a convention is unclear.
 
 ## How to report
 The owner often works between serving customers and types requests in parts as new issues come up. So:
@@ -10,7 +10,16 @@ The owner often works between serving customers and types requests in parts as n
 - Ask only when truly blocked, in one line.
 
 ## Planning & tasks
-Project planning, decisions, and the task backlog live OUTSIDE this public repo at `E:\GitHub\CafeWork\` (private repo) — read `PLAN.md` there first, take tasks from `TASKS.md`. Never commit business/planning details, pricing strategy, or outreach scripts to this repo.
+Project planning, decisions, and the task backlog live OUTSIDE this public repo in **CafeWork** (private repo) — read `PLAN.md` there first, take tasks from `TASKS.md`. Never commit business/planning details, pricing strategy, or outreach scripts to this repo.
+
+Where the sibling repos are depends on the PC (run `hostname`):
+
+| PC | CafeWork | mtch.tech |
+|---|---|---|
+| `DESKTOP-TMUCNUU` | `C:\Projects\CafeWork` | `C:\Projects\mtch.tech` |
+| the PC with the `E:` drive | `E:\GitHub\CafeWork` | `E:\ScriptsGit\mtch.tech` |
+
+On a PC not listed, find them and add a row.
 
 ## Branches
 - **`main` is what's live.** A push to `main` deploys the website (GitHub Actions; a push touching only `kitchen/`, `.claude/`, the top-level `.md` docs or the folders kept out of the build doesn't, and `[skip ci]` in the commit message skips one on purpose), and the kitchen PC pulls `main` when it starts or on Check for updates.
