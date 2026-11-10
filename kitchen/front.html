@@ -169,7 +169,10 @@
      Manage as a full-screen sheet, and nothing wider than the screen. */
   @media (max-width: 36rem) {
     html { font-size: 16px; }
-    .bar { row-gap: 0.3rem; padding-left: max(0.8rem, env(safe-area-inset-left)); padding-right: max(0.8rem, env(safe-area-inset-right)); }
+    /* Columns 0.5rem apart, Undo's name cut short: the four buttons stay on
+       one row on a narrow phone, the sound one no longer on a row of its own
+       (Mitch 2026-11-10, a 360px-wide phone). */
+    .bar { row-gap: 0.3rem; column-gap: 0.5rem; padding-left: max(0.8rem, env(safe-area-inset-left)); padding-right: max(0.8rem, env(safe-area-inset-right)); }
     /* Title, counts and clock on one line, the buttons under them: the bar
        stays put while scrolling, so every line it takes is a line of orders. */
     .bar h1 { font-size: 1.1rem; }
@@ -179,7 +182,8 @@
     .bar .clock { order: 2; margin-left: auto; font-size: 1.15rem; }
     .bar::after { content: ""; order: 2; flex-basis: 100%; }
     .bar .undo-wrap, .bar .filter-wrap, .bar #manage, .bar #sound { order: 3; }
-    .bar button { padding: 0.45rem 0.7rem; }
+    .bar button { padding: 0.45rem 0.6rem; }
+    .bar #undo { max-width: 7.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .undo-wrap, .filter-wrap { position: static; }
     .filter-menu { left: 0.5rem; right: 0.5rem; width: auto; top: auto; margin-top: 0.4rem; }
     .undo-menu { left: 0.5rem; right: 0.5rem; top: auto; margin-top: 0.4rem; }
