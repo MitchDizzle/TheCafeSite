@@ -93,7 +93,7 @@
                 <span class="menu-item-fill" aria-hidden="true"></span>
                 {%- endif %}
                 {%- if item.price %}
-                <span class="menu-item-price p-body">{{ item.price | money }}</span>
+                <span class="menu-item-price p-body">{{ item.price | money }}{% if item.priceUnit %} {{ item.priceUnit }}{% endif %}</span>
                 {%- elif item.prices %}
                 {#- One item, one line, two prices — "2 / 3 Egg Omelet · $9.00 / $11.00".
                     The order matches the sizes in the item name, so the pairing is

@@ -54,7 +54,15 @@
     </div>
 
     <ul class="sw-days">
-        {%- for d in week %}
+        {#- withClosed puts a closed day (site.json closedDays) in its place,
+            as on the weekly post (client 2026-11-09: Wednesday, Veterans Day). -#}
+        {%- for d in week | withClosed(site.closedDays) %}
+        {%- if d.closed %}
+        <li class="sw-row sw-row--closed">
+            <p class="p-display sw-day ink-accent">{{ d.date | dayDate("short") }}<span class="p-body sw-date">{{ d.date | dayDate("monthDay") }}</span></p>
+            <p class="p-display sw-special sw-closed ink-accent">Closed for {{ d.closed }}</p>
+        </li>
+        {%- else %}
         {%- set sides = d | specialSides(true) %}
         <li class="sw-row">
             <p class="p-display sw-day ink-accent">{{ d.date | dayDate("short") }}<span class="p-body sw-date">{{ d.date | dayDate("monthDay") }}</span></p>
@@ -68,6 +76,7 @@
                 <p class="sw-soup-name ink-teal">{{ d.soup or "&mdash;" | safe }}</p>
             </div>
         </li>
+        {%- endif %}
         {%- endfor %}
     </ul>
     </div>

@@ -76,6 +76,14 @@ test("Lunch Special's description: the day's note goes after the plate", () => {
     "Macho Nachos. Made with jalapeño. Includes a fountain drink or iced tea. Served from 11am.", "a full stop added");
 });
 
+test("Soup of the Day's description: the day's soup note goes after the soup", () => {
+  // Client 2026-11-09: the noodles in the Chicken Noodle are made in house.
+  const soup = { items: { "Soup of the Day": { today: "Chicken Noodle" } } };
+  assert.match(dayDescription("Soup of the Day", soup, undefined, undefined, "Made with our homemade noodles."), /^Chicken Noodle\. Made with our homemade noodles\./);
+  assert.match(dayDescription("Soup of the Day", soup), /^Chicken Noodle\.(?! Made)/, "no note, no words");
+  assert.doesNotMatch(dayDescription("Lunch Special", day("Macho Nachos"), undefined, undefined, "Made with our homemade noodles."), /noodles/, "not on the plate");
+});
+
 test("At the counter only: hidden online on the item, the pick kept, that day's only", () => {
   plan.counterOnly = { "2026-10-29": ["Twice Baked Potato Casserole"] };
   const hidden = counterOnlyOn("2026-10-29");

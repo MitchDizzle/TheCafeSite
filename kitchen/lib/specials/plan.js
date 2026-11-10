@@ -69,10 +69,12 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 //            know about the plate ("Our nacho cheese is made with jalapeño, onion & tomato.",
 //            client 2026-11-03), put after the plate in Lunch Special's description. Kept
 //            apart from `days` like extraSides, and read the same way, even for today.
+// siteSoupNotes: the same for the day's `soupNote`, put after the soup in Soup of the
+//            Day's description ("Made with our homemade noodles.", client 2026-11-09).
 // soupSide: a cup of the day's soup can be picked as a side, as the website last said
 // includesDrink: every lunch special includes a drink, as the website last said
 // site:    the last read of the website, for the front to show
-const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, dayLists: {}, dishLists: {}, listsUsed: [], dayMods: {}, dishMods: {}, siteMods: {}, frontExtra: {}, swapSides: [], extraSides: {}, leaveOff: {}, counterOnly: {}, siteNotes: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
+const plan = { days: {}, notes: {}, applied: {}, sidesApplied: {}, descApplied: {}, photoApplied: {}, squareImages: {}, photoTurn: {}, photoPick: {}, dayLists: {}, dishLists: {}, listsUsed: [], dayMods: {}, dishMods: {}, siteMods: {}, frontExtra: {}, swapSides: [], extraSides: {}, leaveOff: {}, counterOnly: {}, siteNotes: {}, siteSoupNotes: {}, soupSide: false, includesDrink: false, site: { checkedAt: null, error: null } };
 try {
   Object.assign(plan, JSON.parse(fs.readFileSync(PLAN_FILE, "utf8")));
 } catch {}
@@ -80,7 +82,7 @@ try {
 function savePlan() {
   // Two weeks back is plenty; a past day is never written again.
   const old = localDate(new Date(Date.now() - 14 * 864e5));
-  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.counterOnly, plan.siteNotes, plan.frontExtra, plan.dayMods, plan.siteMods, plan.photoPick, plan.dayLists, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
+  for (const map of [plan.days, plan.notes, plan.extraSides, plan.leaveOff, plan.counterOnly, plan.siteNotes, plan.siteSoupNotes, plan.frontExtra, plan.dayMods, plan.siteMods, plan.photoPick, plan.dayLists, plan.applied, plan.sidesApplied, plan.descApplied, plan.photoApplied]) for (const d of Object.keys(map)) if (d < old) delete map[d];
   fs.writeFileSync(PLAN_FILE, JSON.stringify(plan, null, 2));
 }
 
@@ -257,17 +259,21 @@ async function pullSite() {
       plan.siteMods[date] = list;
       console.log(`Specials Modifiers for ${date} from the website: ${list.join(", ")}.`);
     }
-    // A day's note, read the same way: it only adds to the description.
-    const noted = {};
-    for (const d of listed) {
-      const note = String(d.note ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
-      if (d.date >= today && note) noted[d.date] = note;
-    }
-    for (const date of Object.keys(plan.siteNotes)) if (date >= today && !noted[date]) delete plan.siteNotes[date];
-    for (const [date, note] of Object.entries(noted)) {
-      if (plan.siteNotes[date] === note) continue;
-      plan.siteNotes[date] = note;
-      console.log(`Note for ${date}'s plate, from the website: ${note}`);
+    // A day's note, and its soup's, read the same way: they only add to the
+    // descriptions.
+    if (!plan.siteSoupNotes) plan.siteSoupNotes = {}; // a plan saved before 2026-11-09
+    for (const [field, map, what] of [["note", plan.siteNotes, "plate"], ["soupNote", plan.siteSoupNotes, "soup"]]) {
+      const noted = {};
+      for (const d of listed) {
+        const note = String(d[field] ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
+        if (d.date >= today && note) noted[d.date] = note;
+      }
+      for (const date of Object.keys(map)) if (date >= today && !noted[date]) delete map[date];
+      for (const [date, note] of Object.entries(noted)) {
+        if (map[date] === note) continue;
+        map[date] = note;
+        console.log(`Note for ${date}'s ${what}, from the website: ${note}`);
+      }
     }
     // Sides sold at the counter only, read the same way: they only hide
     // options from online ordering and never change the day's names.

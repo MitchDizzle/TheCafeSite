@@ -30,6 +30,7 @@
       "items": [
         {
           "_note_prices": "One line, two sizes. `prices` renders as '$9.00 / $11.00' in the same order as the sizes in the name — 2 egg first, 3 egg second — so the mapping is implied rather than labelled twice.",
+          "_note_fresh": "Square's description says the eggs are fresh cracked (client 2026-11-09); the menus leave it off for room.",
           "name": "2 / 3 Egg Omelet",
           "description": "Pick fillings above. With toast.",
           "dietOnRequest": ["V", "GF"],
@@ -71,10 +72,10 @@
       "items": [
         { "name": "Toast, Biscuit or English Muffin", "diet": ["V"], "price": 2.50 },
         { "name": "Bacon (4 slices)", "price": 4.50 },
-        { "name": "Sausage Patty", "price": 3.00 },
+        { "name": "Sausage (2 patties)", "price": 3.00 },
         { "name": "Fried Potatoes", "diet": ["V", "GF"], "price": 3.00 },
         { "name": "Side of Gravy", "price": 2.00 },
-        { "name": "1 / 2 / 3 Eggs", "_note": "Added 2026-10-06: $1.75 an egg. No description on purpose: the tri-fold's breakfast flap had one row left, and a description line would put the dietary key inside a desktop printer's unprintable margin. `prices` follows the sizes in the name, like the omelet. In Square it is one item, Side of Eggs, with 1 Egg / 2 Eggs / 3 Eggs sizes and the Eggs style list.", "diet": ["V", "GF"], "prices": [1.75, 3.50, 5.25] }
+        { "name": "Side of Eggs", "_note": "Added 2026-10-06: $1.75 an egg. Named \"1 / 2 / 3 Eggs\" with three prices until 2026-11-09, when the client renamed it Side of Eggs, priced each, to save a line on the menus. `priceUnit` prints after the price (\"$1.75 each\"). No description on purpose: the tri-fold's breakfast flap had one row left. In Square it is one item, Side of Eggs, with 1 Egg / 2 Eggs / 3 Eggs variations at 1, 2 and 3 times this price (scripts/square-catalog.py) and the Eggs style list; its Square description says the eggs are fresh cracked (client 2026-11-09, Square only).", "diet": ["V", "GF"], "price": 1.75, "priceUnit": "each" }
       ]
     },
     {
@@ -216,7 +217,7 @@
         },
         {
           "name": "Reuben Sandwich",
-          "description": "Corn beef, Swiss cheese & thousand island dressing on grilled rye",
+          "description": "Corned beef, Swiss cheese & thousand island dressing on grilled rye",
           "defaultBread": "Rye",
           "price": 10.00
         }
@@ -313,7 +314,7 @@
       "name": "Drinks",
       "items": [
         { "name": "Iced Tea / Fountain Drink", "price": 2.00, "squareChoices": ["Self-Serve", "Sweet Tea", "Unsweet Tea", "Pepsi", "Pepsi Zero", "Mountain Dew", "Starry", "Dr Pepper", "Diet Dr Pepper", "Mug Root Beer", "Tropicana Lemonade"], "_note_choices": "`squareChoices` is Square only: the item's variations, one per drink at the one price, so an online or DoorDash order says which drink to pour (client 2026-10-13). Self-Serve, first, is for the counter: the customer pours their own, so the POS needn't ask which. They are not printed on any menu (the tri-fold is full); add or remove a drink here and run `npm run square`." },
-        { "name": "Coffee", "price": 1.00 },
+        { "name": "Coffee", "price": 1.00, "squareChoices": ["Regular", "Decaf"], "_note_coffee": "`squareChoices` is Square only, as on the fountain drinks: Regular and Decaf variations at the one price, so an online or DoorDash order says which pot (client 2026-11-09). Sugar and creamer are the Sugar & Creamer modifier list, made by hand in Square (square/README.md)." },
         { "name": "Bottle Water", "price": 1.50 },
         { "name": "Bottle Juice", "_note_flavours": "No flavour list on purpose (client 2026-10-09). The flavours are left over from the old contract and change as they run out, so a printed list goes wrong as soon as one is gone; customers ask at the counter. They live only in Square, as the Juice modifier list on this one item, kept up to date there by hand. Don't add a description or a row per flavour.", "price": 3.00 }
       ]

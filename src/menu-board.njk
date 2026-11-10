@@ -103,7 +103,7 @@ noSiteJs: true
             <span class="bitem-fill" aria-hidden="true"></span>
             {%- endif %}
             {%- if item.price %}
-            <span class="bitem-price">{{ item.price | money }}</span>
+            <span class="bitem-price">{{ item.price | money }}{% if item.priceUnit %} {{ item.priceUnit }}{% endif %}</span>
             {%- elif item.prices %}
             <span class="bitem-price">
                 {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}

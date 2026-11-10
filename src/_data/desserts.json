@@ -1,6 +1,6 @@
 {
   "_note": "Made by scripts/desserts.js (npm run desserts, and the start of npm run build) from Square's desserts, as the kitchen board's Manage -> Desserts has them. Don't edit it: change the desserts there, then run it again and commit this file. `out` is a kind Square counts at 0. Read by studio/sign-desserts-bw.njk and sign-dessert-bars-bw.njk.",
-  "updated": "2026-11-06",
+  "updated": "2026-11-09",
   "items": [
     {
       "name": "Cheesecake",
@@ -26,10 +26,12 @@
       "price": 1.5,
       "kinds": [
         {
-          "name": "Magic Bar"
+          "name": "Magic Bar",
+          "out": true
         },
         {
-          "name": "M&M Rice Crispy Treat"
+          "name": "M&M Rice Crispy Treat",
+          "out": true
         }
       ],
       "lists": []
@@ -39,7 +41,30 @@
       "price": 3.5,
       "kinds": [
         {
-          "name": "Banana Pudding"
+          "name": "Banana Pudding",
+          "out": true
+        }
+      ],
+      "lists": []
+    },
+    {
+      "name": "Bread Pudding",
+      "price": 3.5,
+      "kinds": [
+        {
+          "name": "Bread Pudding",
+          "out": true
+        }
+      ],
+      "lists": []
+    },
+    {
+      "name": "Brownie Delight",
+      "price": 3.5,
+      "kinds": [
+        {
+          "name": "Brownie Delight",
+          "out": true
         }
       ],
       "lists": []
@@ -79,14 +104,27 @@
       "lists": []
     },
     {
-      "name": "Cream Puffs",
+      "name": "Cream Puff",
       "price": 3.5,
       "kinds": [
         {
-          "name": "Cream Puffs"
+          "name": "Cream Puff",
+          "out": true
         },
         {
-          "name": "Chocolate Cream Puffs"
+          "name": "Chocolate Cream Puff",
+          "out": true
+        }
+      ],
+      "lists": []
+    },
+    {
+      "name": "Lemon Layered Dessert",
+      "price": 3.5,
+      "kinds": [
+        {
+          "name": "Lemon Layered Dessert",
+          "out": true
         }
       ],
       "lists": []
@@ -117,7 +155,8 @@
       "price": 3.5,
       "kinds": [
         {
-          "name": "Strawberry Trifle"
+          "name": "Strawberry Trifle",
+          "out": true
         }
       ],
       "lists": []

@@ -108,7 +108,7 @@ pageCss: "/assets/css/menu.css"
                             <span class="menu-item-name">{{ item.name }}{% if menu.dietsConfirmed %}{{ dietMarks(item, menu.diets) }}{% endif %}</span>
                             <span class="menu-item-fill" aria-hidden="true"></span>
                             {%- if item.price %}
-                            <span class="menu-item-price">{{ item.price | money }}</span>
+                            <span class="menu-item-price">{{ item.price | money }}{% if item.priceUnit %} {{ item.priceUnit }}{% endif %}</span>
                             {%- elif item.prices %}
                             <span class="menu-item-price">
                                 {%- for pr in item.prices %}{{ pr | money }}{% if not loop.last %} / {% endif %}{% endfor -%}
@@ -414,7 +414,7 @@ pageCss: "/assets/css/menu.css"
           {%- endif %}
           {%- if item.price %},
           "offers": { "@type": "Offer", "price": "{{ item.price | money | replace("$", "") }}", "priceCurrency": "USD" }
-          {#- An item in sizes (`prices`: the omelet, the eggs, biscuit & gravy)
+          {#- An item in sizes (`prices`: the omelet, biscuit & gravy)
               still has a price: the range a customer can pay. Emitting nothing
               would publish it as an item with no price at all.
               lowPrice/highPrice is the vocabulary for exactly this. Nunjucks

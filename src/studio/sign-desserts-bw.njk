@@ -8,11 +8,8 @@ pageCss: "/assets/css/studio/sign.css"
 bw: true
 skipDesserts: ["Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"]
 treats: ["Cookies", "Dessert Bar"]
-skipKinds: []
-inKinds: ["Banana Pudding", "Cream Puffs", "Chocolate Cream Puffs"]
-addDesserts:
-  - name: "Brownie Delight"
-    priceOf: "Strawberry Trifle"
+skipKinds: ["M&M Brown Butter Chocolate Chip (2)"]
+inKinds: ["Bread Pudding", "Lemon Layered Dessert"]
 signNames:
   "M&M Brown Butter Chocolate Chip (2)": "M&M Cookies (2)"
   "Triple Chocolate Chip (2)": "Triple Chocolate Cookies (2)"
@@ -61,27 +58,11 @@ studioOrder: 32
     {#- Every row first, then the two groups: dearest first, so the
         cookies go to the bottom (client 2026-11-04); same price keeps
         Square's order. #}
-    {%- set allItems = desserts.items.slice() %}
-    {%- for a in addDesserts or [] %}
-    {%- set like = (desserts.items | where("name", a.priceOf))[0] %}
-    {%- if like %}
-    {%- set _ = allItems.push({ name: a.name, price: like.price, kinds: [{ name: a.name }], lists: [] }) %}
-    {%- endif %}
-    {%- endfor %}
+    {#- Worked out in partials/studio/dessert-rows.njk, which the counter
+        page of sign-day-letter.njk uses too. #}
+    {%- from "partials/studio/dessert-rows.njk" import collect %}
     {%- set rows = [] %}
-    {%- for item in allItems | sort(true, false, "price") %}
-    {%- if item.name not in skipDesserts %}
-    {%- set kinds = [] %}
-    {%- for k in item.kinds %}
-    {%- if (not k.out or k.name in inKinds) and k.name not in skipKinds %}
-    {%- set _ = kinds.push(k) %}
-    {%- endif %}
-    {%- endfor %}
-    {%- for k in kinds %}
-    {%- set _ = rows.push({ name: signNames[k.name] or k.name, price: item.price, lists: (item.lists if loop.last else []), treat: item.name in (treats or []) }) %}
-    {%- endfor %}
-    {%- endif %}
-    {%- endfor %}
+    {{- collect(desserts, { skipDesserts: skipDesserts, skipKinds: skipKinds, inKinds: inKinds, addDesserts: addDesserts, signNames: signNames, treats: treats }, rows) }}
     {%- set treatRows = rows | selectattr("treat") %}
 
     <ul class="sign-rows fd-rows">

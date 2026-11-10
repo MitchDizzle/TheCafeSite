@@ -1,0 +1,28 @@
+{#- The dessert fridge sign's rows, worked out in one place so the counter
+    page of sign-day-letter.njk lists exactly what the fridge sign does
+    (client 2026-11-09). `o` is the fridge sign's front matter
+    (skipDesserts, skipKinds, inKinds, addDesserts, signNames, treats: its
+    comment says what each does); the rows are pushed onto `rows`, dearest
+    first, each { name, price, lists, treat }. -#}
+{%- macro collect(desserts, o, rows) %}
+    {%- set allItems = desserts.items.slice() %}
+    {%- for a in o.addDesserts or [] %}
+    {%- set like = (desserts.items | where("name", a.priceOf))[0] %}
+    {%- if like %}
+    {%- set _ = allItems.push({ name: a.name, price: like.price, kinds: [{ name: a.name }], lists: [] }) %}
+    {%- endif %}
+    {%- endfor %}
+    {%- for item in allItems | sort(true, false, "price") %}
+    {%- if item.name not in (o.skipDesserts or []) %}
+    {%- set kinds = [] %}
+    {%- for k in item.kinds %}
+    {%- if (not k.out or k.name in (o.inKinds or [])) and k.name not in (o.skipKinds or []) %}
+    {%- set _ = kinds.push(k) %}
+    {%- endif %}
+    {%- endfor %}
+    {%- for k in kinds %}
+    {%- set _ = rows.push({ name: (o.signNames or {})[k.name] or k.name, price: item.price, lists: (item.lists if loop.last else []), treat: item.name in (o.treats or []) }) %}
+    {%- endfor %}
+    {%- endif %}
+    {%- endfor %}
+{%- endmacro %}
