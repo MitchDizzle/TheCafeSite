@@ -198,6 +198,27 @@ function toTicket(order) {
     }
   }
   for (const [name, qty] of packets) front.push({ qty, name, variation: null, mods: [], note: null });
+  // A DoorDash order's bag check (client 2026-11-10): the drinks, chips,
+  // desserts and packets, the things a Dasher leaves without, listed again
+  // at the top of its card on /front to tick off before it goes. The kitchen
+  // still gets the whole order; this is only the front's reminder.
+  const bagCheck = [];
+  if (online && /doordash/i.test((order.source && order.source.name) || "")) {
+    const desserts = new Set((cfg.dessertItems || []).map((n) => n.trim().toLowerCase()));
+    const dessertCat = String(cfg.dessertCategory || "").trim().toLowerCase();
+    const isDessert = (li) => desserts.has(itemName(li).trim().toLowerCase())
+      || (!!dessertCat && categoriesOf(li).some((c) => c.trim().toLowerCase() === dessertCat));
+    for (const li of food) if (isSkip(li) || isDessert(li)) bagCheck.push(toItem(li));
+    const ddPackets = new Map();
+    for (const li of food) {
+      for (const m of li.modifiers || []) {
+        if (!isPacket(m)) continue;
+        ddPackets.set(m.name, (ddPackets.get(m.name) || 0) + (Number(li.quantity) || 1) * (Number(m.quantity) || 1));
+      }
+    }
+    for (const [name, qty] of ddPackets) bagCheck.push({ qty, name, variation: null, mods: [], note: null });
+    for (const it of bagCheck) delete it.toGo;
+  }
   if (!lines.length) return { reason: "no items on the order" };
   // A counter sale of only drinks or chips is handed over as it's rung up;
   // it belongs on neither screen.
@@ -290,6 +311,7 @@ function toTicket(order) {
     courier,
     items,
     front,
+    bagCheck,
     // Marked ready in Order Manager: the customer has been texted.
     squareReady: !!(online && f && f.state === "PREPARED"),
     unpaid,

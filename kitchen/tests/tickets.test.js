@@ -288,6 +288,26 @@ test("an online order goes to the kitchen whole: skipped items and packets too",
   assert.deepEqual(t.front, [], "nothing for the front to add");
 });
 
+test("a DoorDash order's drinks, chips, desserts and packets are its bag check; the kitchen still gets it all", () => {
+  board.setSkip({ items: ["Chips", "Iced Tea / Fountain Drink"], categories: [] });
+  const t = ticketOf(doordash({ line_items: [
+    li(1, "Fried Potatoes", { modifiers: [{ name: "Ketchup packet", quantity: "2" }] }),
+    li(2, "Iced Tea / Fountain Drink"), li(1, "Chips", { variation_name: "BBQ" }), li(1, "Cheesecake"),
+  ] }));
+  assert.deepEqual(t.items.map((it) => it.name), ["Fried Potatoes", "Iced Tea / Fountain Drink", "Chips", "Cheesecake"]);
+  assert.deepEqual(t.bagCheck.map((it) => [it.qty, it.name]), [[2, "Iced Tea / Fountain Drink"], [1, "Chips"], [1, "Cheesecake"], [2, "Ketchup packet"]]);
+  assert.deepEqual(t.front, []);
+});
+
+test("only DoorDash gets a bag check, and only with something to check", () => {
+  board.setSkip({ items: ["Iced Tea / Fountain Drink"], categories: [] });
+  assert.deepEqual(ticketOf(online({ line_items: [li(1, "Burger"), li(1, "Iced Tea / Fountain Drink")] })).bagCheck, []);
+  assert.deepEqual(ticketOf(counter({ line_items: [li(1, "Burger"), li(1, "Iced Tea / Fountain Drink")] })).bagCheck, []);
+  assert.deepEqual(ticketOf(doordash()).bagCheck, []);
+  const pickup = ticketOf(doordash({ source: { name: "DoorDash - Storefront" }, line_items: [li(1, "Omelet"), li(1, "Iced Tea / Fountain Drink")] }));
+  assert.deepEqual(pickup.bagCheck.map((it) => it.name), ["Iced Tea / Fountain Drink"]);
+});
+
 test("an online order of only skipped items goes to the kitchen like any other", () => {
   board.setSkip({ items: ["Chips", "V8"], categories: [] });
   const t = ticketOf(online({ line_items: [li(2, "V8"), li(1, "Chips", { variation_name: "BBQ", modifiers: [{ name: "Ketchup packet" }] })] }));

@@ -241,6 +241,23 @@
   .front-items li.got .box::before { content: "\2611"; color: var(--green); }
   .nothing { color: var(--muted); font-style: italic; }
 
+  /* DoorDash: check the bag. The drinks, chips, desserts and packets on a
+     DoorDash order, listed at the top of its card to tick off before the
+     Dasher takes it (client 2026-11-10). Red until every line is ticked,
+     then green. Ticks are this device's, like the front's. */
+  .bag-band { background: #FBE3E1; border-left: 0.4rem solid var(--red); }
+  .bag-band .label { color: #7A1F18; font-weight: 900; }
+  .bag-band li { cursor: pointer; border-radius: 0.3rem; user-select: none; grid-template-columns: 1.6rem 1.8rem 1fr; }
+  .bag-band li:hover { background: #F7CFCB; }
+  .bag-band li.got { color: var(--muted); }
+  .bag-band li.got .item-name { text-decoration: line-through; }
+  .bag-band li.got .box::before { content: "\2611"; color: var(--green); }
+  .bag-band .bag-all { display: none; font-weight: 800; color: var(--green); }
+  .bag-band.all-in { background: var(--green-soft); border-left-color: var(--green); }
+  .bag-band.all-in .label { color: var(--green); }
+  .bag-band.all-in .bag-all { display: block; }
+  .order.bag-todo { border: 2px solid var(--red); }
+
   .note { margin: 0.2rem 0; padding: 0.3rem 0.5rem; background: #FFF0C2; border-left: 0.25rem solid var(--amber); font-weight: 700; white-space: pre-line; }
   .note.allergy { background: #FBE3E1; border-left-color: var(--red); color: #7A1F18; }
   .note.allergy::before { content: "\26A0  "; }
@@ -466,14 +483,15 @@
     return o.dueAt ? `${k} · due ${fmtTime(o.dueAt)}` : k;
   }
 
-  function itemsHtml(list, isFront, orderId) {
+  // prefix keeps the bag check's ticks apart from the front's ("b0", "b1"...).
+  function itemsHtml(list, isFront, orderId, prefix = "") {
     return `<ul class="items">${list.map((it, i) => {
       const split = it.toGo && !(list[i - 1] || {}).toGo ? `<li class="togo-split"><span class="dining">To go</span></li>` : "";
       const subs = [it.variation, ...it.mods].filter(Boolean)
         .map((m) => `<div class="sub${ALLERGY.test(m) ? " allergy" : ""}">${esc(m)}</div>`).join("");
       const note = it.note ? `<div class="note${ALLERGY.test(it.note) ? " allergy" : ""}">${esc(it.note)}</div>` : "";
-      const got = isFront && ticks[orderId] && ticks[orderId][i];
-      return `${split}<li${isFront ? ` data-tick="${i}"${got ? ' class="got"' : ""}` : ""}>
+      const got = isFront && ticks[orderId] && ticks[orderId][prefix + i];
+      return `${split}<li${isFront ? ` data-tick="${prefix}${i}"${got ? ' class="got"' : ""}` : ""}>
         ${isFront ? '<span class="box" aria-hidden="true"></span>' : ""}<span class="qty${it.qty > 1 ? " many" : ""}">${it.qty > 1 ? `${it.qty}×` : it.qty}</span>
         <div><div class="item-name">${esc(it.name)}</div>${subs}${note}</div>
       </li>`;
@@ -492,10 +510,24 @@
     const kitchen = n(o.items), front = n(o.front);
     const bits = [`<b>${kitchen} item${kitchen === 1 ? "" : "s"}</b> from the kitchen`];
     if (front) bits.push(`${front} from the front`);
+    const bagLeft = bagToCheck(o);
+    if (bagLeft) bits.push(`<b class="brief-due">check the bag: ${bagLeft} left</b>`);
     if (o.unpaid) bits.push(`<b class="brief-due">not paid${o.due ? ` ($${o.due.toFixed(2)})` : ""}</b>`);
     if (o.holdUntil && Date.now() < Date.parse(o.holdUntil)) bits.push("waiting for its Dasher");
     if (o.note) bits.push("has a note");
     return `<div class="brief">${bits.join(" · ")}. Tap to show it all.</div>`;
+  }
+
+  // A DoorDash order's bag check: how many lines aren't ticked yet.
+  const bagList = (o) => o.bagCheck || [];
+  const bagToCheck = (o) => bagList(o).filter((_, i) => !(ticks[o.id] && ticks[o.id]["b" + i])).length;
+  function bagHtml(o) {
+    if (!bagList(o).length) return "";
+    return `<div class="section bag-band${bagToCheck(o) ? "" : " all-in"}" data-bag>
+          <div class="label">DoorDash: check the bag</div>
+          ${itemsHtml(bagList(o), true, o.id, "b")}
+          <div class="bag-all">✓ All in the bag.</div>
+        </div>`;
   }
 
   function orderHtml(o) {
@@ -510,7 +542,7 @@
         ? `<div class="square pending">Marking it ready in Square…</div>`
         : `<div class="square todo">Mark it ready in Square Order Manager to text the customer.</div>`) : "";
     return `
-      <article class="order ${ready ? "ready" : "cooking"}${o.unpaid ? " unpaid" : ""}${o.demo ? " demo" : ""}${o.pinned ? " pinned" : ""}${folded ? " mini" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
+      <article class="order ${ready ? "ready" : "cooking"}${o.unpaid ? " unpaid" : ""}${bagToCheck(o) ? " bag-todo" : ""}${o.demo ? " demo" : ""}${o.pinned ? " pinned" : ""}${folded ? " mini" : ""}${justReady.has(o.id) ? " just-ready" : ""}" data-id="${esc(o.id)}">
         <header>
           <span><span class="name">${esc(label(o))}${o.group || o.tableOf ? ` <span class="dining here">${[o.group ? `Group${o.group !== "1" ? ` ${o.group}` : ""}` : "", o.tableOf ? `${o.tableOf.n} of ${o.tableOf.of}` : ""].filter(Boolean).join(" · ")}</span>` : ""}${o.addOn ? '<span class="added-tag">+ added</span>' : ""}</span><span class="kind">${o.pinned ? '<span class="pin-tag" title="Pinned: stays at the top until Handed off, and never clears itself">PINNED</span>' : ""}${o.demo ? '<span class="demo-tag">DEMO</span>' : ""}${o.test ? '<span class="test-tag">TEST</span>' : ""}${esc(kindLabel(o))}${diningHtml(o)}</span></span>
           <span class="status" data-status></span>
@@ -520,6 +552,7 @@
           </span>
         </header>
         ${briefHtml(o)}
+        ${bagHtml(o)}
         ${o.unpaid ? `<div class="section unpaid-band">Not paid${o.due ? `: $${o.due.toFixed(2)} due` : ""}
           <small>Collect when they pick up. If the sale fell through, press Canceled to take it off the kitchen board too.</small></div>` : ""}
         ${o.holdUntil && Date.now() < Date.parse(o.holdUntil) ? `<div class="section dasher-band">
@@ -738,6 +771,15 @@
       ticks[id][i] = !ticks[id][i];
       saveTicks(ticks);
       li.classList.toggle("got", ticks[id][i]);
+      const o = orders.find((x) => x.id === id);
+      const band = li.closest("[data-bag]");
+      if (o && band) {
+        const left = bagToCheck(o);
+        band.classList.toggle("all-in", !left);
+        card.classList.toggle("bag-todo", !!left);
+        const brief = card.querySelector(".brief");
+        if (brief) brief.outerHTML = briefHtml(o);
+      }
     }
   });
   const ago = (iso) => {

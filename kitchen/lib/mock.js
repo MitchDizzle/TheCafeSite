@@ -199,7 +199,9 @@ function mockOrders() {
     ticket_name: "DoorDash",
     tenders: [{ id: "DDTENDER", type: "OTHER" }],
     fulfillments: [{ uid: "f1", type: "DELIVERY", state: "PROPOSED", delivery_details: { schedule_type: "ASAP", courier_pickup_at: at(8), courier_provider_name: "DoorDash", managed_delivery: true } }],
-    line_items: [li(1, "Fried Potatoes"), li(1, "Biscuit & Gravy", { variation_name: "Full" })],
+    // The drinks, chips, dessert and packet: its bag check on /front.
+    line_items: [li(1, "Fried Potatoes", { modifiers: [{ name: "Ketchup packet", quantity: "2" }] }), li(1, "Biscuit & Gravy", { variation_name: "Full" }),
+      li(2, "Iced Tea / Fountain Drink", { variation_name: "Iced Tea" }), li(1, "Chips", { variation_name: "BBQ" }), li(1, "Cheesecake")],
   });
   // A pickup from DoorDash's own ordering site: the customer comes in, so
   // it goes on like an online pickup, with no wait for a Dasher.
