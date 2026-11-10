@@ -96,7 +96,12 @@
       "date": "2026-11-10",
       "soup": "Broccoli Cheese",
       "special": "Pulled Pork Sandwich",
-      "anySide": true
+      "sides": [
+        "Cheesy Potatoes"
+      ],
+      "extraSides": [
+        "Cheesy Potatoes"
+      ]
     },
     {
       "date": "2026-11-12",
