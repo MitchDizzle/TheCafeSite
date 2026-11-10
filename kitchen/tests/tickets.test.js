@@ -630,3 +630,31 @@ test("a plate that is one of two shows the one picked, not its long name", () =>
   const other = toTicket(counter({ line_items: [li(1, "Breakfast Sandwich", { variation_name: "Ham or Bacon", modifiers: [{ name: "Ham" }] })] })).ticket;
   assert.equal(other.items[0].variation, "Ham or Bacon", "only the daily items");
 });
+
+// ---------------------------------------------------------------- a wrong Handed off comes back (client 2026-11-10)
+
+test("an online order the board marked picked up in Square stays a ticket, hidden while handed off, so Undo brings it back", () => {
+  const st = require("../lib/state");
+  const order = online({}, { state: "COMPLETED" });
+  assert.ok(toTicket(order).reason, "picked up elsewhere (the POS): gone as before");
+  st.markedDone[order.id] = new Date().toISOString();
+  board.handedOff[order.id] = new Date().toISOString();
+  const t = ticketOf(order);
+  assert.equal(t.squareDone, true);
+  assert.ok(hiddenReason(t, Date.now()), "off the kitchen board while handed off");
+  assert.ok(frontHiddenReason(t, Date.now()), "off the front while handed off");
+  delete board.handedOff[order.id]; // the front's Undo
+  assert.equal(frontHiddenReason(t, Date.now()), null);
+});
+
+test("Undo on the kitchen board brings a handed-off order back on the front page too", () => {
+  const { bump, unbump, keepOnFront, byHand } = require("../lib/state");
+  const t = ticketOf(counter());
+  bump(t.id, false);
+  board.handedOff[t.id] = byHand[t.id] = new Date().toISOString();
+  unbump(t.id);
+  assert.ok(!board.bumped[t.id]);
+  assert.ok(!board.handedOff[t.id] && !byHand[t.id]);
+  assert.ok(keepOnFront[t.id], "and it stays until handed off by hand");
+  assert.equal(frontHiddenReason(t, Date.now()), null);
+});

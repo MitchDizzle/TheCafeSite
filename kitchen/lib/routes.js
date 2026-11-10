@@ -7,7 +7,7 @@ const { DIR, DEV, cfg } = require("./config");
 const { localDate, dayWords } = require("./util");
 const { live } = require("./live");
 const { catalog, loadCatalog, modifierListsByName } = require("./catalog");
-const { bump, handedOff, canceled, sentNow, byHand, keepOnFront, pinned, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
+const { bump, bumped, platesDone, handedOff, canceled, sentNow, byHand, doneAtFront, keepOnFront, pinned, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
 const { poll, watched, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay } = require("./orders");
 const { recordHistoryNow, historyReport, todayView } = require("./stats");
 const surveys = require("./surveys");
@@ -186,10 +186,18 @@ async function handle(req, res) {
     return send(res, 200, frontSnapshot());
   }
   if (req.method === "POST" && url.pathname === "/api/handoff") {
-    const { id } = await readBody(req);
+    const { id, done } = await readBody(req);
     if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
     handedOff[id] = new Date().toISOString();
     byHand[id] = handedOff[id];
+    // Held on an order still cooking: the front is pressing the kitchen's
+    // Done too (client 2026-11-10), so it leaves the board. The front's Undo
+    // puts it back on both.
+    if (done && !bumped[id]) {
+      delete platesDone[id];
+      bump(id, false);
+      doneAtFront[id] = handedOff[id];
+    }
     saveState();
     return send(res, 200, frontSnapshot());
   }
@@ -490,9 +498,11 @@ async function handle(req, res) {
   if (req.method === "POST" && url.pathname === "/api/unhandoff") {
     const { id } = await readBody(req);
     if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
+    if (doneAtFront[id]) unbump(id); // the Done the front pressed goes too
     delete handedOff[id];
     delete canceled[id];
     delete byHand[id];
+    delete doneAtFront[id];
     // Back on the front page to stay: it won't clear itself again.
     keepOnFront[id] = new Date().toISOString();
     autoOff.delete(id);
@@ -508,9 +518,11 @@ async function handle(req, res) {
   if (req.method === "POST" && url.pathname === "/api/handoff-undo") {
     const last = lastHandedOff();
     if (last) {
+      if (doneAtFront[last.id]) unbump(last.id); // the Done the front pressed goes too
       delete handedOff[last.id];
       delete canceled[last.id];
       delete byHand[last.id];
+      delete doneAtFront[last.id];
       keepOnFront[last.id] = new Date().toISOString();
       autoOff.delete(last.id);
       saveState();

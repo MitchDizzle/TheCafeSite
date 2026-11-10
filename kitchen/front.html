@@ -316,6 +316,16 @@
   /* Still cooking: the button is there (the customer may take part of it
      early, or the kitchen forgot Done) but it doesn't invite a tap. */
   .order.cooking .handoff { background: transparent; color: var(--muted); border: 2px solid var(--line); }
+  /* Still cooking, Handed off is held, not tapped (client 2026-11-10): it
+     presses the kitchen's Done as well, so a brush of the finger can't take
+     an order off both screens. Green fills the button while it's held. */
+  .handoff.hold { position: relative; overflow: hidden; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+  .handoff.hold .fill { position: absolute; inset: 0; width: 0; background: var(--green); }
+  .handoff.hold .txt { position: relative; }
+  .order.cooking .handoff.hold.holding { color: #fff; border-color: var(--green); }
+  .handoff.hold.holding .fill { width: 100%; transition: width 1s linear; }
+  .order.cooking .handoff.hold.hint { color: var(--red-dark); border-color: var(--red); }
+  @media (prefers-reduced-motion: reduce) { .handoff.hold.holding .fill { transition: none; } }
 
   /* Not paid: cooked like any other order, but the front collects. */
   .unpaid-band { background: #FBE3E1; color: #7A1F18; font-weight: 800; }
@@ -571,7 +581,9 @@
     const online = o.kind !== "COUNTER";
     // With squareStatus on, the board marks it ready in Square itself a few
     // seconds after Done, and picked up when it's handed off here.
-    const square = !online ? "" : o.squareReady
+    const square = !online ? "" : o.squareDone
+      ? `<div class="square done">✓ Already marked picked up in Square.</div>`
+      : o.squareReady
       ? `<div class="square done">✓ Marked ready in Square.${o.kind === "PICKUP" ? " Customer texted." : ""}${o.autoSquare ? " Handed off marks it picked up." : ""}</div>`
       : ready ? (o.autoSquare
         ? `<div class="square pending">Marking it ready in Square…</div>`
@@ -604,7 +616,7 @@
           ${itemsHtml(o.front, true, o.id)}
         </div>` : ""}
         ${square ? `<div class="section">${square}</div>` : ""}
-        <div class="actions${o.unpaid ? " two" : ""}"><button class="handoff" type="button">Handed off</button>${o.unpaid ? `<button class="cancel-unpaid" type="button">Canceled</button>` : ""}</div>
+        <div class="actions${o.unpaid ? " two" : ""}">${ready ? `<button class="handoff" type="button">Handed off</button>` : `<button class="handoff hold" type="button" title="Still cooking: hold to hand it off and clear it from the kitchen board"><span class="fill"></span><span class="txt">Hold to hand off</span></button>`}${o.unpaid ? `<button class="cancel-unpaid" type="button">Canceled</button>` : ""}</div>
       </article>`;
   }
 
@@ -672,7 +684,61 @@
     return f;
   }
 
+  // ---- Handed off on an order still cooking: held for HOLD_MS. It does the
+  // kitchen's Done too (the server bumps it), so it leaves the board; the
+  // front's Undo puts it back on both. Let go early and it says to hold.
+  const HOLD_MS = 1000;
+  let hold = null; // { btn, id, timer }
+  let renderWaiting = false; // a poll's render, held back while a button is held
+  const holdText = (btn, text) => { const t = btn.querySelector(".txt"); if (t) t.textContent = text; };
+  function startHold(btn) {
+    if (hold) return;
+    const card = btn.closest(".order");
+    if (!card) return;
+    btn.classList.remove("hint");
+    btn.classList.add("holding");
+    holdText(btn, "Keep holding…");
+    hold = { btn, id: card.dataset.id, timer: setTimeout(finishHold, HOLD_MS) };
+  }
+  function endHold(early) {
+    if (!hold) return;
+    const { btn, timer } = hold;
+    clearTimeout(timer);
+    hold = null;
+    btn.classList.remove("holding");
+    if (early) {
+      btn.classList.add("hint");
+      holdText(btn, "Hold it down to hand off");
+      setTimeout(() => { if (btn.isConnected && !btn.classList.contains("holding")) { btn.classList.remove("hint"); holdText(btn, "Hold to hand off"); } }, 2000);
+    }
+    if (renderWaiting) { renderWaiting = false; render(); }
+  }
+  function finishHold() {
+    if (!hold) return;
+    const { id } = hold;
+    hold = null;
+    renderWaiting = false;
+    // Gone from this screen at once; the server confirms.
+    orders = orders.filter((o) => o.id !== id);
+    render();
+    send("/api/handoff", { id, done: true });
+  }
+  const mainEl = document.querySelector("main");
+  mainEl.addEventListener("pointerdown", (e) => {
+    const btn = e.target.closest(".handoff.hold");
+    if (btn && (e.pointerType !== "mouse" || e.button === 0)) startHold(btn);
+  });
+  for (const ev of ["pointerup", "pointercancel"]) document.addEventListener(ev, () => endHold(true));
+  mainEl.addEventListener("pointerout", (e) => { if (hold && e.target.closest(".handoff.hold") === hold.btn && !hold.btn.contains(e.relatedTarget)) endHold(true); });
+  mainEl.addEventListener("contextmenu", (e) => { if (e.target.closest(".handoff.hold")) e.preventDefault(); });
+  mainEl.addEventListener("keydown", (e) => {
+    const btn = e.target.closest && e.target.closest(".handoff.hold");
+    if (btn && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); if (!e.repeat) startHold(btn); }
+  });
+  mainEl.addEventListener("keyup", (e) => { if (hold && (e.key === "Enter" || e.key === " ")) endHold(true); });
+
   function render() {
+    if (hold) { renderWaiting = true; return; }
     const f = renderFilters();
     const shown = orders.filter(f.test);
     const ready = shown.filter((o) => o.readyAt);
@@ -859,6 +925,8 @@
       send("/api/send-to-kitchen", { id });
       return;
     }
+    // Still cooking: held, not tapped (see the hold below).
+    if (e.target.closest(".handoff.hold")) return;
     if (e.target.closest(".handoff")) {
       // Gone from this screen at once; the server confirms.
       orders = orders.filter((o) => o.id !== id);

@@ -34,7 +34,18 @@ function bump(id, hasToGo) {
 // with the time it spent cleared kept out of the stats (only until its
 // plates were out: the stats stop there), or a ticket whose plates were
 // out back to the whole order.
+// Brought back on the board brings it back on the front page too, if the
+// front had handed it off (client 2026-11-10: a wrong Handed off at the
+// front, and the kitchen's Undo didn't bring it back). It stays there until
+// it's handed off by hand again.
 function unbump(id) {
+  if (handedOff[id]) {
+    delete handedOff[id];
+    delete byHand[id];
+    delete doneAtFront[id];
+    keepOnFront[id] = new Date().toISOString();
+    autoOff.delete(id);
+  }
   if (!bumped[id]) {
     delete platesDone[id];
     return;
@@ -67,6 +78,10 @@ const pinned = {};
 // markedDone: Square told it was picked up.
 const markedReady = {};
 const byHand = {};
+// orderId -> ISO time: Done pressed for the kitchen from the front, by
+// holding Handed off on an order still cooking (client 2026-11-10: the
+// kitchen forgot Done). The front's Undo takes the Done back too.
+const doneAtFront = {};
 const markedDone = {};
 const autoOff = new Set(); // ids cleared by autoHandoff, so Undo can say so
 const readySince = {}; // orderId -> ms first seen ready, for autoHandoff (not saved)
@@ -109,6 +124,7 @@ function loadState() {
     Object.assign(pinned, saved.pinned || {});
     Object.assign(markedReady, saved.markedReady || {});
     Object.assign(byHand, saved.byHand || {});
+    Object.assign(doneAtFront, saved.doneAtFront || {});
     Object.assign(markedDone, saved.markedDone || {});
     Object.assign(kitchenLines, saved.kitchenLines || {});
     Object.assign(dueSeen, saved.dueSeen || {});
@@ -126,7 +142,7 @@ function loadState() {
 function saveState() {
   // Three days is plenty; nothing older can reappear on either screen anyway.
   const cutoff = Date.now() - 3 * 864e5;
-  for (const map of [bumped, platesDone, handedOff, canceled, sentNow, keepOnFront, pinned, markedReady, byHand, markedDone]) {
+  for (const map of [bumped, platesDone, handedOff, canceled, sentNow, keepOnFront, pinned, markedReady, byHand, doneAtFront, markedDone]) {
     for (const [id, at] of Object.entries(map)) {
       if (Date.parse(at) < cutoff) delete map[id];
     }
@@ -134,7 +150,7 @@ function saveState() {
   for (const map of [offBoard, kitchenLines, dueSeen]) for (const [id, o] of Object.entries(map)) if (Date.parse(o.at) < cutoff) delete map[id];
   // Demo tickets are practice: never written down, gone when the demo ends.
   const real = (map) => Object.fromEntries(Object.entries(map).filter(([id]) => !isDemo(id)));
-  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), platesDone: real(platesDone), handedOff: real(handedOff), canceled: real(canceled), sentNow: real(sentNow), keepOnFront: real(keepOnFront), pinned: real(pinned), markedReady: real(markedReady), byHand: real(byHand), markedDone: real(markedDone), kitchenLines: real(kitchenLines), dueSeen: real(dueSeen), skip: state.skipEdited ? state.skip : undefined, undoFloor: state.undoFloor, statsFloor: state.statsFloor }, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ bumped: real(bumped), offBoard: real(offBoard), platesDone: real(platesDone), handedOff: real(handedOff), canceled: real(canceled), sentNow: real(sentNow), keepOnFront: real(keepOnFront), pinned: real(pinned), markedReady: real(markedReady), byHand: real(byHand), doneAtFront: real(doneAtFront), markedDone: real(markedDone), kitchenLines: real(kitchenLines), dueSeen: real(dueSeen), skip: state.skipEdited ? state.skip : undefined, undoFloor: state.undoFloor, statsFloor: state.statsFloor }, null, 2));
 }
 
 loadState();
@@ -153,6 +169,6 @@ setSkip(state.skip);
 const skipSummary = () => [...state.skip.categories.map((c) => `all of ${c}`), ...state.skip.items].join(", ") || "nothing";
 
 module.exports = {
-  bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, pinned, markedReady, byHand, markedDone, autoOff, readySince, kitchenLines, dueSeen,
+  bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, pinned, markedReady, byHand, doneAtFront, markedDone, autoOff, readySince, kitchenLines, dueSeen,
   state, bump, unbump, saveState, setSkip, skipSets, skipSummary,
 };

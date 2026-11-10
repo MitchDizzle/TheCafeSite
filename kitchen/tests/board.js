@@ -16,7 +16,8 @@ const board = require("../server.js");
 
 // Every test starts from a board where nothing has been pressed.
 board.reset = () => {
-  for (const map of [board.bumped, board.platesDone, board.canceled, board.handedOff, board.markedReady]) {
+  const st = require("../lib/state");
+  for (const map of [board.bumped, board.platesDone, board.canceled, board.handedOff, board.markedReady, st.markedDone, st.byHand, st.doneAtFront, st.keepOnFront]) {
     for (const id of Object.keys(map)) delete map[id];
   }
   board.setSkip({ items: [], categories: [] });

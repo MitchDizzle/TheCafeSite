@@ -5,7 +5,7 @@ const { cfg } = require("./config");
 const { startOfToday } = require("./util");
 const { catalog } = require("./catalog");
 const { leadMinutes } = require("./lead");
-const { bumped, canceled, handedOff, markedReady, sentNow, skipSets } = require("./state");
+const { bumped, canceled, handedOff, markedReady, markedDone, sentNow, skipSets } = require("./state");
 
 // An online order the front has picked up, canceled or failed is finished
 // everywhere. PREPARED (marked ready in Order Manager, which texts the
@@ -128,7 +128,12 @@ function toTicket(order) {
   const f = (order.fulfillments || [])[0];
   const online = isOnline(order, f);
   if (f && f.state === "CANCELED") return { reason: "canceled" };
-  if (online && f && GONE_FULFILLMENT.has(f.state)) {
+  // Picked up in Square because the board told it so (Handed off here) is
+  // kept as a ticket, hidden while it's handed off, so Undo on either
+  // screen can still bring it back after Square has heard (client
+  // 2026-11-10: a wrong Handed off vanished from the kitchen board for good).
+  const doneHere = online && f && f.state === "COMPLETED" && !!markedDone[order.id];
+  if (online && f && GONE_FULFILLMENT.has(f.state) && !doneHere) {
     return { reason: `front already marked it ${f.state.toLowerCase()}` };
   }
 
@@ -314,6 +319,8 @@ function toTicket(order) {
     bagCheck,
     // Marked ready in Order Manager: the customer has been texted.
     squareReady: !!(online && f && f.state === "PREPARED"),
+    // Already picked up in Square (by the board's Handed off).
+    squareDone: doneHere,
     unpaid,
     toGo,
     due: unpaid && due ? due / 100 : null,
@@ -362,6 +369,7 @@ function outOfWindow(t, now, ahead = t.leadMinutes || cfg.showAheadMinutes) {
 function goneReason(t) {
   if (bumped[t.id]) return "cleared with Done";
   if (canceled[t.id]) return "not paid; canceled at the front";
+  if (t.squareDone && handedOff[t.id]) return "picked up (handed off at the front)";
   // A Ready the board wrote itself follows Done/Undo, so Undo still
   // brings the ticket back after Square has been told.
   if (t.squareReady && !markedReady[t.id]) return "front already marked it prepared";
