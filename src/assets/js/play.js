@@ -1,0 +1,891 @@
+/* ============================================================
+   Order Up — the game at /play.
+
+   A short-order cook's week at The Café: tickets on the rail, food on the
+   flat-top, a plate, Send. One week is a run, one day is a shift, and after
+   close you pick up gear and tricks for the rest of the week.
+
+   No libraries, no images, no server. The page (src/play.njk) carries the
+   kitchen's fixed parts and the sprite sheet; everything that can be tuned
+   without touching code is data in src/_data/game.json, read here as D.
+   The plan and the rules of the look are in game/README.md.
+
+   Shape of this file:
+     1. setup, the save, sound
+     2. the run (G) and the day (T)
+     3. the kitchen: tickets, flat-top, plate, send
+     4. what the items do
+     5. family at the counter
+     6. drawing the kitchen
+     7. the paper screens: dawn, after close, week over, Recipe Box, how to
+     8. taps, the loop, fitting the phone
+
+   Saved on the phone only (localStorage, always in try/catch): best week,
+   weeks played, what's been served, the sound setting. Nothing is sent
+   anywhere.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var dataEl = document.getElementById('ou-data');
+  var stage = document.getElementById('ou-stage');
+  if (!dataEl || !stage) return;
+
+  var D = JSON.parse(dataEl.textContent);
+  var TU = D.tuning;
+  var W = 360;                         // the stage's width; fit() scales it to the phone
+  var DEBUG = /[?&]debug\b/.test(location.search);
+
+  var $ = function (sel) { return stage.querySelector(sel); };
+  var rand = Math.random;
+  var pick = function (a) { return a[Math.floor(rand() * a.length)]; };
+  var shuffle = function (a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rand() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var money = function (n) { return '$' + Math.round(n); };
+  var plural = function (n, one, many) { return n + ' ' + (n === 1 ? one : many); };
+
+  /* One sprite from the sheet. `style` carries a cooking food's colours. */
+  function spr(name, cls, style) {
+    return '<svg class="ou-i' + (cls ? ' ' + cls : '') + '" viewBox="0 0 64 64" aria-hidden="true" focusable="false"' +
+      (style ? ' style="' + style + '"' : '') + '><use href="#s-' + name + '"/></svg>';
+  }
+  function partSprite(id, cls, raw) {
+    var p = D.parts[id];
+    var style = raw && p.raw ? '--food:' + p.raw + ';' + (p.raw2 ? '--food2:' + p.raw2 + ';' : '') + '--marks:0' : '';
+    return spr(p.sprite, cls, style);
+  }
+
+  /* ---------- 1. the save ---------- */
+  var KEY = 'orderup.v1';
+  var save = { best: 0, weeks: 0, wins: 0, served: {}, sound: false, seen: false };
+  try {
+    var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (stored && typeof stored === 'object') for (var k in save) if (k in stored) save[k] = stored[k];
+    if (!save.served || typeof save.served !== 'object') save.served = {};
+  } catch (e) { /* a private window: start fresh, nothing breaks */ }
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* same */ } }
+
+  /* ---------- sound: made here, no files. Off until it's turned on. ---------- */
+  var ac = null;
+  function audio() {
+    if (!save.sound) return null;
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === 'suspended') ac.resume();
+      return ac;
+    } catch (e) { return null; }
+  }
+  function tone(freq, dur, type, vol, slideTo, delay) {
+    var a = audio(); if (!a) return;
+    var t0 = a.currentTime + (delay || 0);
+    var o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t0);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+    g.gain.setValueAtTime(vol || 0.07, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function hiss(dur, vol) {
+    var a = audio(); if (!a) return;
+    var n = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, n, a.sampleRate), ch = buf.getChannelData(0);
+    for (var i = 0; i < n; i++) ch[i] = (rand() * 2 - 1) * (1 - i / n);
+    var src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+    f.type = 'highpass'; f.frequency.value = 3200; g.gain.value = vol || 0.05;
+    src.buffer = buf; src.connect(f); f.connect(g); g.connect(a.destination); src.start();
+  }
+  var sfx = {
+    tap: function () { tone(540, 0.05, 'triangle', 0.05); },
+    sizzle: function () { hiss(0.35, 0.05); },
+    done: function () { tone(880, 0.12, 'sine', 0.05); },
+    bell: function () { tone(1320, 0.5, 'sine', 0.08); tone(1980, 0.35, 'sine', 0.04, 0, 0.05); },
+    ticket: function () { tone(720, 0.04, 'square', 0.025); tone(720, 0.04, 'square', 0.025, 0, 0.07); },
+    bad: function () { tone(170, 0.16, 'square', 0.035); },
+    spill: function () { tone(320, 0.45, 'sawtooth', 0.045, 80); },
+    buy: function () { tone(660, 0.09, 'triangle', 0.06); tone(990, 0.16, 'triangle', 0.06, 0, 0.08); },
+    win: function () { [660, 830, 990, 1320].forEach(function (f, i) { tone(f, 0.22, 'triangle', 0.06, 0, i * 0.12); }); },
+    talk: function () { tone(300, 0.07, 'sine', 0.04); tone(360, 0.07, 'sine', 0.04, 0, 0.08); }
+  };
+  function buzz(ms) { if (save.sound && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { /* no matter */ } } }
+
+  /* ---------- 2. the run and the day ---------- */
+  var G = null;      // the week: day, tips to spend, what's owned
+  var T = null;      // the shift being played
+  var screen = 'title';
+  var uid = 0;
+  var speed = 1;     // debug only
+
+  function has(id) { return (G && G.items[id]) || 0; }
+
+  function newRun() {
+    G = { day: 0, tips: 0, earned: 0, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [] };
+    showDawn();
+  }
+
+  function startDay(special) {
+    var day = D.days[G.day];
+    T = {
+      t: 0, len: TU.dayLength, phase: 'breakfast', bins: 'breakfast', closing: false, ended: false, paused: false,
+      tickets: [], grill: [null, null, null, null, null, null], plate: [],
+      cups: TU.cups, spawnIn: 1.2, seq: 1, served: 0, walk: 0, tips: 0,
+      special: special, dry: 0, lineT: 0, urnDone: false,
+      cookies: has('cookie'),
+      usualAt: has('regular') ? [3 + Math.floor(rand() * 3), 9 + Math.floor(rand() * 4)] : [],
+      familyAt: null, fam: null, bubbles: [], cat: null, endIn: null, lastClock: '', lastSky: -1
+    };
+    if (rand() * 100 < day.family) {
+      var lunchStart = TU.breakfastShare * T.len;
+      T.familyAt = lunchStart + 6 + rand() * (T.len - lunchStart - 26);
+    }
+    dirtyAll();
+    show('shift');
+    $('#ou-pausebox').hidden = true;
+    $('#ou-bubbles').innerHTML = '';
+    banner(day.name, 'Open at 6am. Breakfast first.');
+  }
+
+  function usable() { return Math.min(6, TU.griddle + 2 * has('flattop')); }
+
+  /* The clock runs 6am to 2pm, but breakfast (to 11am) and lunch each get the
+     share of the shift game.json gives them, so it ticks at two speeds. */
+  function minutesNow() {
+    var bs = TU.breakfastShare * T.len;
+    if (T.t < bs) return 360 + (T.t / bs) * 300;
+    return 660 + Math.min(1, (T.t - bs) / (T.len - bs)) * 180;
+  }
+  function clockText(min) {
+    min = Math.floor(min / 5) * 5;
+    var h = Math.floor(min / 60), m = min % 60;
+    return ((h + 11) % 12 + 1) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? 'am' : 'pm');
+  }
+
+  /* ---------- 3. the kitchen ---------- */
+  function makeTicket(recipe, o) {
+    var day = D.days[G.day];
+    var t = {
+      id: ++uid, n: T.seq++, rid: recipe.id, name: recipe.name, when: recipe.when || 'lunch', parts: recipe.parts.slice(),
+      age: 0, togo: false, usual: false, special: false, family: false, catering: false, boarded: false, late: false, auto: null
+    };
+    for (var key in o) t[key] = o[key];
+    t.total = (TU.waitBase + TU.waitPerPart * t.parts.length) * day.patience + 3 * has('refills');
+    if (t.togo && has('clamshell')) t.total += 8;
+    if (t.family) t.total = D.family.wait;
+    if (t.catering) t.total = 1;
+    t.left = t.total;
+    if (has('counter') && t.parts.length === 1 && !t.family && !t.catering) t.auto = 2.5;
+    return t;
+  }
+
+  function spawnTicket() {
+    var day = D.days[G.day], lunch = T.bins === 'lunch', recipe, o = {};
+    if (lunch && rand() * 100 < TU.specialShare) {
+      recipe = { id: 'sp-' + T.special.id, name: T.special.name, when: 'lunch', parts: ['special'].concat(T.special.sides.map(function () { return 'side'; })) };
+      o.special = true;
+    } else if (!lunch && has('rollcase') && rand() < 0.22) {
+      recipe = D.rollRecipe;
+    } else {
+      var gentle = !save.seen && G.day === 0 && T.seq <= 2;
+      var pool = D.recipes.filter(function (r) { return r.when === (lunch ? 'lunch' : 'breakfast') && r.tier <= (gentle ? 1 : day.tier); });
+      var fresh = pool.filter(function (r) { return !T.tickets.some(function (t) { return t.rid === r.id; }); });
+      recipe = pick(fresh.length ? fresh : pool);
+    }
+    if (lunch && rand() * 100 < TU.toGo) o.togo = true;
+    if (T.usualAt.indexOf(T.seq) !== -1) o.usual = true;
+    T.tickets.push(makeTicket(recipe, o));
+    dirty.rail = true;
+    sfx.ticket();
+  }
+
+  /* Does the plate fill a ticket? Three ways, best first:
+       exact   the plate is the ticket
+       pickle  the ticket plus one pickle spear (any plate can take one: $1 more)
+       wild    Big Dill: a pickle standing in for one missing part */
+  function count(list) { var c = {}; list.forEach(function (p) { c[p] = (c[p] || 0) + 1; }); return c; }
+  function compare(plate, parts) {
+    var a = count(plate), b = count(parts), extra = [], missing = [], key;
+    for (key in a) for (var i = 0; i < a[key] - (b[key] || 0); i++) extra.push(key);
+    for (key in b) for (var j = 0; j < b[key] - (a[key] || 0); j++) missing.push(key);
+    return { extra: extra, missing: missing };
+  }
+  function byUrgency(a, b) { return (a.catering ? a.n : a.left) - (b.catering ? b.n : b.left); }
+  function findMatch() {
+    if (!T.plate.length) return null;
+    var list = T.tickets.slice().sort(byUrgency), i, c;
+    for (i = 0; i < list.length; i++) { c = compare(T.plate, list[i].parts); if (!c.extra.length && !c.missing.length) return { t: list[i], kind: 'exact' }; }
+    for (i = 0; i < list.length; i++) { c = compare(T.plate, list[i].parts); if (!c.missing.length && c.extra.length === 1 && c.extra[0] === 'pickle') return { t: list[i], kind: 'pickle' }; }
+    if (has('bigdill')) for (i = 0; i < list.length; i++) { c = compare(T.plate, list[i].parts); if (c.missing.length === 1 && c.extra.length === 1 && c.extra[0] === 'pickle') return { t: list[i], kind: 'wild' }; }
+    return null;
+  }
+  /* The ticket the plate is heading for: the most urgent one it still fits. */
+  function aimTicket() {
+    if (!T.plate.length) return null;
+    var list = T.tickets.slice().sort(byUrgency);
+    for (var i = 0; i < list.length; i++) {
+      var c = compare(T.plate, list[i].parts);
+      var spare = c.extra.filter(function (p) { return p !== 'pickle'; });
+      if (!spare.length && c.extra.length <= 1) {
+        var left = T.plate.slice(), have = list[i].parts.map(function (p) { var at = left.indexOf(p); if (at === -1) return false; left.splice(at, 1); return true; });
+        return { t: list[i], have: have };
+      }
+    }
+    return null;
+  }
+
+  function tapBin(part) {
+    var info = D.parts[part];
+    if (!binOpen(part)) { return; }
+    if (info.cook) {
+      var n = usable(), at = -1;
+      for (var i = 0; i < n; i++) if (!T.grill[i]) { at = i; break; }
+      if (at === -1) { toast('The flat-top is full'); sfx.bad(); return; }
+      T.grill[at] = { part: part, t: 0, state: 'raw', gone: 0 };
+      dirty.grill = dirty.bins = true; sfx.sizzle();
+    } else {
+      if (T.plate.length >= TU.plateMax) { toast('The plate is full'); sfx.bad(); return; }
+      T.plate.push(part); T.plateNew = T.plate.length - 1;
+      dirty.plate = dirty.rail = true; sfx.tap();
+    }
+  }
+  function tapSpot(i) {
+    var it = T.grill[i]; if (!it) return;
+    if (it.state === 'raw') { hintFlash('Not done yet'); return; }
+    if (it.state === 'burnt') { T.grill[i] = null; dirty.grill = dirty.bins = true; sfx.tap(); return; }
+    if (T.plate.length >= TU.plateMax) { toast('The plate is full'); sfx.bad(); return; }
+    T.plate.push(it.part); T.plateNew = T.plate.length - 1; T.grill[i] = null;
+    dirty.grill = dirty.plate = dirty.rail = dirty.bins = true; sfx.tap();
+  }
+  function tapPlateItem(i) { T.plate.splice(i, 1); dirty.plate = dirty.rail = true; sfx.tap(); }
+  function scrap() { if (!T.plate.length) return; T.plate = []; dirty.plate = dirty.rail = true; sfx.tap(); }
+
+  function send() {
+    if (!T.plate.length) return;
+    var m = findMatch();
+    if (!m) {
+      toast('Not on a ticket'); sfx.bad();
+      var pl = $('#ou-plate'); pl.classList.remove('is-bad'); void pl.offsetWidth; pl.classList.add('is-bad');
+      return;
+    }
+    T.plate = []; dirty.plate = true;
+    complete(m.t, m.kind, false);
+  }
+
+  /* A ticket goes out: by Send, or by a helper (`by` names who). */
+  function complete(t, kind, by) {
+    var tip = t.parts.length + (t.special ? 2 : 0);
+    var frac = t.left / t.total;
+    if (!t.catering) tip += frac > 0.5 ? 2 : frac > 0.25 ? 1 : 0;
+    if (t.catering) tip += 2;
+    if (t.rid === 'roll') tip = 3;
+    if (kind === 'pickle') tip += 1 + has('picklejar');
+    else if (t.parts.indexOf('pickle') !== -1 || kind === 'wild') tip += has('picklejar');
+    tip += has('tipjar');
+    var mult = 1;
+    if (t.special && has('drink')) mult *= 2;
+    if (t.n <= 3 && has('earlybird') && !t.catering) mult *= 2;
+    if (t.usual) mult *= 3;
+    tip *= mult;
+    if (t.family) tip = 0;
+
+    removeTicket(t);
+    T.served++; T.tips += tip; G.tips += tip; G.earned += tip;
+    save.served[t.rid] = (save.served[t.rid] || 0) + 1;
+    if (has('bell')) T.tickets.forEach(function (o) { if (!o.catering) o.left = Math.min(o.total, o.left + 2); });
+    dirty.hud = dirty.rail = true; popTips();
+    sfx.bell();
+
+    if (t.family) { familyFed(t); return; }
+    var words = by ? by + ' sent #' + t.n : (kind === 'pickle' ? 'Order up, with a pickle' : kind === 'wild' ? 'Order up. Big Dill.' : 'Order up');
+    if (t.usual) words = 'The usual';
+    toast(words + ' · ' + money(tip));
+
+    if (t.catering) {
+      T.cat.done++;
+      if (T.cat.queue.length) { T.tickets.push(makeTicket(T.cat.queue.shift(), { catering: true })); }
+      if (T.cat.done >= T.cat.n) cateringDone();
+    }
+  }
+  function removeTicket(t) {
+    var at = T.tickets.indexOf(t);
+    if (at !== -1) T.tickets.splice(at, 1);
+    dirty.rail = true;
+  }
+
+  function walkOut(t) {
+    removeTicket(t);
+    if (t.family) { familyGone(); toast('They’ll bring it up at dinner.'); return; }
+    T.cups--; T.walk++; T.dry = 0; dirty.hud = true;
+    toast(T.cups > 0 ? 'They left. One coffee down.' : 'They left. That was the last coffee.');
+    sfx.spill(); buzz(90);
+    if (T.cups <= 0) { T.ended = true; setTimeout(function () { weekOver(false, 'coffee'); }, 1100); }
+  }
+
+  /* ---------- the shift, one frame at a time ---------- */
+  function update(dt) {
+    var day = D.days[G.day], i, t;
+
+    if (T.cat) {
+      T.cat.left -= dt;
+      if (T.cat.left <= 0) { T.ended = true; weekOver(false, 'late'); return; }
+    } else {
+      T.t += dt;
+      var bs = TU.breakfastShare * T.len;
+      if (T.phase === 'breakfast' && T.t >= bs) { T.phase = 'lunch'; }
+      // The bins turn over only once the last breakfast ticket is out, so
+      // nobody is left holding a ticket they can no longer make.
+      if (T.phase === 'lunch' && T.bins === 'breakfast' && !T.tickets.some(function (x) { return x.when === 'breakfast'; })) {
+        T.bins = 'lunch'; T.spawnIn = 1.4; dirty.bins = dirty.pass = true;
+        banner('11am', 'Lunch. ' + T.special.name + ' is on.');
+        if (has('urn') && T.cups < TU.cups) { T.cups++; dirty.hud = true; setTimeout(function () { toast('Coffee Urn: one coffee poured again'); }, 1900); }
+      }
+      if (!T.closing && T.t >= T.len) {
+        T.closing = true; dirty.pass = true;
+        if (T.tickets.length) banner('2pm', 'Last call. Finish the rail.');
+      }
+      if (!T.closing) {
+        var open = T.phase === 'breakfast' ? T.bins === 'breakfast' : T.bins === 'lunch';
+        T.spawnIn -= dt;
+        if (open && T.spawnIn <= 0) {
+          if (T.tickets.length < TU.rail) { spawnTicket(); T.spawnIn = day.every * (0.8 + rand() * 0.4); }
+          else T.spawnIn = 0.5;
+        }
+        if (T.familyAt != null && T.bins === 'lunch' && T.t >= T.familyAt && T.tickets.length < TU.rail) familyArrives();
+      }
+      if (T.closing && !T.tickets.length && T.endIn == null) T.endIn = 0.9;
+      if (T.endIn != null) { T.endIn -= dt; if (T.endIn <= 0) { T.ended = true; endDay(); return; } }
+    }
+
+    // tickets
+    for (i = T.tickets.length - 1; i >= 0; i--) {
+      t = T.tickets[i]; t.age += dt;
+      if (t.catering) continue;
+      t.left -= dt;
+      if (t.auto != null) { t.auto -= dt; if (t.auto <= 0) { complete(t, 'exact', 'Counter Help'); continue; } }
+      if (t.left <= 0.4 && !t.boarded && has('board') && !t.family) { t.boarded = true; t.left += 6; toast('Kitchen Board: #' + t.n + ' waits a little longer'); }
+      if (t.left <= 0) walkOut(t);
+    }
+    if (T.ended) return;
+
+    // the flat-top
+    var faster = 1 + 0.2 * has('press'), burnAfter = day.burn + 5 * has('shelf'), gold = has('goldspat');
+    for (i = 0; i < T.grill.length; i++) {
+      var it = T.grill[i]; if (!it) continue;
+      var cook = D.parts[it.part].cook / faster;
+      if (it.state === 'burnt') {
+        if (has('scraper')) { it.gone += dt; if (it.gone > 0.9) { T.grill[i] = null; dirty.grill = dirty.bins = true; } }
+        continue;
+      }
+      it.t += dt;
+      if (it.state === 'raw' && it.t >= cook) { it.state = 'done'; dirty.grill = true; sfx.done(); }
+      else if (it.state === 'done' && !gold && it.t >= cook + burnAfter) { it.state = 'burnt'; dirty.grill = true; sfx.bad(); }
+    }
+
+    // helpers
+    if (has('linecook')) {
+      T.lineT += dt;
+      if (T.lineT >= 14) {
+        var mine = T.tickets.filter(function (x) { return !x.family; }).sort(function (a, b) { return a.n - b.n; })[0];
+        if (mine) { T.lineT = 0; complete(mine, 'exact', 'Line Cook'); } else T.lineT = 14;
+      }
+    }
+    if (has('bottomless') && T.cups < TU.cups && T.cups > 0) {
+      T.dry += dt;
+      if (T.dry >= 25) { T.dry = 0; T.cups++; dirty.hud = true; toast('Bottomless Coffee: poured again'); }
+    }
+
+    // family
+    if (T.fam) {
+      T.fam.say -= dt;
+      if (T.fam.say <= 0) { T.fam.say = D.family.every; if (T.bubbles.length < D.family.maxBubbles) addBubble(); }
+    }
+  }
+
+  function endDay() {
+    G.perDay[G.day] = T.tips;
+    save.seen = true; persist();
+    clearBubbles();
+    if (G.day >= D.days.length - 1) startCatering(); else showClose();
+  }
+
+  /* ---------- Friday's catering order ---------- */
+  function startCatering() {
+    var c = D.catering, queue = shuffle(c.platters).slice(0, 5);
+    T.ended = false; T.closing = true; T.endIn = null; T.phase = 'catering'; T.bins = 'lunch';
+    T.plate = []; T.fam = null; T.familyAt = null;
+    T.cat = { left: c.seconds, total: c.seconds, queue: queue, n: queue.length, done: 0 };
+    T.tipsBefore = T.tips;
+    for (var i = 0; i < TU.rail && T.cat.queue.length; i++) T.tickets.push(makeTicket(T.cat.queue.shift(), { catering: true }));
+    dirtyAll();
+    banner('Catering order', plural(T.cat.n, 'platter', 'platters') + ', one clock.');
+  }
+  function cateringDone() {
+    var bonus = D.catering.bonus + Math.floor(T.cat.left / 4);
+    T.tips += bonus; G.tips += bonus; G.earned += bonus;
+    T.ended = true;
+    G.cater = T.tips - T.tipsBefore;
+    setTimeout(function () { weekOver(true, 'win'); }, 900);
+  }
+
+  /* ---------- 5. family at the counter ----------
+     They eat free and they talk. Each line sits on top of the kitchen until
+     it's tapped, which is the whole problem. Words only, never a face. */
+  function familyArrives() {
+    T.familyAt = null;
+    var pool = D.recipes.filter(function (r) { return r.when === 'lunch' && r.tier <= 2 && r.parts.length > 1; });
+    var who = pick(D.family.who);
+    var t = makeTicket(pick(pool), { family: true, who: who });
+    T.tickets.push(t);
+    T.fam = { who: who, say: 1.2 };
+    dirty.rail = true;
+    banner(who + ' stopped by', 'On the house. They want to talk.');
+    sfx.talk();
+  }
+  function addBubble() {
+    var box = $('#ou-bubbles'), h = stage.offsetHeight, bw = 196, x, y, tries = 0, ok;
+    do {
+      x = 6 + rand() * (W - bw - 12); y = 172 + rand() * Math.max(40, h - 172 - 150); ok = true;
+      for (var i = 0; i < T.bubbles.length; i++) if (Math.abs(T.bubbles[i].x - x) < 90 && Math.abs(T.bubbles[i].y - y) < 60) ok = false;
+    } while (!ok && ++tries < 8);
+    var used = T.bubbles.map(function (b) { return b.line; });
+    var lines = D.family.lines.filter(function (l) { return used.indexOf(l) === -1; });
+    var b = { id: ++uid, x: x, y: y, line: pick(lines.length ? lines : D.family.lines) };
+    T.bubbles.push(b);
+    var el = document.createElement('button');
+    el.className = 'ou-bubble'; el.setAttribute('data-act', 'bubble'); el.setAttribute('data-id', b.id);
+    el.style.left = Math.round(x) + 'px'; el.style.top = Math.round(y) + 'px';
+    el.innerHTML = '<span class="ou-label">' + esc(T.fam.who) + '</span><b>' + esc(b.line) + '</b><small>Tap to answer</small>';
+    box.appendChild(el); sfx.talk();
+  }
+  function tapBubble(id) {
+    for (var i = 0; i < T.bubbles.length; i++) if (String(T.bubbles[i].id) === String(id)) T.bubbles.splice(i, 1);
+    var el = stage.querySelector('.ou-bubble[data-id="' + id + '"]'); if (el) el.remove();
+    toast(pick(D.family.replies)); sfx.tap();
+  }
+  function clearBubbles() { if (T) T.bubbles = []; $('#ou-bubbles').innerHTML = ''; }
+  function familyGone() { T.fam = null; clearBubbles(); }
+  function familyFed(t) {
+    var who = t.who; familyGone();
+    var gift = rand() * 100 < D.family.cookieChance;
+    if (gift) { T.cookies++; dirty.pass = true; }
+    if (T.cups < TU.cups) { T.cups++; dirty.hud = true; toast(who + ' poured you a coffee' + (gift ? ' and left a cookie' : '')); }
+    else { T.tips += D.family.leave; G.tips += D.family.leave; G.earned += D.family.leave; dirty.hud = true; popTips(); toast(who + ' left ' + money(D.family.leave) + ' on the counter' + (gift ? ' and a cookie' : '')); }
+  }
+
+  function eatCookie() {
+    if (!T.cookies || !T.tickets.length) { if (T.cookies) toast('Save it for a full rail'); return; }
+    T.cookies--; dirty.pass = true;
+    T.tickets.forEach(function (t) { if (!t.catering) { t.left = t.total; t.late = false; } });
+    if (T.cat) T.cat.left = Math.min(T.cat.total, T.cat.left + 15);
+    dirty.rail = true;
+    toast(T.cat ? 'Cookies for the crew: 15 more seconds' : 'Cookies for the line: every clock starts over');
+    sfx.buy();
+  }
+
+  /* ---------- 6. drawing the kitchen ---------- */
+  var dirty = {};
+  function dirtyAll() { dirty = { hud: true, rail: true, grill: true, plate: true, bins: true, pass: true }; }
+
+  function binOpen(part) {
+    if (part === 'roll') return has('rollcase') && T.bins === 'breakfast';
+    if (D.bins.lunchOnly.indexOf(part) !== -1 && T.bins !== 'lunch') return false;
+    if (part === 'special' && T.cat) return false;
+    return true;
+  }
+
+  function drawHud() {
+    $('#ou-day').textContent = T.cat ? 'Catering' : D.days[G.day].name;
+    var cups = '';
+    for (var i = 0; i < TU.cups; i++) cups += '<span' + (i < T.cups ? '' : ' class="is-spilled"') + '>' + spr(i < T.cups ? 'cup' : 'cup-spilled') + '</span>';
+    var el = $('#ou-cups'); el.innerHTML = cups;
+    el.setAttribute('aria-label', plural(T.cups, 'coffee', 'coffees') + ' left');
+    $('#ou-tips').textContent = money(T.tips);
+  }
+  function popTips() { var el = $('#ou-tips'); el.classList.remove('is-pop'); void el.offsetWidth; el.classList.add('is-pop'); }
+
+  function drawRail() {
+    var rail = $('#ou-rail'), aim = aimTicket();
+    if (!T.tickets.length) {
+      rail.innerHTML = '<div class="ou-rail-empty">' + (T.closing ? 'The rail is clear.' : 'No tickets. Get ahead: start something cooking.') + '</div>';
+      return;
+    }
+    rail.innerHTML = T.tickets.map(function (t) {
+      var have = aim && aim.t === t ? aim.have : null, cls = 'ou-ticket', flag = '';
+      if (t.age < 0.25) cls += ' is-new';
+      if (t.togo) cls += ' is-togo';
+      if (t.late) cls += ' is-late';
+      if (have) cls += ' is-aim';
+      if (t.special) { cls += ' is-special'; flag = 'Special'; }
+      if (t.usual) { cls += ' is-usual'; flag = 'x3'; }
+      if (t.family) { cls += ' is-family'; flag = 'Free'; }
+      var label = t.family ? esc(t.who.replace(/^Your /, '')) :t.catering ? 'Catering' : '#' + t.n + (t.late ? ' · Late' : t.togo ? ' · To go' : t.usual ? ' · The usual' : '');
+      var parts = t.parts.map(function (p, i) { return '<span' + (have && have[i] ? ' class="is-have"' : '') + '>' + partSprite(p) + '</span>'; }).join('');
+      return '<div class="' + cls + '" data-id="' + t.id + '"' + (flag ? ' data-flag="' + flag + '"' : '') + '>' +
+        '<span class="ou-label">' + label + '</span><span class="ou-tname">' + esc(t.name) + '</span>' +
+        '<span class="ou-parts" aria-label="' + esc(t.parts.map(function (p) { return D.parts[p].name; }).join(', ')) + '">' + parts + '</span>' +
+        '<span class="ou-timer"><i></i></span></div>';
+    }).join('');
+    T.tickets.forEach(function (t) { t.bar = rail.querySelector('[data-id="' + t.id + '"] .ou-timer i'); });
+  }
+
+  function drawGrill() {
+    var n = usable(), html = '';
+    for (var i = 0; i < 6; i++) {
+      var it = T.grill[i];
+      if (i >= n) { html += '<div class="ou-spot is-locked"></div>'; continue; }
+      if (!it) { html += '<div class="ou-spot"></div>'; continue; }
+      var name = D.parts[it.part].name;
+      html += '<button class="ou-spot is-' + it.state + '" data-act="spot" data-i="' + i + '" aria-label="' + name + ', ' + (it.state === 'raw' ? 'cooking' : it.state) + '">' +
+        '<svg class="ou-ring" viewBox="0 0 64 64" aria-hidden="true"><circle class="ou-ring-bg" cx="32" cy="32" r="29"/><circle class="ou-ring-fg" cx="32" cy="32" r="29"/></svg>' +
+        '<span class="ou-food ou-sh">' + partSprite(it.part, '', it.state === 'raw') + '</span>' +
+        (it.state === 'burnt' ? '<svg class="ou-smoke" viewBox="0 0 30 16" aria-hidden="true"><path class="ou-steam" d="M5 15c-4-4 4-6 0-11M15 15c-4-4 4-6 0-11M25 15c-4-4 4-6 0-11" stroke="#C5CFD3" stroke-width="2.500" fill="none" stroke-linecap="round"/></svg>' : '') +
+        '</button>';
+    }
+    var el = $('#ou-griddle'); el.innerHTML = html;
+    for (var j = 0; j < 6; j++) if (T.grill[j]) T.grill[j].fg = el.children[j].querySelector('.ou-ring-fg');
+  }
+
+  var LAYOUT = {
+    1: [[50, 50]], 2: [[34, 50], [66, 50]], 3: [[50, 33], [32, 64], [68, 64]],
+    4: [[33, 34], [67, 34], [33, 67], [67, 67]], 5: [[50, 50], [28, 30], [72, 30], [28, 71], [72, 71]]
+  };
+  function drawPlate() {
+    var lay = LAYOUT[T.plate.length] || [];
+    $('#ou-plate').innerHTML = spr('plate', 'ou-sh') + T.plate.map(function (p, i) {
+      return '<button class="ou-pi' + (i === T.plateNew ? ' is-new' : '') + '" data-act="pi" data-i="' + i + '" style="left:' + lay[i][0] + '%;top:' + lay[i][1] + '%" aria-label="Take off ' + D.parts[p].name + '">' + partSprite(p) + '</button>';
+    }).join('');
+    T.plateNew = -1;
+    var m = findMatch(), sendEl = $('#ou-send');
+    sendEl.className = 'ou-send' + (m ? ' is-ready' : ' is-off');
+    $('#ou-scrap').disabled = !T.plate.length;
+    drawHint();
+  }
+
+  var hintHold = 0;
+  function hintFlash(text) { var el = $('#ou-hint'); el.textContent = text; el.className = 'ou-hint is-bad'; hintHold = 1.1; }
+  function drawHint() {
+    if (hintHold > 0) return;
+    var el = $('#ou-hint'), text = '', bad = false, m = T.plate.length ? findMatch() : null;
+    var coach = !save.seen && G.day === 0 && !T.cat;
+    if (T.plate.length) {
+      if (m) text = coach ? 'That’s a ticket. Tap Send.' : 'Ready: ' + m.t.name;
+      else { var aim = aimTicket(); if (aim) text = 'For ' + aim.t.name; else { text = 'Not on a ticket. Tap food to take it off.'; bad = true; } }
+    } else if (coach) {
+      var doneOne = T.grill.some(function (x) { return x && x.state === 'done'; }), rawOne = T.grill.some(function (x) { return x && x.state === 'raw'; });
+      text = doneOne ? 'Done. Tap it to plate it.' : rawOne ? 'Cooking. Wait for the ring.' : T.tickets.length ? 'Tap the bins a ticket shows.' : 'Tickets land up top.';
+    } else if (T.cat) {
+      text = plural(T.cat.n - T.cat.done, 'platter', 'platters') + ' to go';
+    }
+    el.textContent = text; el.className = 'ou-hint' + (bad ? ' is-bad' : '');
+  }
+
+  function drawBins() {
+    var full = !T.grill.slice(0, usable()).some(function (x) { return !x; });
+    $('#ou-bins').innerHTML = D.bins[T.bins].map(function (part) {
+      var p = D.parts[part];
+      if (part === 'roll' && !binOpen(part)) return '<span></span>';
+      var open = binOpen(part), cls = 'ou-bin' + (p.cook ? ' is-cook' : '') + (open ? '' : ' is-off') + (open && p.cook && full ? ' is-full' : '');
+      return '<button class="' + cls + '" data-act="bin" data-part="' + part + '"' + (open ? '' : ' aria-disabled="true"') + '>' + partSprite(part, 'ou-sh') + '<span class="ou-label">' + p.name + '</span></button>';
+    }).join('');
+  }
+
+  function drawPass() {
+    $('#ou-phase').textContent = T.cat ? 'Catering' : T.closing ? 'Last call' : T.bins === 'lunch' ? 'Lunch' : T.phase === 'lunch' ? 'Last breakfast' : 'Breakfast';
+    var html = '';
+    if (has('counter')) html += '<span title="Counter Help">' + spr('apron') + '</span>';
+    if (has('linecook')) html += '<span title="Line Cook">' + spr('hat') + '<span class="ou-meter"><i id="ou-line"></i></span></span>';
+    if (T.cookies > 0) html += '<button class="ou-cookie" data-act="cookie" aria-label="Cookie: start every ticket’s clock over. ' + T.cookies + ' left">' + spr('cookie') + '<b>' + T.cookies + '</b></button>';
+    $('#ou-crew').innerHTML = html;
+    T.lineEl = stage.querySelector('#ou-line');
+  }
+
+  /* The strip of sky in the window: dawn at 6am, gold by 8, blue by 11. */
+  var SKY = [
+    [360, '#9C8BC4', '#F4A9B8', '#F8BE8A'], [480, '#F4A9B8', '#F8BE8A', '#F7D88C'],
+    [660, '#9FD3E3', '#BFE2EC', '#F7E6B8'], [780, '#7EC4DA', '#A9DCEA', '#D4EEF4'], [840, '#7EC4DA', '#A9DCEA', '#D4EEF4']
+  ];
+  function mix(a, b, f) {
+    var out = '#';
+    for (var i = 1; i < 7; i += 2) { var x = parseInt(a.substr(i, 2), 16), y = parseInt(b.substr(i, 2), 16), v = Math.round(x + (y - x) * f).toString(16); out += v.length < 2 ? '0' + v : v; }
+    return out;
+  }
+  function drawSky(min) {
+    var pass = $('#ou-pass');
+    if (T.cat) { pass.style.setProperty('--sky1', '#6E5E9E'); pass.style.setProperty('--sky2', '#E88FA0'); pass.style.setProperty('--sky3', '#F59E5E'); pass.style.setProperty('--sun-y', '40px'); return; }
+    var i = 0; while (i < SKY.length - 2 && min > SKY[i + 1][0]) i++;
+    var a = SKY[i], b = SKY[i + 1], f = Math.max(0, Math.min(1, (min - a[0]) / (b[0] - a[0])));
+    for (var k = 1; k <= 3; k++) pass.style.setProperty('--sky' + k, mix(a[k], b[k], f));
+    var day = (min - 360) / 480;
+    pass.style.setProperty('--sun-x', (8 + day * 80) + '%');
+    pass.style.setProperty('--sun-y', (22 - Math.sin(Math.min(1, day * 1.15) * Math.PI) * 20) + 'px');
+  }
+
+  function draw(dt) {
+    if (hintHold > 0) { hintHold -= dt; if (hintHold <= 0) { hintHold = 0; drawHint(); } }
+    // late flags flip here so a ticket shakes once, when it turns
+    T.tickets.forEach(function (t) {
+      if (t.catering) return;
+      var late = t.left / t.total < TU.lateAt;
+      if (late !== t.late) { t.late = late; dirty.rail = true; }
+    });
+    if (dirty.hud) drawHud();
+    if (dirty.rail) { drawRail(); if (!dirty.plate) drawPlate(); }
+    if (dirty.grill) drawGrill();
+    if (dirty.plate) drawPlate();
+    if (dirty.bins) drawBins();
+    if (dirty.pass) drawPass();
+    dirty = {};
+
+    // the cheap, every-frame parts
+    var i, t;
+    for (i = 0; i < T.tickets.length; i++) {
+      t = T.tickets[i]; if (!t.bar) continue;
+      var f = t.catering ? T.cat.left / T.cat.total : t.left / t.total;
+      t.bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, f)).toFixed(3) + ')';
+    }
+    var day = D.days[G.day], faster = 1 + 0.2 * has('press'), burnAfter = day.burn + 5 * has('shelf'), gold = has('goldspat');
+    for (i = 0; i < T.grill.length; i++) {
+      var it = T.grill[i]; if (!it || !it.fg || it.state === 'burnt') continue;
+      var cook = D.parts[it.part].cook / faster;
+      var left = it.state === 'raw' ? 1 - it.t / cook : gold ? 0 : (it.t - cook) / burnAfter;
+      it.fg.style.strokeDashoffset = (182.2 * Math.max(0, Math.min(1, left))).toFixed(1);
+    }
+    if (T.lineEl) T.lineEl.style.transform = 'scaleX(' + Math.min(1, T.lineT / 14).toFixed(3) + ')';
+
+    var clock;
+    if (T.cat) { var s = Math.max(0, Math.ceil(T.cat.left)); clock = Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60); }
+    else clock = clockText(minutesNow());
+    if (clock !== T.lastClock) { T.lastClock = clock; $('#ou-clock').textContent = clock; drawSky(T.cat ? 0 : minutesNow()); }
+  }
+
+  var toastTimer = 0, bannerTimer = 0;
+  function toast(text) {
+    var el = $('#ou-toast'); el.textContent = text; el.classList.add('is-on');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('is-on'); }, 1700);
+  }
+  function banner(title, sub) {
+    var el = $('#ou-banner'); el.innerHTML = '<b>' + esc(title) + '</b><span>' + esc(sub || '') + '</span>';
+    el.classList.remove('is-on'); void el.offsetWidth; el.classList.add('is-on');
+    clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { el.classList.remove('is-on'); }, 2000);
+  }
+
+  /* ---------- 7. the paper screens ---------- */
+  function show(name) {
+    screen = name;
+    var all = stage.querySelectorAll('.ou-scr');
+    for (var i = 0; i < all.length; i++) all[i].hidden = all[i].getAttribute('data-scr') !== name;
+    var el = stage.querySelector('[data-scr="' + name + '"]'); if (el && el.scrollTo) el.scrollTo(0, 0);
+  }
+  function paper(name, html) { stage.querySelector('[data-scr="' + name + '"]').innerHTML = html; show(name); }
+
+  function ownedRow() {
+    var ids = Object.keys(G.items); if (!ids.length) return '';
+    return '<span class="ou-label">On your line</span><div class="ou-own-row">' + D.items.filter(function (it) { return G.items[it.id]; }).map(function (it) {
+      return '<span class="is-' + it.rarity + '" title="' + esc(it.name) + '">' + spr(it.icon) + (G.items[it.id] > 1 ? '<em>' + G.items[it.id] + '</em>' : '') + '</span>';
+    }).join('') + '</div>';
+  }
+
+  function showDawn() {
+    var day = D.days[G.day], friday = G.day === D.days.length - 1;
+    G.offers = shuffle(D.specials).slice(0, 3);
+    paper('dawn',
+      '<div class="ou-top ou-top--dawn"><span class="ou-kicker">Today’s special</span><h2 class="ou-h">' + day.name + ', 6am</h2><span class="ou-label">Pick the plate for lunch</span></div>' +
+      '<div class="ou-body-pad">' + G.offers.map(function (s, i) {
+        return '<button class="ou-card ou-card--special" data-act="special" data-i="' + i + '">' +
+          '<span class="ou-ci">' + (s.photo ? '<img src="' + esc(s.photo) + '" alt="" loading="lazy">' : spr('special')) + '</span>' +
+          '<span><b>' + esc(s.name) + '</b><span class="ou-ct">' + esc(s.sides.join(', ')) + '</span>' +
+          '<span class="ou-chip">' + (s.sides.length > 1 ? 'Two sides · tips more' : 'One side · quicker') + '</span></span><span></span></button>';
+      }).join('') +
+      '<p class="ou-note">It goes on at 11am. ' + (friday ? 'Friday ends with a catering order: five platters on one clock.' : day.family ? 'Family may stop by at lunch. They eat free, and they talk.' : 'Three walk-outs in a day and the week is over.') + '</p>' +
+      ownedRow() + '</div>');
+  }
+
+  /* Deal `n` different items by rarity. A rarity with nothing left falls back. */
+  function deal(n, not) {
+    var odds = D.odds[Math.min(G.day, D.odds.length - 1)], out = [];
+    var falls = { epic: ['epic', 'rare', 'normal'], rare: ['rare', 'normal', 'epic'], normal: ['normal', 'rare', 'epic'] };
+    for (var k = 0; k < n; k++) {
+      var roll = rand() * 100, rar = roll < odds.epic ? 'epic' : roll < odds.epic + odds.rare ? 'rare' : 'normal', got = null;
+      for (var f = 0; f < 3 && !got; f++) {
+        var pool = D.items.filter(function (it) { return it.rarity === falls[rar][f] && has(it.id) < (it.max || 1) && out.indexOf(it) === -1 && not.indexOf(it.id) === -1; });
+        if (pool.length) got = pick(pool);
+      }
+      if (got) out.push(got);
+    }
+    return out;
+  }
+  function itemCard(it, act, i, extra) {
+    var pips = it.rarity === 'epic' ? '<i></i><i></i><i></i>' : it.rarity === 'rare' ? '<i></i><i></i>' : '<i></i>';
+    return '<button class="ou-card is-' + it.rarity + (extra.cls || '') + '" data-act="' + act + '" data-i="' + i + '">' +
+      '<span class="ou-rar">' + pips + D.rarityNames[it.rarity] + '</span>' +
+      '<span class="ou-ci ou-sh">' + spr(it.icon) + '</span>' +
+      '<span><b>' + esc(it.name) + '</b><span class="ou-ct">' + esc(it.text) + '</span>' + (has(it.id) ? '<span class="ou-own">You have ' + has(it.id) + '</span>' : '') + '</span>' +
+      (extra.price ? '<span class="ou-price">' + extra.price + '</span>' : '<span></span>') + '</button>';
+  }
+
+  function showClose() {
+    G.stage = 'pick'; G.pick = deal(3, []); G.shop = []; G.sold = []; G.reroll = D.reroll.first;
+    drawClose();
+  }
+  function drawClose() {
+    var day = D.days[G.day], next = D.days[G.day + 1], body;
+    if (G.stage === 'pick') {
+      body = '<span class="ou-label">Pick one, free</span>' + G.pick.map(function (it, i) { return itemCard(it, 'pick', i, {}); }).join('') +
+        '<p class="ou-note">One diamond is Normal, two is Rare, three is Epic. The better ones turn up more as the week goes on.</p>';
+    } else {
+      body = '<span class="ou-label">The shop</span>' + G.shop.map(function (it, i) {
+        var sold = G.sold.indexOf(i) !== -1, poor = !sold && G.tips < it.price;
+        return itemCard(it, 'buy', i, { price: sold ? 'Yours' : money(it.price), cls: sold ? ' is-sold' : poor ? ' is-poor' : '' });
+      }).join('') +
+        '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="reroll"' + (G.tips < G.reroll ? ' disabled' : '') + '>Restock · ' + money(G.reroll) + '</button>' +
+        '<button class="ou-btn" data-act="next">Open ' + next.short + '</button></div>';
+    }
+    paper('close',
+      '<div class="ou-top ou-top--wallet"><span class="ou-kicker">After close</span><h2 class="ou-h">' + day.name + ' · ' + money(T.tips) + ' in tips</h2>' +
+      '<span class="ou-label">Closed at 2pm · ' + plural(T.served, 'plate', 'plates') + ' · ' + plural(T.walk, 'walk-out', 'walk-outs') + '</span>' +
+      '<div class="ou-wallet"><span class="ou-label">To spend</span><b>' + money(G.tips) + '</b></div></div>' +
+      '<div class="ou-body-pad">' + body + ownedRow() + '</div>');
+  }
+  function own(it) { G.items[it.id] = (G.items[it.id] || 0) + 1; }
+
+  function weekOver(win, why) {
+    if (!G) return;
+    clearBubbles();
+    var cut = !!T && !T.cat && !win;      // the day itself was cut short
+    if (T && G.perDay[G.day] == null) G.perDay[G.day] = T.cat ? T.tipsBefore : T.tips;
+    if (T && T.cat && G.cater == null) G.cater = T.tips - T.tipsBefore;
+    var best = G.earned > save.best;
+    save.weeks++; if (win) save.wins++; if (best) save.best = G.earned; save.seen = true; persist();
+    if (win) sfx.win();
+    var day = D.days[G.day];
+    var head = win ? ['Week done', 'The catering went out on time.']
+      : why === 'late' ? ['So close', 'The catering went out late.']
+      : why === 'quit' ? ['Week ended', 'Closed early on ' + day.name + '.']
+      : ['Rough week', 'Three coffees down on ' + day.name + '.'];
+    var rows = G.perDay.map(function (tips, i) { return '<div><b>' + D.days[i].short + '</b><span>' + (i === G.day && cut ? 'Closed early' : 'Closed at 2pm') + '</span><strong>' + money(tips) + '</strong></div>'; }).join('');
+    if (G.cater != null) rows += '<div><b>Fri</b><span>Catering' + (win ? ', on time' : why === 'late' ? ', late' : ', not finished') + '</span><strong>' + money(G.cater) + '</strong></div>';
+    rows += '<div class="is-total"><b>Week</b><span>in tips</span><strong>' + money(G.earned) + '</strong></div>';
+    paper('over',
+      '<div class="ou-top' + (win ? ' ou-top--fri' : '') + '"><span class="ou-kicker">' + head[0] + '</span><h2 class="ou-h">' + head[1] + '</h2>' +
+      '<span class="ou-label">' + (best ? 'A new best week' : 'Best week: ' + money(save.best)) + '</span></div>' +
+      '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' + ownedRow() +
+      '<button class="ou-btn" data-act="start">Start a new week</button>' +
+      '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="box">Recipe Box</button><a class="ou-btn ou-btn--quiet" href="/menu">The real menu</a></div>' +
+      '</div>');
+    G = null; T = null;
+  }
+
+  function showBox(from) {
+    var list = D.recipes.concat([D.rollRecipe]).map(function (r) { return { id: r.id, name: r.name, photo: r.photo, sprite: D.parts[r.parts[r.parts.length > 1 ? 1 : 0]].sprite }; })
+      .concat(D.specials.map(function (s) { return { id: 'sp-' + s.id, name: s.name, photo: s.photo, sprite: 'special' }; }));
+    var seen = list.filter(function (r) { return save.served[r.id]; }).length;
+    paper('box',
+      '<div class="ou-top"><span class="ou-kicker">Recipe Box</span><h2 class="ou-h">' + seen + ' of ' + list.length + ' served</h2><span class="ou-label">Serve one 10 times to see the real plate</span></div>' +
+      '<div class="ou-body-pad"><div class="ou-grid">' + list.map(function (r) {
+        var n = save.served[r.id] || 0, real = n >= 10 && r.photo;
+        return '<div class="ou-rc' + (n ? '' : ' is-new') + '"><span class="ou-rp">' + (real ? '<img src="' + esc(r.photo) + '" alt="' + esc(r.name) + ' at The Café" loading="lazy">' : spr(r.sprite)) + '</span>' +
+          '<div><b>' + esc(r.name) + '</b><span>' + (n ? 'Served ' + n + (n < 10 && r.photo ? ' of 10' : '') : 'Not served yet') + '</span></div></div>';
+      }).join('') + '</div><button class="ou-btn" data-act="back" data-to="' + from + '">Back</button></div>');
+  }
+
+  function showHow(from) {
+    var li = function (icon, html) { return '<li>' + spr(icon, 'ou-sh') + '<span>' + html + '</span></li>'; };
+    paper('how',
+      '<div class="ou-top"><span class="ou-kicker">How to play</span><h2 class="ou-h">Tickets in, plates out</h2></div>' +
+      '<div class="ou-body-pad"><ul class="ou-how-list">' +
+      li('patty', '<b>Tap a bin.</b> Food that cooks goes on the flat-top. The rest goes on the plate.') +
+      li('spatula', '<b>Pull it when the ring is full.</b> Leave it and it burns. Tap burnt food to scrap it.') +
+      li('bell', '<b>Tap Send</b> when the plate has what a ticket shows. Faster plates tip more.') +
+      li('pickle', '<b>At lunch, add a pickle spear</b> to any plate for $1 more.') +
+      li('cup-spilled', '<b>A ticket that runs out is a walk-out.</b> Three in a day and the week is over.') +
+      li('jar', '<b>After close,</b> pick one item for free and spend your tips on more.') +
+      li('talk', '<b>Family eats free.</b> They also talk. Tap what they say to answer.') +
+      '</ul><button class="ou-btn" data-act="back" data-to="' + from + '">Got it</button></div>');
+  }
+
+  function drawTitle() {
+    $('#ou-best').textContent = save.weeks ? 'Best week: ' + money(save.best) + ' · ' + plural(save.wins, 'week', 'weeks') + ' finished' : 'Monday to Friday, 6am to 2pm';
+    var s = 'Sound: ' + (save.sound ? 'on' : 'off');
+    $('#ou-sound-title').textContent = s; $('#ou-sound-pause').textContent = s;
+  }
+
+  /* ---------- 8. taps ---------- */
+  function setPaused(on) {
+    if (!T || screen !== 'shift' || T.ended) return;
+    T.paused = on; $('#ou-pausebox').hidden = !on;
+  }
+  stage.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]'); if (!el || !stage.contains(el)) return;
+    var act = el.getAttribute('data-act'), i = parseInt(el.getAttribute('data-i'), 10);
+    var live = T && screen === 'shift' && !T.paused && !T.ended;
+    switch (act) {
+      case 'start': sfx.tap(); newRun(); if (!save.seen) showHow('dawn'); break;   // first week: the rules first
+      case 'how': showHow(screen); break;
+      case 'box': showBox(screen === 'over' ? 'over' : 'title'); break;
+      case 'back': show(el.getAttribute('data-to') || 'title'); drawTitle(); break;
+      case 'sound': save.sound = !save.sound; persist(); drawTitle(); sfx.done(); break;
+      case 'special': sfx.tap(); startDay(G.offers[i]); break;
+      case 'bin': if (live) tapBin(el.getAttribute('data-part')); break;
+      case 'spot': if (live) tapSpot(i); break;
+      case 'pi': if (live) tapPlateItem(i); break;
+      case 'scrap': if (live) scrap(); break;
+      case 'send': if (live) send(); break;
+      case 'cookie': if (live) eatCookie(); break;
+      case 'bubble': if (live) tapBubble(el.getAttribute('data-id')); break;
+      case 'pause': setPaused(true); break;
+      case 'resume': setPaused(false); break;
+      case 'quit': $('#ou-pausebox').hidden = true; T.ended = true; weekOver(false, 'quit'); break;
+      case 'pick': own(G.pick[i]); sfx.buy(); G.stage = 'shop'; G.shop = deal(3, []); drawClose(); break;
+      case 'buy':
+        var it = G.shop[i];
+        if (G.sold.indexOf(i) !== -1) break;
+        if (G.tips < it.price) { sfx.bad(); break; }
+        G.tips -= it.price; own(it); G.sold.push(i); sfx.buy(); drawClose(); break;
+      case 'reroll':
+        if (G.tips < G.reroll) break;
+        G.tips -= G.reroll; G.reroll += D.reroll.step; G.shop = deal(3, []); G.sold = []; sfx.tap(); drawClose(); break;
+      case 'next': G.day++; sfx.tap(); showDawn(); break;
+    }
+  });
+  document.addEventListener('visibilitychange', function () { if (document.hidden) setPaused(true); });
+
+  /* ---------- the loop ---------- */
+  var last = 0;
+  function frame(now) {
+    var dt = Math.min(0.1, (now - last) / 1000) * speed; last = now;
+    if (T && screen === 'shift' && !T.paused) {
+      if (!T.ended) update(dt);
+      if (T && screen === 'shift') draw(dt);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- fitting the phone ----------
+     The stage is 360 wide and at least 600 tall; scale it to fill the
+     screen, and give a taller phone the extra height (the griddle and the
+     table take it). */
+  function fit() {
+    var vv = window.visualViewport, vw = vv ? vv.width : window.innerWidth, vh = vv ? vv.height : window.innerHeight;
+    var s = Math.min(vw / W, vh / 600, 1.8), h = Math.min(vh / s, 800);
+    stage.style.height = h + 'px';
+    stage.style.transform = 'translate(' + Math.round((vw - W * s) / 2) + 'px,' + Math.round(Math.max(0, (vh - h * s) / 2)) + 'px) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
+
+  fit(); drawTitle(); show('title');
+  requestAnimationFrame(function (now) { last = now; requestAnimationFrame(frame); });
+
+  if (DEBUG) {
+    window.__ou = {
+      D: D, get G() { return G; }, get T() { return T; }, get screen() { return screen; }, save: save,
+      speed: function (v) { speed = v; },
+      // Move the shift on by hand (game/bot.js does, with speed(0), so a test
+      // doesn't depend on the page being on screen).
+      tick: function (dt) { if (T && screen === 'shift' && !T.paused) { if (!T.ended) update(dt); if (T && screen === 'shift') draw(dt); } },
+      give: function (id) { own({ id: id }); dirtyAll(); },
+      findMatch: findMatch, aimTicket: aimTicket, usable: usable, binOpen: binOpen
+    };
+  }
+})();

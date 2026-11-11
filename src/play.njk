@@ -1,0 +1,117 @@
+---
+layout: layouts/base.njk
+title: "Order Up | The Café"
+description: "A little game from The Café in Leavenworth, KS: work the flat-top for a week, one shift a day."
+pageCss: "/assets/css/play.css"
+bodyClass: "ou-body"
+noSiteJs: true
+noindex: true
+headExtra: |
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@700;900&display=swap" rel="stylesheet">
+      <meta name="theme-color" content="#1F4552">
+---
+{# Order Up: a phone game. A short-order cook's week at The Café, one shift a
+   day, with gear and tricks picked up after close.
+
+   The plan, the rules of the look and the words are in game/README.md; the
+   foods, tickets, items, odds and difficulty are data in src/_data/game.json
+   (handed over by play.11tydata.js); the logic is assets/js/play.js; the
+   drawings are partials/game/sprites.njk.
+
+   Unlisted while it's a demo: noindex, off nav.json, off the sitemap, no
+   link from any page. Like the home page it has no nav or footer: the game
+   is the whole screen.
+
+   This file is only the shell: the title screen and the kitchen's fixed
+   parts. play.js fills in everything that changes. Nothing here is a person:
+   the staff don't want their likeness online, so the game is seen from the
+   cook's own eyes. #}
+{% include "partials/game/sprites.njk" %}
+
+<main class="ou" id="ou">
+  <div class="ou-stage" id="ou-stage">
+
+    {# ---------- title ---------- #}
+    <section class="ou-scr ou-title" data-scr="title">
+      <svg class="ou-title-sky" viewBox="0 0 360 240" preserveAspectRatio="none" aria-hidden="true">
+        <defs><linearGradient id="ou-dawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9C8BC4"/><stop offset=".5" stop-color="#F4A9B8"/><stop offset="1" stop-color="#F8BE8A"/></linearGradient></defs>
+        <rect width="360" height="240" fill="url(#ou-dawn)"/>
+        <rect x="0" y="150" width="360" height="90" fill="#5F3D32"/>
+        <rect x="0" y="150" width="360" height="6" fill="#3A2620"/>
+        <g fill="#4E3229"><rect x="0" y="170" width="360" height="2"/><rect x="0" y="188" width="360" height="2"/><rect x="0" y="206" width="360" height="2"/></g>
+        <rect x="30" y="174" width="78" height="38" rx="3" fill="#FFE7A8"/>
+        <rect x="156" y="168" width="46" height="72" fill="#22323A"/>
+        <rect x="162" y="178" width="34" height="34" fill="#FFE7A8" opacity=".35"/>
+        <rect x="240" y="174" width="90" height="38" rx="3" fill="#FFE7A8"/>
+        <rect x="0" y="222" width="360" height="18" fill="#1F4552"/>
+        <g stroke="#22323A" stroke-width="3"><path d="M0 218h360"/><path d="M20 218v22M84 218v22M148 218v22M212 218v22M276 218v22M340 218v22"/></g>
+      </svg>
+      <div class="ou-title-gap"></div>
+      <div class="ou-title-body">
+        <div class="ou-wordmark">{% inlineSvg "/assets/thecafe.svg", "", site.name %}</div>
+        <h1>Order Up</h1>
+        <p>A week on the flat-top at {{ site.address.street }}.</p>
+        <button class="ou-btn" data-act="start">Start the week</button>
+        <div class="ou-title-links">
+          <button class="ou-link" data-act="how">How to play</button>
+          <button class="ou-link" data-act="box">Recipe Box</button>
+          <button class="ou-link" data-act="sound" id="ou-sound-title">Sound: off</button>
+        </div>
+      </div>
+      <div class="ou-title-foot">
+        <span id="ou-best"></span><br>
+        <a class="ou-link" href="/menu">See the real menu</a>
+      </div>
+    </section>
+
+    {# ---------- the kitchen ---------- #}
+    <section class="ou-scr ou-shift" data-scr="shift" hidden>
+      <header class="ou-hud">
+        <button class="ou-pause" data-act="pause" aria-label="Pause"></button>
+        <div class="ou-when"><span class="ou-label" id="ou-day">Monday</span><b id="ou-clock">6:00am</b></div>
+        <div class="ou-cups" id="ou-cups" role="img" aria-label="Coffees left"></div>
+        <div class="ou-tips"><span class="ou-label">Tips</span><b id="ou-tips">$0</b></div>
+      </header>
+      <div class="ou-rail" id="ou-rail" aria-label="Tickets"></div>
+      <div class="ou-pass" id="ou-pass">
+        <span class="ou-sun" aria-hidden="true"></span>
+        <span class="ou-pass-phase ou-label" id="ou-phase">Breakfast</span>
+        <div class="ou-crew" id="ou-crew"></div>
+      </div>
+      <div class="ou-griddle" id="ou-griddle" aria-label="The flat-top"></div>
+      <div class="ou-table">
+        <div class="ou-side">
+          <div class="ou-hint" id="ou-hint" aria-live="polite"></div>
+          <button class="ou-scrap" id="ou-scrap" data-act="scrap">Scrap</button>
+        </div>
+        <div class="ou-plate" id="ou-plate" aria-label="The plate"></div>
+        <div class="ou-sendwrap"><button class="ou-send is-off" id="ou-send" data-act="send">Send</button></div>
+      </div>
+      <div class="ou-bins" id="ou-bins" aria-label="The bins"></div>
+
+      <div class="ou-bubbles" id="ou-bubbles"></div>
+      <div class="ou-toast" id="ou-toast" role="status"></div>
+      <div class="ou-banner" id="ou-banner"></div>
+      <div class="ou-pausebox" id="ou-pausebox" hidden>
+        <div class="ou-pausecard">
+          <h2 class="ou-h">Paused</h2>
+          <button class="ou-btn" data-act="resume">Back to the line</button>
+          <button class="ou-btn ou-btn--quiet" data-act="sound" id="ou-sound-pause">Sound: off</button>
+          <button class="ou-btn ou-btn--quiet" data-act="quit">End the week</button>
+        </div>
+      </div>
+    </section>
+
+    {# ---------- filled in by play.js ---------- #}
+    <section class="ou-scr ou-paper" data-scr="dawn" hidden></section>
+    <section class="ou-scr ou-paper" data-scr="close" hidden></section>
+    <section class="ou-scr ou-paper" data-scr="over" hidden></section>
+    <section class="ou-scr ou-paper" data-scr="box" hidden></section>
+    <section class="ou-scr ou-paper" data-scr="how" hidden></section>
+
+  </div>
+  <noscript><p style="color:#FAF7F2;padding:24px;font:400 17px Lato,sans-serif">Order Up needs JavaScript. The menu doesn't: <a href="/menu" style="color:#8ED9D4">see the menu</a>.</p></noscript>
+</main>
+
+<script id="ou-data" type="application/json">{{ gameJson | safe }}</script>
+<script src="{{ '/assets/js/play.js' | bust }}"></script>
