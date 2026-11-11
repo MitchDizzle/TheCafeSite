@@ -1,14 +1,14 @@
 {
   "_note": "Order Up, the phone game at /play (src/play.njk, assets/js/play.js). Everything a non-programmer might want to change is here: the foods, the tickets, the specials, the items and their odds, the family's small talk, and the numbers that set how hard a day is. The rules these follow are in game/README.md. play.11tydata.js checks every `menu` name against menu.json when the site builds and warns if one has gone, so the game can't serve something the café stopped selling.",
 
-  "_note_parts": "Every food a plate can hold. `cook` (seconds on the flat-top) makes it a food that cooks: it goes on the griddle first and must be pulled when done. No `cook` and it goes straight on the plate. `sprite` is the drawing in partials/game/sprites.njk (s-<sprite>). `raw` and `raw2` are the colours it shows before it's done.",
+  "_note_parts": "Every food a plate can hold. `cook` (seconds on the flat-top) makes it a food that cooks: it goes on the griddle first and must be pulled when done. No `cook` and it goes straight on the plate. `sprite` is the drawing in partials/game/sprites.njk (s-<sprite>). `raw` and `raw2` are the colours it shows before it's done. `flip` makes it a food that must be turned half way through (on the levels that have flipping, see `levels`): it stops cooking at the half until it is flipped, and burns if it is left.",
   "parts": {
-    "egg":      { "name": "Egg",       "sprite": "egg",      "cook": 3.5, "raw": "#F4F1E4", "raw2": "#F9D36B" },
-    "bacon":    { "name": "Bacon",     "sprite": "bacon",    "cook": 4.5, "raw": "#E08F82", "raw2": "#FBE3D2" },
+    "egg":      { "name": "Egg",       "sprite": "egg",      "cook": 3.5, "flip": true, "raw": "#F4F1E4", "raw2": "#F9D36B" },
+    "bacon":    { "name": "Bacon",     "sprite": "bacon",    "cook": 4.5, "flip": true, "raw": "#E08F82", "raw2": "#FBE3D2" },
     "toast":    { "name": "Toast",     "sprite": "toast",    "cook": 3,   "raw": "#F3E3BC", "raw2": "#D9B77E" },
     "potatoes": { "name": "Potatoes",  "sprite": "potatoes", "cook": 5,   "raw": "#F4E6B4" },
-    "patty":    { "name": "Patty",     "sprite": "patty",    "cook": 5.5, "raw": "#DB9A8C" },
-    "chicken":  { "name": "Chicken",   "sprite": "chicken",  "cook": 5.5, "raw": "#F2C7B6" },
+    "patty":    { "name": "Patty",     "sprite": "patty",    "cook": 5.5, "flip": true, "raw": "#DB9A8C" },
+    "chicken":  { "name": "Chicken",   "sprite": "chicken",  "cook": 5.5, "flip": true, "raw": "#F2C7B6" },
     "biscuit":  { "name": "Biscuit",   "sprite": "biscuit" },
     "gravy":    { "name": "Gravy",     "sprite": "gravy" },
     "tortilla": { "name": "Tortilla",  "sprite": "tortilla" },
@@ -109,6 +109,7 @@
     { "id": "counter",   "name": "Counter Help",       "rarity": "rare",   "price": 105, "icon": "apron",                 "text": "A helper sends out every one-item ticket for you" },
     { "id": "regular",   "name": "The Regular",        "rarity": "rare",   "price": 80, "icon": "mug",                   "text": "Twice a day a ticket is \"the usual\" and tips triple" },
     { "id": "cookie",    "name": "Triple Chocolate Cookie", "rarity": "rare", "price": 90, "max": 2, "icon": "cookie",   "text": "Once a day, tap it: every ticket's clock starts over" },
+    { "id": "spatula",   "name": "Heavy Spatula",      "rarity": "rare",   "price": 80, "icon": "spatula",               "text": "Food flips itself (not offered on Easy, where nothing needs flipping)" },
 
     { "id": "linecook",  "name": "Line Cook",          "rarity": "epic",   "price": 200, "icon": "hat",                   "text": "A second cook sends out the oldest ticket every 14 seconds" },
     { "id": "goldspat",  "name": "Golden Spatula",     "rarity": "epic",   "price": 185, "icon": "goldspatula",           "text": "Nothing burns. Ever." },
@@ -150,7 +151,14 @@
     "plateMax": 5
   },
 
-  "_note_family": "Family at the counter (Wednesday on, see `days`). They eat free, they wait a long time, and they talk: a line pops up over the kitchen every `every` seconds and stays until it's tapped. Feed them and they pour you a coffee back (or leave $`leave` if none is spilled); `cookieChance` out of 100 they brought a cookie. Words only, never a face, and no real names. Keep the lines kind: this is somebody's mother.",
+  "_note_levels": "How hard, picked on the title screen and kept for the whole week. `flip`: none (food never needs turning), tap (a tap or a swipe turns it) or swipe (only a swipe does). `wait` multiplies how long every ticket waits, `every` the seconds between tickets (bigger is slower), `burn` how long done food lasts. `family` multiplies each day's family chance in `days` (0 is never); `familyFloor` is a chance out of 100 that applies from Tuesday whatever the day says. The best week is kept for each level by itself.",
+  "levels": {
+    "easy":   { "name": "Easy",    "text": "No flipping, no distractions, tickets wait longer.",          "flip": "none",  "wait": 1.6,  "every": 1.4,  "burn": 1.5,  "family": 0 },
+    "normal": { "name": "Regular", "text": "Flip eggs and burgers with a tap. Things get busy by Wednesday.", "flip": "tap",   "wait": 1.22, "every": 1.05, "burn": 1.0,  "family": 1 },
+    "hard":   { "name": "Rush",    "text": "Flip with a swipe. Shorter waits. More going on, sooner.",      "flip": "swipe", "wait": 0.82, "every": 0.85, "burn": 0.8,  "family": 1.5, "familyFloor": 45 }
+  },
+
+  "_note_family": "Family at the counter (Wednesday on, see `days`; never on Easy and sooner on Rush, see `levels`). The player is not warned: they just turn up when the week gets hard (owner 2026-11-11). They eat free, they wait a long time, and they talk: a line pops up over the kitchen every `every` seconds and stays until it's tapped. Feed them and they pour you a coffee back (or leave $`leave` if none is spilled); `cookieChance` out of 100 they brought a cookie. Words only, never a face, and no real names. Keep the lines kind: this is somebody's mother.",
   "family": {
     "wait": 45,
     "every": 3.4,

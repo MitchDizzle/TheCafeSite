@@ -4,8 +4,9 @@ A small phone game on lvcafetogo.com: a short-order cook's week at The Café,
 played one shift at a time. Something to tap through while waiting for an
 order, or at home, that feels like this kitchen and no other.
 
-**It's built, as a demo, at `/play`** (unlisted: no link to it, noindex, off
-the sitemap). `npm start`, then `http://localhost:8080/play`.
+**It's built, and live at lvcafetogo.com/play** (on `main` since 2026-11-10),
+still unlisted: no link to it, noindex, off the sitemap. Locally: `npm
+start`, then `http://localhost:8080/play`.
 
 | What | Where |
 |---|---|
@@ -27,9 +28,9 @@ game needs, and where the two meet it says which rule wins.
 
 You are on the flat-top at 417 South 6th St. Tickets come in on the rail,
 just like the kitchen board. Tap a bin: food that cooks goes on the griddle,
-the rest goes on the plate. Pull the food when it's done (not burnt), and
-tap Send when the plate has what a ticket shows, before the ticket goes
-late. A **run is one week, Monday to Friday**; each **day is one shift, 6am
+the rest goes on the plate. Flip what needs flipping, pull the food when
+it's done (not burnt), and tap Send when the plate has what a ticket shows,
+before the ticket goes late. A **run is one week, Monday to Friday**; each **day is one shift, 6am
 to 2pm**, in about 100 seconds. After close you pick one item for free and
 spend the day's tips on more. Finish Friday's catering order and the week is
 yours. Spill all three coffees in one day and the week is over: start a new
@@ -46,7 +47,8 @@ starting at 11am with a drink included, no fryer, closed weekends.
 
 | Piece | What it is | Real thing it comes from |
 |---|---|---|
-| **Run** | One week, Monday – Friday. No weekends: the café is closed. | The hours |
+| **Level** | Easy, Regular or Rush, picked on the title screen and kept for the week (§4). | |
+| **Run** | One week, Monday – Friday. No weekends: the café is closed. A week left half way is kept each morning and can be picked up from that morning ("Continue: Wednesday"). | The hours |
 | **Dawn** | Before each shift, pick the day's special from three. One side is a quicker plate; two sides tip more. | `specials.json`, the weekly posts |
 | **Day** | One shift, 6am – 2pm, about 100 seconds. A clock on the HUD runs the real hours. | The hours |
 | **Breakfast** (6am – 11am) | Eggs, bacon, toast, potatoes, biscuit and gravy, burritos | `menu.json` breakfast |
@@ -54,7 +56,8 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | **The pickle spear** | At lunch, any plate can take one: $1 more. Never required. | Nearly every plate in the photos |
 | **Lives** | Three **coffee cups**. A ticket that runs out of time is a walk-out and spills one. They are poured again each morning. | |
 | **After close** | Pick one item of three, free. Then the shop: three more for tips, and "Restock" for a new three. | |
-| **Family** | From Wednesday, family may stop by at lunch (§4). | |
+| **Flipping** | Eggs, bacon, burgers and chicken stop cooking half way until they're turned (§4). | The flat-top |
+| **Family** | From Wednesday, family may stop by at lunch (§4). Never announced. | |
 | **Friday** | Ends on a **catering order**: five platters, one after another, on one clock. | The catering photos |
 | **Win** | Finish Friday's catering on time. The week's tips are the score. | |
 | **Lose** | Three spilled coffees in one day, or the catering goes out late. | |
@@ -63,8 +66,7 @@ starting at 11am with a drink included, no fryer, closed weekends.
 for every ticket and special by its real name, which turns into the café's
 own photo once it has been served 10 times; the best week; weeks finished.
 
-**Not built yet:** unlocks (new tickets opening up over many runs), and
-keeping a week that was left half way (closing the page ends it).
+**Not built yet:** unlocks (new tickets opening up over many runs).
 
 ---
 
@@ -111,6 +113,7 @@ prices and how many of each can be owned are in `game.json` → `items`,
 | **Counter Help** (a helper) | Sends out every one-item ticket by themself |
 | The Regular | Twice a day a ticket is "the usual" and tips triple |
 | **Triple Chocolate Cookie** (2) | Once a day, tap it: every ticket's clock starts over |
+| Heavy Spatula | Food flips itself (never offered on Easy, where nothing flips) |
 
 **Epic**
 
@@ -129,17 +132,54 @@ family. They are drawn as an apron and a hat, never as a person (§5).
 **The cookie** sits on the pass with its count. It is for the moment the
 rail is full and red. Family sometimes leaves one too.
 
-**One joke that never works:** the **Deep Fryer**, "Not for now." It is on
-the style sheet and not in the shop yet; when it goes in, it is greyed out
-and can't be bought. It is the honest answer on /feedback.
+**One joke that never works:** the **Deep Fryer**, "Not for now." About one
+shop in three has it as a fourth, greyed-out card with no price. Tapping it
+shakes its head. It is the honest answer on /feedback.
 
 ---
 
-## 4. Family at the counter
+## 4. How hard: levels, flipping, family
 
-From Wednesday on (40%, 65%, 85% of days) someone from the family stops by
-at lunch. It is the game's late-week difficulty, and it isn't a faster
-clock: it's a distraction.
+### Levels
+
+Picked on the title screen (owner 2026-11-11), kept for the whole week, and
+the best week is remembered for each one by itself. All of it is
+`game.json` → `levels`.
+
+| | Easy | Regular | Rush |
+|---|---|---|---|
+| Flipping | none | a tap or a swipe | a swipe only |
+| Tickets wait | 60% longer | 22% longer | 18% shorter |
+| Tickets come | 40% slower | 5% slower | 15% faster |
+| Done food lasts | 50% longer | as written | 20% shorter |
+| Family | never | from Wednesday | from Tuesday, more often |
+
+"As written" is the day's own numbers in `game.json` → `days`, which get
+harder from Monday to Friday on every level.
+
+### Flipping
+
+Eggs, bacon, burgers and chicken (`"flip": true` in `game.json` → `parts`)
+cook to the half and stop, with a gold **Flip** tag (on Rush it says
+**Swipe**). Turned, they finish; left, that side burns on the same clock
+done food burns on. Toast and potatoes don't flip.
+
+- **Regular:** a tap flips it. So does a swipe.
+- **Rush:** only a swipe across it does; a tap says so. This is the one
+  place the game asks for more than a tap, and it is opt-in. A keyboard
+  (Enter on the spot) always flips, on every level, so the game is never out
+  of reach without a touch screen.
+- After the flip the food shows its cooked side, with grill marks, while
+  the ring finishes filling.
+- The Heavy Spatula (Rare) flips for you.
+
+### Family at the counter
+
+From Wednesday on (40%, 65%, 85% of days on Regular) someone from the family
+stops by at lunch. It is the late-week difficulty, and it isn't a faster
+clock: it's a distraction. **Nothing warns the player**: no line on the
+morning screen, nothing in How to play, no banner when they arrive (owner
+2026-11-11). They just turn up when it starts to get hard.
 
 - Their ticket says **Free**. It tips nothing and waits a long time (45
   seconds).
@@ -202,15 +242,21 @@ moves from sunrise to noon as the shift goes on.
 
 ### Food on the flat-top
 
-Three looks, and **colour is never the only signal** (colour-blind players):
+Four looks, and **colour is never the only signal** (colour-blind players):
 
 | State | Look | Also shown by |
 |---|---|---|
 | Raw | Pale, no grill marks | A mint ring that fills as it cooks |
+| Flip | Still pale, bouncing | A gold "Flip" tag ("Swipe" on Rush); the ring burns down in orange |
 | Done | Its real colour, grill marks, a small bounce | A "Pull" tag; the ring burns down in orange (the time left before it burns) |
 | Burnt | Dark | Crossed out, a "Burnt" tag, smoke. Tap to scrap. |
 
-One drawing serves all three: a cooking food takes its colours from the CSS
+**Each food sits in the middle of its own spot, whatever the screen.** Four
+spots are one row; the Second Flat-Top makes it two rows of three. (The
+first build sized the rings by a percentage of the row, which a wider
+screen ignored, so they spilled over two spots: owner 2026-11-11.)
+
+One drawing serves every state: a cooking food takes its colours from the CSS
 custom properties `--food`, `--food2` and `--marks`.
 
 ### The spilled coffee
@@ -275,8 +321,8 @@ ticket's name is never under 15.
 
 ## 8. The screen (phone, portrait)
 
-Built for a phone held in one hand: **portrait, tap only, everything in
-thumb reach.** The game is one 360px-wide stage scaled to fit; a taller
+Built for a phone held in one hand: **portrait, taps (and on Rush one
+swipe), everything in thumb reach.** The game is one 360px-wide stage scaled to fit; a taller
 phone gives the griddle the extra room. Checked at 375 × 553 (an iPhone SE
 with the browser's bars showing), 390 × 760 and 412 × 860.
 
@@ -288,7 +334,7 @@ with the browser's bars showing), 390 × 760 and 412 × 860.
 ├───────────────────────────┤
 │ the window: sky  [helpers]│  tells the time; helpers and the cookie
 ├───────────────────────────┤
-│   FLAT-TOP: 4 to 6 spots  │
+│ FLAT-TOP: 4 in a row (6)  │
 ├───────────────────────────┤
 │ hint      (plate)   [SEND]│  the steel table
 │ [Scrap]                   │
@@ -304,9 +350,14 @@ with the browser's bars showing), 390 × 760 and 412 × 860.
 - **Tap food on the plate to take it off.** Scrap clears the plate.
 - **Bins that cook have a warm tint**; they dim when the griddle is full.
   Bacon, tortilla and cheese keep their place when breakfast turns to lunch.
-- Tap only: no dragging, no swipes, no tilt.
+- Tap only on Easy and Regular. Rush adds one swipe (flipping); nothing
+  else is ever dragged, and nothing tilts.
 - Pause is top left; the game pauses itself when the tab is hidden (a
   customer looks up when their name is called).
+
+**The title screen** has the three levels as one row of buttons with a line
+under them saying what the chosen one means, and "Continue: Wednesday" in
+place of "Start the week" when a week was left half way.
 
 **The paper screens** (dawn, after close, week over, Recipe Box, how to
 play) are cream with a teal band on top and a red rule under it, like the
@@ -327,12 +378,26 @@ hints beside the plate through that day.
   the same.
 - A short buzz on a walk-out where the phone allows it, off with the sound.
 
-## 10. Sound
+## 10. Sound and music
 
-- **Off until the player turns it on** (title screen or pause; remembered).
-  Many people will open this in the dining room.
-- Made in the browser (Web Audio), so there are no sound files and nothing
-  to license: a sizzle, a ticket tick, a "done" ping, the order bell, a low
+Two switches, on the title screen and in pause, both **off until the player
+turns them on** and both remembered. Many people will open this in the
+dining room.
+
+**Music** (owner 2026-11-11: lo-fi jazz, generated). Nothing is recorded or
+downloaded: `play.js` plays it as it goes. An eight-bar loop of jazz chords
+(ii V I vi, then IV iii ii V, in C) on a soft electric piano, a bass, a
+kick, a brushed snare and hats with a little swing at 74 beats a minute,
+and a few notes on top picked at random from a scale that can't clash, all
+through a low-pass so it sounds like a radio in the next room. It never
+plays the same way twice, and it stops when the page is hidden. Nobody has
+listened to it on a phone speaker yet: the notes, tempo and volumes are at
+the top of the music block in `play.js`.
+
+**Sound effects:**
+
+- Also made in the browser (Web Audio), so there are no sound files and
+  nothing to license: a sizzle, a ticket tick, a "done" ping, the order bell, a low
   note for a walk-out. Short and quiet, no music.
 - If real recordings are ever wanted (this kitchen's own flat-top and
   bell), list each one's source beside it.
@@ -396,8 +461,12 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
   dawn cards, as the gallery's thumbnails.
 - **Small:** about 120 KB before compression for everything (40 KB or so as the server sends it).
 - **Saved on the phone only**, in `localStorage` (`orderup.v1`), every read
-  and write in a `try`/`catch`: best week, weeks played and finished, what
-  has been served, the sound setting. A private window just starts fresh.
+  and write in a `try`/`catch`: the best week on each level, weeks played
+  and finished, what has been served, the level, the sound and music
+  settings, and a week left half way. A private window just starts fresh.
+- **The flat-top reads taps and swipes itself** (pointer events, on the way
+  up, from where the finger went down), because a click can get lost when
+  the griddle is redrawn under a finger and a swipe is never a click.
 - **Data, not code, for anything worth changing:** `src/_data/game.json`,
   with a note on every block. `play.11tydata.js` strips the notes, points
   each photo at its thumbnail and **warns in the build log** if a recipe's
@@ -410,21 +479,26 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
 `/play?debug` puts a `window.__ou` handle on the page (the run, the day, a
 `tick()` to move the clock by hand, `give('linecook')` to own an item).
 `game/bot.js` is a stand-in player built on it: paste it into the console
-and `await ouBot({ weeks: 6, apm: 90 })`. A week takes it a second or two.
+and `await ouBot({ weeks: 6, apm: 90, level: 'normal' })`. A week takes it a
+second or two.
 
-Where the numbers were left (2026-11-10), with a bot that never makes a
-mistake:
+Where the numbers were left (2026-11-11), with a bot that never makes a
+mistake and isn't slowed by having to swipe:
 
-| Taps a minute | Like | Weeks won | Walk-outs |
+| Level | Taps a minute | Like | Weeks won |
 |---|---|---|---|
-| 60 | a slow thumb | 4 of 6, the others lost on Thursday | a few from Wednesday on |
-| 90 | a steady thumb | 6 of 6 | a few on Thursday and Friday |
-| 150 | a quick one | 6 of 6, about $900 | almost none |
+| Easy | 40 | a very slow thumb | 4 of 6 |
+| Easy | 60 | a slow thumb | 6 of 6, hardly a walk-out |
+| Regular | 60 | a slow thumb | 6 of 8, the others lost on Wednesday and Thursday |
+| Regular | 75 – 90 | a steady thumb | all, with a few walk-outs late in the week |
+| Rush | 90 | a steady thumb | 2 of 6, most lost on Wednesday |
+| Rush | 150 | a quick one | all |
 
 A person reads slower and mis-taps, so expect real first weeks to end
-around Wednesday or Thursday, and Monday to be gentle. If it's too hard or
-too easy, change `days` in `game.json` (`every`, `patience`) and run the
-bot again.
+on Regular around Wednesday or Thursday, and Monday to be gentle. If one
+level is too hard or too easy, change its line in `levels`; if the whole
+week's shape is wrong, change `days` (`every`, `patience`). Then run the bot
+again.
 
 ### What was changed from the first plan, and why
 
@@ -443,10 +517,13 @@ bot again.
 - **Prices went up and tickets came faster** after the bot won every week
   with a dozen items.
 
+- **(2026-11-11) Levels, flipping, music, no family warning**, and the
+  griddle fix, all from the owner's first play: see §4, §5 and §10.
+
 ### Next
 
-1. Play it on real phones (GM-2 in CafeWork `TASKS.md`) and tune `days`.
-2. Unlocks across runs; keep a half-finished week.
-3. The Deep Fryer in the shop.
-4. This week's real special as a dawn card (from `specials.json`).
-5. The owners' go-ahead, then the link and the sitemap.
+1. Play it on real phones (GM-5 in CafeWork `TASKS.md`): listen to the
+   music on a phone speaker, try the swipe with a thumb, tune `levels`.
+2. Unlocks across runs.
+3. This week's real special as a dawn card (from `specials.json`).
+4. The owners' go-ahead, then the link and the sitemap.

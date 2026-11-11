@@ -3,7 +3,9 @@
 
    A short-order cook's week at The Café: tickets on the rail, food on the
    flat-top, a plate, Send. One week is a run, one day is a shift, and after
-   close you pick up gear and tricks for the rest of the week.
+   close you pick up gear and tricks for the rest of the week. Three levels
+   (Easy, Regular, Rush) set how much is asked: whether food needs flipping
+   and how (a tap or a swipe), how long tickets wait, whether family drops by.
 
    No libraries, no images, no server. The page (src/play.njk) carries the
    kitchen's fixed parts and the sprite sheet; everything that can be tuned
@@ -11,7 +13,7 @@
    The plan and the rules of the look are in game/README.md.
 
    Shape of this file:
-     1. setup, the save, sound
+     1. setup, the save, sound, the music
      2. the run (G) and the day (T)
      3. the kitchen: tickets, flat-top, plate, send
      4. what the items do
@@ -20,9 +22,10 @@
      7. the paper screens: dawn, after close, week over, Recipe Box, how to
      8. taps, the loop, fitting the phone
 
-   Saved on the phone only (localStorage, always in try/catch): best week,
-   weeks played, what's been served, the sound setting. Nothing is sent
-   anywhere.
+   Saved on the phone only (localStorage, always in try/catch): the best week
+   on each level, weeks played, what's been served, the level, the sound and
+   music settings, and a week left half way (kept at each morning, so it can
+   be picked up from the start of that day). Nothing is sent anywhere.
    ============================================================ */
 (function () {
   'use strict';
@@ -61,24 +64,28 @@
 
   /* ---------- 1. the save ---------- */
   var KEY = 'orderup.v1';
-  var save = { best: 0, weeks: 0, wins: 0, served: {}, sound: false, seen: false };
+  var save = { best: 0, bests: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null };
   try {
     var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (stored && typeof stored === 'object') for (var k in save) if (k in stored) save[k] = stored[k];
     if (!save.served || typeof save.served !== 'object') save.served = {};
   } catch (e) { /* a private window: start fresh, nothing breaks */ }
+  if (!save.bests || typeof save.bests !== 'object') save.bests = {};
+  if (save.best && !save.bests.normal) save.bests.normal = save.best;   // from before there were levels
+  if (!D.levels[save.level]) save.level = 'normal';
+  if (save.run && (typeof save.run !== 'object' || !D.days[save.run.day] || !D.levels[save.run.level])) save.run = null;
   function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* same */ } }
 
   /* ---------- sound: made here, no files. Off until it's turned on. ---------- */
   var ac = null;
-  function audio() {
-    if (!save.sound) return null;
+  function ctx() {
     try {
       ac = ac || new (window.AudioContext || window.webkitAudioContext)();
       if (ac.state === 'suspended') ac.resume();
       return ac;
     } catch (e) { return null; }
   }
+  function audio() { return save.sound ? ctx() : null; }
   function tone(freq, dur, type, vol, slideTo, delay) {
     var a = audio(); if (!a) return;
     var t0 = a.currentTime + (delay || 0);
@@ -110,6 +117,85 @@
   };
   function buzz(ms) { if (save.sound && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { /* no matter */ } } }
 
+  /* ---------- music: slow lo-fi jazz, made here as it plays ----------
+     No recording and no file, so nothing to license or download: an
+     eight-bar loop of jazz chords on a soft electric piano, a bass, brushed
+     drums with a little swing, and a few notes on top picked at random, all
+     through a low-pass so it sounds like a radio in the next room. It never
+     plays the same way twice. Off until it's turned on (its own switch, apart
+     from the sound effects), and it stops when the page is hidden. */
+  var music = { on: false, timer: 0, next: 0, step: 0, out: null, noise: null };
+  var BEAT = 60 / 74;
+  // One bar each: the bass note, then the chord (MIDI numbers). ii V I vi, then IV iii ii V, in C.
+  var BARS = [
+    [38, 53, 57, 60, 64], [43, 53, 57, 59, 64], [36, 52, 55, 59, 62], [45, 55, 59, 60, 64],
+    [41, 57, 60, 64, 67], [40, 55, 59, 62, 64], [38, 53, 57, 60, 64], [43, 53, 57, 59, 64]
+  ];
+  var TOP = [67, 69, 72, 74, 76, 79, 81];     // C major pentatonic: it can't hit a wrong note over these chords
+  function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  function musicOut(a) {
+    if (music.out) return music.out;
+    var g = a.createGain(), lp = a.createBiquadFilter();
+    g.gain.value = 0.5; lp.type = 'lowpass'; lp.frequency.value = 2400; lp.Q.value = 0.4;
+    g.connect(lp); lp.connect(a.destination);
+    var len = a.sampleRate, buf = a.createBuffer(1, len, len), ch = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) ch[i] = rand() * 2 - 1;
+    music.noise = buf; music.out = g;
+    return g;
+  }
+  function note(a, when, midi, dur, vol, type) {
+    var o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine'; o.frequency.value = hz(midi); o.detune.value = (rand() - 0.5) * 14;   // a touch out of tune, like tape
+    g.gain.setValueAtTime(0.0001, when); g.gain.linearRampToValueAtTime(vol, when + 0.025);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    o.connect(g); g.connect(music.out); o.start(when); o.stop(when + dur + 0.05);
+  }
+  function drum(a, when, kind, vol) {
+    if (kind === 'kick') {
+      var o = a.createOscillator(), g = a.createGain();
+      o.frequency.setValueAtTime(110, when); o.frequency.exponentialRampToValueAtTime(42, when + 0.16);
+      g.gain.setValueAtTime(vol, when); g.gain.exponentialRampToValueAtTime(0.0001, when + 0.26);
+      o.connect(g); g.connect(music.out); o.start(when); o.stop(when + 0.3);
+      return;
+    }
+    var src = a.createBufferSource(), flt = a.createBiquadFilter(), g2 = a.createGain(), len = kind === 'hat' ? 0.05 : 0.16;
+    src.buffer = music.noise; flt.type = kind === 'hat' ? 'highpass' : 'bandpass'; flt.frequency.value = kind === 'hat' ? 6000 : 1700;
+    g2.gain.setValueAtTime(vol, when); g2.gain.exponentialRampToValueAtTime(0.0001, when + len);
+    src.connect(flt); flt.connect(g2); g2.connect(music.out); src.start(when, rand() * 0.5, len + 0.02);
+  }
+  /* One eighth note of it. Eight to a bar. */
+  function musicStep(a, step, when) {
+    var bar = BARS[Math.floor(step / 8) % BARS.length], at = step % 8, i;
+    if (at === 0) {
+      for (i = 1; i < bar.length; i++) note(a, when + (i - 1) * 0.018, bar[i], 2.6, 0.05, i % 2 ? 'sine' : 'triangle');   // the chord, rolled a little
+      note(a, when, bar[0], 1.3, 0.16, 'sine');
+    }
+    if (at === 5 && rand() < 0.6) for (i = 2; i < bar.length; i++) note(a, when, bar[i], 1.1, 0.028, 'sine');
+    if (at === 4) note(a, when, bar[0] + (rand() < 0.5 ? 7 : 12), 0.9, 0.11, 'sine');
+    if (at === 0 || (at === 5 && rand() < 0.7)) drum(a, when, 'kick', 0.22);
+    if (at === 2 || at === 6) drum(a, when, 'snare', 0.07);
+    drum(a, when, 'hat', at % 2 ? 0.022 : 0.04);
+    if (rand() < (at % 2 ? 0.16 : 0.26)) note(a, when, pick(TOP), 0.9 + rand(), 0.045, 'triangle');
+  }
+  function musicTick() {
+    var a = ac; if (!a || !music.on) return;
+    if (music.next < a.currentTime) music.next = a.currentTime + 0.06;
+    while (music.next < a.currentTime + 0.4) {
+      musicStep(a, music.step, music.next + (music.step % 2 ? BEAT * 0.09 : 0));    // the off-beats come late: swing
+      music.next += BEAT / 2; music.step++;
+    }
+  }
+  /* Start or stop to match the switch. A browser only lets sound start from
+     a tap, so every tap calls this. */
+  function musicSync() {
+    var want = save.music && !document.hidden;
+    if (want && !music.on) {
+      var a = ctx(); if (!a) return;
+      musicOut(a); music.on = true; music.next = 0;
+      music.timer = setInterval(musicTick, 110); musicTick();
+    } else if (!want && music.on) { music.on = false; clearInterval(music.timer); }
+  }
+
   /* ---------- 2. the run and the day ---------- */
   var G = null;      // the week: day, tips to spend, what's owned
   var T = null;      // the shift being played
@@ -118,9 +204,22 @@
   var speed = 1;     // debug only
 
   function has(id) { return (G && G.items[id]) || 0; }
+  /* How hard: the level the week was started on (game.json, levels). */
+  function level() { return D.levels[(G && G.level) || save.level] || D.levels.normal; }
 
   function newRun() {
-    G = { day: 0, tips: 0, earned: 0, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [] };
+    G = { level: save.level, day: 0, tips: 0, earned: 0, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
+    showDawn();
+  }
+  /* A week left half way is kept each morning and picked up from that morning. */
+  function keepRun() {
+    save.run = { level: G.level, day: G.day, tips: G.tips, earned: G.earned, perDay: G.perDay.slice(0, G.day), items: G.items };
+    persist();
+  }
+  function resumeRun() {
+    var r = save.run, items = {};
+    for (var id in r.items) if (D.items.some(function (it) { return it.id === id; })) items[id] = r.items[id];
+    G = { level: r.level, day: r.day, tips: r.tips || 0, earned: r.earned || 0, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
     showDawn();
   }
 
@@ -135,7 +234,9 @@
       usualAt: has('regular') ? [3 + Math.floor(rand() * 3), 9 + Math.floor(rand() * 4)] : [],
       familyAt: null, fam: null, bubbles: [], cat: null, endIn: null, lastClock: '', lastSky: -1
     };
-    if (rand() * 100 < day.family) {
+    var lv = level(), famChance = day.family * lv.family;
+    if (G.day >= 1 && lv.familyFloor) famChance = Math.max(famChance, lv.familyFloor);
+    if (rand() * 100 < famChance) {
       var lunchStart = TU.breakfastShare * T.len;
       T.familyAt = lunchStart + 6 + rand() * (T.len - lunchStart - 26);
     }
@@ -169,7 +270,7 @@
       age: 0, togo: false, usual: false, special: false, family: false, catering: false, boarded: false, late: false, auto: null
     };
     for (var key in o) t[key] = o[key];
-    t.total = (TU.waitBase + TU.waitPerPart * t.parts.length) * day.patience + 3 * has('refills');
+    t.total = (TU.waitBase + TU.waitPerPart * t.parts.length) * day.patience * level().wait + 3 * has('refills');
     if (t.togo && has('clamshell')) t.total += 8;
     if (t.family) t.total = D.family.wait;
     if (t.catering) t.total = 1;
@@ -240,7 +341,7 @@
       var n = usable(), at = -1;
       for (var i = 0; i < n; i++) if (!T.grill[i]) { at = i; break; }
       if (at === -1) { toast('The flat-top is full'); sfx.bad(); return; }
-      T.grill[at] = { part: part, t: 0, state: 'raw', gone: 0 };
+      T.grill[at] = { part: part, t: 0, state: 'raw', gone: 0, flipped: false, wait: 0 };
       dirty.grill = dirty.bins = true; sfx.sizzle();
     } else {
       if (T.plate.length >= TU.plateMax) { toast('The plate is full'); sfx.bad(); return; }
@@ -255,6 +356,22 @@
     if (T.plate.length >= TU.plateMax) { toast('The plate is full'); sfx.bad(); return; }
     T.plate.push(it.part); T.plateNew = T.plate.length - 1; T.grill[i] = null;
     dirty.grill = dirty.plate = dirty.rail = dirty.bins = true; sfx.tap();
+  }
+  /* Food that flips (game.json, parts) stops at the half until it's turned.
+     `how` is tap, swipe or key. On Rush only a swipe turns it; a keyboard
+     always can, so the game is never out of reach without a touch screen. */
+  function flipIt(it) {
+    it.flipped = true; it.state = 'raw'; it.wait = 0; it.flipNow = true;
+    dirty.grill = true; sfx.sizzle();
+  }
+  function spotGesture(i, how) {
+    var it = T.grill[i]; if (!it) return;
+    if (it.state === 'flip') {
+      if (how === 'tap' && level().flip === 'swipe') { hintFlash('Swipe across it to flip'); sfx.bad(); return; }
+      flipIt(it); return;
+    }
+    if (how === 'swipe' && it.state === 'raw') { hintFlash('Not ready yet'); return; }
+    tapSpot(i);
   }
   function tapPlateItem(i) { T.plate.splice(i, 1); dirty.plate = dirty.rail = true; sfx.tap(); }
   function scrap() { if (!T.plate.length) return; T.plate = []; dirty.plate = dirty.rail = true; sfx.tap(); }
@@ -347,7 +464,7 @@
         var open = T.phase === 'breakfast' ? T.bins === 'breakfast' : T.bins === 'lunch';
         T.spawnIn -= dt;
         if (open && T.spawnIn <= 0) {
-          if (T.tickets.length < TU.rail) { spawnTicket(); T.spawnIn = day.every * (0.8 + rand() * 0.4); }
+          if (T.tickets.length < TU.rail) { spawnTicket(); T.spawnIn = day.every * level().every * (0.8 + rand() * 0.4); }
           else T.spawnIn = 0.5;
         }
         if (T.familyAt != null && T.bins === 'lunch' && T.t >= T.familyAt && T.tickets.length < TU.rail) familyArrives();
@@ -368,7 +485,7 @@
     if (T.ended) return;
 
     // the flat-top
-    var faster = 1 + 0.2 * has('press'), burnAfter = day.burn + 5 * has('shelf'), gold = has('goldspat');
+    var faster = 1 + 0.2 * has('press'), burnAfter = day.burn * level().burn + 5 * has('shelf'), gold = has('goldspat'), flips = level().flip !== 'none';
     for (i = 0; i < T.grill.length; i++) {
       var it = T.grill[i]; if (!it) continue;
       var cook = D.parts[it.part].cook / faster;
@@ -376,8 +493,17 @@
         if (has('scraper')) { it.gone += dt; if (it.gone > 0.9) { T.grill[i] = null; dirty.grill = dirty.bins = true; } }
         continue;
       }
+      if (it.state === 'flip') {       // waiting to be turned: this side is still on the heat
+        it.wait += dt;
+        if (!gold && it.wait >= burnAfter) { it.state = 'burnt'; dirty.grill = true; sfx.bad(); }
+        continue;
+      }
       it.t += dt;
-      if (it.state === 'raw' && it.t >= cook) { it.state = 'done'; dirty.grill = true; sfx.done(); }
+      if (it.state === 'raw' && flips && D.parts[it.part].flip && !it.flipped && it.t >= cook / 2) {
+        it.t = cook / 2;
+        if (has('spatula')) flipIt(it); else { it.state = 'flip'; it.wait = 0; dirty.grill = true; sfx.done(); }
+      }
+      else if (it.state === 'raw' && it.t >= cook) { it.state = 'done'; dirty.grill = true; sfx.done(); }
       else if (it.state === 'done' && !gold && it.t >= cook + burnAfter) { it.state = 'burnt'; dirty.grill = true; sfx.bad(); }
     }
 
@@ -437,8 +563,7 @@
     var t = makeTicket(pick(pool), { family: true, who: who });
     T.tickets.push(t);
     T.fam = { who: who, say: 1.2 };
-    dirty.rail = true;
-    banner(who + ' stopped by', 'On the house. They want to talk.');
+    dirty.rail = true;       // no banner, no warning: they just turn up (owner 2026-11-11)
     sfx.talk();
   }
   function addBubble() {
@@ -529,20 +654,24 @@
   }
 
   function drawGrill() {
-    var n = usable(), html = '';
-    for (var i = 0; i < 6; i++) {
+    var n = usable(), html = '', swipe = level().flip === 'swipe';
+    for (var i = 0; i < n; i++) {
       var it = T.grill[i];
-      if (i >= n) { html += '<div class="ou-spot is-locked"></div>'; continue; }
       if (!it) { html += '<div class="ou-spot"></div>'; continue; }
       var name = D.parts[it.part].name;
-      html += '<button class="ou-spot is-' + it.state + '" data-act="spot" data-i="' + i + '" aria-label="' + name + ', ' + (it.state === 'raw' ? 'cooking' : it.state) + '">' +
+      var tag = it.state === 'done' ? 'Pull' : it.state === 'burnt' ? 'Burnt' : it.state === 'flip' ? (swipe ? 'Swipe' : 'Flip') : '';
+      var says = it.state === 'raw' ? 'cooking' : it.state === 'flip' ? 'ready to flip' : it.state;
+      var pale = it.state === 'flip' || (it.state === 'raw' && !it.flipped);      // the side that's up is still raw
+      html += '<button class="ou-spot is-' + it.state + (it.flipped ? ' is-turned' : '') + (it.flipNow ? ' is-flipping' : '') + '" data-act="spot" data-i="' + i + '"' +
+        (tag ? ' data-tag="' + tag + '"' : '') + ' aria-label="' + name + ', ' + says + '">' +
         '<svg class="ou-ring" viewBox="0 0 64 64" aria-hidden="true"><circle class="ou-ring-bg" cx="32" cy="32" r="29"/><circle class="ou-ring-fg" cx="32" cy="32" r="29"/></svg>' +
-        '<span class="ou-food ou-sh">' + partSprite(it.part, '', it.state === 'raw') + '</span>' +
+        '<span class="ou-food ou-sh">' + partSprite(it.part, '', pale) + '</span>' +
         (it.state === 'burnt' ? '<svg class="ou-smoke" viewBox="0 0 30 16" aria-hidden="true"><path class="ou-steam" d="M5 15c-4-4 4-6 0-11M15 15c-4-4 4-6 0-11M25 15c-4-4 4-6 0-11" stroke="#C5CFD3" stroke-width="2.500" fill="none" stroke-linecap="round"/></svg>' : '') +
         '</button>';
+      it.flipNow = false;
     }
-    var el = $('#ou-griddle'); el.innerHTML = html;
-    for (var j = 0; j < 6; j++) if (T.grill[j]) T.grill[j].fg = el.children[j].querySelector('.ou-ring-fg');
+    var el = $('#ou-griddle'); el.className = 'ou-griddle is-n' + n; el.innerHTML = html;
+    for (var j = 0; j < n; j++) if (T.grill[j]) T.grill[j].fg = el.children[j].querySelector('.ou-ring-fg');
   }
 
   var LAYOUT = {
@@ -572,7 +701,8 @@
       else { var aim = aimTicket(); if (aim) text = 'For ' + aim.t.name; else { text = 'Not on a ticket. Tap food to take it off.'; bad = true; } }
     } else if (coach) {
       var doneOne = T.grill.some(function (x) { return x && x.state === 'done'; }), rawOne = T.grill.some(function (x) { return x && x.state === 'raw'; });
-      text = doneOne ? 'Done. Tap it to plate it.' : rawOne ? 'Cooking. Wait for the ring.' : T.tickets.length ? 'Tap the bins a ticket shows.' : 'Tickets land up top.';
+      var flipOne = T.grill.some(function (x) { return x && x.state === 'flip'; });
+      text = flipOne ? (level().flip === 'swipe' ? 'Swipe across it to flip it.' : 'Half way. Tap it to flip it.') : doneOne ? 'Done. Tap it to plate it.' : rawOne ? 'Cooking. Wait for the ring.' : T.tickets.length ? 'Tap the bins a ticket shows.' : 'Tickets land up top.';
     } else if (T.cat) {
       text = plural(T.cat.n - T.cat.done, 'platter', 'platters') + ' to go';
     }
@@ -643,11 +773,11 @@
       var f = t.catering ? T.cat.left / T.cat.total : t.left / t.total;
       t.bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, f)).toFixed(3) + ')';
     }
-    var day = D.days[G.day], faster = 1 + 0.2 * has('press'), burnAfter = day.burn + 5 * has('shelf'), gold = has('goldspat');
+    var day = D.days[G.day], faster = 1 + 0.2 * has('press'), burnAfter = day.burn * level().burn + 5 * has('shelf'), gold = has('goldspat');
     for (i = 0; i < T.grill.length; i++) {
       var it = T.grill[i]; if (!it || !it.fg || it.state === 'burnt') continue;
       var cook = D.parts[it.part].cook / faster;
-      var left = it.state === 'raw' ? 1 - it.t / cook : gold ? 0 : (it.t - cook) / burnAfter;
+      var left = it.state === 'raw' ? 1 - it.t / cook : gold ? 0 : it.state === 'flip' ? it.wait / burnAfter : (it.t - cook) / burnAfter;
       it.fg.style.strokeDashoffset = (182.2 * Math.max(0, Math.min(1, left))).toFixed(1);
     }
     if (T.lineEl) T.lineEl.style.transform = 'scaleX(' + Math.min(1, T.lineT / 14).toFixed(3) + ')';
@@ -687,6 +817,7 @@
 
   function showDawn() {
     var day = D.days[G.day], friday = G.day === D.days.length - 1;
+    keepRun();
     G.offers = shuffle(D.specials).slice(0, 3);
     paper('dawn',
       '<div class="ou-top ou-top--dawn"><span class="ou-kicker">Today’s special</span><h2 class="ou-h">' + day.name + ', 6am</h2><span class="ou-label">Pick the plate for lunch</span></div>' +
@@ -696,7 +827,7 @@
           '<span><b>' + esc(s.name) + '</b><span class="ou-ct">' + esc(s.sides.join(', ')) + '</span>' +
           '<span class="ou-chip">' + (s.sides.length > 1 ? 'Two sides · tips more' : 'One side · quicker') + '</span></span><span></span></button>';
       }).join('') +
-      '<p class="ou-note">It goes on at 11am. ' + (friday ? 'Friday ends with a catering order: five platters on one clock.' : day.family ? 'Family may stop by at lunch. They eat free, and they talk.' : 'Three walk-outs in a day and the week is over.') + '</p>' +
+      '<p class="ou-note">It goes on at 11am. ' + (friday ? 'Friday ends with a catering order: five platters on one clock.' : 'Three walk-outs in a day and the week is over.') + '</p>' +
       ownedRow() + '</div>');
   }
 
@@ -707,7 +838,7 @@
     for (var k = 0; k < n; k++) {
       var roll = rand() * 100, rar = roll < odds.epic ? 'epic' : roll < odds.epic + odds.rare ? 'rare' : 'normal', got = null;
       for (var f = 0; f < 3 && !got; f++) {
-        var pool = D.items.filter(function (it) { return it.rarity === falls[rar][f] && has(it.id) < (it.max || 1) && out.indexOf(it) === -1 && not.indexOf(it.id) === -1; });
+        var pool = D.items.filter(function (it) { return it.rarity === falls[rar][f] && has(it.id) < (it.max || 1) && out.indexOf(it) === -1 && not.indexOf(it.id) === -1 && !(it.id === 'spatula' && level().flip === 'none'); });
         if (pool.length) got = pick(pool);
       }
       if (got) out.push(got);
@@ -737,6 +868,9 @@
         var sold = G.sold.indexOf(i) !== -1, poor = !sold && G.tips < it.price;
         return itemCard(it, 'buy', i, { price: sold ? 'Yours' : money(it.price), cls: sold ? ' is-sold' : poor ? ' is-poor' : '' });
       }).join('') +
+        // The one thing that is never for sale: there is no fryer (see /feedback).
+        (G.fryer ? '<button class="ou-card is-off" data-act="fryer"><span class="ou-rar"><i></i>Not for now</span><span class="ou-ci">' + spr('fryer') + '</span>' +
+          '<span><b>Deep Fryer</b><span class="ou-ct">Not for now.</span></span><span class="ou-price">—</span></button>' : '') +
         '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="reroll"' + (G.tips < G.reroll ? ' disabled' : '') + '>Restock · ' + money(G.reroll) + '</button>' +
         '<button class="ou-btn" data-act="next">Open ' + next.short + '</button></div>';
     }
@@ -754,8 +888,9 @@
     var cut = !!T && !T.cat && !win;      // the day itself was cut short
     if (T && G.perDay[G.day] == null) G.perDay[G.day] = T.cat ? T.tipsBefore : T.tips;
     if (T && T.cat && G.cater == null) G.cater = T.tips - T.tipsBefore;
-    var best = G.earned > save.best;
-    save.weeks++; if (win) save.wins++; if (best) save.best = G.earned; save.seen = true; persist();
+    var lvName = level().name, best = G.earned > (save.bests[G.level] || 0);
+    if (best) save.bests[G.level] = G.earned;
+    save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, G.earned); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
     var day = D.days[G.day];
     var head = win ? ['Week done', 'The catering went out on time.']
@@ -767,7 +902,7 @@
     rows += '<div class="is-total"><b>Week</b><span>in tips</span><strong>' + money(G.earned) + '</strong></div>';
     paper('over',
       '<div class="ou-top' + (win ? ' ou-top--fri' : '') + '"><span class="ou-kicker">' + head[0] + '</span><h2 class="ou-h">' + head[1] + '</h2>' +
-      '<span class="ou-label">' + (best ? 'A new best week' : 'Best week: ' + money(save.best)) + '</span></div>' +
+      '<span class="ou-label">' + (best ? 'A new best ' + lvName + ' week' : 'Best ' + lvName + ' week: ' + money(save.bests[G.level] || 0)) + '</span></div>' +
       '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' + ownedRow() +
       '<button class="ou-btn" data-act="start">Start a new week</button>' +
       '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="box">Recipe Box</button><a class="ou-btn ou-btn--quiet" href="/menu">The real menu</a></div>' +
@@ -789,24 +924,34 @@
   }
 
   function showHow(from) {
-    var li = function (icon, html) { return '<li>' + spr(icon, 'ou-sh') + '<span>' + html + '</span></li>'; };
+    var li = function (icon, html) { return '<li>' + spr(icon, 'ou-sh') + '<span>' + html + '</span></li>'; }, flip = level().flip;
     paper('how',
       '<div class="ou-top"><span class="ou-kicker">How to play</span><h2 class="ou-h">Tickets in, plates out</h2></div>' +
       '<div class="ou-body-pad"><ul class="ou-how-list">' +
       li('patty', '<b>Tap a bin.</b> Food that cooks goes on the flat-top. The rest goes on the plate.') +
+      (flip === 'none' ? '' : li('egg', flip === 'swipe' ? '<b>Eggs, bacon, burgers and chicken need a flip</b> half way. Swipe across them.' : '<b>Eggs, bacon, burgers and chicken need a flip</b> half way. Tap them, or swipe.')) +
       li('spatula', '<b>Pull it when the ring is full.</b> Leave it and it burns. Tap burnt food to scrap it.') +
       li('bell', '<b>Tap Send</b> when the plate has what a ticket shows. Faster plates tip more.') +
       li('pickle', '<b>At lunch, add a pickle spear</b> to any plate for $1 more.') +
       li('cup-spilled', '<b>A ticket that runs out is a walk-out.</b> Three in a day and the week is over.') +
       li('jar', '<b>After close,</b> pick one item for free and spend your tips on more.') +
-      li('talk', '<b>Family eats free.</b> They also talk. Tap what they say to answer.') +
       '</ul><button class="ou-btn" data-act="back" data-to="' + from + '">Got it</button></div>');
   }
 
   function drawTitle() {
-    $('#ou-best').textContent = save.weeks ? 'Best week: ' + money(save.best) + ' · ' + plural(save.wins, 'week', 'weeks') + ' finished' : 'Monday to Friday, 6am to 2pm';
-    var s = 'Sound: ' + (save.sound ? 'on' : 'off');
-    $('#ou-sound-title').textContent = s; $('#ou-sound-pause').textContent = s;
+    var lv = D.levels[save.level], best = save.bests[save.level] || 0, run = save.run;
+    $('#ou-best').textContent = best ? 'Best ' + lv.name + ' week: ' + money(best) + ' · ' + plural(save.wins, 'week', 'weeks') + ' finished' : 'Monday to Friday, 6am to 2pm';
+    $('#ou-levels').innerHTML = Object.keys(D.levels).map(function (id) {
+      return '<button class="ou-level' + (id === save.level ? ' is-on' : '') + '" data-act="level" data-level="' + id + '" aria-pressed="' + (id === save.level) + '">' + esc(D.levels[id].name) + '</button>';
+    }).join('');
+    $('#ou-level-text').textContent = lv.text;
+    var go = $('#ou-go');
+    go.textContent = run ? 'Continue: ' + D.days[run.day].name : 'Start the week';
+    go.setAttribute('data-act', run ? 'continue' : 'start');
+    $('#ou-fresh').hidden = !run;
+    var snd = 'Sound: ' + (save.sound ? 'on' : 'off'), mus = 'Music: ' + (save.music ? 'on' : 'off');
+    $('#ou-sound-title').textContent = snd; $('#ou-sound-pause').textContent = snd;
+    $('#ou-music-title').textContent = mus; $('#ou-music-pause').textContent = mus;
   }
 
   /* ---------- 8. taps ---------- */
@@ -820,13 +965,17 @@
     var live = T && screen === 'shift' && !T.paused && !T.ended;
     switch (act) {
       case 'start': sfx.tap(); newRun(); if (!save.seen) showHow('dawn'); break;   // first week: the rules first
+      case 'continue': sfx.tap(); if (save.run) resumeRun(); else newRun(); break;
+      case 'level': if (D.levels[el.getAttribute('data-level')]) { save.level = el.getAttribute('data-level'); persist(); drawTitle(); sfx.tap(); } break;
+      case 'music': save.music = !save.music; persist(); drawTitle(); break;
+      case 'fryer': sfx.bad(); el.classList.remove('is-nope'); void el.offsetWidth; el.classList.add('is-nope'); break;
       case 'how': showHow(screen); break;
       case 'box': showBox(screen === 'over' ? 'over' : 'title'); break;
       case 'back': show(el.getAttribute('data-to') || 'title'); drawTitle(); break;
       case 'sound': save.sound = !save.sound; persist(); drawTitle(); sfx.done(); break;
       case 'special': sfx.tap(); startDay(G.offers[i]); break;
       case 'bin': if (live) tapBin(el.getAttribute('data-part')); break;
-      case 'spot': if (live) tapSpot(i); break;
+      case 'spot': if (live && performance.now() - grabbedAt > 500) spotGesture(i, e.detail === 0 ? 'key' : 'tap'); break;   // a touch or mouse was dealt with on pointerup
       case 'pi': if (live) tapPlateItem(i); break;
       case 'scrap': if (live) scrap(); break;
       case 'send': if (live) send(); break;
@@ -835,7 +984,7 @@
       case 'pause': setPaused(true); break;
       case 'resume': setPaused(false); break;
       case 'quit': $('#ou-pausebox').hidden = true; T.ended = true; weekOver(false, 'quit'); break;
-      case 'pick': own(G.pick[i]); sfx.buy(); G.stage = 'shop'; G.shop = deal(3, []); drawClose(); break;
+      case 'pick': own(G.pick[i]); sfx.buy(); G.stage = 'shop'; G.shop = deal(3, []); G.fryer = rand() < 0.34; drawClose(); break;
       case 'buy':
         var it = G.shop[i];
         if (G.sold.indexOf(i) !== -1) break;
@@ -843,11 +992,28 @@
         G.tips -= it.price; own(it); G.sold.push(i); sfx.buy(); drawClose(); break;
       case 'reroll':
         if (G.tips < G.reroll) break;
-        G.tips -= G.reroll; G.reroll += D.reroll.step; G.shop = deal(3, []); G.sold = []; sfx.tap(); drawClose(); break;
+        G.tips -= G.reroll; G.reroll += D.reroll.step; G.shop = deal(3, []); G.sold = []; G.fryer = rand() < 0.34; sfx.tap(); drawClose(); break;
       case 'next': G.day++; sfx.tap(); showDawn(); break;
     }
+    musicSync();
   });
-  document.addEventListener('visibilitychange', function () { if (document.hidden) setPaused(true); });
+  document.addEventListener('visibilitychange', function () { if (document.hidden) setPaused(true); musicSync(); });
+
+  /* The flat-top takes a tap or a swipe. Both are read here, on the way up,
+     from where the finger went down: a click can get lost when the griddle is
+     redrawn under the finger, and a swipe is never a click at all. */
+  var grab = null, grabbedAt = -1e9, scaleNow = 1;
+  stage.addEventListener('pointerdown', function (e) {
+    var el = e.target.closest ? e.target.closest('[data-act="spot"]') : null;
+    grab = el ? { i: parseInt(el.getAttribute('data-i'), 10), x: e.clientX, y: e.clientY, id: e.pointerId } : null;
+  });
+  window.addEventListener('pointerup', function (e) {
+    if (!grab || e.pointerId !== grab.id) return;
+    var g = grab, dx = e.clientX - g.x, dy = e.clientY - g.y, far = Math.sqrt(dx * dx + dy * dy) > 18 * scaleNow;
+    grab = null; grabbedAt = performance.now();
+    if (T && screen === 'shift' && !T.paused && !T.ended) { spotGesture(g.i, far ? 'swipe' : 'tap'); musicSync(); }
+  });
+  window.addEventListener('pointercancel', function () { grab = null; });
 
   /* ---------- the loop ---------- */
   var last = 0;
@@ -867,6 +1033,7 @@
   function fit() {
     var vv = window.visualViewport, vw = vv ? vv.width : window.innerWidth, vh = vv ? vv.height : window.innerHeight;
     var s = Math.min(vw / W, vh / 600, 1.8), h = Math.min(vh / s, 800);
+    scaleNow = s;
     stage.style.height = h + 'px';
     stage.style.transform = 'translate(' + Math.round((vw - W * s) / 2) + 'px,' + Math.round(Math.max(0, (vh - h * s) / 2)) + 'px) scale(' + s + ')';
   }
@@ -885,7 +1052,9 @@
       // doesn't depend on the page being on screen).
       tick: function (dt) { if (T && screen === 'shift' && !T.paused) { if (!T.ended) update(dt); if (T && screen === 'shift') draw(dt); } },
       give: function (id) { own({ id: id }); dirtyAll(); },
-      findMatch: findMatch, aimTicket: aimTicket, usable: usable, binOpen: binOpen
+      findMatch: findMatch, aimTicket: aimTicket, usable: usable, binOpen: binOpen, level: level,
+      gesture: function (i, how) { if (T) spotGesture(i, how || 'key'); },
+      get music() { return { on: music.on, step: music.step, audio: ac ? ac.state : 'none' }; }
     };
   }
 })();

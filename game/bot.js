@@ -3,7 +3,7 @@
 //
 // Open /play?debug (the ?debug gives the page a window.__ou handle), paste
 // this file into the browser console, then:
-//     await ouBot({ weeks: 5, apm: 90 })
+//     await ouBot({ weeks: 5, apm: 90, level: 'normal' })      // easy, normal or hard
 // It plays whole weeks the way a fair player would (`apm` taps a minute,
 // one thing at a time, most urgent ticket first) and returns how each week
 // went: the day it ended on, tips per day, walk-outs, what it owned.
@@ -11,7 +11,7 @@
 // It moves the shift's clock itself (__ou.tick), so a week takes a second
 // or two and the page doesn't have to be on screen.
 window.ouBot = async function (opt) {
-  opt = Object.assign({ weeks: 3, apm: 90, buy: true, log: false }, opt);
+  opt = Object.assign({ weeks: 3, apm: 90, level: 'normal', buy: true, log: false }, opt);
   var ou = window.__ou, D = ou.D, results = [];
   if (!ou) throw new Error('Open /play?debug first');
   var q = function (s) { return document.querySelector('#ou-stage ' + s); };
@@ -25,6 +25,8 @@ window.ouBot = async function (opt) {
     if (T.bubbles.length) return click('.ou-bubble');
     if (ou.findMatch()) return click('[data-act=send]');
     for (var b = 0; b < T.grill.length; b++) if (T.grill[b] && T.grill[b].state === 'burnt') return click('[data-act=spot][data-i="' + b + '"]');
+    // turn whatever is waiting to be flipped (a click from here counts as a key press, so it flips on Rush too)
+    for (var fl = 0; fl < T.grill.length; fl++) if (T.grill[fl] && T.grill[fl].state === 'flip') return click('[data-act=spot][data-i="' + fl + '"]');
     var list = T.tickets.filter(function (t) { return t.auto == null; }).sort(function (a, c) { return (a.catering ? a.n : a.left) - (c.catering ? c.n : c.left); });
     var t = list[0];
     if (!t) return;
@@ -50,7 +52,9 @@ window.ouBot = async function (opt) {
   }
 
   for (var w = 0; w < opt.weeks; w++) {
+    ou.save.level = opt.level;
     click('[data-act=start]');
+    if (ou.screen === 'how') click('[data-scr=how] [data-act=back]');
     var days = [], guard = 0, lastDay = -1, walk = [];
     while (ou.screen !== 'over' && guard++ < 200000) {
       var s = ou.screen;

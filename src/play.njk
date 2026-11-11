@@ -11,7 +11,9 @@ headExtra: |
       <meta name="theme-color" content="#1F4552">
 ---
 {# Order Up: a phone game. A short-order cook's week at The Café, one shift a
-   day, with gear and tricks picked up after close.
+   day, with gear and tricks picked up after close. Three levels (Easy,
+   Regular, Rush), food that needs flipping, and slow jazz made in the
+   browser if the player turns it on.
 
    The plan, the rules of the look and the words are in game/README.md; the
    foods, tickets, items, odds and difficulty are data in src/_data/game.json
@@ -50,12 +52,17 @@ headExtra: |
       <div class="ou-title-body">
         <div class="ou-wordmark">{% inlineSvg "/assets/thecafe.svg", "", site.name %}</div>
         <h1>Order Up</h1>
-        <p>A week on the flat-top at {{ site.address.street }}.</p>
-        <button class="ou-btn" data-act="start">Start the week</button>
+        {# play.js turns this into "Continue: Wednesday" when a week was left
+           half way, and shows "New week" beside it. #}
+        <button class="ou-btn" data-act="start" id="ou-go">Start the week</button>
+        <div class="ou-levels" id="ou-levels" role="group" aria-label="How hard"></div>
+        <p class="ou-level-text" id="ou-level-text"></p>
         <div class="ou-title-links">
+          <button class="ou-link" data-act="start" id="ou-fresh" hidden>New week</button>
           <button class="ou-link" data-act="how">How to play</button>
           <button class="ou-link" data-act="box">Recipe Box</button>
           <button class="ou-link" data-act="sound" id="ou-sound-title">Sound: off</button>
+          <button class="ou-link" data-act="music" id="ou-music-title">Music: off</button>
         </div>
       </div>
       <div class="ou-title-foot">
@@ -96,7 +103,10 @@ headExtra: |
         <div class="ou-pausecard">
           <h2 class="ou-h">Paused</h2>
           <button class="ou-btn" data-act="resume">Back to the line</button>
-          <button class="ou-btn ou-btn--quiet" data-act="sound" id="ou-sound-pause">Sound: off</button>
+          <div class="ou-row">
+            <button class="ou-btn ou-btn--quiet" data-act="sound" id="ou-sound-pause">Sound: off</button>
+            <button class="ou-btn ou-btn--quiet" data-act="music" id="ou-music-pause">Music: off</button>
+          </div>
           <button class="ou-btn ou-btn--quiet" data-act="quit">End the week</button>
         </div>
       </div>
