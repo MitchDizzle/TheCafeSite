@@ -366,6 +366,14 @@ The week-over screen is the week as rows, Monday to Friday, like the post.
 First-time players get "How to play" before their first Monday, and short
 hints beside the plate through that day.
 
+**Nobody scrolls to find the button** (owner 2026-11-11). A paper screen is
+a band on top, a middle that scrolls, and a foot that stays put with the way
+on or the way back in it: "Got it", "Restock" and "Open Tue", "Start a new
+week", "Back". The Recipe Box, the longest page, has Back in its top band as
+well. The phone's own back button, the browser's, Backspace and Escape all
+leave the Recipe Box and How to play the way the Back button does, instead
+of leaving the game; Escape during a shift pauses it.
+
 ---
 
 ## 9. Motion and feel
@@ -413,6 +421,7 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
 | Start | Start the week | Play now!!! |
 | A plate sent | Order up · $5 | Awesome! |
 | With a pickle | Order up, with a pickle · $6 | |
+| The pickle rule | At lunch there's a Pickle bin. No ticket asks for it. Tap it to add a pickle spear to any plate before you send it: $1 more in tips. | "Add a pickle spear to any plate" (read as an item you buy) |
 | A walk-out | They left. One coffee down. | FAIL |
 | Day over | After close · Monday · $46 in tips | |
 | Lost the week | Rough week · Three coffees down on Thursday. | Game over |

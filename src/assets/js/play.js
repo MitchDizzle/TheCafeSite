@@ -804,9 +804,33 @@
     screen = name;
     var all = stage.querySelectorAll('.ou-scr');
     for (var i = 0; i < all.length; i++) all[i].hidden = all[i].getAttribute('data-scr') !== name;
-    var el = stage.querySelector('[data-scr="' + name + '"]'); if (el && el.scrollTo) el.scrollTo(0, 0);
+    var pad = stage.querySelector('[data-scr="' + name + '"] .ou-body-pad'); if (pad) pad.scrollTop = 0;
   }
+  /* A paper screen is a band on top, a middle that scrolls (.ou-body-pad) and,
+     where there is a way on or a way back, a foot that stays put (.ou-foot):
+     nobody should have to scroll to find the button (owner 2026-11-11). */
   function paper(name, html) { stage.querySelector('[data-scr="' + name + '"]').innerHTML = html; show(name); }
+
+  /* The Recipe Box and How to play are looked at and left. The phone's own
+     back button, the browser's, Backspace and Escape all leave them the same
+     way the Back button does, instead of leaving the game. */
+  var backTo = 'title', pushed = false;
+  function openOverlay(from) {
+    backTo = from || 'title';
+    if (pushed) return;
+    try { history.pushState({ ou: 1 }, ''); pushed = true; } catch (e) { /* no history here: the buttons still work */ }
+  }
+  function leaveOverlay() { show(backTo); drawTitle(); }
+  function closeOverlay() { if (pushed) history.back(); else leaveOverlay(); }
+  window.addEventListener('popstate', function () {
+    pushed = false;
+    if (screen === 'box' || screen === 'how') leaveOverlay();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' && e.key !== 'Backspace') return;
+    if (screen === 'box' || screen === 'how') { e.preventDefault(); closeOverlay(); }
+    else if (e.key === 'Escape' && screen === 'shift' && T) setPaused(!T.paused);
+  });
 
   function ownedRow() {
     var ids = Object.keys(G.items); if (!ids.length) return '';
@@ -859,7 +883,7 @@
     drawClose();
   }
   function drawClose() {
-    var day = D.days[G.day], next = D.days[G.day + 1], body;
+    var day = D.days[G.day], next = D.days[G.day + 1], body, foot = '';
     if (G.stage === 'pick') {
       body = '<span class="ou-label">Pick one, free</span>' + G.pick.map(function (it, i) { return itemCard(it, 'pick', i, {}); }).join('') +
         '<p class="ou-note">One diamond is Normal, two is Rare, three is Epic. The better ones turn up more as the week goes on.</p>';
@@ -871,14 +895,15 @@
         // The one thing that is never for sale: there is no fryer (see /feedback).
         (G.fryer ? '<button class="ou-card is-off" data-act="fryer"><span class="ou-rar"><i></i>Not for now</span><span class="ou-ci">' + spr('fryer') + '</span>' +
           '<span><b>Deep Fryer</b><span class="ou-ct">Not for now.</span></span><span class="ou-price">—</span></button>' : '') +
-        '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="reroll"' + (G.tips < G.reroll ? ' disabled' : '') + '>Restock · ' + money(G.reroll) + '</button>' +
-        '<button class="ou-btn" data-act="next">Open ' + next.short + '</button></div>';
+        '';
+      foot = '<div class="ou-foot"><div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="reroll"' + (G.tips < G.reroll ? ' disabled' : '') + '>Restock · ' + money(G.reroll) + '</button>' +
+        '<button class="ou-btn" data-act="next">Open ' + next.short + '</button></div></div>';
     }
     paper('close',
       '<div class="ou-top ou-top--wallet"><span class="ou-kicker">After close</span><h2 class="ou-h">' + day.name + ' · ' + money(T.tips) + ' in tips</h2>' +
       '<span class="ou-label">Closed at 2pm · ' + plural(T.served, 'plate', 'plates') + ' · ' + plural(T.walk, 'walk-out', 'walk-outs') + '</span>' +
       '<div class="ou-wallet"><span class="ou-label">To spend</span><b>' + money(G.tips) + '</b></div></div>' +
-      '<div class="ou-body-pad">' + body + ownedRow() + '</div>');
+      '<div class="ou-body-pad">' + body + ownedRow() + '</div>' + foot);
   }
   function own(it) { G.items[it.id] = (G.items[it.id] || 0) + 1; }
 
@@ -904,9 +929,8 @@
       '<div class="ou-top' + (win ? ' ou-top--fri' : '') + '"><span class="ou-kicker">' + head[0] + '</span><h2 class="ou-h">' + head[1] + '</h2>' +
       '<span class="ou-label">' + (best ? 'A new best ' + lvName + ' week' : 'Best ' + lvName + ' week: ' + money(save.bests[G.level] || 0)) + '</span></div>' +
       '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' + ownedRow() +
-      '<button class="ou-btn" data-act="start">Start a new week</button>' +
       '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="box">Recipe Box</button><a class="ou-btn ou-btn--quiet" href="/menu">The real menu</a></div>' +
-      '</div>');
+      '</div><div class="ou-foot"><button class="ou-btn" data-act="start">Start a new week</button></div>');
     G = null; T = null;
   }
 
@@ -915,12 +939,14 @@
       .concat(D.specials.map(function (s) { return { id: 'sp-' + s.id, name: s.name, photo: s.photo, sprite: 'special' }; }));
     var seen = list.filter(function (r) { return save.served[r.id]; }).length;
     paper('box',
-      '<div class="ou-top"><span class="ou-kicker">Recipe Box</span><h2 class="ou-h">' + seen + ' of ' + list.length + ' served</h2><span class="ou-label">Serve one 10 times to see the real plate</span></div>' +
+      '<div class="ou-top ou-top--back"><span class="ou-kicker">Recipe Box</span><h2 class="ou-h">' + seen + ' of ' + list.length + ' served</h2><span class="ou-label">Serve one 10 times to see the real plate</span>' +
+      '<button class="ou-topback" data-act="back">Back</button></div>' +
       '<div class="ou-body-pad"><div class="ou-grid">' + list.map(function (r) {
         var n = save.served[r.id] || 0, real = n >= 10 && r.photo;
         return '<div class="ou-rc' + (n ? '' : ' is-new') + '"><span class="ou-rp">' + (real ? '<img src="' + esc(r.photo) + '" alt="' + esc(r.name) + ' at The Café" loading="lazy">' : spr(r.sprite)) + '</span>' +
           '<div><b>' + esc(r.name) + '</b><span>' + (n ? 'Served ' + n + (n < 10 && r.photo ? ' of 10' : '') : 'Not served yet') + '</span></div></div>';
-      }).join('') + '</div><button class="ou-btn" data-act="back" data-to="' + from + '">Back</button></div>');
+      }).join('') + '</div></div><div class="ou-foot"><button class="ou-btn" data-act="back">Back</button></div>');
+    openOverlay(from);
   }
 
   function showHow(from) {
@@ -932,10 +958,11 @@
       (flip === 'none' ? '' : li('egg', flip === 'swipe' ? '<b>Eggs, bacon, burgers and chicken need a flip</b> half way. Swipe across them.' : '<b>Eggs, bacon, burgers and chicken need a flip</b> half way. Tap them, or swipe.')) +
       li('spatula', '<b>Pull it when the ring is full.</b> Leave it and it burns. Tap burnt food to scrap it.') +
       li('bell', '<b>Tap Send</b> when the plate has what a ticket shows. Faster plates tip more.') +
-      li('pickle', '<b>At lunch, add a pickle spear</b> to any plate for $1 more.') +
+      li('pickle', '<b>At lunch there’s a Pickle bin.</b> No ticket asks for it. Tap it to add a pickle spear to any plate before you send it: $1 more in tips.') +
       li('cup-spilled', '<b>A ticket that runs out is a walk-out.</b> Three in a day and the week is over.') +
       li('jar', '<b>After close,</b> pick one item for free and spend your tips on more.') +
-      '</ul><button class="ou-btn" data-act="back" data-to="' + from + '">Got it</button></div>');
+      '</ul></div><div class="ou-foot"><button class="ou-btn" data-act="back">Got it</button></div>');
+    openOverlay(from);
   }
 
   function drawTitle() {
@@ -971,7 +998,7 @@
       case 'fryer': sfx.bad(); el.classList.remove('is-nope'); void el.offsetWidth; el.classList.add('is-nope'); break;
       case 'how': showHow(screen); break;
       case 'box': showBox(screen === 'over' ? 'over' : 'title'); break;
-      case 'back': show(el.getAttribute('data-to') || 'title'); drawTitle(); break;
+      case 'back': closeOverlay(); break;
       case 'sound': save.sound = !save.sound; persist(); drawTitle(); sfx.done(); break;
       case 'special': sfx.tap(); startDay(G.offers[i]); break;
       case 'bin': if (live) tapBin(el.getAttribute('data-part')); break;
