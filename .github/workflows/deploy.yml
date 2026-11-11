@@ -19,6 +19,7 @@ on:
       - 'personal/**'
       - 'social/**'
       - 'square/**'
+      - 'game/**'
 
 # One deploy at a time. A push runs once, for its newest commit, however many
 # commits it carries. Pushes close together queue rather than overlap on the
