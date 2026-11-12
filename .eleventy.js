@@ -236,9 +236,40 @@ module.exports = function (eleventyConfig) {
     const file = path.join((directories && directories.output) || dir.output, "assets", "js", "play.js");
     if (!fs.existsSync(file)) return;
     const source = fs.readFileSync(file, "utf8");
-    const built = source.replace(/[ \t]*\/\* DEV-ONLY:START[\s\S]*?\/\* DEV-ONLY:END \*\/\r?\n?/g, "");
+    let built = source.replace(/[ \t]*\/\* DEV-ONLY:START[\s\S]*?\/\* DEV-ONLY:END \*\/\r?\n?/g, "");
     if (/DEV-ONLY|__ou\b/.test(built)) throw new Error("[play] the test handle is still in the built play.js: check the DEV-ONLY markers");
-    if (built !== source) fs.writeFileSync(file, built);
+    // The results key: a GitHub secret (OU_KEY) on the deploy, the same value
+    // as the results script's KEY. Without it the game still runs; its results
+    // just can't be checked.
+    const key = process.env.OU_KEY || "";
+    if (!key) console.warn("[play] OU_KEY is not set: results from this build will not be signed with the real key");
+    built = built.replace("__OU_SIGN_KEY__", key.replace(/[^A-Za-z0-9_-]/g, "") || "unset");
+    // Minified and obfuscated for the live site; `npm start` serves the
+    // readable source. Set OU_PLAIN=1 to build without it (to debug a build).
+    if (!process.env.OU_PLAIN) {
+      const Obfuscator = require("javascript-obfuscator");
+      built = Obfuscator.obfuscate(built, {
+        compact: true,
+        seed: 20261112,                       // the same source builds the same file
+        identifierNamesGenerator: "hexadecimal",
+        renameGlobals: false,                 // window.* names the page relies on stay
+        stringArray: true,
+        stringArrayEncoding: ["base64"],
+        stringArrayThreshold: 0.75,
+        stringArrayRotate: true,
+        stringArrayShuffle: true,
+        splitStrings: true,
+        splitStringsChunkLength: 6,
+        transformObjectKeys: false,
+        controlFlowFlattening: false,         // the game loop runs every frame: keep it quick
+        deadCodeInjection: false,
+        selfDefending: false,
+        debugProtection: false,
+        unicodeEscapeSequence: false,
+        target: "browser",
+      }).getObfuscatedCode();
+    }
+    fs.writeFileSync(file, built);
   });
 
   return {

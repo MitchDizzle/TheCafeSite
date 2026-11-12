@@ -547,7 +547,20 @@ set it up is in the private planning repo, `game-stats/`):
   13? Ask a grown-up first." It says "Sent. Thank you!" either way.
 - Notes go as plain text with `fetch(..., { mode: 'no-cors', keepalive })`:
   the game never waits on them, never shows an error for them, and works
-  the same with no connection.
+  the same with no connection. Each is sent as `{ d: the note, s: its
+  HMAC-SHA256 }`, signed with a key the deploy puts in (the GitHub secret
+  `OU_KEY`; the results script holds the same key). The end of a week, and
+  the score form, carry the whole week day by day.
+- **The first time** the game is opened (and only when results go
+  somewhere), a small notice says what it keeps and sends: "Your progress
+  is saved on this phone. The game also tells The Café how your weeks go,
+  with no name… No cookies, no ads." **OK** or **Don't send**; Don't send
+  turns the notes off on that phone. The game uses no cookies, only the
+  phone's own storage for the save, so there is no cookie banner.
+- **On the live site `play.js` is minified and obfuscated** (the deploy
+  build, `.eleventy.js`, with javascript-obfuscator): `npm start` serves
+  the readable source. `OU_PLAIN=1 npm run build` builds without it, to
+  debug a build.
 
 ### Checking the balance
 

@@ -55,6 +55,9 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # Order Up's results key: the same value as KEY in the results script.
+          OU_KEY: ${{ secrets.OU_KEY }}
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

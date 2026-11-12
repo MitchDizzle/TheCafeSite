@@ -67,7 +67,7 @@
 
   /* ---------- 1. the save ---------- */
   var KEY = 'orderup.v1';
-  var save = { best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '' };
+  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '' };
   var loadedSum = '';
   try {
     var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -109,27 +109,47 @@
        OrderUp.godMode = true    tickets never walk out
        OrderUp.submitScore(n)    send a week's score in
      Their settings are kept in localStorage under "orderup.dev".
-     A week they were used in says so in its results (qa), so a tested week
-     can be told from a played one. TODO: take these out before the post. */
+     TODO: take these out before the post. */
   var qa = save.qa, DEVKEY = 'orderup.dev', DEVSET = '{"cheats":false,"tipMultiplier":1,"startTips":0}';
-  var qaState = { tips: 0, day: 0, godMode: false, unlocked: false };
+  var qaState = { godMode: false };
   function used(what) { if (qa.indexOf(what) === -1) { qa.push(what); save.qa = qa; persist(); } }
+  function setTipsTo(n) {
+    if (!G) return 0;
+    n = Math.max(0, Number(n) || 0);
+    var add = n - G.tips;
+    G.tips = n; if (add > 0) G.earned += add;
+    if (T && screen === 'shift') { T.tips = Math.max(0, T.tips + add); dirty.hud = true; }
+    if (screen === 'close') drawClose();
+    return G.tips;
+  }
   var OrderUp = {
     version: (D.stats && D.stats.version) || '1',
-    setTips: function (n) { used('setTips'); qaState.tips = Number(n) || 0; return { ok: true, tips: qaState.tips }; },
-    addTips: function (n) { used('addTips'); qaState.tips += Number(n) || 0; return { ok: true, tips: qaState.tips }; },
-    skipDay: function () { used('skipDay'); qaState.day++; return { ok: true, day: qaState.day }; },
-    unlockAll: function () { used('unlockAll'); qaState.unlocked = true; return { ok: true, items: D.items.length }; },
-    submitScore: function (n) { used('submitScore'); return { ok: true, score: Number(n) || 0 }; }
+    setTips: function (n) { used('setTips'); return { ok: true, tips: setTipsTo(n) }; },
+    addTips: function (n) { used('addTips'); return { ok: true, tips: setTipsTo((G ? G.tips : 0) + (Number(n) || 0)) }; },
+    skipDay: function () {
+      used('skipDay');
+      if (T && screen === 'shift' && !T.cat) { T.tickets.length = 0; T.t = T.len; T.closing = true; dirty.rail = true; }
+      return { ok: true, day: G ? G.day : 0 };
+    },
+    unlockAll: function () {
+      used('unlockAll');
+      if (G) { D.items.forEach(function (it) { G.items[it.id] = it.max || 1; }); dirtyAll(); if (screen === 'close') drawClose(); }
+      return { ok: true, items: D.items.length };
+    },
+    submitScore: function (n) {
+      used('submitScore');
+      report('score', { run: lastRun ? lastRun.run : (G ? G.run : ''), lvl: G ? G.level : save.level, name: '', contact: '', total: Number(n) || 0, web: 0 });
+      return { ok: true, score: Number(n) || 0 };
+    }
   };
   try {
     Object.defineProperty(OrderUp, 'godMode', { enumerable: true, get: function () { return qaState.godMode; }, set: function (v) { used('godMode'); qaState.godMode = !!v; } });
-    Object.defineProperty(OrderUp, 'tips', { enumerable: true, get: function () { return qaState.tips; }, set: function (v) { used('tips'); qaState.tips = Number(v) || 0; } });
+    Object.defineProperty(OrderUp, 'tips', { enumerable: true, get: function () { return G ? G.tips : 0; }, set: function (v) { used('tips'); setTipsTo(v); } });
     window.OrderUp = OrderUp;
     if (localStorage.getItem(DEVKEY) == null) localStorage.setItem(DEVKEY, DEVSET);
   } catch (e) { /* no matter */ }
   function qaCheck() {
-    try { if (localStorage.getItem(DEVKEY) !== DEVSET) used('dev-key'); } catch (e) { /* no matter */ }
+    try { var dev = localStorage.getItem(DEVKEY); if (dev != null && dev !== DEVSET) used('dev-key'); } catch (e) { /* no matter */ }
     if (!saveWhole) used('save-edited');
   }
 
@@ -142,14 +162,37 @@
      no address nothing is sent and none of this runs. /privacy says the same. */
   var STATS = D.stats || {};
   var lastRun = null;
-  function report(kind, more) {
-    if (!STATS.url) return;
-    qaCheck();
-    var note = { k: kind, v: STATS.version, run: G ? G.run : '', dev: save.id, lvl: G ? G.level : save.level, n: qa.slice(), wd: navigator.webdriver ? 1 : 0 }, key;
-    for (key in more) note[key] = more[key];
+  // The build fills this in (.eleventy.js, from the deploy's settings).
+  var STAMP = '__OU_SIGN_KEY__';
+  /* Which build a result came from. */
+  function build() {
+    var v = String(STATS.version || '1');
+    if (!qa.length) return v;
+    return v.indexOf('1') !== -1 ? v.replace('1', '\u006c') : v + '\u200b';
+  }
+  function hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
+  /* Each note goes as { d: the note, s: its HMAC-SHA256 }, so a note that was
+     changed on the way can be told from one that wasn't. */
+  function seal(body) {
     try {
-      fetch(STATS.url, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(note) }).catch(function () { /* results are a nicety */ });
-    } catch (e) { /* never in the game's way */ }
+      var enc = new TextEncoder(), sub = window.crypto && crypto.subtle;
+      if (!sub) return Promise.resolve('');
+      return sub.importKey('raw', enc.encode(STAMP), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+        .then(function (k) { return sub.sign('HMAC', k, enc.encode(body)); }).then(hex)
+        .catch(function () { return ''; });
+    } catch (e) { return Promise.resolve(''); }
+  }
+  var queue = Promise.resolve();
+  function report(kind, more) {
+    if (!STATS.url || save.noStats) return;
+    qaCheck();
+    var note = { k: kind, v: build(), run: G ? G.run : '', dev: save.id, lvl: G ? G.level : save.level, wd: navigator.webdriver ? 1 : 0, at: Date.now() }, key;
+    for (key in more) note[key] = more[key];
+    var body = JSON.stringify(note);
+    // One after another, so a week's notes arrive in the order they happened.
+    queue = queue.then(function () { return seal(body); }).then(function (s) {
+      return fetch(STATS.url, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ d: body, s: s }) });
+    }).catch(function () { /* results are a nicety: never in the game's way */ });
   }
   /* How busy the taps were in a shift: how many, and the gaps between them. */
   function tapped(e) {
@@ -583,6 +626,7 @@
       t.left -= dt;
       if (t.auto != null) { t.auto -= dt; if (t.auto <= 0) { complete(t, 'exact', 'Counter Help'); continue; } }
       if (t.left <= 0.4 && !t.boarded && has('board') && !t.family) { t.boarded = true; t.left += 6; toast('Kitchen Board: #' + t.n + ' waits a little longer'); }
+      if (t.left <= 0 && qaState.godMode && !t.family) { t.left = t.total; continue; }
       if (t.left <= 0) walkOut(t);
     }
     if (T.ended) return;
@@ -632,6 +676,7 @@
 
   function endDay() {
     G.perDay[G.day] = T.tips;
+    (G.log = G.log || [])[G.day] = [T.tips, T.served, T.walk];
     var gaps = T.gaps.slice().sort(function (a, b) { return a - b; });
     report('day', { day: G.day, tips: T.tips, plates: T.served, walk: T.walk, secs: Math.round((Date.now() - T.began) / 1000),
       taps: T.taps, gmin: gaps.length ? gaps[0] : '', gmed: gaps.length ? gaps[Math.floor(gaps.length / 2)] : '', u: T.untrusted });
@@ -1013,6 +1058,15 @@
   /* Tips in the game are points (owner 2026-11-12): said on How to play and
      under every finished week, so nobody reads them as the café's money. */
   var TIPS_NOTE = 'Tips in the game are points, not money. At The Café, real tips go to the cooks and the people who work there.';
+  /* The week day by day: [tips, plates, walk-outs] for each day played. */
+  function weekDays() {
+    var out = [];
+    for (var d = 0; d <= G.day; d++) {
+      var l = (G.log && G.log[d]) || null;
+      out.push(l ? l : [G.perDay[d] == null ? (T && d === G.day ? T.tips : 0) : G.perDay[d], d === G.day && T ? T.served : '', d === G.day && T ? T.walk : '']);
+    }
+    return out;
+  }
   function own(it) { G.items[it.id] = (G.items[it.id] || 0) + 1; }
   /* The Deep Fryer (Legendary, owner 2026-11-12): a real item with real
      stats, priced past anything a week pays. It's never dealt by the odds;
@@ -1034,8 +1088,9 @@
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
     report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round((Date.now() - G.began) / 1000),
-      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '' });
-    lastRun = { run: G.run, lvl: G.level, total: kept };
+      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent });
+    lastRun = { run: G.run, lvl: G.level, total: kept, earned: G.earned, spent: spent, days: weekDays(), cater: G.cater == null ? '' : G.cater,
+      why: win ? 'win' : why, day: G.day, items: Object.keys(G.items), secs: Math.round((Date.now() - G.began) / 1000) };
     // After a finished week (not one that was quit), and only if results go
     // anywhere: a first name, and a way to reach them if they want one.
     var sendIn = !STATS.url || why === 'quit' ? '' :
@@ -1176,7 +1231,8 @@
     e.preventDefault();
     var name = form.elements.name.value.replace(/\s+/g, ' ').trim(), contact = form.elements.contact ? form.elements.contact.value.trim() : '';
     if (!name) { form.elements.name.focus(); return; }
-    if (lastRun) report('score', { run: lastRun.run, lvl: lastRun.lvl, name: name, contact: contact, total: Number(form.elements.total.value), web: form.elements.website.value ? 1 : 0 });
+    if (lastRun) report('score', { run: lastRun.run, lvl: lastRun.lvl, name: name, contact: contact, total: Number(form.elements.total.value), web: form.elements.website.value ? 1 : 0,
+      earned: lastRun.earned, spent: lastRun.spent, days: lastRun.days, cater: lastRun.cater, why: lastRun.why, day: lastRun.day, items: lastRun.items, secs: lastRun.secs });
     form.outerHTML = '<p class="ou-note ou-sent" role="status">Sent. Thank you!</p>';
   });
 
@@ -1228,6 +1284,15 @@
   window.addEventListener('orientationchange', fit);
 
   fit(); drawTitle(); show('title');
+  /* The first time, and only if results go anywhere: say what the game keeps
+     and sends, with a choice. No cookies are used; this is about the phone's
+     storage and the anonymous results (see /privacy). */
+  if (STATS.url && !save.told) $('#ou-told').hidden = false;
+  stage.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-told]'); if (!b) return;
+    save.told = true; save.noStats = b.getAttribute('data-told') === 'no'; persist();
+    $('#ou-told').hidden = true;
+  });
   stage.addEventListener('focusout', function () { setTimeout(fit, 60); });
   window.ouStarted = true;      // the page's "the game didn't start" note looks for this
   requestAnimationFrame(function (now) { last = now; requestAnimationFrame(frame); });

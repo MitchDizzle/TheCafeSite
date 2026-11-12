@@ -66,6 +66,17 @@ headExtra: |
         </div>
         <div class="ou-levels" id="ou-levels" role="group" aria-label="How hard"></div>
         <p class="ou-level-text" id="ou-level-text"></p>
+        {# Shown once, the first time, and only when results go somewhere
+           (site.json game.statsUrl). play.js decides. #}
+        <div class="ou-told" id="ou-told" hidden role="dialog" aria-labelledby="ou-told-h">
+          <p id="ou-told-h"><b>Before you play</b></p>
+          <p>Your progress is saved on this phone. The game also tells The Café how your weeks go, with no name, so we can see whether it's too hard. No cookies, no ads.</p>
+          <div class="ou-row">
+            <button class="ou-btn" data-told="ok">OK</button>
+            <button class="ou-btn ou-btn--ghost" data-told="no">Don't send</button>
+          </div>
+          <a class="ou-link" href="/privacy">Privacy</a>
+        </div>
         <div class="ou-title-links">
           <button class="ou-link" data-act="how">How to play</button>
           <button class="ou-link" data-act="box">Recipe Box</button>
