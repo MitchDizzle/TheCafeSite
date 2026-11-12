@@ -548,8 +548,8 @@ set it up is in the private planning repo, `game-stats/`):
 - Notes go as plain text with `fetch(..., { mode: 'no-cors', keepalive })`:
   the game never waits on them, never shows an error for them, and works
   the same with no connection. Each is sent as `{ d: the note, s: its
-  HMAC-SHA256 }`, signed with a key the deploy puts in (the GitHub secret
-  `OU_KEY`; the results script holds the same key). The end of a week, and
+  HMAC-SHA256 }`, signed with a key the deploy puts in (the repo secret `OU_SECRET`, read by
+  the build as `OU_KEY`; the results script holds the same key). The end of a week, and
   the score form, carry the whole week day by day.
 - **The first time** the game is opened (and only when results go
   somewhere), a small notice says what it keeps and sends: "Your progress
