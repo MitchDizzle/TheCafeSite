@@ -9,6 +9,14 @@ Mitch asks between customers and prints straight from the PDF you send. The
 design is settled (STYLE.md, "Counter signs, quickly"); don't redesign. Get
 the words right, proof once, send the PDF.
 
+## The everyday three are on the kitchen board
+
+Since 2026-11-11 the cafe prints today's special sides, the special & soup
+and the dessert fridge sign itself: the front page's **Manage → Signs**
+(`kitchen/lib/signs.js`, kitchen/README.md "Signs"), from Specials and
+Square. Point Mitch there first. Make one here only when he asks for a PDF,
+or for something that screen can't do.
+
 ## Which piece
 
 | Request | Piece | What to change |

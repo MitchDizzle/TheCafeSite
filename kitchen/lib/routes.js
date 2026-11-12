@@ -76,7 +76,7 @@ function isLocal(req) {
 
 // What another device on the wifi (or the owner's phone over Tailscale) may
 // reach: the front page, the phone page (/today) and their own actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/send-to-kitchen", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated", "/api/front-pin", "/api/front-print-report", "/api/front-mail-report", "/api/front-mail-report-save", "/api/front-mail-report-send"]);
+const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/send-to-kitchen", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated", "/api/front-pin", "/api/front-print-report", "/api/front-signs", "/api/front-mail-report", "/api/front-mail-report-save", "/api/front-mail-report-send"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -104,6 +104,7 @@ const STATIC = {
   "/front/saved-photos.js": "front/saved-photos.js",
   "/front/reservations.js": "front/reservations.js",
   "/front/print-report.js": "front/print-report.js",
+  "/front/signs.js": "front/signs.js",
 };
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
@@ -467,6 +468,22 @@ async function handle(req, res) {
       if (url.pathname === "/api/front-survey-website") return send(res, 200, { ok: true, stats: surveys.websiteStats() });
     } catch (err) {
       return send(res, 200, { ok: false, message: `Couldn't read that: ${err.message}` });
+    }
+  }
+  // Manage -> Signs, behind the PIN: the day's counter signs as letter pages
+  // to show and print (lib/signs.js). `fridge` is the desserts ticked for
+  // the fridge sign, kept before the pages are made.
+  if (req.method === "POST" && url.pathname === "/api/front-signs") {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    const today = localDate();
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(body.date || "") && body.date >= today ? body.date : today;
+    try {
+      return send(res, 200, { ok: true, ...(await require("./signs").buildSigns(date, Array.isArray(body.fridge) ? body.fridge : null)) });
+    } catch (err) {
+      console.error(`Signs: ${err.message}`);
+      return send(res, 200, { ok: false, message: `The signs couldn't be made: ${err.message}` });
     }
   }
   // Manage -> Numbers -> Print a report, behind the PIN: the page for a

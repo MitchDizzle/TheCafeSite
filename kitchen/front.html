@@ -1142,7 +1142,7 @@
   }
 
   // What the Manage jobs in front/*.js (Specials, Reservations, Photo post,
-  // Reports, Print a report, Survey, Desserts, Saved photos, Leave off
+  // Reports, Print a report, Signs, Survey, Desserts, Saved photos, Leave off
   // kitchen tickets) share with this page. Each file is
   // loaded after this script and registers its menu row's job in tools
   // (and any of its own buttons in acts) under the row's data-act name.
@@ -1226,6 +1226,7 @@
     reservations: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     desserts: '<path d="M5 11h14l-1.5 9h-11z"/><path d="M7 11a5 5 0 0 1 10 0"/><path d="M12 6V4"/>',
     photo: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    signs: '<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/>',
     numbers: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
     tools: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
   };
@@ -1247,6 +1248,7 @@
           ${tile("reservations", "Reservations", requests ? `${requests} request${requests === 1 ? "" : "s"} to answer` : "Book a table, answer requests", requests)}
           ${tile("desserts", "Desserts", "What's in, how many left")}
           ${tile("photo", "Photo post", "A dish's Facebook picture")}
+          ${tile("signs", "Signs", "Today's sides, special & soup and dessert fridge, to print")}
         </div>
         ${section("numbers", "Numbers", "Today's report · Print a report · Reports · Survey", [
           row("today", "Today's report", "Sales so far against last week, and what's selling"),
@@ -1313,5 +1315,6 @@
 <script src="/front/leave-off.js"></script>
 <script src="/front/saved-photos.js"></script>
 <script src="/front/print-report.js"></script>
+<script src="/front/signs.js"></script>
 </body>
 </html>

@@ -189,7 +189,7 @@ Settings in `config.json`, both optional:
 | `photoPlaceholders` | `placeholders/soup-of-the-day.png` for Soup of the Day only | The picture for each daily item on a day its dish has no photo. Leave an item out to show nothing of ours on those days. Lunch Special is left out (see "Photos in Square"); `"Lunch Special": "placeholders/lunch-special.png"` puts its card back. |
 | `specialsUrl` | `https://lvcafetogo.com/specials.json` | Where **Specials** reads the website's specials from. `""` turns that off. |
 | `openDays` | `[1, 2, 3, 4, 5]` | The days Specials lists (0 is Sunday, 6 Saturday). |
-| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu: the everyday four (Specials, Reservations, Desserts, Photo post) are tiles at the top, and the rest fold away under **Numbers** (Today's report, Print a report and its daily email, Reports, Survey) and **Tools** (Leave off kitchen tickets, Saved photos, Back up now, Check for updates, Reset for the day); a phone remembers which of the two are open (Mitch 2026-11-08). Back returns to the menu; closing the panel forgets the PIN, unless **Remember on this device** was ticked. With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), delete test shots or move the photos to GitHub in **Saved photos** (see Photo post), **Back up now** (the backup below, on demand; the board and orders carry on while it runs), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update, installed quietly as on the board; see Settings above) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below), **Print a report** (see below), or open **Today's report** (see "Today's report"). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
+| `updatePin` | none | Turns on **Manage** on the front page: enter the PIN once, then pick a job from the menu: the everyday five (Specials, Reservations, Desserts, Photo post, Signs) are tiles at the top, and the rest fold away under **Numbers** (Today's report, Print a report and its daily email, Reports, Survey) and **Tools** (Leave off kitchen tickets, Saved photos, Back up now, Check for updates, Reset for the day); a phone remembers which of the two are open (Mitch 2026-11-08). Back returns to the menu; closing the panel forgets the PIN, unless **Remember on this device** was ticked. With this PIN it can set the **Specials** for today and the days ahead (see below), make a **Photo post** (see below), change the **Desserts** (see below), delete test shots or move the photos to GitHub in **Saved photos** (see Photo post), **Back up now** (the backup below, on demand; the board and orders carry on while it runs), change what to **Leave off kitchen tickets** (every Square category with its items; tick an item, or a whole category), **Check for updates** (the board's own update, installed quietly as on the board; see Settings above) or **Reset for the day** (same as the board's, including the clear-the-board option), or see **Reports** (see below), **Print a report** (see below), or open **Today's report** (see "Today's report"). Five wrong PINs in 10 minutes locks it for 10 minutes. Without it, Manage says it isn't set up. Example: `"updatePin": "2468"`. |
 
 ## Today's report (`/today`)
 
@@ -260,7 +260,7 @@ To test without sound (on another computer, say), also run `set KITCHEN_MUTE=1` 
 | `front.html` | The front page for the counter (`/front`). |
 | `today.html` | Today's report (`/today`), for the PC or the owner's phone: the day's numbers, the reservations and the open orders. |
 | `google-script\Code.gs` | The reservations' Google Apps Script, pasted into the cafe's Google Sheet (see "Reservations"); it also sends the emailed report. Not run on this PC. |
-| `front\` | The front page's Manage jobs, one file each (Specials, Reservations, Photo post, Saved photos, Reports, Print a report, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
+| `front\` | The front page's Manage jobs, one file each (Specials, Reservations, Photo post, Saved photos, Reports, Print a report, Signs, Desserts, Leave off kitchen tickets), and the Manage panel's styles. |
 | `kitchen.css` | The colours, fonts and base styles every screen shares: House style (see "The look"). |
 | `config.json` | The token and settings. Only on the kitchen PC; gitignored. |
 | `data\` | This PC's own files, made by the board; gitignored, never touched by an update (see "The data folder and backups"). |
@@ -486,6 +486,22 @@ The PDF is made on the kitchen PC by Chrome (or Edge), printing the page headles
 If the PC was off at 2:10, or Google didn't answer, it goes as soon as it can: tried every 10 minutes, and the next days still (up to three days for a day's, a week for the week's). Never for a day before this update, so the first one is the first 2:10 after it. Test mode never emails, and a development copy (`start-dev.bat`) doesn't by itself. `/check` says when the last one went, or why it didn't.
 
 **It goes through the reservations' Google script**, so it needs `reservationsKey` (see "Reservations"), and **the script needs this version of `Code.gs`** (its `report` action): paste it in again and deploy a new version (see "After a change to `Code.gs`" there). Until then, Email it says "Unknown action." Google allows about 100 emails a day from a free account; the report is one.
+
+## Signs (Manage on the front page)
+
+**The day's counter signs, ready to print** (client 2026-11-11: they were made by hand on the website every morning). **Manage → Signs** shows three letter pages, as they print, and **Print** sends them to any printer (on the PC, Chrome's print):
+
+- **Special sides** (black & white): the plate's sides in boxes ("comes with both", or "one side, pick from" for a side written with "or"), then the sides to swap in: the day's extra sides marked "today only", the Deli Salads, a cup of the soup. A choice-of-side day lists the sides to pick from; a plate that is one of two shows the two and its breads. A plate with no sides has no sides sign.
+- **Special & soup**: the plate with its sides and "Includes a drink", and the soup with its Cup / Bowl prices and its note. Coloured type, light on ink; tick **Special & soup in black & white** for black ink only.
+- **Dessert fridge** (black & white): what's in the fridge with its price, dearest first, the cookies and bars under Treats.
+
+Nothing is typed there, so the signs can't disagree with the till: the plate, sides and soup are the day's in **Specials** (fix a wrong one there), and the desserts, their prices and the soup's prices are Square's (**Desserts**). **Today** is picked; the next two planned days can be printed ahead.
+
+- **Untick a page** to leave it out of the print. The device remembers.
+- **What's in the dessert fridge** lists every dessert kind with a tick. Square's count decides (0 is off), and Cheesecake, Cinnamon Roll and Pecan Sticky Bun start off (not kept in that fridge). Tick or untick one and it stays that way until changed back, on every device; a tick that agrees with Square is forgotten, so that dessert follows Square again. Kept in `datasigns.json`, which can also hold `skipItems`, `treats` and `names` (a shorter name for the sign, by the kind's name in Square) to change the defaults in `lib/signs.js`.
+- A page with too much on it (a long plate, a full fridge) shrinks to fit its sheet.
+
+The pages use the website's own sign styles (`src/assets/css/studio/sign.css`, which an update brings with it), so they match the /studio/ pieces they replace day to day: `sign-todays-sides-bw`, `sign-day-letter` (without its desserts) and `sign-desserts-bw`.
 
 ## The look (House style)
 
