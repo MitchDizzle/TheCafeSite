@@ -17,6 +17,7 @@
     { "label": "Reserve a table", "href": "/reserve" },
     { "label": "Contact",  "href": "/contact" },
     { "label": "Our feedback", "href": "/feedback", "needsFeedback": true },
+    { "label": "Play Order Up", "href": "/play", "needsGame": true },
     { "label": "Privacy",  "href": "/privacy" }
   ]
 }

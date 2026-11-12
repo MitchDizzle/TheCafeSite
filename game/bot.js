@@ -8,15 +8,19 @@
 // one thing at a time, most urgent ticket first) and returns how each week
 // went: the day it ended on, tips per day, walk-outs, what it owned.
 // About 60 taps a minute is a slow thumb, 90 a steady one, 150 a quick one.
+// `slip` (0 to 1) is how often a beat is wasted, the way a person hesitates
+// or mis-taps: 0.1 is a fair guess, 0 is a machine.
 // It moves the shift's clock itself (__ou.tick), so a week takes a second
 // or two and the page doesn't have to be on screen.
 window.ouBot = async function (opt) {
-  opt = Object.assign({ weeks: 3, apm: 90, level: 'normal', buy: true, log: false }, opt);
+  opt = Object.assign({ weeks: 3, apm: 90, level: 'normal', slip: 0, buy: true, log: false }, opt);
   var ou = window.__ou, D = ou.D, results = [];
   if (!ou) throw new Error('Open /play?debug first');
   var q = function (s) { return document.querySelector('#ou-stage ' + s); };
   var click = function (s) { var el = typeof s === 'string' ? q(s) : s; if (el) el.click(); return !!el; };
-  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  // Step aside for a moment without a timer: a browser slows timers right
+  // down on a page that isn't on screen, and a test shouldn't care.
+  var sleep = function () { return new Promise(function (r) { var c = new MessageChannel(); c.port1.onmessage = function () { r(); }; c.port2.postMessage(0); }); };
   var step = 60 / opt.apm;      // game seconds between taps
   ou.speed(0);                  // the page's own clock stands still; we move it
 
@@ -55,8 +59,9 @@ window.ouBot = async function (opt) {
     ou.save.level = opt.level;
     click('[data-act=start]');
     if (ou.screen === 'how') click('[data-scr=how] [data-act=back]');
-    var days = [], guard = 0, lastDay = -1, walk = [];
-    while (ou.screen !== 'over' && guard++ < 200000) {
+    var days = [], guard = 0, lastDay = -1, walk = [], began = Date.now();
+    while (ou.screen !== 'over' && Date.now() - began < 120000) {
+      guard++;
       var s = ou.screen;
       if (s === 'dawn') click('[data-act=special]');
       else if (s === 'close') {
@@ -69,7 +74,7 @@ window.ouBot = async function (opt) {
       } else if (s === 'shift') {
         var T = ou.T;
         if (T) { lastDay = ou.G.day; walk[lastDay] = T.walk; days[lastDay] = T.tips; }
-        if (T && !T.ended) { for (var k = 0, n = Math.ceil(step / 0.05); k < n; k++) ou.tick(step / n); act(); if (guard % 40) continue; }
+        if (T && !T.ended) { for (var k = 0, n = Math.ceil(step / 0.05); k < n; k++) ou.tick(step / n); if (Math.random() >= opt.slip) act(); if (guard % 40) continue; }
         else { await sleep(60); continue; }
       }
       await sleep(0);

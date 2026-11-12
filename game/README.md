@@ -445,9 +445,12 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
 - No red on teal; no red that isn't a button, a price or a late ticket.
 - No fries, deep-fried anything, evenings or weekends: the game doesn't
   promise what the café doesn't do.
-- No ads, no tracking, no accounts, no leaderboard server, no sign-in.
-  Scores stay on the phone. The site has no backend and the game doesn't
-  add one.
+- No ads, no ad trackers, no accounts, no sign-in, no names. Today scores
+  stay on the phone and nothing is sent anywhere. (Planned, owner
+  2026-11-11, not built: anonymous results to the café's own sheet, to see
+  how many people play and where weeks end, with checks against made-up
+  scores. When that is built this line, §13 and `/privacy` change with it.
+  The plan is in the private planning repo: `GAME-LAUNCH.md`.)
 - No menu prices in the game. Tips are game money; menu prices change and
   belong to Square.
 - Don't recreate any existing game's look or characters. This one looks
@@ -535,4 +538,9 @@ again.
    music on a phone speaker, try the swipe with a thumb, tune `levels`.
 2. Unlocks across runs.
 3. This week's real special as a dawn card (from `specials.json`).
-4. The owners' go-ahead, then the link and the sitemap.
+4. **Before any score is kept: build the `?debug` handle into the dev
+   server only.** On the live page it lets anyone move the clock and hand
+   themselves items. Harmless while scores stay on the phone.
+5. Results, play counts and cheat checks (planned, see §12).
+6. The owners' go-ahead, then the checklist before it's posted: Facebook's
+   own browser, a share picture, the link and the sitemap.

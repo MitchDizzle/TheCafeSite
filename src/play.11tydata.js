@@ -4,6 +4,10 @@
 // photo given its small gallery copy (thumbs/), as one JSON string the page
 // puts in a <script type="application/json"> for assets/js/play.js to read.
 //
+// `noindex` follows site.json's game.listed, so one switch lists the game or
+// hides it. The game's results settings (site.json, game) ride along in the
+// same JSON as `stats`.
+//
 // It also checks the game against the real menu: every recipe names the
 // menu.json item it stands for (`menu`), and a name that is no longer on the
 // menu is a warning in the build log, so the game can't keep serving
@@ -30,8 +34,11 @@ function strip(value) {
 
 module.exports = {
   eleventyComputed: {
+    noindex: (data) => !(data.site && data.site.game && data.site.game.listed),
     gameJson: (data) => {
       const game = strip(data.game || {});
+      const cfg = (data.site && data.site.game) || {};
+      game.stats = { url: cfg.statsUrl || "", version: String(cfg.version || "1"), askContact: cfg.askContact !== false };
       const onMenu = new Set();
       for (const c of (data.menu && data.menu.categories) || []) for (const i of c.items || []) onMenu.add(i.name);
 

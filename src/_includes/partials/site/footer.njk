@@ -12,7 +12,8 @@
         <ul class="footer__links" role="list">
             {%- for item in nav.footer %}
             {#- /feedback is only built once there are surveys (feedbackStats.json) #}
-            {%- if not item.needsFeedback or feedbackStats.total %}
+            {#- /play is linked only once site.json's game.listed says so #}
+            {%- if (not item.needsFeedback or feedbackStats.total) and (not item.needsGame or site.game.listed) %}
             <li><a href="{{ item.href }}">{{ item.label }}</a></li>
             {%- endif %}
             {%- endfor %}

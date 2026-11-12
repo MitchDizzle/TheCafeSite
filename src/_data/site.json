@@ -36,6 +36,14 @@
     "label": "Order Online"
   },
 
+  "_comment_game": "Order Up, the phone game at /play (game/README.md). `listed`: false keeps it unlisted (noindex, no link in the footer or on /menu); true takes noindex off and shows both links, and then add https://lvcafetogo.com/play to sitemap.xml by hand. It is also the switch to pull the links in a hurry. `statsUrl`: where the game sends its results (how weeks went, no names); empty means it sends nothing and never offers 'Send in your score'. `askContact`: whether that form also offers an email-or-phone box; false keeps it to a first name. `version` shows on the title screen and goes with every result, so change it when the rules change.",
+  "game": {
+    "listed": false,
+    "statsUrl": "",
+    "askContact": true,
+    "version": "1.0"
+  },
+
   "_comment_opening": "Opening day (2026-10-05) and the hours. The hours fields (hoursDays, opens, closes, hoursLabel) are read all over the site, the menus and the posts, so they are stated once here. dayName and monthDay are read by /about. date, kicker and ordinal were only for the opening-week posts, archived 2026-10-09 in archive/site-src/studio/; they stay so those posts can come back as they were. Not billed as a grand opening: that is a separate, later piece.",
   "opening": {
     "date": "2026-10-05",
