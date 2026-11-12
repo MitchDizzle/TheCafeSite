@@ -39,7 +39,7 @@
   "_comment_game": "Order Up, the phone game at /play (game/README.md). `listed`: false keeps it unlisted (noindex, no link in the footer or on /menu); true takes noindex off and shows both links, and then add https://lvcafetogo.com/play to sitemap.xml by hand. It is also the switch to pull the links in a hurry. `statsUrl`: where the game sends its results (how weeks went, no names); empty means it sends nothing and never offers 'Send in your score'. `askContact`: whether that form also offers an email-or-phone box; false keeps it to a first name. `version` shows on the title screen and goes with every result, so change it when the rules change.",
   "game": {
     "listed": false,
-    "statsUrl": "",
+    "statsUrl": "https://script.google.com/macros/s/AKfycbwB1nwoqRdsDq0Xqcys2iJqKZJTSexwvRkfLIWplfk8bpAqbVlEXNAC3Gcme4XH8RBhkA/exec",
     "askContact": true,
     "version": "1.0"
   },
