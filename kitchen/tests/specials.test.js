@@ -229,6 +229,19 @@ test("Doubling up: the plate's own sides as extra sides put each on the other's 
   delete plan.sidesApplied[today];
 });
 
+test("Doubling up needs no extra sides: each list offers the plate's other side after its own", async () => {
+  const today = localDate();
+  plan.extraSides = {};
+  await loadCatalog();
+  delete plan.sidesApplied[today];
+  await applySides(today, day("Brisket", { sides: ["Cheesy Potatoes", "Corn Casserole"] }));
+  const names = (name) => [...mockItems.values()].find((o) => o.type === "MODIFIER_LIST" && o.modifier_list_data.name === name)
+    .modifier_list_data.modifiers.map((m) => [m.modifier_data.name, m.modifier_data.on_by_default]);
+  assert.deepEqual(names("Side 1"), [["Cheesy Potatoes", true], ["Corn Casserole", false], ["Tossed Salad", false], ["Cottage Cheese", false]]);
+  assert.deepEqual(names("Side 2"), [["Corn Casserole", true], ["Cheesy Potatoes", false], ["Tossed Salad", false], ["Cottage Cheese", false]]);
+  delete plan.sidesApplied[today];
+});
+
 test("Specials Modifiers go on Lunch Special in Square as one list, priced; Leave Off and unpicked presets go off", async () => {
   const today = localDate();
   Object.assign(plan, { dayLists: {}, dishLists: {}, listsUsed: [] });

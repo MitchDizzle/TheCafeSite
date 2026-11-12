@@ -10,6 +10,10 @@
 //     one (client 2026-10-29: no Chef's Choice; it was pre-picked first).
 //   - choice of side (anySide): one list, Chef's Choice pre-picked, then the
 //     swap sides.
+// On a plate with two or three sides, each list also offers the plate's other
+// sides, right after its own, so a customer can double up on one (client
+// 2026-11-12: it only worked on a day whose extraSides named them, and the
+// sign says "Double up on it" every such day).
 // The swap sides are the day's own extra sides (the website's extraSides),
 // then the website's swapSides (menu.json's Deli Salads), then a cup of the
 // day's soup when the website sets soupSide (client 2026-10-13). Every
@@ -129,7 +133,9 @@ async function saveSides(slots, swaps, hidden) {
     // the swap list's spelling, so it doesn't rename that option.
     const canon = (w) => swaps.find((x) => x.toLowerCase() === w.toLowerCase()) || w;
     const pickWord = slot.pick && canon(slot.pick);
-    list = await writeOptions(list, name, `side-${i + 1}`, [slot.pick, ...slot.also, ...swaps].filter(Boolean).map(canon), where, "SINGLE", pickWord);
+    // The plate's other sides, to double up on one (writeOptions drops a repeat).
+    const others = slots.slice(0, cfg.sideLists.length).filter((x) => x !== slot).flatMap((x) => (x.also.length ? x.also : [x.pick]));
+    list = await writeOptions(list, name, `side-${i + 1}`, [slot.pick, ...slot.also, ...others, ...swaps].filter(Boolean).map(canon), where, "SINGLE", pickWord);
     const pick = pickWord && (list.modifier_list_data.modifiers || []).find((m) => m.modifier_data.name.toLowerCase() === pickWord.toLowerCase());
     set.push({ list, on: true, pickId: pick ? pick.id : null });
   }
@@ -320,8 +326,9 @@ async function applySides(today, day) {
   // an "or" side without Chef's Choice, 2026-10-29; 9: counter-only sides
   // hidden online, 2026-10-29; 10: Specials Modifiers in place of Leave Off,
   // extra sides on the Special Side, no lists by a sandwich's name, 2026-10-29;
-  // 11: Specials Modifiers at the top, 2026-11-03).
-  const sig = JSON.stringify({ v: 11, slots, swaps, special, mods, extra, hidden: [...hidden] });
+  // 11: Specials Modifiers at the top, 2026-11-03; 12: the plate's other
+  // sides on each list, 2026-11-12).
+  const sig = JSON.stringify({ v: 12, slots, swaps, special, mods, extra, hidden: [...hidden] });
   const last = plan.sidesApplied[today];
   if (last && last.sig === sig && (last.at || Date.now() - Date.parse(last.failedAt) < RETRY_MINUTES * 6e4)) return last;
   if (!slots.length && !mods.length && !extra.length && !special.length && !Object.values(plan.sidesApplied).some((a) => a.at)) return null;
