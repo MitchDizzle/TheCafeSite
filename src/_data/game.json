@@ -110,6 +110,7 @@
     { "id": "regular",   "name": "The Regular",        "rarity": "rare",   "price": 70, "icon": "mug",                   "text": "Twice a day a ticket is \"the usual\" and tips triple" },
     { "id": "cookie",    "name": "Triple Chocolate Cookie", "rarity": "rare", "price": 80, "max": 2, "icon": "cookie",   "text": "Once a day, tap it: every ticket's clock starts over" },
     { "id": "spatula",   "name": "Heavy Spatula",      "rarity": "rare",   "price": 70, "icon": "spatula",               "text": "Food flips itself (not offered on Easy, where nothing needs flipping)" },
+    { "id": "spare",     "name": "Second Plate",       "rarity": "rare",   "price": 75, "icon": "plates",                "text": "A second plate beside the first: tap it to swap them, and park a half-made plate while a quicker ticket goes out" },
     { "id": "smalltalk", "name": "Small Talk",         "rarity": "rare",   "price": 70, "icon": "talk",                  "text": "You answer family without looking up: what they say clears itself" },
 
     { "id": "linecook",  "name": "Line Cook",          "rarity": "epic",   "price": 180, "icon": "hat",                   "text": "A second cook sends out a ticket that is about to walk out, once every 14 seconds" },

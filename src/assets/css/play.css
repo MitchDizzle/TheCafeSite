@@ -184,6 +184,16 @@
 .ou-hint.is-bad { color: var(--text-dark); }
 .ou-scrap { align-self: flex-start; min-height: 40px; padding: 8px 12px !important; border-radius: 10px; background: #fff !important; border: 2px solid var(--teal-dark) !important; font: 700 12px/1 Lato, sans-serif !important; letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 3px 0 var(--steel-dark); }
 .ou-scrap[disabled] { opacity: .4; }
+.ou-sidebtns { display: flex; align-items: flex-end; gap: 6px; }
+.ou-sidebtns .ou-scrap { align-self: auto; padding: 8px 9px !important; letter-spacing: .08em; }
+/* The Second Plate: a small plate beside Scrap, its food shown small. */
+.ou-spare { position: relative; width: 50px; height: 50px; flex: none; padding: 0 !important; background: none !important; border: 0 !important; }
+.ou-spare > .ou-i { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(2px 2px 0 var(--shadow)); }
+.ou-spare span { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; }
+.ou-spare span .ou-i { width: 100%; height: 100%; }
+.ou-spare em { position: absolute; right: -3px; top: -3px; font: 900 10px/1 Lato, sans-serif; font-style: normal; background: var(--teal-dark); color: var(--cream); border-radius: 999px; padding: 2px 4px; }
+.ou-spare b { position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); font: 700 9px/1 Lato, sans-serif; letter-spacing: .12em; text-transform: uppercase; background: var(--teal-dark); color: var(--cream); border-radius: 999px; padding: 2px 5px; }
+.ou-spare.is-full { animation: ou-pop .22s ease-out; }
 .ou-plate { position: relative; height: min(104px, 100%); width: auto; aspect-ratio: 1; justify-self: center; }
 .ou-plate > .ou-i { position: absolute; inset: 0; }
 .ou-plate.is-bad { animation: ou-shake .3s ease-in-out 1; }

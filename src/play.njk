@@ -109,7 +109,11 @@ headExtra: |
       <div class="ou-table">
         <div class="ou-side">
           <div class="ou-hint" id="ou-hint" aria-live="polite"></div>
-          <button class="ou-scrap" id="ou-scrap" data-act="scrap">Scrap</button>
+          <div class="ou-sidebtns">
+            <button class="ou-scrap" id="ou-scrap" data-act="scrap">Scrap</button>
+            {#- The Second Plate (an item): a plate to park one on. Tap it to swap. #}
+            <button class="ou-spare" id="ou-spare" data-act="swap" hidden></button>
+          </div>
         </div>
         <div class="ou-plate" id="ou-plate" aria-label="The plate"></div>
         <div class="ou-sendwrap"><button class="ou-send is-off" id="ou-send" data-act="send">Send</button></div>

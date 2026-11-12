@@ -131,6 +131,7 @@ prices and how many of each can be owned are in `game.json` → `items`,
 | The Regular | Twice a day a ticket is "the usual" and tips triple |
 | **Triple Chocolate Cookie** (2) | Once a day, tap it: every ticket's clock starts over |
 | Heavy Spatula | Food flips itself (never offered on Easy, where nothing flips) |
+| Second Plate | A small plate beside Scrap: tap it to swap the two plates, so a half-made plate can wait while a quicker ticket goes out. Send only sends the front plate |
 | Small Talk | What family says clears itself, and never blocks a tap (never offered on Easy, where family doesn't come) |
 
 **Epic**

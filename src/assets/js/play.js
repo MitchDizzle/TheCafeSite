@@ -356,7 +356,7 @@
     var day = D.days[G.day];
     T = {
       t: 0, len: TU.dayLength, phase: 'breakfast', bins: 'breakfast', closing: false, ended: false, paused: false,
-      tickets: [], grill: [null, null, null, null, null, null], plate: [],
+      tickets: [], grill: [null, null, null, null, null, null], plate: [], spare: [],
       cups: TU.cups, spawnIn: BANNER_S + 0.3, seq: 1, served: 0, walk: 0, tips: 0,
       special: special, dry: 0, lineT: 0, urnDone: false,
       cookies: has('cookie'),
@@ -512,6 +512,13 @@
     }
     if (how === 'swipe' && it.state === 'raw') { hintFlash('Not ready yet'); return; }
     tapSpot(i);
+  }
+  /* The Second Plate: the two plates change places. What's parked waits as
+     it is (nothing on a plate goes cold); Send only ever sends the front one. */
+  function swapPlates() {
+    if (!has('spare') || (!T.plate.length && !T.spare.length)) return;
+    var t = T.plate; T.plate = T.spare; T.spare = t; T.plateNew = -1;
+    dirty.plate = dirty.rail = true; sfx.tap();
   }
   function tapPlateItem(i) { T.plate.splice(i, 1); dirty.plate = dirty.rail = true; sfx.tap(); }
   function scrap() { if (!T.plate.length) return; T.plate = []; dirty.plate = dirty.rail = true; sfx.tap(); }
@@ -713,7 +720,7 @@
   function startCatering() {
     var c = D.catering, queue = shuffle(c.platters).slice(0, 5);
     T.ended = false; T.closing = true; T.endIn = null; T.phase = 'catering'; T.bins = 'lunch';
-    T.plate = []; T.fam = null; T.familyAt = null;
+    T.plate = []; T.spare = []; T.fam = null; T.familyAt = null;
     T.cat = { left: c.seconds + BANNER_S, total: c.seconds + BANNER_S, queue: queue, n: queue.length, done: 0 };
     T.tipsBefore = T.tips;
     for (var i = 0; i < TU.rail && T.cat.queue.length; i++) T.tickets.push(makeTicket(T.cat.queue.shift(), { catering: true }));
@@ -863,7 +870,19 @@
     var m = findMatch(), sendEl = $('#ou-send');
     sendEl.className = 'ou-send' + (m ? ' is-ready' : ' is-off');
     $('#ou-scrap').disabled = !T.plate.length;
+    drawSpare();
     drawHint();
+  }
+
+  function drawSpare() {
+    var el = $('#ou-spare'), on = !!has('spare');
+    el.hidden = !on; if (!on) return;
+    var n = T.spare.length, show = T.spare.slice(0, n > 3 ? 2 : 3);
+    var lay = { 1: [[50, 50]], 2: [[34, 50], [66, 50]], 3: [[50, 32], [30, 64], [70, 64]] }[show.length] || [];
+    el.innerHTML = spr('plate') + show.map(function (p, i) { return '<span style="left:' + lay[i][0] + '%;top:' + lay[i][1] + '%">' + partSprite(p) + '</span>'; }).join('') +
+      (n > 3 ? '<em>+' + (n - 2) + '</em>' : '') + '<b>' + (n ? 'Swap' : T.plate.length ? 'Park' : 'Spare') + '</b>';
+    el.className = 'ou-spare' + (n ? ' is-full' : '');
+    el.setAttribute('aria-label', n ? 'Second plate: ' + T.spare.map(function (p) { return D.parts[p].name; }).join(', ') + '. Tap to swap the plates' : 'Second plate, empty. Tap to park this plate on it');
   }
 
   var hintHold = 0;
@@ -1265,6 +1284,7 @@
       case 'spot': if (live && performance.now() - grabbedAt > 500) spotGesture(i, e.detail === 0 ? 'key' : 'tap'); break;   // a touch or mouse was dealt with on pointerup
       case 'pi': if (live) tapPlateItem(i); break;
       case 'scrap': if (live) scrap(); break;
+      case 'swap': if (live) swapPlates(); break;
       case 'send': if (live) send(); break;
       case 'cookie': if (live) eatCookie(); break;
       case 'bubble': if (live) tapBubble(el.getAttribute('data-id')); break;
