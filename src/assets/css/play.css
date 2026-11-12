@@ -23,6 +23,11 @@
     --steel-light: #E6ECEE; --steel: #C5CFD3; --steel-dark: #8E9AA0;
     --flattop: #3A4247; --flattop-heat: #F08A3C; --floor: #1C2226;
     --gold: #F4C542; --gold-dark: #E5AE25; --paper: #FFFDF6;
+    /* Rarity, the way most games colour it (owner 2026-11-12): gray, blue,
+       purple, gold. Always with the word and its diamonds too. */
+    --r-normal: #B9C2C6; --r-normal-bg: #F1F3F4;
+    --r-rare: #2E6DB4; --r-rare-bg: #EEF4FB; --r-rare-own: #D9E6F6;
+    --r-epic: #6E3FA6; --r-epic-bg: #F5EFFB; --r-epic-own: #E6D9F4;
     --house-gradient: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
     --shadow: rgba(31, 69, 82, .25);
 
@@ -284,19 +289,36 @@
 .ou-card .ou-own { font: 700 11px/1 Lato, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); display: block; margin-top: 3px; }
 .ou-rar { position: absolute; left: 0; right: 0; top: 0; height: 17px; display: flex; align-items: center; gap: 5px; padding: 0 9px; font: 700 10px/1 Lato, sans-serif; letter-spacing: .16em; text-transform: uppercase; border-bottom: 2px solid var(--teal-dark); background: var(--steel-light); color: var(--text-dark); }
 .ou-rar i { width: 6px; height: 6px; background: currentColor; transform: rotate(45deg); display: block; }
-.ou-card.is-rare .ou-rar { background: var(--teal); color: var(--cream); }
+.ou-card.is-normal .ou-rar { background: var(--r-normal); }
+.ou-card.is-rare .ou-rar { background: var(--r-rare); color: #fff; }
+.ou-card.is-rare { background: var(--r-rare-bg) !important; box-shadow: 3px 3px 0 var(--r-rare); }
 /* Legendary: a dark band with gold diamonds. Still no red. */
-.ou-card.is-legendary .ou-rar { background: var(--text-dark); color: var(--gold); }
-.ou-card.is-legendary { background: #FFF8E1 !important; box-shadow: 3px 3px 0 var(--text-dark); }
-.ou-own-row span.is-legendary { background: #FFE9A6; border-color: var(--text-dark); }
-.ou-card.is-epic .ou-rar { background: var(--gold); color: var(--text-dark); }
-.ou-card.is-epic { border-color: var(--teal-dark) !important; box-shadow: 3px 3px 0 var(--gold-dark); background: #FFFBEA !important; }
+.ou-card.is-epic .ou-rar { background: var(--r-epic); color: #fff; }
+.ou-card.is-epic { border-color: var(--teal-dark) !important; box-shadow: 3px 3px 0 var(--r-epic); background: var(--r-epic-bg) !important; }
+/* Legendary: gold all over, shining, with rays turning behind its picture
+   (owner 2026-11-12). The one card allowed gradients on it. Still: the word
+   and four diamonds, the house outline, and the price button red. */
+.ou-card.is-legendary { background: linear-gradient(135deg, #FFF3C4 0%, #FFE07A 38%, #F4C542 62%, #FFE9A0 100%) !important; border-color: #7A5A0E !important;
+    box-shadow: 3px 3px 0 #9C7414, 0 0 18px 3px rgba(255, 210, 80, .75); animation: ou-glow 2.4s ease-in-out infinite; }
+.ou-card.is-legendary .ou-rar { background: linear-gradient(90deg, #E5AE25, #FFE58A 50%, #E5AE25); color: var(--text-dark); border-bottom-color: #7A5A0E; z-index: 2; }
+.ou-card.is-legendary > * { position: relative; z-index: 1; }
+.ou-card.is-legendary > .ou-rar { position: absolute; }
+.ou-card.is-legendary::before { content: ""; position: absolute; left: 33px; top: 42px; width: 260px; height: 260px; margin: -130px 0 0 -130px; z-index: 0; pointer-events: none;
+    background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, .85) 0deg 7deg, rgba(255, 255, 255, 0) 7deg 22deg);
+    -webkit-mask: radial-gradient(circle, #000 12%, transparent 68%); mask: radial-gradient(circle, #000 12%, transparent 68%);
+    animation: ou-rays 9s linear infinite; }
+.ou-card.is-legendary::after { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .75) 50%, transparent 65%); transform: translateX(-100%); animation: ou-shine 3s ease-in-out infinite; }
+.ou-card.is-legendary .ou-ci { filter: drop-shadow(0 0 6px rgba(255, 255, 255, .9)) drop-shadow(2px 2px 0 rgba(122, 90, 14, .4)); }
 .ou-card.is-epic .ou-rar::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .7) 50%, transparent 70%); transform: translateX(-100%); animation: ou-shine 2.6s ease-in-out infinite; }
 .ou-price { min-width: 58px; min-height: 44px; display: grid; place-items: center; border-radius: 10px; background: var(--accent); color: #fff; border: 2px solid var(--teal-dark); font: 700 16px/1 Lato, sans-serif; padding: 0 8px; }
 .ou-card.is-poor .ou-price, .ou-card.is-sold .ou-price { background: var(--steel); color: #5A6970; }
 .ou-card.is-sold { opacity: .6; }
 .ou-card.is-off { opacity: .55; }
 .ou-card.is-nope { animation: ou-shake .3s ease-in-out 1; }
+.ou-price.is-sale { display: flex; flex-direction: column; justify-content: center; gap: 2px; line-height: 1; }
+.ou-price s { font: 700 11px/1 Lato, sans-serif; opacity: .8; }
+.ou-sale { margin: 0 0 8px; padding: 8px 10px; border: 2px dashed var(--teal-dark); border-radius: 10px; background: #FFF6D6; font: 400 14px/1.3 Lato, sans-serif; }
 .ou-pausecard .ou-row .ou-btn { letter-spacing: .08em; padding: 14px 6px; }
 .ou-card--special { grid-template-columns: 52px 1fr auto; padding-top: 10px !important; }
 .ou-card--special .ou-ci { width: 52px; height: 52px; border-radius: 10px; overflow: hidden; border: 2px solid var(--teal-dark); background: var(--steel-light); }
@@ -304,9 +326,16 @@
 .ou-chip { display: inline-block; font: 700 12px/1 Lato, sans-serif; background: var(--steel-light); border: 1.5px solid var(--teal-dark); border-radius: 999px; padding: 4px 8px; margin: 3px 3px 0 0; }
 .ou-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .ou-own-row { display: flex; flex-wrap: wrap; gap: 4px; }
-.ou-own-row span { width: 34px; height: 34px; position: relative; background: #fff; border: 2px solid var(--teal-dark); border-radius: 9px; padding: 2px; display: block; }
-.ou-own-row span.is-rare { background: #DCEFEF; } .ou-own-row span.is-epic { background: #FFF1B8; }
-.ou-own-row span em { position: absolute; right: -4px; bottom: -4px; font: 900 10px/1 Lato, sans-serif; font-style: normal; background: var(--teal-dark); color: var(--cream); border-radius: 999px; padding: 2px 4px; }
+.ou-own-row button { width: 40px; height: 40px; position: relative; background: var(--r-normal-bg) !important; border: 2px solid var(--teal-dark) !important; border-radius: 9px; padding: 3px !important; display: block; }
+.ou-own-row button.is-rare { background: var(--r-rare-own) !important; } .ou-own-row button.is-epic { background: var(--r-epic-own) !important; }
+.ou-own-row button.is-legendary { background: linear-gradient(135deg, #FFF3C4, #F4C542) !important; border-color: #7A5A0E !important; }
+.ou-own-row button.is-picked { outline: 3px solid var(--teal); outline-offset: 1px; }
+.ou-own-info { margin: 6px 0 0; padding: 7px 10px; background: #fff; border: 2px solid var(--teal-dark); border-radius: 10px; font: 400 14px/1.3 Lato, sans-serif; text-align: left; }
+.ou-own-info b { font: 700 15px/1.2 "Playfair Display", Georgia, serif; }
+.ou-own-info span { font: 700 10px/1 Lato, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #4A5A62; }
+.ou-pause-own:empty { display: none; }
+.ou-pause-own .ou-own-row { justify-content: center; }
+.ou-own-row button em { position: absolute; right: -4px; bottom: -4px; font: 900 10px/1 Lato, sans-serif; font-style: normal; background: var(--teal-dark); color: var(--cream); border-radius: 999px; padding: 2px 4px; }
 .ou-wallet { position: absolute; right: 14px; top: 14px; text-align: right; line-height: 1.05; }
 .ou-wallet b { font: 900 22px/1 Lato, sans-serif; display: block; }
 
@@ -340,6 +369,8 @@
 @keyframes ou-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @keyframes ou-ready { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 @keyframes ou-nudge { 0%, 86%, 100% { transform: rotate(0); } 90% { transform: rotate(-7deg); } 95% { transform: rotate(7deg); } }
+@keyframes ou-rays { to { transform: rotate(360deg); } }
+@keyframes ou-glow { 0%, 100% { box-shadow: 3px 3px 0 #9C7414, 0 0 12px 2px rgba(255, 210, 80, .55); } 50% { box-shadow: 3px 3px 0 #9C7414, 0 0 22px 6px rgba(255, 210, 80, .9); } }
 @keyframes ou-shine { 0%, 55% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 @keyframes ou-steam { 0%, 100% { opacity: .2; transform: translateY(2px); } 50% { opacity: .9; transform: translateY(-3px); } }
 .ou-steam { animation: ou-steam 2.4s ease-in-out infinite; }

@@ -78,6 +78,21 @@ Every item has a **rarity: Normal, Rare or Epic**. After each close one is
 picked for free from three, and three more are for sale. Each card is dealt
 by rarity, and the odds move toward the better ones as the week goes on:
 
+**Turning it down** (owner 2026-11-12): instead of the free item, "None
+tonight" pays tips: $15 after Monday, $25, $35, $50 after Thursday
+(`game.json` → `skip`), since an item has fewer days left to pay off as
+the week goes on. It counts in tips earned, so it adds to the score, and
+the week's results carry it as `bonus`.
+
+**A sale for a careful week** (owner 2026-11-12): a week that has bought
+nothing in the shop by Wednesday's close has an even chance, at that close
+and Thursday's, of finding everything 40% off, shown with the old price
+struck through (`sale`). The Deep Fryer is never on sale.
+
+**What does that do again?** Every "On your line" row (the morning, after
+close, the end of the week, and pause) is a row of buttons: tap an item for
+its name, rarity and what it does.
+
 | After | Normal | Rare | Epic |
 |---|---|---|---|
 | Monday | 62% | 30% | 8% |
@@ -242,7 +257,8 @@ moves from sunrise to noon as the shift goes on.
 
 1. **Flat shapes, no textures, no gradients on objects.** One flat colour
    per part, one lighter flat highlight where light hits. Gradients only in
-   the sky and on teal bands (the house gradient).
+   the sky and on teal bands (the house gradient), and on the Legendary
+   card, which is meant to look like nothing else (§6).
 2. **The house outline.** Every object has a **teal-dark (`#1F4552`)
    outline**, 2.5 on the sprite's 64 box. Never black.
 3. **The house shadow.** Objects cast one **flat, unblurred shadow offset
@@ -310,9 +326,18 @@ timer).** This is the kitchen board's own rule. So no red food, no red
 rarity, no red decoration. And still **never red on teal, either way
 round.**
 
-**Rarity colours:** Normal steel (`#E6ECEE`), Rare teal with cream words,
-Epic gold (`#F4C542`) with dark words. Always with the word and its
-diamonds (one, two, three).
+**Rarity colours** (owner 2026-11-12: the way most games do it): Normal
+gray (`#B9C2C6`), Rare blue (`#2E6DB4`) and Epic purple (`#6E3FA6`), both
+with white words, and the one Legendary gold. Always with the word and its
+diamonds (one, two, three, four). The blue and purple are only ever rarity,
+never a button, so red keeps its two jobs.
+
+**The Legendary card shines** (owner 2026-11-12): gold all over, a soft
+gold glow that breathes, a sheen that sweeps across, and rays turning
+behind its picture. It is the one object allowed gradients (§5, rule 1).
+All of it stops with `prefers-reduced-motion`. To look at it without
+playing to a shop: `/play?debug&cards` on `npm start` (dev only, like the
+rest of `?debug`).
 
 The game palette (sky, brick, steel, flat-top, each food) is on
 `game/style-sheet.html` with its hex values and lives in `play.css` and the

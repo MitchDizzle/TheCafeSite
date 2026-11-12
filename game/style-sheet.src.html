@@ -196,9 +196,13 @@ section > .wrap > .lede { margin: 0 0 22px; max-width: 64ch; }
 .rarity .gear { position: relative; padding-top: 26px; overflow: hidden; }
 .gear .rar { position: absolute; left: 0; right: 0; top: 0; height: 18px; display: flex; align-items: center; gap: 5px; padding: 0 10px; font: 700 10px/1 Lato, sans-serif; letter-spacing: .16em; text-transform: uppercase; border-bottom: 2px solid var(--teal-dark); background: var(--steel-light); color: var(--text-dark); }
 .gear .rar i { width: 6px; height: 6px; background: currentColor; transform: rotate(45deg); display: block; }
-.gear.rar-rare .rar { background: var(--teal); color: var(--cream); }
-.gear.rar-epic .rar { background: var(--cheese); }
-.rar-epic { background: #FFFBEA; box-shadow: 3px 3px 0 #E5AE25; }
+.gear.rar-normal .rar { background: #B9C2C6; }
+.gear.rar-rare .rar { background: #2E6DB4; color: #fff; }
+.rar-rare { background: #EEF4FB; box-shadow: 3px 3px 0 #2E6DB4; }
+.gear.rar-epic .rar { background: #6E3FA6; color: #fff; }
+.rar-epic { background: #F5EFFB; box-shadow: 3px 3px 0 #6E3FA6; }
+.gear.rar-legendary .rar { background: linear-gradient(90deg, #E5AE25, #FFE58A 50%, #E5AE25); border-bottom-color: #7A5A0E; }
+.rar-legendary { background: linear-gradient(135deg, #FFF3C4 0%, #FFE07A 38%, #F4C542 62%, #FFE9A0 100%); border-color: #7A5A0E; box-shadow: 3px 3px 0 #9C7414, 0 0 18px 3px rgba(255, 210, 80, .75); }
 .talk { display: flex; flex-wrap: wrap; gap: 22px 16px; padding-bottom: 12px; }
 .bubble { position: relative; width: 210px; background: var(--cream); border: 2.5px solid var(--teal-dark); border-radius: 16px; padding: 8px 12px 9px; box-shadow: 4px 4px 0 rgba(31,69,82,.25); }
 .bubble::after { content: ""; position: absolute; left: 22px; bottom: -11px; width: 16px; height: 16px; background: var(--cream); border: solid var(--teal-dark); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) skew(8deg, 8deg); }
@@ -390,11 +394,12 @@ footer { padding: 40px 0 48px; font-size: 14px; color: #4A5A62; }
 <section>
   <div class="wrap">
     <h2>Rarity</h2>
-    <p class="lede">Every item is Normal, Rare or Epic. The band says so in words and in diamonds (one, two, three), so colour is never the only signal: steel for Normal, teal for Rare, gold for Epic. The better ones turn up more as the week goes on. No red: red stays for buttons and late tickets.</p>
+    <p class="lede">Every item is Normal, Rare or Epic. The band says so in words and in diamonds (one, two, three), so colour is never the only signal: gray for Normal, blue for Rare, purple for Epic, as most games do it (owner 2026-11-12), and gold for the one Legendary, which shines (rays turn behind it in the game). The better ones turn up more as the week goes on. No red: red stays for buttons and late tickets.</p>
     <div class="rarity">
-      <div class="gear rar-normal"><span class="rar"><i></i>Normal</span><svg viewBox="0 0 64 64"><use href="#s-jar" filter="url(#sh)"/></svg><div><b>Pickle Jar</b><span>A plate with a pickle spear tips $1 more</span></div><span class="buy">$30</span></div>
-      <div class="gear rar-rare"><span class="rar"><i></i><i></i>Rare</span><svg viewBox="0 0 64 64"><use href="#s-cookie" filter="url(#sh)"/></svg><div><b>Triple Chocolate Cookie</b><span>Once a day, tap it: every ticket’s clock starts over</span></div><span class="buy">$90</span></div>
-      <div class="gear rar-epic"><span class="rar"><i></i><i></i><i></i>Epic</span><svg viewBox="0 0 64 64"><use href="#s-hat" filter="url(#sh)"/></svg><div><b>Line Cook</b><span>A second cook sends out a ticket that is about to walk out, once every 14 seconds</span></div><span class="buy">$200</span></div>
+      <div class="gear rar-normal"><span class="rar"><i></i>Normal</span><svg viewBox="0 0 64 64"><use href="#s-jar" filter="url(#sh)"/></svg><div><b>Pickle Jar</b><span>A plate with a pickle spear tips $1 more</span></div><span class="buy">$25</span></div>
+      <div class="gear rar-rare"><span class="rar"><i></i><i></i>Rare</span><svg viewBox="0 0 64 64"><use href="#s-cookie" filter="url(#sh)"/></svg><div><b>Triple Chocolate Cookie</b><span>Once a day, tap it: every ticket’s clock starts over</span></div><span class="buy">$80</span></div>
+      <div class="gear rar-epic"><span class="rar"><i></i><i></i><i></i>Epic</span><svg viewBox="0 0 64 64"><use href="#s-hat" filter="url(#sh)"/></svg><div><b>Line Cook</b><span>A second cook sends out a ticket that is about to walk out, once every 14 seconds</span></div><span class="buy">$180</span></div>
+      <div class="gear rar-legendary"><span class="rar"><i></i><i></i><i></i><i></i>Legendary</span><svg viewBox="0 0 64 64"><use href="#s-fryer" filter="url(#sh)"/></svg><div><b>Deep Fryer</b><span>Every plate tips triple. Not for now.</span></div><span class="buy">$1,500</span></div>
     </div>
   </div>
 </section>

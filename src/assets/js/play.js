@@ -336,19 +336,19 @@
   function level() { return D.levels[(G && G.level) || save.level] || D.levels.normal; }
 
   function newRun() {
-    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
+    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, bought: 0, bonus: 0, sale: false, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
     report('start', {});
     showDawn();
   }
   /* A week left half way is kept each morning and picked up from that morning. */
   function keepRun() {
-    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, perDay: G.perDay.slice(0, G.day), items: G.items };
+    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, bought: G.bought, bonus: G.bonus, perDay: G.perDay.slice(0, G.day), items: G.items };
     persist();
   }
   function resumeRun() {
     var r = save.run, items = {};
     for (var id in r.items) if (D.items.some(function (it) { return it.id === id; })) items[id] = r.items[id];
-    G = { level: r.level, run: r.run || rid(), began: r.began || Date.now(), played: r.played || 0, away: r.away || 0, day: r.day, tips: r.tips || 0, earned: r.earned || 0, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
+    G = { level: r.level, run: r.run || rid(), began: r.began || Date.now(), played: r.played || 0, away: r.away || 0, day: r.day, tips: r.tips || 0, earned: r.earned || 0, bought: r.bought || 0, bonus: r.bonus || 0, sale: false, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
     showDawn();
   }
 
@@ -1008,11 +1008,23 @@
     else if (e.key === 'Escape' && screen === 'shift' && T) setPaused(!T.paused);
   });
 
+  /* What's owned, as small buttons: tap one to see its name and what it
+     does, for when the player forgets (owner 2026-11-12). */
   function ownedRow() {
     var ids = Object.keys(G.items); if (!ids.length) return '';
-    return '<span class="ou-label">On your line</span><div class="ou-own-row">' + D.items.filter(function (it) { return G.items[it.id]; }).map(function (it) {
-      return '<span class="is-' + it.rarity + '" title="' + esc(it.name) + '">' + spr(it.icon) + (G.items[it.id] > 1 ? '<em>' + G.items[it.id] + '</em>' : '') + '</span>';
-    }).join('') + '</div>';
+    return '<div class="ou-own"><span class="ou-label">On your line · tap one to see what it does</span><div class="ou-own-row">' + D.items.filter(function (it) { return G.items[it.id]; }).map(function (it) {
+      return '<button class="is-' + it.rarity + '" data-act="owninfo" data-id="' + it.id + '" aria-label="' + esc(it.name) + ': what it does">' + spr(it.icon) + (G.items[it.id] > 1 ? '<em>' + G.items[it.id] + '</em>' : '') + '</button>';
+    }).join('') + '</div><p class="ou-own-info" role="status" hidden></p></div>';
+  }
+  function ownInfo(el) {
+    var box = el.closest('.ou-own'), info = box && box.querySelector('.ou-own-info'), id = el.getAttribute('data-id');
+    var it = D.items.filter(function (x) { return x.id === id; })[0]; if (!info || !it) return;
+    var again = el.classList.contains('is-picked');
+    var all = box.querySelectorAll('.is-picked'); for (var i = 0; i < all.length; i++) all[i].classList.remove('is-picked');
+    if (again) { info.hidden = true; return; }
+    el.classList.add('is-picked');
+    info.innerHTML = '<b>' + esc(it.name) + '</b> <span>' + D.rarityNames[it.rarity] + (G.items[id] > 1 ? ' · you have ' + G.items[id] : '') + '</span><br>' + esc(it.text);
+    info.hidden = false;
   }
 
   function showDawn() {
@@ -1051,22 +1063,41 @@
       '<span class="ou-rar">' + pips + D.rarityNames[it.rarity] + '</span>' +
       '<span class="ou-ci ou-sh">' + spr(it.icon) + '</span>' +
       '<span><b>' + esc(it.name) + '</b><span class="ou-ct">' + esc(it.text) + '</span>' + (has(it.id) ? '<span class="ou-own">You have ' + has(it.id) + '</span>' : '') + '</span>' +
-      (extra.price ? '<span class="ou-price">' + extra.price + '</span>' : '<span></span>') + '</button>';
+      (extra.price ? '<span class="ou-price' + (extra.was ? ' is-sale' : '') + '">' + (extra.was ? '<s>' + extra.was + '</s>' : '') + extra.price + '</span>' : '<span></span>') + '</button>';
   }
 
   function showClose() {
-    G.stage = 'pick'; G.pick = deal(3, []); G.shop = []; G.sold = []; G.reroll = D.reroll.first;
+    G.stage = 'pick'; G.pick = deal(3, []); G.shop = []; G.sold = []; G.reroll = D.reroll.first; G.sale = false;
     drawClose();
+  }
+  /* What turning down the free item pays tonight (owner 2026-11-12): more
+     later in the week, when an item has fewer days left to pay off. */
+  function skipBonus() { var b = D.skip.bonus; return b[Math.min(G.day, b.length - 1)]; }
+  /* From the shop to the shop's stock. A week that has bought nothing by
+     Wednesday's close may find the shop on sale (owner 2026-11-12: by
+     Thursday an item has little time left to pay for itself). Decided once
+     a close, kept through a restock. */
+  function toShop() {
+    G.stage = 'shop'; G.shop = deal(3, []); G.fryer = rand() * 100 < (D.legendaryChance || 0);
+    G.sale = G.day >= D.sale.fromDay && !G.bought && rand() * 100 < D.sale.chance;
+    drawClose();
+  }
+  function priceOf(it) {
+    if (!G.sale || it.rarity === 'legendary') return it.price;
+    return Math.max(5, Math.round(it.price * (100 - D.sale.off) / 500) * 5);
   }
   function drawClose() {
     var day = D.days[G.day], next = D.days[G.day + 1], body, foot = '';
     if (G.stage === 'pick') {
       body = '<span class="ou-label">Pick one, free</span>' + G.pick.map(function (it, i) { return itemCard(it, 'pick', i, {}); }).join('') +
         '<p class="ou-note">One diamond is Normal, two is Rare, three is Epic. The better ones turn up more as the week goes on.</p>';
+      foot = '<div class="ou-foot"><button class="ou-btn ou-btn--quiet" data-act="skip">None tonight · ' + money(skipBonus()) + ' in tips instead</button></div>';
     } else {
-      body = '<span class="ou-label">The shop</span>' + G.shop.map(function (it, i) {
-        var sold = G.sold.indexOf(i) !== -1, poor = !sold && G.tips < it.price;
-        return itemCard(it, 'buy', i, { price: sold ? 'Yours' : money(it.price), cls: sold ? ' is-sold' : poor ? ' is-poor' : '' });
+      body = '<span class="ou-label">The shop</span>' +
+        (G.sale ? '<p class="ou-sale"><b>' + D.sale.off + '% off tonight.</b> You haven’t bought a thing all week, so the supplier cut you a deal.</p>' : '') +
+        G.shop.map(function (it, i) {
+        var sold = G.sold.indexOf(i) !== -1, cost = priceOf(it), poor = !sold && G.tips < cost;
+        return itemCard(it, 'buy', i, { price: sold ? 'Yours' : money(cost), was: !sold && cost !== it.price ? money(it.price) : '', cls: sold ? ' is-sold' : poor ? ' is-poor' : '' });
       }).join('') +
         // The one thing that is never for sale: there is no fryer (see /feedback).
         (G.fryer && fryerItem() && !has('fryer') ? itemCard(fryerItem(), 'fryer', 0, { price: money(fryerItem().price), cls: G.tips < fryerItem().price ? ' is-poor' : '' }) : '') +
@@ -1114,8 +1145,8 @@
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
     report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round(G.played), away: Math.round(G.away),
-      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent });
-    lastRun = { run: G.run, lvl: G.level, total: kept, earned: G.earned, spent: spent, days: weekDays(), cater: G.cater == null ? '' : G.cater,
+      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent, bonus: G.bonus });
+    lastRun = { run: G.run, lvl: G.level, total: kept, earned: G.earned, spent: spent, bonus: G.bonus, days: weekDays(), cater: G.cater == null ? '' : G.cater,
       why: win ? 'win' : why, day: G.day, items: Object.keys(G.items), secs: Math.round(G.played) };
     // After a finished week (not one that was quit), and only if results go
     // anywhere: a first name, and a way to reach them if they want one.
@@ -1137,6 +1168,7 @@
     var rows = G.perDay.map(function (tips, i) { return '<div><b>' + D.days[i].short + '</b><span>' + (i === G.day && cut ? 'Closed early' : 'Closed at 2pm') + '</span><strong>' + money(tips) + '</strong></div>'; }).join('');
     if (G.cater != null) rows += '<div><b>Fri</b><span>Catering' + (win ? ', on time' : why === 'late' ? ', late' : ', not finished') + '</span><strong>' + money(G.cater) + '</strong></div>';
     rows += '<div><b>Week</b><span>Tips earned</span><strong>' + money(G.earned) + '</strong></div>';
+    if (G.bonus) rows += '<div><b></b><span>Free items turned down</span><strong>+' + money(G.bonus) + '</strong></div>';
     rows += '<div><b></b><span>Spent on items</span><strong>' + (spent ? '−' + money(spent) : '$0') + '</strong></div>';
     rows += '<div class="is-total"><b>Kept</b><span>your score</span><strong>' + money(kept) + '</strong></div>';
     paper('over',
@@ -1202,6 +1234,7 @@
   function setPaused(on) {
     if (!T || screen !== 'shift' || T.ended) return;
     T.paused = on; $('#ou-pausebox').hidden = !on;
+    if (on) $('#ou-pause-own').innerHTML = ownedRow();
   }
   stage.addEventListener('click', function (e) {
     var el = e.target.closest('[data-act]'); if (!el || !stage.contains(el)) return;
@@ -1221,7 +1254,7 @@
       case 'music': save.music = !save.music; persist(); drawTitle(); break;
       case 'fryer':
         var fry = fryerItem();
-        if (fry && G.tips >= fry.price) { G.tips -= fry.price; own(fry); sfx.win(); drawClose(); break; }
+        if (fry && G.tips >= fry.price) { G.tips -= fry.price; G.bought++; own(fry); sfx.win(); drawClose(); break; }
         sfx.bad(); el.classList.remove('is-nope'); void el.offsetWidth; el.classList.add('is-nope'); break;
       case 'how': showHow(screen); break;
       case 'box': showBox(screen === 'over' ? 'over' : 'title'); break;
@@ -1238,12 +1271,15 @@
       case 'pause': setPaused(true); break;
       case 'resume': setPaused(false); break;
       case 'quit': $('#ou-pausebox').hidden = true; T.ended = true; weekOver(false, 'quit'); break;
-      case 'pick': own(G.pick[i]); sfx.buy(); G.stage = 'shop'; G.shop = deal(3, []); G.fryer = rand() * 100 < (D.legendaryChance || 0); drawClose(); break;
+      case 'pick': own(G.pick[i]); sfx.buy(); toShop(); break;
+      case 'skip':                 // no free item tonight: tips instead (owner 2026-11-12)
+        var bonus = skipBonus(); G.tips += bonus; G.earned += bonus; G.bonus += bonus; sfx.buy(); toShop(); break;
+      case 'owninfo': ownInfo(el); sfx.tap(); break;
       case 'buy':
-        var it = G.shop[i];
+        var it = G.shop[i], cost = priceOf(it);
         if (G.sold.indexOf(i) !== -1) break;
-        if (G.tips < it.price) { sfx.bad(); break; }
-        G.tips -= it.price; own(it); G.sold.push(i); sfx.buy(); drawClose(); break;
+        if (G.tips < cost) { sfx.bad(); break; }
+        G.tips -= cost; G.bought++; own(it); G.sold.push(i); sfx.buy(); drawClose(); break;
       case 'reroll':
         if (G.tips < G.reroll) break;
         G.tips -= G.reroll; G.reroll += D.reroll.step; G.shop = deal(3, []); G.sold = []; G.fryer = rand() * 100 < (D.legendaryChance || 0); sfx.tap(); drawClose(); break;
@@ -1258,7 +1294,7 @@
     var name = form.elements.name.value.replace(/\s+/g, ' ').trim(), contact = form.elements.contact ? form.elements.contact.value.trim() : '';
     if (!name) { form.elements.name.focus(); return; }
     if (lastRun) report('score', { run: lastRun.run, lvl: lastRun.lvl, name: name, contact: contact, total: Number(form.elements.total.value), web: form.elements.website.value ? 1 : 0,
-      earned: lastRun.earned, spent: lastRun.spent, days: lastRun.days, cater: lastRun.cater, why: lastRun.why, day: lastRun.day, items: lastRun.items, secs: lastRun.secs });
+      earned: lastRun.earned, spent: lastRun.spent, bonus: lastRun.bonus, days: lastRun.days, cater: lastRun.cater, why: lastRun.why, day: lastRun.day, items: lastRun.items, secs: lastRun.secs });
     form.outerHTML = '<p class="ou-note ou-sent" role="status">Sent. Thank you!</p>';
   });
 
@@ -1341,6 +1377,22 @@
       gesture: function (i, how) { if (T) spotGesture(i, how || 'key'); },
       get music() { return { on: music.on, step: music.step, audio: ac ? ac.state : 'none' }; }
     };
+    /* /play?debug&cards: one card of each rarity, a sale price and the owned
+       row, to judge the look of the rarities without playing to the shop. */
+    if (/[?&]cards\b/.test(location.search)) {
+      $('#ou-told').hidden = true;
+      G = { level: 'normal', day: 3, tips: 2000, earned: 2000, bought: 0, bonus: 0, sale: false, items: { tipjar: 2, counter: 1, linecook: 1, fryer: 1 }, perDay: [] };
+      var one = function (r, id) { return D.items.filter(function (x) { return x.rarity === r && (!id || x.id === id); })[0]; };
+      paper('close', '<div class="ou-top ou-top--wallet"><span class="ou-kicker">Test page</span><h2 class="ou-h">The rarities</h2><span class="ou-label">Dev server only · /play?debug&amp;cards</span></div>' +
+        '<div class="ou-body-pad"><span class="ou-label">The shop</span>' +
+        itemCard(one('normal', 'picklejar'), 'buy', 0, { price: money(one('normal', 'picklejar').price) }) +
+        itemCard(one('rare', 'counter'), 'buy', 1, { price: money(one('rare', 'counter').price) }) +
+        itemCard(one('epic', 'linecook'), 'buy', 2, { price: money(one('epic', 'linecook').price) }) +
+        itemCard(one('legendary'), 'fryer', 0, { price: money(one('legendary').price) }) +
+        '<span class="ou-label">On sale</span><p class="ou-sale"><b>' + D.sale.off + '% off tonight.</b> You haven’t bought a thing all week, so the supplier cut you a deal.</p>' +
+        itemCard(one('epic', 'goldspat'), 'buy', 3, { price: money(Math.round(one('epic', 'goldspat').price * (100 - D.sale.off) / 500) * 5), was: money(one('epic', 'goldspat').price) }) +
+        ownedRow() + '</div>');
+    }
   }
   /* DEV-ONLY:END */
 })();
