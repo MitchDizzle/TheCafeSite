@@ -59,7 +59,9 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | **Flipping** | Eggs, bacon, burgers and chicken stop cooking half way until they're turned (§4). | The flat-top |
 | **Family** | From Wednesday, family may stop by at lunch (§4). Never announced. | |
 | **Friday** | Ends on a **catering order**: five platters, one after another, on one clock. | The catering photos |
-| **Win** | Finish Friday's catering on time. The week's tips are the score. | |
+| **Win** | Finish Friday's catering on time. | |
+| **Score** | **The tips the week keeps**: tips earned, less what was spent on items (owner 2026-11-12). Items help a week through, but the best score is a week won with few of them, and the real test is Rush. The best is kept for each level. | |
+| **Tips are points** | Said on How to play and under every finished week: "Tips in the game are points, not money. At The Café, real tips go to the cooks and the people who work there." So nobody reads the game's tips as the café's money. | Owner 2026-11-12 |
 | **Lose** | Three spilled coffees in one day, or the catering goes out late. | |
 
 **Between runs** (kept on the phone only, §13): the **Recipe Box**, a card
@@ -78,12 +80,12 @@ by rarity, and the odds move toward the better ones as the week goes on:
 
 | After | Normal | Rare | Epic |
 |---|---|---|---|
-| Monday | 72% | 24% | 4% |
-| Tuesday | 60% | 31% | 9% |
-| Wednesday | 50% | 36% | 14% |
-| Thursday | 40% | 40% | 20% |
+| Monday | 62% | 30% | 8% |
+| Tuesday | 50% | 38% | 12% |
+| Wednesday | 42% | 42% | 16% |
+| Thursday | 34% | 44% | 22% |
 
-(Friday has no shop: it ends in the catering order.) The odds, names,
+Rares were made likelier on 2026-11-12 (owner): over a week a player sees 24 cards (three free and three for sale after each of four closes), so almost every week (about 98%) shows at least one Epic, and most show several Rares. The shop is a gamble that can help, never the goal. The **Legendary** Deep Fryer is apart from these odds: 3% each time the shop is stocked (`legendaryChance`), so about one week in nine shows it, more with restocks. (Friday has no shop: it ends in the catering order.) The odds, names,
 prices and how many of each can be owned are in `game.json` → `items`,
 `odds`. What an item *does* is in `play.js` under the same `id`.
 
@@ -132,9 +134,18 @@ family. They are drawn as an apron and a hat, never as a person (§5).
 **The cookie** sits on the pass with its count. It is for the moment the
 rail is full and red. Family sometimes leaves one too.
 
-**One joke that never works:** the **Deep Fryer**, "Not for now." About one
-shop in three has it as a fourth, greyed-out card with no price. Tapping it
-shakes its head. It is the honest answer on /feedback.
+**Legendary**
+
+| Name | Does |
+|---|---|
+| **Deep Fryer** ($1,500) | Every plate tips triple. "Not for now." |
+
+The Deep Fryer (owner 2026-11-12) is a real item with real stats, priced
+past anything a week pays: a good Regular week is $500 – $700, and tips are
+spent as they come in. It is never dealt by the odds; it turns up by itself
+as a fourth card, 3% of the time the shop is stocked (a lucky sight), with a dark band and four gold
+diamonds. Tapping it without the money shakes its head. It is still the
+honest answer on /feedback: there's no fryer, not for now.
 
 ---
 
@@ -356,8 +367,16 @@ with the browser's bars showing), 390 × 760 and 412 × 860.
   customer looks up when their name is called).
 
 **The title screen** has the three levels as one row of buttons with a line
-under them saying what the chosen one means, and "Continue: Wednesday" in
-place of "Start the week" when a week was left half way.
+under them saying what the chosen one means. When a week was left half way,
+the big button says "Continue: Wednesday" and **New week** sits right beside
+it (owner 2026-11-12); New week asks first ("Start a new week? Your
+Wednesday will be lost." Start over / Keep it), so a week is never thrown
+away by a stray tap.
+
+**There is always a way back** (owner 2026-11-12): the morning screen has
+Back in its band, and pause has "Back to the title" ("Your week is kept
+from this morning"), as well as End the week. Both leave the week to be
+continued from that day's morning.
 
 **The paper screens** (dawn, after close, week over, Recipe Box, how to
 play) are cream with a teal band on top and a red rule under it, like the
@@ -445,12 +464,11 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
 - No red on teal; no red that isn't a button, a price or a late ticket.
 - No fries, deep-fried anything, evenings or weekends: the game doesn't
   promise what the café doesn't do.
-- No ads, no ad trackers, no accounts, no sign-in, no names. Today scores
-  stay on the phone and nothing is sent anywhere. (Planned, owner
-  2026-11-11, not built: anonymous results to the café's own sheet, to see
-  how many people play and where weeks end, with checks against made-up
-  scores. When that is built this line, §13 and `/privacy` change with it.
-  The plan is in the private planning repo: `GAME-LAUNCH.md`.)
+- No ads, no ad trackers, no accounts, no sign-in. How a week went goes to
+  the café's own sheet with no name (§13, "Results"); a name, and a way to
+  reach them, only if a player chooses to send their score in after a
+  finished week. Never a public score board, never a prize, unless the
+  owners decide so. `/privacy` says all of this.
 - No menu prices in the game. Tips are game money; menu prices change and
   belong to Square.
 - Don't recreate any existing game's look or characters. This one looks
@@ -462,9 +480,27 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
 
 - **A page of the site:** `src/play.njk` → `/play`, on `layouts/base.njk`
   with no nav or footer (like the home page), `noSiteJs: true`.
-  **Unlisted while it's a demo.** To publish it: take `noindex` off, add it
-  to `sitemap.xml`, and link it (the footer; "Waiting on an order? Play a
-  shift" on `/menu`).
+  **Listed or not is one switch:** `site.json` → `game.listed`. False (now):
+  noindex, no link anywhere. True: noindex comes off, the footer gets "Play
+  Order Up" and `/menu` gets a "Play Order Up" button under the print link.
+  Add `https://lvcafetogo.com/play` to `sitemap.xml` by hand at the same
+  time. Flip it back to false to pull the links in a hurry.
+- **The share picture** (what Facebook shows for a link to `/play`) is the
+  studio piece `share-order-up` (1200 × 630, pinned, so it always builds);
+  the launch post is `fb-order-up`. Both are the storefront below with a
+  teal band. A `noindex` page carries no share tags, so the picture only
+  goes out once the game is listed.
+- **The storefront** on the title screen is
+  `partials/game/storefront.njk`, drawn from the café's own photos: the
+  mottled brick and its cap, the two pairs of windows (the saying and the
+  sunrise; the sign with the real wordmark, and the flag), the door with a
+  notice in it, the light, the 417 plaque, the railing, the walk, the wet
+  lot with its lines and wheel stops, the trees and the roof unit. The name
+  is drawn from the wordmark's outline (the `svgPath` filter), never typed.
+- **A version line** (`site.json` → `game.version`) shows small on the
+  title screen and goes with every result. Change it when the rules change.
+- **If the game doesn't start** (its script fails or never arrives), the
+  page shows "The game didn't start" with Try again and See the menu.
 - **No libraries, no image files.** Plain HTML and CSS for the kitchen,
   one inline SVG sprite sheet for every drawing, plain JavaScript. (The
   first plan said one `<canvas>`; a tap-only game with a few dozen things
@@ -486,25 +522,60 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
   Prices are not read.
 - `bust` on its CSS and JS, like every other asset.
 
+### Results
+
+With `site.json` → `game.statsUrl` empty, the game sends nothing and none
+of this shows. With an address (the café's own Google Apps Script; how to
+set it up is in the private planning repo, `game-stats/`):
+
+- A short note when a week starts, when each day ends and when the week
+  ends: the level, the day, tips, plates, walk-outs, how many taps and how
+  far apart, how long it took, the items owned. **No name.** A random id
+  made on the phone tells one phone's weeks from another's.
+- After a **finished** week (won, or lost; not one the player ended
+  themselves), the week-over screen offers **Send in your score**: a first
+  name, and (`game.askContact`) an email or phone number only if they'd
+  like to hear back, with "Used only to get in touch about the game. Under
+  13? Ask a grown-up first." It says "Sent. Thank you!" either way.
+- Notes go as plain text with `fetch(..., { mode: 'no-cors', keepalive })`:
+  the game never waits on them, never shows an error for them, and works
+  the same with no connection.
+
 ### Checking the balance
 
-`/play?debug` puts a `window.__ou` handle on the page (the run, the day, a
-`tick()` to move the clock by hand, `give('linecook')` to own an item).
+**The test handle is for `npm start` only.** `/play?debug` on the dev
+server puts `window.__ou` on the page (the run, the day, `tick()` to move
+the clock by hand, `give('linecook')` to own an item). A build (`npm run
+build`, the deploy) cuts it out of `play.js`: everything between the
+`DEV-ONLY:START` and `DEV-ONLY:END` comments goes, and the build fails if
+any of it is left (`.eleventy.js`). Keep those two markers as they are.
+
 `game/bot.js` is a stand-in player built on it: paste it into the console
-and `await ouBot({ weeks: 6, apm: 90, level: 'normal' })`. A week takes it a
-second or two.
+and `await ouBot({ weeks: 6, apm: 90, level: 'normal', slip: 0.1 })`. A
+week takes it a second or two. `slip` is how often a beat is wasted, as a
+person hesitates or mis-taps.
 
-Where the numbers were left (2026-11-11), with a bot that never makes a
-mistake and isn't slowed by having to swipe:
+Where the numbers were left (2026-11-12, after the fairness pass), 12 weeks
+each, with a bot that wastes one beat in ten (`slip: 0.1`) and isn't slowed
+by having to swipe:
 
-| Level | Taps a minute | Like | Weeks won |
-|---|---|---|---|
-| Easy | 40 | a very slow thumb | 4 of 6 |
-| Easy | 60 | a slow thumb | 6 of 6, hardly a walk-out |
-| Regular | 60 | a slow thumb | 6 of 8, the others lost on Wednesday and Thursday |
-| Regular | 75 – 90 | a steady thumb | all, with a few walk-outs late in the week |
-| Rush | 90 | a steady thumb | 2 of 6, most lost on Wednesday |
-| Rush | 150 | a quick one | all |
+| Level | Taps a minute | Like | Weeks won | Where the others ended |
+|---|---|---|---|---|
+| Easy | 35 | a very slow thumb | 8 of 12 | Thursday, Friday |
+| Easy | 50 | a slow thumb | 12 of 12 | |
+| Regular | 50 | a slow thumb | 3 of 12 | mostly Wednesday |
+| Regular | 65 | a steady thumb | 7 of 12 | Wednesday to Friday |
+| Regular | 85 | a quick thumb | 12 of 12 | |
+| Rush | 70 | a steady thumb | 4 of 12 | Tuesday, Wednesday |
+| Rush | 90 | a quick thumb | 11 of 12 | Wednesday |
+| Rush | 120 | a very quick one | 12 of 12 | |
+
+What keeps a hard day from being an impossible one (`tuning.fair`): a
+ticket never waits less than the time it takes to make; with two four-part
+tickets up, the next is a small one; and a walk-out gives the tickets still
+up four more seconds and holds the next one back, so one miss doesn't drag
+two more with it. Before that, a player a little slower than the pace lost
+almost every week by Tuesday.
 
 A person reads slower and mis-taps, so expect real first weeks to end
 on Regular around Wednesday or Thursday, and Monday to be gentle. If one
@@ -534,13 +605,10 @@ again.
 
 ### Next
 
-1. Play it on real phones (GM-5 in CafeWork `TASKS.md`): listen to the
-   music on a phone speaker, try the swipe with a thumb, tune `levels`.
-2. Unlocks across runs.
-3. This week's real special as a dawn card (from `specials.json`).
-4. **Before any score is kept: build the `?debug` handle into the dev
-   server only.** On the live page it lets anyone move the clock and hand
-   themselves items. Harmless while scores stay on the phone.
-5. Results, play counts and cheat checks (planned, see §12).
-6. The owners' go-ahead, then the checklist before it's posted: Facebook's
-   own browser, a share picture, the link and the sitemap.
+1. Play it on real phones, including inside Facebook's own browser: the
+   music on a phone speaker, the swipe under a thumb, the score form with
+   the phone's keyboard up.
+2. Set up the results script and put its address in `game.statsUrl`.
+3. The owners' go-ahead, then `game.listed: true`, `/play` in the sitemap,
+   and the post.
+4. Later: unlocks across runs; this week's real special as a dawn card.

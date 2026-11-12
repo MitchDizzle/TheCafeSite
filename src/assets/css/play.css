@@ -228,6 +228,17 @@
 .ou-top--fri { background: linear-gradient(180deg, #6E5E9E, #E88FA0 55%, #F59E5E); }
 /* max-content rows: a card keeps its height and the middle scrolls, instead of every card being squeezed to fit. */
 .ou-body-pad { padding: 12px 12px 16px; display: grid; grid-auto-rows: max-content; gap: 9px; align-content: start; flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* Continue and New week side by side; the check before a week is thrown away. */
+.ou-gorow { display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; }
+.ou-gorow:has(#ou-fresh:not([hidden])) { grid-template-columns: 1.7fr 1fr; }
+.ou .ou-gorow .ou-btn { letter-spacing: .06em; padding-left: 6px; padding-right: 6px; white-space: nowrap; }
+.ou-gorow:has(#ou-fresh:not([hidden])) .ou-btn { font-size: 15px !important; }
+.ou .ou-btn--ghost { background: transparent !important; color: var(--cream) !important; border: 2px solid var(--mint) !important; box-shadow: none; }
+.ou .ou-btn--ghost:active { background: var(--teal-dark) !important; transform: translateY(2px); }
+.ou-confirm { width: 100%; background: var(--teal-dark); border: 2px solid var(--mint); border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+.ou-title .ou-confirm p { margin: 0; font: 700 16px/1.3 Lato, sans-serif; color: var(--cream); }
+.ou-pausenote { margin: -4px 0 4px; color: #4A5A62; }
+
 .ou-version { display: block; font: 400 11px/1.2 Lato, sans-serif; color: var(--mint); opacity: .75; }
 
 /* Send in your score (the week-over screen, only when results go somewhere). */
@@ -250,6 +261,8 @@
 .ou-top--back { padding-right: 96px; }
 .ou .ou-topback { position: absolute; right: 12px; top: 12px; min-width: 72px; min-height: 44px; padding: 0 14px; border-radius: 10px; border: 2px solid var(--mint); color: var(--cream); font: 700 14px/1 Lato, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
 .ou .ou-topback:active { background: var(--teal-dark); }
+/* On the pink morning band the button is dark on light, like the band's own words. */
+.ou .ou-top--dawn .ou-topback { color: var(--text-dark); border-color: var(--teal-dark); background: rgba(250, 247, 242, .55); }
 .ou-body-pad > .ou-label { color: var(--teal); margin-top: 2px; }
 .ou-note { font: 400 14px/1.35 Lato, sans-serif; margin: 0; }
 
@@ -262,6 +275,10 @@
 .ou-rar { position: absolute; left: 0; right: 0; top: 0; height: 17px; display: flex; align-items: center; gap: 5px; padding: 0 9px; font: 700 10px/1 Lato, sans-serif; letter-spacing: .16em; text-transform: uppercase; border-bottom: 2px solid var(--teal-dark); background: var(--steel-light); color: var(--text-dark); }
 .ou-rar i { width: 6px; height: 6px; background: currentColor; transform: rotate(45deg); display: block; }
 .ou-card.is-rare .ou-rar { background: var(--teal); color: var(--cream); }
+/* Legendary: a dark band with gold diamonds. Still no red. */
+.ou-card.is-legendary .ou-rar { background: var(--text-dark); color: var(--gold); }
+.ou-card.is-legendary { background: #FFF8E1 !important; box-shadow: 3px 3px 0 var(--text-dark); }
+.ou-own-row span.is-legendary { background: #FFE9A6; border-color: var(--text-dark); }
 .ou-card.is-epic .ou-rar { background: var(--gold); color: var(--text-dark); }
 .ou-card.is-epic { border-color: var(--teal-dark) !important; box-shadow: 3px 3px 0 var(--gold-dark); background: #FFFBEA !important; }
 .ou-card.is-epic .ou-rar::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .7) 50%, transparent 70%); transform: translateX(-100%); animation: ou-shine 2.6s ease-in-out infinite; }

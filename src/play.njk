@@ -51,11 +51,22 @@ headExtra: |
         <h1>Order Up</h1>
         {# play.js turns this into "Continue: Wednesday" when a week was left
            half way, and shows "New week" beside it. #}
-        <button class="ou-btn" data-act="start" id="ou-go">Start the week</button>
+        {# With a week saved: Continue, and New week right beside it (behind
+           a "start over?" check, so a week is never lost to a stray tap). #}
+        <div class="ou-gorow">
+          <button class="ou-btn" data-act="start" id="ou-go">Start the week</button>
+          <button class="ou-btn ou-btn--ghost" data-act="fresh" id="ou-fresh" hidden>New week</button>
+        </div>
+        <div class="ou-confirm" id="ou-confirm" hidden role="alertdialog" aria-labelledby="ou-confirm-q">
+          <p id="ou-confirm-q"></p>
+          <div class="ou-row">
+            <button class="ou-btn" data-act="start">Start over</button>
+            <button class="ou-btn ou-btn--ghost" data-act="keep">Keep it</button>
+          </div>
+        </div>
         <div class="ou-levels" id="ou-levels" role="group" aria-label="How hard"></div>
         <p class="ou-level-text" id="ou-level-text"></p>
         <div class="ou-title-links">
-          <button class="ou-link" data-act="start" id="ou-fresh" hidden>New week</button>
           <button class="ou-link" data-act="how">How to play</button>
           <button class="ou-link" data-act="box">Recipe Box</button>
           <button class="ou-link" data-act="sound" id="ou-sound-title">Sound: off</button>
@@ -105,6 +116,8 @@ headExtra: |
             <button class="ou-btn ou-btn--quiet" data-act="sound" id="ou-sound-pause">Sound: off</button>
             <button class="ou-btn ou-btn--quiet" data-act="music" id="ou-music-pause">Music: off</button>
           </div>
+          <button class="ou-btn ou-btn--quiet" data-act="leave">Back to the title</button>
+          <p class="ou-note ou-pausenote">Your week is kept from this morning.</p>
           <button class="ou-btn ou-btn--quiet" data-act="quit">End the week</button>
         </div>
       </div>

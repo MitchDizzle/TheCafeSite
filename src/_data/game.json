@@ -32,7 +32,7 @@
   "_note_recipes": "The tickets. `name` is what the ticket says, `menu` the item in menu.json it stands for (left out for something that isn't on the printed menu), `parts` what goes on the plate (four at most; a pickle spear can always be added at lunch for a better tip, so it is never listed), `when` breakfast or lunch, `tier` 1 to 3 (Monday serves tiers 1 and 2; tier 3 comes in from Wednesday), and `photo` the café's own picture for the Recipe Box.",
   "recipes": [
     { "id": "eggs",       "name": "Side of Eggs",       "menu": "Side of Eggs",       "when": "breakfast", "tier": 1, "parts": ["egg"] },
-    { "id": "bacon",      "name": "Bacon (4 slices)",   "menu": "Bacon (4 slices)",   "when": "breakfast", "tier": 1, "parts": ["bacon"] },
+    { "id": "bacon",      "name": "Bacon",              "menu": "Bacon (4 slices)",   "when": "breakfast", "tier": 1, "parts": ["bacon"] },
     { "id": "potatoes",   "name": "Fried Potatoes",     "menu": "Fried Potatoes",     "when": "breakfast", "tier": 1, "parts": ["potatoes"], "photo": "/assets/photos/fried-potatoes.jpg" },
     { "id": "bng",        "name": "Biscuit & Gravy",    "menu": "Full / Half Biscuit & Gravy", "when": "breakfast", "tier": 1, "parts": ["biscuit", "gravy"] },
     { "id": "burrito",    "name": "Burrito",            "menu": "Burrito",            "when": "breakfast", "tier": 2, "parts": ["tortilla", "egg", "bacon"], "photo": "/assets/photos/breakfast-burrito.jpg" },
@@ -114,17 +114,20 @@
     { "id": "linecook",  "name": "Line Cook",          "rarity": "epic",   "price": 200, "icon": "hat",                   "text": "A second cook sends out the oldest ticket every 14 seconds" },
     { "id": "goldspat",  "name": "Golden Spatula",     "rarity": "epic",   "price": 185, "icon": "goldspatula",           "text": "Nothing burns. Ever." },
     { "id": "bigdill",   "name": "Big Dill",           "rarity": "epic",   "price": 170, "icon": "bigdill",               "text": "A pickle spear can stand in for any one missing part" },
-    { "id": "bottomless","name": "Bottomless Coffee",  "rarity": "epic",   "price": 185, "icon": "refill",                "text": "A spilled coffee pours itself again after 25 seconds with no walk-out" }
+    { "id": "bottomless","name": "Bottomless Coffee",  "rarity": "epic",   "price": 185, "icon": "refill",                "text": "A spilled coffee pours itself again after 25 seconds with no walk-out" },
+
+    { "id": "fryer",     "name": "Deep Fryer",         "rarity": "legendary", "price": 1500, "icon": "fryer",           "text": "Every plate tips triple. Not for now." }
   ],
 
-  "_note_odds": "The chance of each rarity when a card is dealt, by which close it is (Monday's first). They must add up to 100. A rarity with nothing left to offer falls back to the one below it.",
+  "_note_odds": "The chance of each rarity when a card is dealt (Legendary is never dealt: the Deep Fryer turns up by itself as a fourth card, legendaryChance out of 100 each time the shop is stocked, at a price no week can reach; owner 2026-11-12: it must be a lucky sight, not a regular one). Rares come up more than they used to (owner 2026-11-12), but items only help: the score is the tips a week keeps, so a Rush week won with few items is the best kind, by which close it is (Monday's first). They must add up to 100. A rarity with nothing left to offer falls back to the one below it.",
   "odds": [
-    { "normal": 72, "rare": 24, "epic": 4 },
-    { "normal": 60, "rare": 31, "epic": 9 },
-    { "normal": 50, "rare": 36, "epic": 14 },
-    { "normal": 40, "rare": 40, "epic": 20 }
+    { "normal": 62, "rare": 30, "epic": 8 },
+    { "normal": 50, "rare": 38, "epic": 12 },
+    { "normal": 42, "rare": 42, "epic": 16 },
+    { "normal": 34, "rare": 44, "epic": 22 }
   ],
-  "rarityNames": { "normal": "Normal", "rare": "Rare", "epic": "Epic" },
+  "legendaryChance": 3,
+  "rarityNames": { "normal": "Normal", "rare": "Rare", "epic": "Epic", "legendary": "Legendary" },
   "reroll": { "first": 10, "step": 10 },
 
   "_note_days": "How hard each day is. `every`: seconds between tickets. `patience`: multiplies how long a ticket waits. `tier`: the hardest ticket that can come in. `family`: the chance, out of 100, that family comes by at lunch. `burn`: seconds done food lasts before it burns.",

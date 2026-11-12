@@ -1,0 +1,35 @@
+---
+layout: layouts/piece.njk
+title: "Order Up — Facebook post (1080 × 1350)"
+canvasW: "1080px"
+canvasH: "1350px"
+pageCss: "/assets/css/studio/order-up.css"
+
+tags: studio
+studioTitle: "Order Up — launch post"
+studioCategory: "Social"
+studioSize: "1080 × 1350 px · portrait feed post"
+studioNote: "Post once the game is listed (site.json game.listed: true). The address is in the picture; keep it out of the caption (Facebook's link cap). Caption: The Café in Leavenworth made a little game. Work the flat-top for a week, one shift a day: tickets in, plates out. Play it on our website, lvcafetogo.com/play."
+studioW: 1080
+studioH: 1350
+studioOrder: 61
+---
+{#- Words follow STYLE.md: the town early, no exclamation marks, no emoji,
+    nothing promised at the counter (no prize). -#}
+<div class="canvas ou-ad ou-post">
+    <svg class="ou-ad-art" viewBox="0 26 360 180" preserveAspectRatio="xMidYMid slice" role="img" aria-label="The Café's brick front at sunrise">
+        {% include "partials/game/storefront.njk" %}
+    </svg>
+    <div class="ou-ad-band">
+        <p class="ou-ad-label">New on our website · {{ site.address.locality }}, Kansas</p>
+        <div class="wordmark wordmark--light wordmark--hero">{% inlineSvg "/assets/thecafe.svg", "", site.name %}</div>
+        <p class="ou-ad-title">Order Up</p>
+        <p class="ou-ad-line">A little game: work our flat-top for a week, one shift a day.</p>
+        <ul class="ou-ad-steps">
+            <li><b>Tickets come in.</b> Cook what they show, flip it, plate it.</li>
+            <li><b>Send it before it's late.</b> Tips buy gear for tomorrow.</li>
+            <li><b>Easy, Regular or Rush.</b> Finish Friday's catering to win the week.</li>
+        </ul>
+        <p class="ou-ad-url">{{ site.social.website }}/play</p>
+    </div>
+</div>

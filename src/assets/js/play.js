@@ -51,7 +51,7 @@
     return a;
   };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-  var money = function (n) { return '$' + Math.round(n); };
+  var money = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
   var plural = function (n, one, many) { return n + ' ' + (n === 1 ? one : many); };
 
   /* One sprite from the sheet. `style` carries a cooking food's colours. */
@@ -67,7 +67,7 @@
 
   /* ---------- 1. the save ---------- */
   var KEY = 'orderup.v1';
-  var save = { best: 0, bests: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '' };
+  var save = { best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '' };
   var loadedSum = '';
   try {
     var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -77,6 +77,9 @@
   } catch (e) { /* a private window: start fresh, nothing breaks */ }
   var saveWhole = !loadedSum || loadedSum === sumOf();     // looked at once, as it was read, before anything here changes it
   if (!save.bests || typeof save.bests !== 'object') save.bests = {};
+  // The score is the tips a week keeps (owner 2026-11-12). The old bests were
+  // tips earned, a different number, so they aren't carried over.
+  if (!save.keeps || typeof save.keeps !== 'object') save.keeps = {};
   if (!save.id) { save.id = rid(); }
   if (save.best && !save.bests.normal) save.bests.normal = save.best;   // from before there were levels
   if (!D.levels[save.level]) save.level = 'normal';
@@ -495,6 +498,7 @@
     if (t.special && has('drink')) mult *= 2;
     if (t.n <= 3 && has('earlybird') && !t.catering) mult *= 2;
     if (t.usual) mult *= 3;
+    if (has('fryer')) mult *= 3;
     tip *= mult;
     if (t.family) tip = 0;
 
@@ -944,7 +948,7 @@
     keepRun();
     G.offers = shuffle(D.specials).slice(0, 3);
     paper('dawn',
-      '<div class="ou-top ou-top--dawn"><span class="ou-kicker">Today’s special</span><h2 class="ou-h">' + day.name + ', 6am</h2><span class="ou-label">Pick the plate for lunch</span></div>' +
+      '<div class="ou-top ou-top--dawn ou-top--back"><button class="ou-topback" data-act="home">Back</button><span class="ou-kicker">Today’s special</span><h2 class="ou-h">' + day.name + ', 6am</h2><span class="ou-label">Pick the plate for lunch</span></div>' +
       '<div class="ou-body-pad">' + G.offers.map(function (s, i) {
         return '<button class="ou-card ou-card--special" data-act="special" data-i="' + i + '">' +
           '<span class="ou-ci">' + (s.photo ? '<img src="' + esc(s.photo) + '" alt="" loading="lazy">' : spr('special')) + '</span>' +
@@ -970,7 +974,7 @@
     return out;
   }
   function itemCard(it, act, i, extra) {
-    var pips = it.rarity === 'epic' ? '<i></i><i></i><i></i>' : it.rarity === 'rare' ? '<i></i><i></i>' : '<i></i>';
+    var pips = '<i></i>'.repeat({ normal: 1, rare: 2, epic: 3, legendary: 4 }[it.rarity] || 1);
     return '<button class="ou-card is-' + it.rarity + (extra.cls || '') + '" data-act="' + act + '" data-i="' + i + '">' +
       '<span class="ou-rar">' + pips + D.rarityNames[it.rarity] + '</span>' +
       '<span class="ou-ci ou-sh">' + spr(it.icon) + '</span>' +
@@ -993,8 +997,7 @@
         return itemCard(it, 'buy', i, { price: sold ? 'Yours' : money(it.price), cls: sold ? ' is-sold' : poor ? ' is-poor' : '' });
       }).join('') +
         // The one thing that is never for sale: there is no fryer (see /feedback).
-        (G.fryer ? '<button class="ou-card is-off" data-act="fryer"><span class="ou-rar"><i></i>Not for now</span><span class="ou-ci">' + spr('fryer') + '</span>' +
-          '<span><b>Deep Fryer</b><span class="ou-ct">Not for now.</span></span><span class="ou-price">—</span></button>' : '') +
+        (G.fryer && fryerItem() && !has('fryer') ? itemCard(fryerItem(), 'fryer', 0, { price: money(fryerItem().price), cls: G.tips < fryerItem().price ? ' is-poor' : '' }) : '') +
         '';
       foot = '<div class="ou-foot"><div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="reroll"' + (G.tips < G.reroll ? ' disabled' : '') + '>Restock · ' + money(G.reroll) + '</button>' +
         '<button class="ou-btn" data-act="next">Open ' + next.short + '</button></div></div>';
@@ -1005,7 +1008,14 @@
       '<div class="ou-wallet"><span class="ou-label">To spend</span><b>' + money(G.tips) + '</b></div></div>' +
       '<div class="ou-body-pad">' + body + ownedRow() + '</div>' + foot);
   }
+  /* Tips in the game are points (owner 2026-11-12): said on How to play and
+     under every finished week, so nobody reads them as the café's money. */
+  var TIPS_NOTE = 'Tips in the game are points, not money. At The Café, real tips go to the cooks and the people who work there.';
   function own(it) { G.items[it.id] = (G.items[it.id] || 0) + 1; }
+  /* The Deep Fryer (Legendary, owner 2026-11-12): a real item with real
+     stats, priced past anything a week pays. It's never dealt by the odds;
+     it turns up by itself in about one shop in three. */
+  function fryerItem() { return D.items.filter(function (it) { return it.id === 'fryer'; })[0]; }
 
   function weekOver(win, why) {
     if (!G) return;
@@ -1013,13 +1023,17 @@
     var cut = !!T && !T.cat && !win;      // the day itself was cut short
     if (T && G.perDay[G.day] == null) G.perDay[G.day] = T.cat ? T.tipsBefore : T.tips;
     if (T && T.cat && G.cater == null) G.cater = T.tips - T.tipsBefore;
-    var lvName = level().name, best = G.earned > (save.bests[G.level] || 0);
-    if (best) save.bests[G.level] = G.earned;
-    save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, G.earned); save.seen = true; save.run = null; persist();
+    // The week's score is what's left in the tip jar: tips earned less what
+    // was spent on items. Items help a week through; a week that needs few
+    // scores best.
+    var kept = Math.max(0, G.tips), spent = Math.max(0, G.earned - G.tips);
+    var lvName = level().name, best = kept > (save.keeps[G.level] || 0);
+    if (best) save.keeps[G.level] = kept;
+    save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
-    report('end', { day: G.day, why: win ? 'win' : why, total: G.earned, secs: Math.round((Date.now() - G.began) / 1000),
-      items: Object.keys(G.items), u: T ? T.untrusted : 0 });
-    lastRun = { run: G.run, lvl: G.level, total: G.earned };
+    report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round((Date.now() - G.began) / 1000),
+      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '' });
+    lastRun = { run: G.run, lvl: G.level, total: kept };
     // After a finished week (not one that was quit), and only if results go
     // anywhere: a first name, and a way to reach them if they want one.
     var sendIn = !STATS.url || why === 'quit' ? '' :
@@ -1029,7 +1043,7 @@
       '<label class="ou-field"><span>First name</span><input name="name" type="text" maxlength="24" autocomplete="given-name" autocapitalize="words"></label>' +
       (STATS.askContact ? '<label class="ou-field"><span>Email or phone, if you’d like to hear back</span><input name="contact" type="text" maxlength="80" autocomplete="email"></label>' : '') +
       '<label class="ou-field ou-field--web" aria-hidden="true"><span>Website</span><input name="website" type="text" tabindex="-1" autocomplete="off"></label>' +
-      '<input name="total" type="hidden" value="' + G.earned + '">' +
+      '<input name="total" type="hidden" value="' + kept + '">' +
       '<p class="ou-fine">Used only to get in touch about the game. Under 13? Ask a grown-up first. <a href="/privacy">Privacy</a></p>' +
       '<button class="ou-btn ou-btn--quiet" type="submit">Send it in</button></form>';
     var day = D.days[G.day];
@@ -1039,11 +1053,14 @@
       : ['Rough week', 'Three coffees down on ' + day.name + '.'];
     var rows = G.perDay.map(function (tips, i) { return '<div><b>' + D.days[i].short + '</b><span>' + (i === G.day && cut ? 'Closed early' : 'Closed at 2pm') + '</span><strong>' + money(tips) + '</strong></div>'; }).join('');
     if (G.cater != null) rows += '<div><b>Fri</b><span>Catering' + (win ? ', on time' : why === 'late' ? ', late' : ', not finished') + '</span><strong>' + money(G.cater) + '</strong></div>';
-    rows += '<div class="is-total"><b>Week</b><span>in tips</span><strong>' + money(G.earned) + '</strong></div>';
+    rows += '<div><b>Week</b><span>Tips earned</span><strong>' + money(G.earned) + '</strong></div>';
+    rows += '<div><b></b><span>Spent on items</span><strong>' + (spent ? '−' + money(spent) : '$0') + '</strong></div>';
+    rows += '<div class="is-total"><b>Kept</b><span>your score</span><strong>' + money(kept) + '</strong></div>';
     paper('over',
       '<div class="ou-top' + (win ? ' ou-top--fri' : '') + '"><span class="ou-kicker">' + head[0] + '</span><h2 class="ou-h">' + head[1] + '</h2>' +
-      '<span class="ou-label">' + (best ? 'A new best ' + lvName + ' week' : 'Best ' + lvName + ' week: ' + money(save.bests[G.level] || 0)) + '</span></div>' +
+      '<span class="ou-label">' + (best ? 'A new best ' + lvName + ' week' : 'Best ' + lvName + ' week: ' + money(save.keeps[G.level] || 0) + ' kept') + '</span></div>' +
       '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' + ownedRow() + sendIn +
+      '<p class="ou-fine">' + TIPS_NOTE + '</p>' +
       '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="box">Recipe Box</button><a class="ou-btn ou-btn--quiet" href="/menu">The real menu</a></div>' +
       '</div><div class="ou-foot"><button class="ou-btn" data-act="start">Start a new week</button></div>');
     G = null; T = null;
@@ -1075,14 +1092,15 @@
       li('bell', '<b>Tap Send</b> when the plate has what a ticket shows. Faster plates tip more.') +
       li('pickle', '<b>At lunch there’s a Pickle bin.</b> No ticket asks for it. Tap it to add a pickle spear to any plate before you send it: $1 more in tips.') +
       li('cup-spilled', '<b>A ticket that runs out is a walk-out.</b> Three in a day and the week is over.') +
-      li('jar', '<b>After close,</b> pick one item for free and spend your tips on more.') +
+      li('jar', '<b>After close,</b> pick one item for free. More cost tips, and <b>your score is the tips you keep</b>, so buy only what gets you through.') +
+      li('tipjar', '<b>Tips here are points, not money.</b> At The Café, real tips go to the cooks and the people who work there.') +
       '</ul></div><div class="ou-foot"><button class="ou-btn" data-act="back">Got it</button></div>');
     openOverlay(from);
   }
 
   function drawTitle() {
-    var lv = D.levels[save.level], best = save.bests[save.level] || 0, run = save.run;
-    $('#ou-best').textContent = best ? 'Best ' + lv.name + ' week: ' + money(best) + ' · ' + plural(save.wins, 'week', 'weeks') + ' finished' : 'Monday to Friday, 6am to 2pm';
+    var lv = D.levels[save.level], best = save.keeps[save.level] || 0, run = save.run;
+    $('#ou-best').textContent = best ? 'Best ' + lv.name + ' week: ' + money(best) + ' kept · ' + plural(save.wins, 'week', 'weeks') + ' finished' : 'Monday to Friday, 6am to 2pm';
     $('#ou-levels').innerHTML = Object.keys(D.levels).map(function (id) {
       return '<button class="ou-level' + (id === save.level ? ' is-on' : '') + '" data-act="level" data-level="' + id + '" aria-pressed="' + (id === save.level) + '">' + esc(D.levels[id].name) + '</button>';
     }).join('');
@@ -1091,6 +1109,7 @@
     go.textContent = run ? 'Continue: ' + D.days[run.day].name : 'Start the week';
     go.setAttribute('data-act', run ? 'continue' : 'start');
     $('#ou-fresh').hidden = !run;
+    $('#ou-confirm').hidden = true;
     var snd = 'Sound: ' + (save.sound ? 'on' : 'off'), mus = 'Music: ' + (save.music ? 'on' : 'off');
     $('#ou-sound-title').textContent = snd; $('#ou-sound-pause').textContent = snd;
     $('#ou-music-title').textContent = mus; $('#ou-music-pause').textContent = mus;
@@ -1107,11 +1126,20 @@
     var act = el.getAttribute('data-act'), i = parseInt(el.getAttribute('data-i'), 10);
     var live = T && screen === 'shift' && !T.paused && !T.ended;
     switch (act) {
-      case 'start': sfx.tap(); newRun(); if (!save.seen) showHow('dawn'); break;   // first week: the rules first
+      case 'start': sfx.tap(); $('#ou-confirm').hidden = true; newRun(); if (!save.seen) showHow('dawn'); break;   // first week: the rules first
+      case 'fresh':                // New week while one is saved: ask first
+        $('#ou-confirm-q').textContent = 'Start a new week? Your ' + D.days[save.run.day].name + ' will be lost.';
+        $('#ou-confirm').hidden = false; $('#ou-confirm').querySelector('[data-act="keep"]').focus(); sfx.tap(); break;
+      case 'keep': $('#ou-confirm').hidden = true; sfx.tap(); break;
+      case 'home': G = null; T = null; show('title'); drawTitle(); sfx.tap(); break;      // the week was kept this morning
+      case 'leave': $('#ou-pausebox').hidden = true; if (T) T.ended = true; clearBubbles(); G = null; T = null; show('title'); drawTitle(); break;
       case 'continue': sfx.tap(); if (save.run) resumeRun(); else newRun(); break;
       case 'level': if (D.levels[el.getAttribute('data-level')]) { save.level = el.getAttribute('data-level'); persist(); drawTitle(); sfx.tap(); } break;
       case 'music': save.music = !save.music; persist(); drawTitle(); break;
-      case 'fryer': sfx.bad(); el.classList.remove('is-nope'); void el.offsetWidth; el.classList.add('is-nope'); break;
+      case 'fryer':
+        var fry = fryerItem();
+        if (fry && G.tips >= fry.price) { G.tips -= fry.price; own(fry); sfx.win(); drawClose(); break; }
+        sfx.bad(); el.classList.remove('is-nope'); void el.offsetWidth; el.classList.add('is-nope'); break;
       case 'how': showHow(screen); break;
       case 'box': showBox(screen === 'over' ? 'over' : 'title'); break;
       case 'back': closeOverlay(); break;
@@ -1127,7 +1155,7 @@
       case 'pause': setPaused(true); break;
       case 'resume': setPaused(false); break;
       case 'quit': $('#ou-pausebox').hidden = true; T.ended = true; weekOver(false, 'quit'); break;
-      case 'pick': own(G.pick[i]); sfx.buy(); G.stage = 'shop'; G.shop = deal(3, []); G.fryer = rand() < 0.34; drawClose(); break;
+      case 'pick': own(G.pick[i]); sfx.buy(); G.stage = 'shop'; G.shop = deal(3, []); G.fryer = rand() * 100 < (D.legendaryChance || 0); drawClose(); break;
       case 'buy':
         var it = G.shop[i];
         if (G.sold.indexOf(i) !== -1) break;
@@ -1135,7 +1163,7 @@
         G.tips -= it.price; own(it); G.sold.push(i); sfx.buy(); drawClose(); break;
       case 'reroll':
         if (G.tips < G.reroll) break;
-        G.tips -= G.reroll; G.reroll += D.reroll.step; G.shop = deal(3, []); G.sold = []; G.fryer = rand() < 0.34; sfx.tap(); drawClose(); break;
+        G.tips -= G.reroll; G.reroll += D.reroll.step; G.shop = deal(3, []); G.sold = []; G.fryer = rand() * 100 < (D.legendaryChance || 0); sfx.tap(); drawClose(); break;
       case 'next': G.day++; sfx.tap(); showDawn(); break;
     }
     musicSync();

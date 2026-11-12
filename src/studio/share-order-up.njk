@@ -1,0 +1,28 @@
+---
+layout: layouts/piece.njk
+title: "Order Up — share picture (1200 × 630)"
+canvasW: "1200px"
+canvasH: "630px"
+pageCss: "/assets/css/studio/order-up.css"
+
+tags: studio
+studioPinned: true
+studioTitle: "Order Up — link picture"
+studioCategory: "Social"
+studioSize: "1200 × 630 px · what Facebook shows for a link to /play"
+studioNote: "Not posted by hand: /play names it as its share picture (ogImage), so it must stay built. Pinned for that reason."
+studioW: 1200
+studioH: 630
+studioOrder: 60
+---
+<div class="canvas ou-ad ou-share">
+    <svg class="ou-ad-art" viewBox="0 66 360 112" preserveAspectRatio="xMidYMid slice" role="img" aria-label="The Café's brick front at sunrise">
+        {% include "partials/game/storefront.njk" %}
+    </svg>
+    <div class="ou-ad-band">
+        <div class="wordmark wordmark--light wordmark--hero">{% inlineSvg "/assets/thecafe.svg", "", site.name %}</div>
+        <p class="ou-ad-title">Order Up</p>
+        <p class="ou-ad-line">A week on the flat-top at {{ site.address.street }}</p>
+        <p class="ou-ad-label">A little game · {{ site.address.locality }}, {{ site.address.region }}</p>
+    </div>
+</div>
