@@ -336,19 +336,19 @@
   function level() { return D.levels[(G && G.level) || save.level] || D.levels.normal; }
 
   function newRun() {
-    G = { level: save.level, run: rid(), began: Date.now(), day: 0, tips: 0, earned: 0, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
+    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
     report('start', {});
     showDawn();
   }
   /* A week left half way is kept each morning and picked up from that morning. */
   function keepRun() {
-    save.run = { level: G.level, run: G.run, began: G.began, day: G.day, tips: G.tips, earned: G.earned, perDay: G.perDay.slice(0, G.day), items: G.items };
+    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, perDay: G.perDay.slice(0, G.day), items: G.items };
     persist();
   }
   function resumeRun() {
     var r = save.run, items = {};
     for (var id in r.items) if (D.items.some(function (it) { return it.id === id; })) items[id] = r.items[id];
-    G = { level: r.level, run: r.run || rid(), began: r.began || Date.now(), day: r.day, tips: r.tips || 0, earned: r.earned || 0, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
+    G = { level: r.level, run: r.run || rid(), began: r.began || Date.now(), played: r.played || 0, away: r.away || 0, day: r.day, tips: r.tips || 0, earned: r.earned || 0, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
     showDawn();
   }
 
@@ -362,7 +362,7 @@
       cookies: has('cookie'),
       usualAt: has('regular') ? [3 + Math.floor(rand() * 3), 9 + Math.floor(rand() * 4)] : [],
       familyAt: null, fam: null, bubbles: [], cat: null, endIn: null, lastClock: '', lastSky: -1,
-      taps: 0, gaps: [], lastTap: 0, untrusted: 0, began: Date.now()
+      taps: 0, gaps: [], lastTap: 0, untrusted: 0, played: 0, away: 0, banked: 0, awayBanked: 0
     };
     var lv = level(), famChance = day.family * lv.family;
     if (G.day >= 1 && lv.familyFloor) famChance = Math.max(famChance, lv.familyFloor);
@@ -377,6 +377,7 @@
     banner(day.name, 'Open at 6am. Breakfast first.');
   }
 
+  var LINE_S = 14, LINE_AT = 0.5;      // the Line Cook: seconds to be ready again, and how close to walking out a ticket must be
   function usable() { return Math.min(6, TU.griddle + 2 * has('flattop')); }
 
   /* The clock runs 6am to 2pm, but breakfast (to 11am) and lunch each get the
@@ -553,7 +554,7 @@
     sfx.bell();
 
     if (t.family) { familyFed(t); return; }
-    var words = by ? by + ' sent #' + t.n : (kind === 'pickle' ? 'Order up, with a pickle' : kind === 'wild' ? 'Order up. Big Dill.' : 'Order up');
+    var words = by ? by + ' sent #' + t.n + (kind === 'pickle' ? ', with a pickle' : '') : (kind === 'pickle' ? 'Order up, with a pickle' : kind === 'wild' ? 'Order up. Big Dill.' : 'Order up');
     if (t.usual) words = 'The usual';
     toast(words + ' · ' + money(tip));
 
@@ -624,7 +625,11 @@
       t = T.tickets[i]; t.age += dt;
       if (t.catering) continue;
       t.left -= dt;
-      if (t.auto != null) { t.auto -= dt; if (t.auto <= 0) { complete(t, 'exact', 'Counter Help'); continue; } }
+      // Counter Help adds the pickle spear at lunch, as a player would.
+      if (t.auto != null) { t.auto -= dt; if (t.auto <= 0) { complete(t, T.bins === 'lunch' && t.parts.indexOf('pickle') === -1 ? 'pickle' : 'exact', 'Counter Help'); continue; } }
+      // The Line Cook, when ready, takes the ticket that is about to walk out:
+      // never the one being made unless it was lost anyway (owner 2026-11-12).
+      if (t.left <= LINE_AT && T.lineT >= LINE_S && has('linecook') && !t.family) { T.lineT = 0; complete(t, 'exact', 'Line Cook'); continue; }
       if (t.left <= 0.4 && !t.boarded && has('board') && !t.family) { t.boarded = true; t.left += 6; toast('Kitchen Board: #' + t.n + ' waits a little longer'); }
       if (t.left <= 0 && qaState.godMode && !t.family) { t.left = t.total; continue; }
       if (t.left <= 0) walkOut(t);
@@ -656,10 +661,13 @@
 
     // helpers
     if (has('linecook')) {
-      T.lineT += dt;
-      if (T.lineT >= 14) {
-        var mine = T.tickets.filter(function (x) { return !x.family; }).sort(function (a, b) { return a.n - b.n; })[0];
-        if (mine) { T.lineT = 0; complete(mine, 'exact', 'Line Cook'); } else T.lineT = 14;
+      T.lineT = Math.min(LINE_S, T.lineT + dt);     // ready when the bar under the hat is full
+      // The catering is one clock, so nothing is about to walk out: there the
+      // Line Cook sends a platter the plate isn't heading for.
+      if (T.cat && T.lineT >= LINE_S) {
+        var aim = aimTicket();
+        var mine = T.tickets.filter(function (x) { return x.catering && !(aim && aim.t === x); }).sort(function (x, y) { return y.n - x.n; })[0];
+        if (mine) { T.lineT = 0; complete(mine, 'exact', 'Line Cook'); }
       }
     }
     if (has('bottomless') && T.cups < TU.cups && T.cups > 0) {
@@ -672,17 +680,33 @@
       T.fam.say -= dt;
       if (T.fam.say <= 0) { T.fam.say = D.family.every; if (T.bubbles.length < D.family.maxBubbles) addBubble(); }
     }
+    // Small Talk: each line is answered by itself after a moment.
+    for (i = T.bubbles.length - 1; i >= 0; i--) {
+      if (T.bubbles[i].auto == null) continue;
+      T.bubbles[i].auto -= dt;
+      if (T.bubbles[i].auto <= 0) dropBubble(T.bubbles[i].id);
+    }
   }
 
   function endDay() {
     G.perDay[G.day] = T.tips;
     (G.log = G.log || [])[G.day] = [T.tips, T.served, T.walk];
     var gaps = T.gaps.slice().sort(function (a, b) { return a - b; });
-    report('day', { day: G.day, tips: T.tips, plates: T.served, walk: T.walk, secs: Math.round((Date.now() - T.began) / 1000),
+    bank();
+    report('day', { day: G.day, tips: T.tips, plates: T.served, walk: T.walk, secs: Math.round(T.played), away: Math.round(T.away),
       taps: T.taps, gmin: gaps.length ? gaps[0] : '', gmed: gaps.length ? gaps[Math.floor(gaps.length / 2)] : '', u: T.untrusted });
     save.seen = true; persist();
     clearBubbles();
     if (G.day >= D.days.length - 1) startCatering(); else showClose();
+  }
+
+  /* How long a week took is the time it was played: the shifts, with pauses
+     and the screens between left out (`away` is the paused part, sent beside
+     it). Each shift's seconds are added to the week's as it ends. */
+  function bank() {
+    if (!T || !G) return;
+    G.played += T.played - T.banked; G.away += T.away - T.awayBanked;
+    T.banked = T.played; T.awayBanked = T.away;
   }
 
   /* ---------- Friday's catering order ---------- */
@@ -725,19 +749,20 @@
     } while (!ok && ++tries < 8);
     var used = T.bubbles.map(function (b) { return b.line; });
     var lines = D.family.lines.filter(function (l) { return used.indexOf(l) === -1; });
-    var b = { id: ++uid, x: x, y: y, line: pick(lines.length ? lines : D.family.lines) };
+    var b = { id: ++uid, x: x, y: y, line: pick(lines.length ? lines : D.family.lines), auto: has('smalltalk') ? 1.3 : null };
     T.bubbles.push(b);
     var el = document.createElement('button');
     el.className = 'ou-bubble'; el.setAttribute('data-act', 'bubble'); el.setAttribute('data-id', b.id);
     el.style.left = Math.round(x) + 'px'; el.style.top = Math.round(y) + 'px';
-    el.innerHTML = '<span class="ou-label">' + esc(T.fam.who) + '</span><b>' + esc(b.line) + '</b><small>Tap to answer</small>';
+    el.innerHTML = '<span class="ou-label">' + esc(T.fam.who) + '</span><b>' + esc(b.line) + '</b><small>' + (b.auto == null ? 'Tap to answer' : esc(pick(D.family.replies))) + '</small>';
+    if (b.auto != null) el.className += ' is-answered';
     box.appendChild(el); sfx.talk();
   }
-  function tapBubble(id) {
+  function dropBubble(id) {
     for (var i = 0; i < T.bubbles.length; i++) if (String(T.bubbles[i].id) === String(id)) T.bubbles.splice(i, 1);
     var el = stage.querySelector('.ou-bubble[data-id="' + id + '"]'); if (el) el.remove();
-    toast(pick(D.family.replies)); sfx.tap();
   }
+  function tapBubble(id) { dropBubble(id); toast(pick(D.family.replies)); sfx.tap(); }
   function clearBubbles() { if (T) T.bubbles = []; $('#ou-bubbles').innerHTML = ''; }
   function familyGone() { T.fam = null; clearBubbles(); }
   function familyFed(t) {
@@ -931,7 +956,7 @@
       var left = it.state === 'raw' ? 1 - it.t / cook : gold ? 0 : it.state === 'flip' ? it.wait / burnAfter : (it.t - cook) / burnAfter;
       it.fg.style.strokeDashoffset = (182.2 * Math.max(0, Math.min(1, left))).toFixed(1);
     }
-    if (T.lineEl) T.lineEl.style.transform = 'scaleX(' + Math.min(1, T.lineT / 14).toFixed(3) + ')';
+    if (T.lineEl) T.lineEl.style.transform = 'scaleX(' + Math.min(1, T.lineT / LINE_S).toFixed(3) + ')';
 
     var clock;
     if (T.cat) { var s = Math.max(0, Math.ceil(T.cat.left)); clock = Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60); }
@@ -1013,7 +1038,7 @@
     for (var k = 0; k < n; k++) {
       var roll = rand() * 100, rar = roll < odds.epic ? 'epic' : roll < odds.epic + odds.rare ? 'rare' : 'normal', got = null;
       for (var f = 0; f < 3 && !got; f++) {
-        var pool = D.items.filter(function (it) { return it.rarity === falls[rar][f] && has(it.id) < (it.max || 1) && out.indexOf(it) === -1 && not.indexOf(it.id) === -1 && !(it.id === 'spatula' && level().flip === 'none'); });
+        var pool = D.items.filter(function (it) { return it.rarity === falls[rar][f] && has(it.id) < (it.max || 1) && out.indexOf(it) === -1 && not.indexOf(it.id) === -1 && !(it.id === 'spatula' && level().flip === 'none') && !(it.id === 'smalltalk' && !level().family); });
         if (pool.length) got = pick(pool);
       }
       if (got) out.push(got);
@@ -1077,6 +1102,7 @@
     if (!G) return;
     clearBubbles();
     var cut = !!T && !T.cat && !win;      // the day itself was cut short
+    bank();
     if (T && G.perDay[G.day] == null) G.perDay[G.day] = T.cat ? T.tipsBefore : T.tips;
     if (T && T.cat && G.cater == null) G.cater = T.tips - T.tipsBefore;
     // The week's score is what's left in the tip jar: tips earned less what
@@ -1087,10 +1113,10 @@
     if (best) save.keeps[G.level] = kept;
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
-    report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round((Date.now() - G.began) / 1000),
+    report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round(G.played), away: Math.round(G.away),
       items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent });
     lastRun = { run: G.run, lvl: G.level, total: kept, earned: G.earned, spent: spent, days: weekDays(), cater: G.cater == null ? '' : G.cater,
-      why: win ? 'win' : why, day: G.day, items: Object.keys(G.items), secs: Math.round((Date.now() - G.began) / 1000) };
+      why: win ? 'win' : why, day: G.day, items: Object.keys(G.items), secs: Math.round(G.played) };
     // After a finished week (not one that was quit), and only if results go
     // anywhere: a first name, and a way to reach them if they want one.
     var sendIn = !STATS.url || why === 'quit' ? '' :
@@ -1256,7 +1282,8 @@
   /* ---------- the loop ---------- */
   var last = 0;
   function frame(now) {
-    var dt = Math.min(0.1, (now - last) / 1000) * speed; last = now;
+    var real = Math.min(0.1, (now - last) / 1000), dt = real * speed; last = now;
+    if (T && screen === 'shift' && !T.ended) { if (T.paused) T.away += real; else T.played += real; }
     if (T && screen === 'shift' && !T.paused) {
       if (!T.ended) update(dt);
       if (T && screen === 'shift') draw(dt);

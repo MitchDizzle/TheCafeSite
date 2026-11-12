@@ -112,24 +112,35 @@ prices and how many of each can be owned are in `game.json` → `items`,
 | Coffee Urn | At 11am, one spilled coffee is poured again |
 | Kitchen Board | A ticket about to walk out waits 6 more seconds, once |
 | Drink Included | The day's special tips double |
-| **Counter Help** (a helper) | Sends out every one-item ticket by themself |
+| **Counter Help** (a helper) | Sends out every one-item ticket by themself, with a pickle spear at lunch |
 | The Regular | Twice a day a ticket is "the usual" and tips triple |
 | **Triple Chocolate Cookie** (2) | Once a day, tap it: every ticket's clock starts over |
 | Heavy Spatula | Food flips itself (never offered on Easy, where nothing flips) |
+| Small Talk | What family says clears itself, and never blocks a tap (never offered on Easy, where family doesn't come) |
 
 **Epic**
 
 | Name | Does |
 |---|---|
-| **Line Cook** (a helper) | Sends out the oldest ticket every 14 seconds |
+| **Line Cook** (a helper) | Sends out a ticket that is about to walk out, once every 14 seconds |
 | Golden Spatula | Nothing burns. Ever. |
 | Big Dill | A pickle spear can stand in for any one missing part |
 | Bottomless Coffee | A spilled coffee pours itself again after 25 seconds with no walk-out |
 
-**The helpers** work by themselves: Counter Help takes the one-item tickets
-(a side, a cup of soup, a side of eggs), the Line Cook takes the oldest
-ticket on a timer shown by the bar under their hat. Neither will cook for
-family. They are drawn as an apron and a hat, never as a person (§5).
+**The helpers** work by themselves. Counter Help takes the one-item tickets
+(a side, a cup of soup, a side of eggs) and at lunch adds the pickle spear,
+so the easy dollar isn't missed. The Line Cook is the safety net: when the
+bar under their hat is full (14 seconds), they send out the next ticket
+that is about to walk out, and the bar starts again. Until 2026-11-12 they
+took the oldest ticket on the timer, which was often the one already on the
+player's plate (owner: confusing). In Friday's catering, where nothing
+walks out, they send a platter the plate isn't heading for. Neither will
+cook for family. They are drawn as an apron and a hat, never as a person
+(§5).
+
+**Small Talk** (owner 2026-11-12) answers family for you: each line shows
+with its answer already under it ("Mm-hm."), can't be tapped and is gone in
+a second or so.
 
 **The cookie** sits on the pass with its count. It is for the moment the
 rail is full and red. Family sometimes leaves one too.
@@ -538,7 +549,8 @@ set it up is in the private planning repo, `game-stats/`):
 
 - A short note when a week starts, when each day ends and when the week
   ends: the level, the day, tips, plates, walk-outs, how many taps and how
-  far apart, how long it took, the items owned. **No name.** A random id
+  far apart, how long it was played (pauses left out, and counted
+  beside it), the items owned. **No name.** A random id
   made on the phone tells one phone's weeks from another's.
 - After a **finished** week (won, or lost; not one the player ended
   themselves), the week-over screen offers **Send in your score**: a first

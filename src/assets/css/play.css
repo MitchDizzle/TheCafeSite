@@ -213,6 +213,8 @@
 .ou-bubble::after { content: ""; position: absolute; left: 22px; bottom: -11px; width: 16px; height: 16px; background: var(--cream); border: solid var(--teal-dark); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) skew(8deg, 8deg); }
 .ou-bubble .ou-label { color: var(--teal); display: block; font-size: 10px; }
 .ou-bubble b { font: 700 16px/1.2 Lato, sans-serif; display: block; }
+/* Small Talk: answered already, so it is only seen and never in the way of a tap. */
+.ou-bubble.is-answered { pointer-events: none; opacity: .88; }
 .ou-bubble small { display: block; font: 400 12px/1.2 Lato, sans-serif; color: #4A5A62; margin-top: 2px; }
 
 .ou-pausebox { position: absolute; inset: 0; background: rgba(28, 34, 38, .78); z-index: 9; display: grid; place-items: center; padding: 24px; }
