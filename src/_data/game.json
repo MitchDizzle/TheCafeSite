@@ -136,7 +136,7 @@
     { "name": "Friday",    "short": "Fri", "every": 2.4, "patience": 0.62, "tier": 3, "family": 85, "burn": 6 }
   ],
 
-  "_note_tuning": "dayLength: seconds a shift takes. breakfastShare: the part of it before 11am. cups: coffees a day. rail: tickets that fit. waitBase + waitPerPart x parts: seconds a ticket waits. lateAt: the share of its time left when a ticket turns red. toGo: chance out of 100 a lunch ticket is to go. specialShare: chance out of 100 a lunch ticket is the special.",
+  "_note_tuning": "dayLength: seconds a shift takes. breakfastShare: the part of it before 11am. cups: coffees a day. rail: tickets that fit. waitBase + waitPerPart x parts: seconds a ticket waits. lateAt: the share of its time left when a ticket turns red. toGo: chance out of 100 a lunch ticket is to go. specialShare: chance out of 100 a lunch ticket is the special. fair: what keeps a hard day from being an impossible one. A ticket never waits less than cookTimes x its longest cook + perPart seconds a part + base. With bigAtOnce tickets of bigParts parts already up, the next one is a small one. After a walk-out the tickets still up get breath more seconds and nothing new comes for breathHold seconds.",
   "tuning": {
     "dayLength": 100,
     "breakfastShare": 0.44,
@@ -148,14 +148,15 @@
     "lateAt": 0.28,
     "toGo": 30,
     "specialShare": 22,
-    "plateMax": 5
+    "plateMax": 5,
+    "fair": { "cookTimes": 1.5, "perPart": 1.3, "base": 2.5, "bigParts": 4, "bigAtOnce": 2, "breath": 4, "breathHold": 3.5 }
   },
 
   "_note_levels": "How hard, picked on the title screen and kept for the whole week. `flip`: none (food never needs turning), tap (a tap or a swipe turns it) or swipe (only a swipe does). `wait` multiplies how long every ticket waits, `every` the seconds between tickets (bigger is slower), `burn` how long done food lasts. `family` multiplies each day's family chance in `days` (0 is never); `familyFloor` is a chance out of 100 that applies from Tuesday whatever the day says. The best week is kept for each level by itself.",
   "levels": {
-    "easy":   { "name": "Easy",    "text": "No flipping, no distractions, tickets wait longer.",          "flip": "none",  "wait": 1.6,  "every": 1.4,  "burn": 1.5,  "family": 0 },
+    "easy":   { "name": "Easy",    "text": "No flipping, no distractions, tickets wait longer.",          "flip": "none",  "wait": 1.9,  "every": 1.6,  "burn": 1.6,  "family": 0 },
     "normal": { "name": "Regular", "text": "Flip eggs and burgers with a tap. Things get busy by Wednesday.", "flip": "tap",   "wait": 1.22, "every": 1.05, "burn": 1.0,  "family": 1 },
-    "hard":   { "name": "Rush",    "text": "Flip with a swipe. Shorter waits. More going on, sooner.",      "flip": "swipe", "wait": 0.82, "every": 0.85, "burn": 0.8,  "family": 1.5, "familyFloor": 45 }
+    "hard":   { "name": "Rush",    "text": "Flip with a swipe. Shorter waits. More going on, sooner.",      "flip": "swipe", "wait": 0.92, "every": 0.92, "burn": 0.85,  "family": 1.5, "familyFloor": 45 }
   },
 
   "_note_family": "Family at the counter (Wednesday on, see `days`; never on Easy and sooner on Rush, see `levels`). The player is not warned: they just turn up when the week gets hard (owner 2026-11-11). They eat free, they wait a long time, and they talk: a line pops up over the kitchen every `every` seconds and stays until it's tapped. Feed them and they pour you a coffee back (or leave $`leave` if none is spilled); `cookieChance` out of 100 they brought a cookie. Words only, never a face, and no real names. Keep the lines kind: this is somebody's mother.",

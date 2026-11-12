@@ -22,6 +22,10 @@
      7. the paper screens: dawn, after close, week over, Recipe Box, how to
      8. taps, the loop, fitting the phone
 
+   If site.json gives it somewhere to send them, the game also reports how
+   each week went (no name; see "results" below and /privacy), and after a
+   finished week offers to send a first name in with the score.
+
    Saved on the phone only (localStorage, always in try/catch): the best week
    on each level, weeks played, what's been served, the level, the sound and
    music settings, and a week left half way (kept at each morning, so it can
@@ -37,7 +41,6 @@
   var D = JSON.parse(dataEl.textContent);
   var TU = D.tuning;
   var W = 360;                         // the stage's width; fit() scales it to the phone
-  var DEBUG = /[?&]debug\b/.test(location.search);
 
   var $ = function (sel) { return stage.querySelector(sel); };
   var rand = Math.random;
@@ -64,17 +67,96 @@
 
   /* ---------- 1. the save ---------- */
   var KEY = 'orderup.v1';
-  var save = { best: 0, bests: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null };
+  var save = { best: 0, bests: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '' };
+  var loadedSum = '';
   try {
     var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (stored && typeof stored === 'object') for (var k in save) if (k in stored) save[k] = stored[k];
+    loadedSum = (stored && stored.sum) || '';
     if (!save.served || typeof save.served !== 'object') save.served = {};
   } catch (e) { /* a private window: start fresh, nothing breaks */ }
+  var saveWhole = !loadedSum || loadedSum === sumOf();     // looked at once, as it was read, before anything here changes it
   if (!save.bests || typeof save.bests !== 'object') save.bests = {};
+  if (!save.id) { save.id = rid(); }
   if (save.best && !save.bests.normal) save.bests.normal = save.best;   // from before there were levels
   if (!D.levels[save.level]) save.level = 'normal';
   if (save.run && (typeof save.run !== 'object' || !D.days[save.run.day] || !D.levels[save.run.level])) save.run = null;
-  function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* same */ } }
+  /* A short check value over the numbers that matter, so a save that was cut
+     off half way through being written isn't taken for a whole one. */
+  function sumOf() {
+    var text = JSON.stringify([save.bests, save.weeks, save.wins, save.id]) + 'flat-top', h = 5381;
+    for (var i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(36);
+  }
+  function persist() { save.sum = sumOf(); try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* same */ } }
+  function rid() {
+    try {
+      var a = new Uint8Array(9); crypto.getRandomValues(a);
+      return Array.prototype.map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    } catch (e) { return String(Date.now()) + Math.floor(rand() * 1e6); }
+  }
+  if (!Array.isArray(save.qa)) save.qa = [];
+
+  /* ---------- test shortcuts ----------
+     For trying things on a phone, where there's no ?debug. From the console:
+       OrderUp.setTips(500)      start the day with $500
+       OrderUp.addTips(50)
+       OrderUp.skipDay()         close the day now
+       OrderUp.unlockAll()       every item in the shop
+       OrderUp.godMode = true    tickets never walk out
+       OrderUp.submitScore(n)    send a week's score in
+     Their settings are kept in localStorage under "orderup.dev".
+     A week they were used in says so in its results (qa), so a tested week
+     can be told from a played one. TODO: take these out before the post. */
+  var qa = save.qa, DEVKEY = 'orderup.dev', DEVSET = '{"cheats":false,"tipMultiplier":1,"startTips":0}';
+  var qaState = { tips: 0, day: 0, godMode: false, unlocked: false };
+  function used(what) { if (qa.indexOf(what) === -1) { qa.push(what); save.qa = qa; persist(); } }
+  var OrderUp = {
+    version: (D.stats && D.stats.version) || '1',
+    setTips: function (n) { used('setTips'); qaState.tips = Number(n) || 0; return { ok: true, tips: qaState.tips }; },
+    addTips: function (n) { used('addTips'); qaState.tips += Number(n) || 0; return { ok: true, tips: qaState.tips }; },
+    skipDay: function () { used('skipDay'); qaState.day++; return { ok: true, day: qaState.day }; },
+    unlockAll: function () { used('unlockAll'); qaState.unlocked = true; return { ok: true, items: D.items.length }; },
+    submitScore: function (n) { used('submitScore'); return { ok: true, score: Number(n) || 0 }; }
+  };
+  try {
+    Object.defineProperty(OrderUp, 'godMode', { enumerable: true, get: function () { return qaState.godMode; }, set: function (v) { used('godMode'); qaState.godMode = !!v; } });
+    Object.defineProperty(OrderUp, 'tips', { enumerable: true, get: function () { return qaState.tips; }, set: function (v) { used('tips'); qaState.tips = Number(v) || 0; } });
+    window.OrderUp = OrderUp;
+    if (localStorage.getItem(DEVKEY) == null) localStorage.setItem(DEVKEY, DEVSET);
+  } catch (e) { /* no matter */ }
+  function qaCheck() {
+    try { if (localStorage.getItem(DEVKEY) !== DEVSET) used('dev-key'); } catch (e) { /* no matter */ }
+    if (!saveWhole) used('save-edited');
+  }
+
+  /* ---------- results ----------
+     If site.json gives the game somewhere to send them (game.statsUrl), a
+     short note goes out when a week starts, when a day ends and when the week
+     ends: the level, the day, the tips, how busy the taps were. No name and
+     nothing about who is playing: `dev` is a random id made here and kept in
+     the save, so two weeks from one phone can be told from two phones. With
+     no address nothing is sent and none of this runs. /privacy says the same. */
+  var STATS = D.stats || {};
+  var lastRun = null;
+  function report(kind, more) {
+    if (!STATS.url) return;
+    qaCheck();
+    var note = { k: kind, v: STATS.version, run: G ? G.run : '', dev: save.id, lvl: G ? G.level : save.level, n: qa.slice(), wd: navigator.webdriver ? 1 : 0 }, key;
+    for (key in more) note[key] = more[key];
+    try {
+      fetch(STATS.url, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(note) }).catch(function () { /* results are a nicety */ });
+    } catch (e) { /* never in the game's way */ }
+  }
+  /* How busy the taps were in a shift: how many, and the gaps between them. */
+  function tapped(e) {
+    if (!T || screen !== 'shift') return;
+    var now = performance.now();
+    T.taps++;
+    if (T.lastTap && T.gaps.length < 900) T.gaps.push(Math.round(now - T.lastTap));
+    T.lastTap = now;
+    if (e && e.isTrusted === false) T.untrusted++;
+  }
 
   /* ---------- sound: made here, no files. Off until it's turned on. ---------- */
   var ac = null;
@@ -208,18 +290,19 @@
   function level() { return D.levels[(G && G.level) || save.level] || D.levels.normal; }
 
   function newRun() {
-    G = { level: save.level, day: 0, tips: 0, earned: 0, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
+    G = { level: save.level, run: rid(), began: Date.now(), day: 0, tips: 0, earned: 0, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
+    report('start', {});
     showDawn();
   }
   /* A week left half way is kept each morning and picked up from that morning. */
   function keepRun() {
-    save.run = { level: G.level, day: G.day, tips: G.tips, earned: G.earned, perDay: G.perDay.slice(0, G.day), items: G.items };
+    save.run = { level: G.level, run: G.run, began: G.began, day: G.day, tips: G.tips, earned: G.earned, perDay: G.perDay.slice(0, G.day), items: G.items };
     persist();
   }
   function resumeRun() {
     var r = save.run, items = {};
     for (var id in r.items) if (D.items.some(function (it) { return it.id === id; })) items[id] = r.items[id];
-    G = { level: r.level, day: r.day, tips: r.tips || 0, earned: r.earned || 0, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
+    G = { level: r.level, run: r.run || rid(), began: r.began || Date.now(), day: r.day, tips: r.tips || 0, earned: r.earned || 0, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
     showDawn();
   }
 
@@ -232,7 +315,8 @@
       special: special, dry: 0, lineT: 0, urnDone: false,
       cookies: has('cookie'),
       usualAt: has('regular') ? [3 + Math.floor(rand() * 3), 9 + Math.floor(rand() * 4)] : [],
-      familyAt: null, fam: null, bubbles: [], cat: null, endIn: null, lastClock: '', lastSky: -1
+      familyAt: null, fam: null, bubbles: [], cat: null, endIn: null, lastClock: '', lastSky: -1,
+      taps: 0, gaps: [], lastTap: 0, untrusted: 0, began: Date.now()
     };
     var lv = level(), famChance = day.family * lv.family;
     if (G.day >= 1 && lv.familyFloor) famChance = Math.max(famChance, lv.familyFloor);
@@ -271,6 +355,11 @@
     };
     for (var key in o) t[key] = o[key];
     t.total = (TU.waitBase + TU.waitPerPart * t.parts.length) * day.patience * level().wait + 3 * has('refills');
+    // Never less than it takes to make: the longest thing on it has to cook,
+    // and every part is a tap or two. Luck can make a day hard, not undoable.
+    var longest = 0;
+    t.parts.forEach(function (p) { longest = Math.max(longest, D.parts[p].cook || 0); });
+    t.total = Math.max(t.total, longest * TU.fair.cookTimes + TU.fair.perPart * t.parts.length + TU.fair.base);
     if (t.togo && has('clamshell')) t.total += 8;
     if (t.family) t.total = D.family.wait;
     if (t.catering) t.total = 1;
@@ -288,6 +377,10 @@
       recipe = D.rollRecipe;
     } else {
       var gentle = !save.seen && G.day === 0 && T.seq <= 2;
+      // Two big tickets already up: the next one is a small one. The rail can
+      // be full, but not full of four-part plates.
+      var heavy = T.tickets.filter(function (t) { return t.parts.length >= TU.fair.bigParts; }).length >= TU.fair.bigAtOnce;
+      if (heavy) gentle = true;
       var pool = D.recipes.filter(function (r) { return r.when === (lunch ? 'lunch' : 'breakfast') && r.tier <= (gentle ? 1 : day.tier); });
       var fresh = pool.filter(function (r) { return !T.tickets.some(function (t) { return t.rid === r.id; }); });
       recipe = pick(fresh.length ? fresh : pool);
@@ -433,6 +526,10 @@
     removeTicket(t);
     if (t.family) { familyGone(); toast('They’ll bring it up at dinner.'); return; }
     T.cups--; T.walk++; T.dry = 0; dirty.hud = true;
+    // A breath: the tickets still up wait a little longer and the next one
+    // holds off, so one walk-out doesn't drag the next two with it.
+    T.tickets.forEach(function (o) { if (!o.catering && !o.family) o.left = Math.min(o.total, o.left + TU.fair.breath); });
+    T.spawnIn = Math.max(T.spawnIn, TU.fair.breathHold);
     toast(T.cups > 0 ? 'They left. One coffee down.' : 'They left. That was the last coffee.');
     sfx.spill(); buzz(90);
     if (T.cups <= 0) { T.ended = true; setTimeout(function () { weekOver(false, 'coffee'); }, 1100); }
@@ -529,6 +626,9 @@
 
   function endDay() {
     G.perDay[G.day] = T.tips;
+    var gaps = T.gaps.slice().sort(function (a, b) { return a - b; });
+    report('day', { day: G.day, tips: T.tips, plates: T.served, walk: T.walk, secs: Math.round((Date.now() - T.began) / 1000),
+      taps: T.taps, gmin: gaps.length ? gaps[0] : '', gmed: gaps.length ? gaps[Math.floor(gaps.length / 2)] : '', u: T.untrusted });
     save.seen = true; persist();
     clearBubbles();
     if (G.day >= D.days.length - 1) startCatering(); else showClose();
@@ -917,6 +1017,21 @@
     if (best) save.bests[G.level] = G.earned;
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, G.earned); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
+    report('end', { day: G.day, why: win ? 'win' : why, total: G.earned, secs: Math.round((Date.now() - G.began) / 1000),
+      items: Object.keys(G.items), u: T ? T.untrusted : 0 });
+    lastRun = { run: G.run, lvl: G.level, total: G.earned };
+    // After a finished week (not one that was quit), and only if results go
+    // anywhere: a first name, and a way to reach them if they want one.
+    var sendIn = !STATS.url || why === 'quit' ? '' :
+      '<form class="ou-sendin" id="ou-sendin" novalidate>' +
+      '<span class="ou-label">Send in your score</span>' +
+      '<p class="ou-note">Let The Café know how your week went. Only we see it.</p>' +
+      '<label class="ou-field"><span>First name</span><input name="name" type="text" maxlength="24" autocomplete="given-name" autocapitalize="words"></label>' +
+      (STATS.askContact ? '<label class="ou-field"><span>Email or phone, if you’d like to hear back</span><input name="contact" type="text" maxlength="80" autocomplete="email"></label>' : '') +
+      '<label class="ou-field ou-field--web" aria-hidden="true"><span>Website</span><input name="website" type="text" tabindex="-1" autocomplete="off"></label>' +
+      '<input name="total" type="hidden" value="' + G.earned + '">' +
+      '<p class="ou-fine">Used only to get in touch about the game. Under 13? Ask a grown-up first. <a href="/privacy">Privacy</a></p>' +
+      '<button class="ou-btn ou-btn--quiet" type="submit">Send it in</button></form>';
     var day = D.days[G.day];
     var head = win ? ['Week done', 'The catering went out on time.']
       : why === 'late' ? ['So close', 'The catering went out late.']
@@ -928,7 +1043,7 @@
     paper('over',
       '<div class="ou-top' + (win ? ' ou-top--fri' : '') + '"><span class="ou-kicker">' + head[0] + '</span><h2 class="ou-h">' + head[1] + '</h2>' +
       '<span class="ou-label">' + (best ? 'A new best ' + lvName + ' week' : 'Best ' + lvName + ' week: ' + money(save.bests[G.level] || 0)) + '</span></div>' +
-      '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' + ownedRow() +
+      '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' + ownedRow() + sendIn +
       '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="box">Recipe Box</button><a class="ou-btn ou-btn--quiet" href="/menu">The real menu</a></div>' +
       '</div><div class="ou-foot"><button class="ou-btn" data-act="start">Start a new week</button></div>');
     G = null; T = null;
@@ -988,6 +1103,7 @@
   }
   stage.addEventListener('click', function (e) {
     var el = e.target.closest('[data-act]'); if (!el || !stage.contains(el)) return;
+    tapped(e);
     var act = el.getAttribute('data-act'), i = parseInt(el.getAttribute('data-i'), 10);
     var live = T && screen === 'shift' && !T.paused && !T.ended;
     switch (act) {
@@ -1025,6 +1141,14 @@
     musicSync();
   });
   document.addEventListener('visibilitychange', function () { if (document.hidden) setPaused(true); musicSync(); });
+  stage.addEventListener('submit', function (e) {
+    var form = e.target; if (!form || form.id !== 'ou-sendin') return;
+    e.preventDefault();
+    var name = form.elements.name.value.replace(/\s+/g, ' ').trim(), contact = form.elements.contact ? form.elements.contact.value.trim() : '';
+    if (!name) { form.elements.name.focus(); return; }
+    if (lastRun) report('score', { run: lastRun.run, lvl: lastRun.lvl, name: name, contact: contact, total: Number(form.elements.total.value), web: form.elements.website.value ? 1 : 0 });
+    form.outerHTML = '<p class="ou-note ou-sent" role="status">Sent. Thank you!</p>';
+  });
 
   /* The flat-top takes a tap or a swipe. Both are read here, on the way up,
      from where the finger went down: a click can get lost when the griddle is
@@ -1038,6 +1162,7 @@
     if (!grab || e.pointerId !== grab.id) return;
     var g = grab, dx = e.clientX - g.x, dy = e.clientY - g.y, far = Math.sqrt(dx * dx + dy * dy) > 18 * scaleNow;
     grab = null; grabbedAt = performance.now();
+    if (far) tapped(e);
     if (T && screen === 'shift' && !T.paused && !T.ended) { spotGesture(g.i, far ? 'swipe' : 'tap'); musicSync(); }
   });
   window.addEventListener('pointercancel', function () { grab = null; });
@@ -1058,6 +1183,10 @@
      screen, and give a taller phone the extra height (the griddle and the
      table take it). */
   function fit() {
+    // The keyboard coming up makes the screen "shorter". Don't shrink the
+    // game for it: the form scrolls instead.
+    var typing = document.activeElement;
+    if (typing && typing.tagName === 'INPUT' && stage.contains(typing)) return;
     var vv = window.visualViewport, vw = vv ? vv.width : window.innerWidth, vh = vv ? vv.height : window.innerHeight;
     var s = Math.min(vw / W, vh / 600, 1.8), h = Math.min(vh / s, 800);
     scaleNow = s;
@@ -1069,9 +1198,16 @@
   window.addEventListener('orientationchange', fit);
 
   fit(); drawTitle(); show('title');
+  stage.addEventListener('focusout', function () { setTimeout(fit, 60); });
+  window.ouStarted = true;      // the page's "the game didn't start" note looks for this
   requestAnimationFrame(function (now) { last = now; requestAnimationFrame(frame); });
 
-  if (DEBUG) {
+  /* DEV-ONLY:START
+     The test handle: /play?debug gives the page window.__ou (move the clock,
+     own an item), which game/bot.js plays through. It exists under `npm
+     start` only: .eleventy.js cuts everything between these two markers out
+     of the play.js it builds for the live site. Keep the markers as they are. */
+  if (/[?&]debug\b/.test(location.search)) {
     window.__ou = {
       D: D, get G() { return G; }, get T() { return T; }, get screen() { return screen; }, save: save,
       speed: function (v) { speed = v; },
@@ -1084,4 +1220,5 @@
       get music() { return { on: music.on, step: music.step, audio: ac ? ac.state : 'none' }; }
     };
   }
+  /* DEV-ONLY:END */
 })();

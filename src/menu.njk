@@ -170,6 +170,14 @@ pageCss: "/assets/css/menu.css"
             <span class="menu-print-hint">Two sides. Print double-sided, then fold in thirds.</span>
         </p>
 
+        {#- Order Up, the game: only once site.json's game.listed says so. -#}
+        {%- if site.game.listed %}
+        <p class="menu-print">
+            <a href="/play" class="btn btn-outline">Play Order Up</a>
+            <span class="menu-print-hint">Waiting on an order? Work a shift in our kitchen.</span>
+        </p>
+        {%- endif %}
+
         <p class="menu-updated">Menu last updated {{ menu._updated }}.</p>
     </div>
 </section>

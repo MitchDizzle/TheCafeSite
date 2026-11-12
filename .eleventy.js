@@ -147,6 +147,20 @@ module.exports = function (eleventyConfig) {
   // an SVG with no fill of its own renders black. Inlining puts the paths in
   // the document, where `fill` inherits normally — one wordmark file can then
   // be cream on the dark hero and dark anywhere else, driven purely by CSS.
+  // The outline of a one-path SVG, for drawing it inside another SVG at any
+  // size (the name on the window in Order Up's storefront). inlineSvg gives a
+  // whole <svg>, which can't be placed and scaled inside a drawing.
+  eleventyConfig.addFilter("svgPath", (url) => {
+    try {
+      const svg = fs.readFileSync(path.join(__dirname, "src", String(url).replace(/^\//, "")), "utf8");
+      const d = svg.match(/<path[\s\S]*?\sd="([^"]+)"/);
+      return d ? d[1] : "";
+    } catch (err) {
+      console.warn(`[svgPath] missing ${url}`);
+      return "";
+    }
+  });
+
   eleventyConfig.addShortcode("inlineSvg", (url, className, label) => {
     const file = path.join(__dirname, "src", String(url).replace(/^\//, ""));
     let svg;
@@ -208,6 +222,23 @@ module.exports = function (eleventyConfig) {
     });
 
     return svg;
+  });
+
+  // Order Up (/play) has a test handle for `npm start` (window.__ou at
+  // /play?debug: move the clock, own any item). It must never reach the live
+  // site, so a build cuts it out of the play.js it writes: everything from
+  // "DEV-ONLY:START" to "DEV-ONLY:END". The dev server serves assets straight
+  // from src/, so there the handle stays. A build that finds a marker it
+  // can't pair fails rather than ship the handle.
+  eleventyConfig.on("eleventy.after", ({ dir, directories, runMode }) => {
+    if (runMode === "serve") return;
+    // `directories` is where this run really wrote (it follows --output); `dir` is only the configured name.
+    const file = path.join((directories && directories.output) || dir.output, "assets", "js", "play.js");
+    if (!fs.existsSync(file)) return;
+    const source = fs.readFileSync(file, "utf8");
+    const built = source.replace(/[ \t]*\/\* DEV-ONLY:START[\s\S]*?\/\* DEV-ONLY:END \*\/\r?\n?/g, "");
+    if (/DEV-ONLY|__ou\b/.test(built)) throw new Error("[play] the test handle is still in the built play.js: check the DEV-ONLY markers");
+    if (built !== source) fs.writeFileSync(file, built);
   });
 
   return {
