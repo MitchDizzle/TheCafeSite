@@ -314,7 +314,7 @@
     T = {
       t: 0, len: TU.dayLength, phase: 'breakfast', bins: 'breakfast', closing: false, ended: false, paused: false,
       tickets: [], grill: [null, null, null, null, null, null], plate: [],
-      cups: TU.cups, spawnIn: 1.2, seq: 1, served: 0, walk: 0, tips: 0,
+      cups: TU.cups, spawnIn: BANNER_S + 0.3, seq: 1, served: 0, walk: 0, tips: 0,
       special: special, dry: 0, lineT: 0, urnDone: false,
       cookies: has('cookie'),
       usualAt: has('regular') ? [3 + Math.floor(rand() * 3), 9 + Math.floor(rand() * 4)] : [],
@@ -553,13 +553,15 @@
       // The bins turn over only once the last breakfast ticket is out, so
       // nobody is left holding a ticket they can no longer make.
       if (T.phase === 'lunch' && T.bins === 'breakfast' && !T.tickets.some(function (x) { return x.when === 'breakfast'; })) {
-        T.bins = 'lunch'; T.spawnIn = 1.4; dirty.bins = dirty.pass = true;
+        // The banner covers the rail for a moment: lunch's first ticket waits
+        // for it to go (owner 2026-11-12: a short break between the two).
+        T.bins = 'lunch'; T.spawnIn = BANNER_S + 0.3; dirty.bins = dirty.pass = true;
         banner('11am', 'Lunch. ' + T.special.name + ' is on.');
         if (has('urn') && T.cups < TU.cups) { T.cups++; dirty.hud = true; setTimeout(function () { toast('Coffee Urn: one coffee poured again'); }, 1900); }
       }
       if (!T.closing && T.t >= T.len) {
         T.closing = true; dirty.pass = true;
-        if (T.tickets.length) banner('2pm', 'Last call. Finish the rail.');
+        if (T.tickets.length) toast('2pm. Last call: finish the rail.');      // not a banner: it would cover the tickets still up
       }
       if (!T.closing) {
         var open = T.phase === 'breakfast' ? T.bins === 'breakfast' : T.bins === 'lunch';
@@ -643,7 +645,7 @@
     var c = D.catering, queue = shuffle(c.platters).slice(0, 5);
     T.ended = false; T.closing = true; T.endIn = null; T.phase = 'catering'; T.bins = 'lunch';
     T.plate = []; T.fam = null; T.familyAt = null;
-    T.cat = { left: c.seconds, total: c.seconds, queue: queue, n: queue.length, done: 0 };
+    T.cat = { left: c.seconds + BANNER_S, total: c.seconds + BANNER_S, queue: queue, n: queue.length, done: 0 };
     T.tipsBefore = T.tips;
     for (var i = 0; i < TU.rail && T.cat.queue.length; i++) T.tickets.push(makeTicket(T.cat.queue.shift(), { catering: true }));
     dirtyAll();
@@ -892,7 +894,7 @@
     if (clock !== T.lastClock) { T.lastClock = clock; $('#ou-clock').textContent = clock; drawSky(T.cat ? 0 : minutesNow()); }
   }
 
-  var toastTimer = 0, bannerTimer = 0;
+  var toastTimer = 0, bannerTimer = 0, BANNER_S = 2;     // seconds a banner stays over the rail
   function toast(text) {
     var el = $('#ou-toast'); el.textContent = text; el.classList.add('is-on');
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('is-on'); }, 1700);
@@ -900,7 +902,7 @@
   function banner(title, sub) {
     var el = $('#ou-banner'); el.innerHTML = '<b>' + esc(title) + '</b><span>' + esc(sub || '') + '</span>';
     el.classList.remove('is-on'); void el.offsetWidth; el.classList.add('is-on');
-    clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { el.classList.remove('is-on'); }, 2000);
+    clearTimeout(bannerTimer); bannerTimer = setTimeout(function () { el.classList.remove('is-on'); }, BANNER_S * 1000);
   }
 
   /* ---------- 7. the paper screens ---------- */
@@ -1062,7 +1064,7 @@
       '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' + ownedRow() + sendIn +
       '<p class="ou-fine">' + TIPS_NOTE + '</p>' +
       '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="box">Recipe Box</button><a class="ou-btn ou-btn--quiet" href="/menu">The real menu</a></div>' +
-      '</div><div class="ou-foot"><button class="ou-btn" data-act="start">Start a new week</button></div>');
+      '</div><div class="ou-foot"><button class="ou-btn" data-act="home">Back to the title</button></div>');
     G = null; T = null;
   }
 

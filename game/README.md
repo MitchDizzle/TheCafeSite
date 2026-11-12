@@ -376,7 +376,15 @@ away by a stray tap.
 **There is always a way back** (owner 2026-11-12): the morning screen has
 Back in its band, and pause has "Back to the title" ("Your week is kept
 from this morning"), as well as End the week. Both leave the week to be
-continued from that day's morning.
+continued from that day's morning. A finished week's only big button is
+**Back to the title**, where the level can be changed before the next one.
+
+**Banners sit over the ticket rail** (the day's name, 11am, the catering
+order), never over the flat-top or the bins, so food keeps cooking in
+plain sight. Nothing new lands on the rail while one is up: the day's first
+ticket and lunch's first ticket wait for it to go, a short breather (owner
+2026-11-12). "Last call" at 2pm is a small note instead, since a banner
+there would cover tickets still to be made.
 
 **The paper screens** (dawn, after close, week over, Recipe Box, how to
 play) are cream with a teal band on top and a red rule under it, like the
