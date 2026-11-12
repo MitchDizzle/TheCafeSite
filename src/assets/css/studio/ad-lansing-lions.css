@@ -28,7 +28,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding-bottom: 8px;
+    padding: 22px 0 16px;
 }
 
 /* A thin cream rule inside the teal, like the profile picture's ring. */
@@ -49,20 +49,20 @@
 }
 
 .lionsad-wordmark {
-    --mark-w: 500px;
+    --mark-w: 560px;
 }
 
 .lionsad-tag {
-    margin-top: 18px;
-    font-size: 19px;
+    margin-top: 14px;
+    font-size: 21px;
     font-weight: 400;
     letter-spacing: 0.24em;
     color: var(--mint);
 }
 
 .lionsad-hours {
-    margin-top: 8px;
-    font-size: 25px;
+    margin-top: 6px;
+    font-size: 29px;
     font-weight: 700;
     color: var(--cream);
 }
@@ -79,17 +79,17 @@
 }
 
 .lionsad-catering {
-    margin-top: 22px;
+    margin-top: 14px;
 }
 
 .lionsad-cater-kicker {
-    font-size: 30px;
+    font-size: 32px;
     color: var(--mint);
 }
 
 .lionsad-cater-line {
     margin-top: 2px;
-    font-size: 36px;
+    font-size: 40px;
     color: var(--cream);
 }
 
@@ -97,7 +97,7 @@
    dark ink on light, inside the card's rounded corners. */
 .lionsad-band {
     width: 100%;
-    padding: 18px 40px 24px;
+    padding: 14px 40px 20px;
     background: var(--cream);
     color: var(--teal-dark);
     border-radius: 0 0 40px 40px;
@@ -106,7 +106,7 @@
 .lionsad-phone {
     font-family: 'Lato', sans-serif;
     font-weight: 900;
-    font-size: 46px;
+    font-size: 50px;
     line-height: 1.05;
     letter-spacing: 0.02em;
 }
@@ -114,7 +114,7 @@
 .lionsad-contact {
     margin-top: 4px;
     font-weight: 700;
-    font-size: 25px;
+    font-size: 27px;
     line-height: 1.2;
 }
 
@@ -124,14 +124,8 @@
 
 .lionsad-address {
     margin-top: 4px;
-    font-size: 18px;
+    font-size: 25px;
+    font-weight: 700;
     line-height: 1.2;
     color: var(--text-dark);
-}
-
-.lionsad-address em {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    font-style: italic;
-    color: var(--accent);
 }
