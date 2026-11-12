@@ -417,7 +417,8 @@
 
   function spawnTicket() {
     var day = D.days[G.day], lunch = T.bins === 'lunch', recipe, o = {};
-    if (lunch && rand() * 100 < TU.specialShare) {
+    // The Facebook Post (up to two): each puts the special on more lunch tickets.
+    if (lunch && rand() * 100 < TU.specialShare + TU.postShare * has('fbpost')) {
       recipe = { id: 'sp-' + T.special.id, name: T.special.name, when: 'lunch', parts: ['special'].concat(T.special.sides.map(function () { return 'side'; })) };
       o.special = true;
     } else if (!lunch && has('rollcase') && rand() < 0.22) {

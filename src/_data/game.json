@@ -100,6 +100,7 @@
     { "id": "earlybird", "name": "Early Bird",         "rarity": "normal", "price": 30, "icon": "sun",                   "text": "The first three tickets of the day tip double" },
     { "id": "rollcase",  "name": "Cinnamon Roll Case", "rarity": "normal", "price": 30, "icon": "roll",                  "text": "Breakfast brings cinnamon roll tickets: one tap, $3" },
     { "id": "refills",   "name": "Free Refills",       "rarity": "normal", "price": 35, "max": 2, "icon": "pot",         "text": "Every ticket waits 3 seconds longer" },
+    { "id": "fbpost",    "name": "Facebook Post",      "rarity": "normal", "price": 30, "max": 2, "icon": "post",               "text": "The special is posted: more lunch tickets are for it" },
     { "id": "scraper",   "name": "Bench Scraper",      "rarity": "normal", "price": 25, "icon": "scraper",               "text": "Burnt food clears itself off the flat-top" },
 
     { "id": "flattop",   "name": "Second Flat-Top",    "rarity": "rare",   "price": 90, "icon": "flattop",               "text": "Two more spots on the griddle" },
@@ -118,7 +119,7 @@
     { "id": "bigdill",   "name": "Big Dill",           "rarity": "epic",   "price": 155, "icon": "bigdill",               "text": "A pickle spear can stand in for any one missing part" },
     { "id": "bottomless","name": "Bottomless Coffee",  "rarity": "epic",   "price": 165, "icon": "refill",                "text": "A spilled coffee pours itself again after 25 seconds with no walk-out" },
 
-    { "id": "fryer",     "name": "Deep Fryer",         "rarity": "legendary", "price": 1500, "icon": "fryer",           "text": "Every plate tips triple. Not for now." }
+    { "id": "fryer",     "name": "Deep Fryer",         "rarity": "legendary", "price": 1500, "icon": "fryer",           "text": "Every plate tips triple" }
   ],
 
   "_note_odds": "The chance of each rarity when a card is dealt (Legendary is never dealt: the Deep Fryer turns up by itself as a fourth card, legendaryChance out of 100 each time the shop is stocked, at a price no week can reach; owner 2026-11-12: it must be a lucky sight, not a regular one). Rares come up more than they used to (owner 2026-11-12), but items only help: the score is the tips a week keeps, so a Rush week won with few items is the best kind, by which close it is (Monday's first). They must add up to 100. A rarity with nothing left to offer falls back to the one below it.",
@@ -147,7 +148,7 @@
     { "name": "Friday",    "short": "Fri", "every": 2.4, "patience": 0.62, "tier": 3, "family": 85, "burn": 6 }
   ],
 
-  "_note_tuning": "dayLength: seconds a shift takes. breakfastShare: the part of it before 11am. cups: coffees a day. rail: tickets that fit. waitBase + waitPerPart x parts: seconds a ticket waits. lateAt: the share of its time left when a ticket turns red. toGo: chance out of 100 a lunch ticket is to go. specialShare: chance out of 100 a lunch ticket is the special. fair: what keeps a hard day from being an impossible one. A ticket never waits less than cookTimes x its longest cook + perPart seconds a part + base. With bigAtOnce tickets of bigParts parts already up, the next one is a small one. After a walk-out the tickets still up get breath more seconds and nothing new comes for breathHold seconds.",
+  "_note_tuning": "dayLength: seconds a shift takes. breakfastShare: the part of it before 11am. cups: coffees a day. rail: tickets that fit. waitBase + waitPerPart x parts: seconds a ticket waits. lateAt: the share of its time left when a ticket turns red. toGo: chance out of 100 a lunch ticket is to go. specialShare: chance out of 100 a lunch ticket is the special; postShare is added for each Facebook Post owned. fair: what keeps a hard day from being an impossible one. A ticket never waits less than cookTimes x its longest cook + perPart seconds a part + base. With bigAtOnce tickets of bigParts parts already up, the next one is a small one. After a walk-out the tickets still up get breath more seconds and nothing new comes for breathHold seconds.",
   "tuning": {
     "dayLength": 100,
     "breakfastShare": 0.44,
@@ -159,6 +160,7 @@
     "lateAt": 0.28,
     "toGo": 30,
     "specialShare": 22,
+    "postShare": 14,
     "plateMax": 5,
     "fair": { "cookTimes": 1.5, "perPart": 1.3, "base": 2.5, "bigParts": 4, "bigAtOnce": 2, "breath": 4, "breathHold": 3.5 }
   },

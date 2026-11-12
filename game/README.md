@@ -118,6 +118,7 @@ prices and how many of each can be owned are in `game.json` → `items`,
 | Cinnamon Roll Case | Breakfast brings cinnamon roll tickets: one tap, $3 |
 | Free Refills (2) | Every ticket waits 3 seconds longer |
 | Bench Scraper | Burnt food clears itself off the flat-top |
+| Facebook Post (2) | The special is posted: more lunch tickets are for it (22 in 100, then 36, then 50; `tuning.postShare`). Two-sided specials tip the most, so it pays best with one |
 
 **Rare**
 
@@ -165,7 +166,7 @@ rail is full and red. Family sometimes leaves one too.
 
 | Name | Does |
 |---|---|
-| **Deep Fryer** ($1,500) | Every plate tips triple. "Not for now." |
+| **Deep Fryer** ($1,500) | Every plate tips triple. One only. |
 
 The Deep Fryer (owner 2026-11-12) is a real item with real stats, priced
 past anything a week pays: a good Regular week is $500 – $700, and tips are
