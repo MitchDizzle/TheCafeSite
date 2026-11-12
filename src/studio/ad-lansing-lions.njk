@@ -1,0 +1,46 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Lansing Lions basketball program ad"
+canvasW: "1050px"
+canvasH: "600px"
+pageCss: "/assets/css/studio/ad-lansing-lions.css"
+
+tags: studio
+studioTransparent: true
+studioExportScale: 2
+studioTitle: "Lansing Lions program ad"
+studioCategory: "Print"
+studioSize: "2100 × 1200 px PNG, transparent corners · business-card shape (3.5 × 2 in at 600 dpi)"
+studioNote: "Our ad for the Lansing High basketball program (client 2026-11-12). The program sets business-card ads on a red or black page with a glow round each, so this is a self-contained teal card with rounded, see-through corners: it reads on either. Send the PNG; it scales down to any ad slot."
+studioW: 1050
+studioH: 600
+studioOrder: 80
+---
+{#- The hero's teal ground and wordmark, so it reads as the same cafe as
+    the website and the sign out front. No red text: it's on teal. -#}
+<div class="canvas lionsad">
+    <div class="lionsad-main">
+    <div class="lionsad-frame"></div>
+
+    <div class="lionsad-top">
+        <div class="wordmark wordmark--light wordmark--hero lionsad-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-eyebrow lionsad-tag">Breakfast &amp; Lunch · Made to Order</p>
+        <p class="lionsad-hours"><span class="p-label">Open {{ site.opening.hoursDays }}</span>
+            <span class="lionsad-dot">·</span>
+            {{ site.opening.opens.time | replace(":00", "") }} {{ site.opening.opens.meridiem }} – {{ site.opening.closes.time | replace(":00", "") }} {{ site.opening.closes.meridiem }}</p>
+    </div>
+
+    <div class="lionsad-catering">
+        <p class="p-display-italic lionsad-cater-kicker">Feeding the team?</p>
+        <p class="p-display lionsad-cater-line">We cater team dinners, banquets &amp; events</p>
+    </div>
+    </div>
+
+    <div class="lionsad-band">
+        <p class="lionsad-phone">{{ site.phone }}</p>
+        <p class="lionsad-contact">lvcafetogo.com<span class="lionsad-dot">·</span>{{ site.email }}</p>
+        <p class="lionsad-address">{{ site.address.street }} · {{ site.address.locality }}, Kansas · <em>Go Lions!</em></p>
+    </div>
+</div>

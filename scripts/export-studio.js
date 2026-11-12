@@ -163,7 +163,7 @@ function startServer(root) {
   });
 }
 
-function shoot(browser, url, outFile, width, height, scale) {
+function shoot(browser, url, outFile, width, height, scale, transparent) {
   return new Promise((resolve, reject) => {
     // A throwaway profile dir keeps this from fighting an already-open Chrome.
     const profile = fs.mkdtempSync(path.join(os.tmpdir(), "cafe-export-"));
@@ -173,6 +173,9 @@ function shoot(browser, url, outFile, width, height, scale) {
       `--window-size=${width},${height}`,
       `--force-device-scale-factor=${scale}`,
       "--hide-scrollbars",
+      // A piece with studioTransparent (an ad someone else lays on their own
+      // background) keeps its alpha: the page paints nothing behind the card.
+      ...(transparent ? ["--default-background-color=00000000"] : []),
       "--disable-gpu",
       ...sandboxArgs(),
       ...browserArgs(browser),
@@ -275,7 +278,7 @@ function printPdf(browser, url, outFile) {
     const ext = `.${piece.format}`;
     const image = path.join(DOWNLOADS, `${piece.slug}${ext}`);
 
-    const ok = await shoot(browser, url, image, piece.w, piece.h, piece.scale);
+    const ok = await shoot(browser, url, image, piece.w, piece.h, piece.scale, piece.transparent);
     if (!ok) {
       failed++;
       console.error(`  FAILED  ${piece.slug}`);
