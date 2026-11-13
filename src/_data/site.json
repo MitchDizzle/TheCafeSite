@@ -41,7 +41,7 @@
     "listed": false,
     "statsUrl": "https://script.google.com/macros/s/AKfycbwB1nwoqRdsDq0Xqcys2iJqKZJTSexwvRkfLIWplfk8bpAqbVlEXNAC3Gcme4XH8RBhkA/exec",
     "askContact": true,
-    "version": "1.3"
+    "version": "1.4"
   },
 
   "_comment_opening": "Opening day (2026-10-05) and the hours. The hours fields (hoursDays, opens, closes, hoursLabel) are read all over the site, the menus and the posts, so they are stated once here. dayName and monthDay are read by /about. date, kicker and ordinal were only for the opening-week posts, archived 2026-10-09 in archive/site-src/studio/; they stay so those posts can come back as they were. Not billed as a grand opening: that is a separate, later piece.",

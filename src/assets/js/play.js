@@ -72,7 +72,7 @@
      migrate() with SAVE_VER raised. Never rename an item's or an
      achievement's id: saves and weeks left half way are keyed by them. */
   var KEY = 'orderup.v1', SAVE_VER = 2;
-  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0, bestRuns: {} };
+  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0, bestRuns: {}, past: [] };
   var loadedSum = '';
   try {
     var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -106,6 +106,7 @@
   if (!Array.isArray(save.qa)) save.qa = [];
   if (!save.ach || typeof save.ach !== 'object') save.ach = {};
   if (!save.bestRuns || typeof save.bestRuns !== 'object') save.bestRuns = {};
+  if (!Array.isArray(save.past)) save.past = [];
   migrate();
   /* One step per change of shape, oldest first. A save from any earlier
      version walks up through all of them. */
@@ -1131,11 +1132,11 @@
   function closeOverlay() { if (pushed) history.back(); else leaveOverlay(); }
   window.addEventListener('popstate', function () {
     pushed = false;
-    if (screen === 'box' || screen === 'how' || screen === 'settings' || screen === 'ach') leaveOverlay();
+    if (screen === 'box' || screen === 'how' || screen === 'settings' || screen === 'ach' || screen === 'past') leaveOverlay();
   });
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape' && e.key !== 'Backspace') return;
-    if (screen === 'box' || screen === 'how' || screen === 'settings' || screen === 'ach') { e.preventDefault(); closeOverlay(); }
+    if (screen === 'box' || screen === 'how' || screen === 'settings' || screen === 'ach' || screen === 'past') { e.preventDefault(); closeOverlay(); }
     else if (e.key === 'Escape' && screen === 'shift' && T) setPaused(!T.paused);
   });
 
@@ -1144,17 +1145,18 @@
   function ownedRow() {
     var ids = Object.keys(G.items); if (!ids.length) return '';
     return '<div class="ou-own"><span class="ou-label">On your line · tap one to see what it does</span><div class="ou-own-row">' + D.items.filter(function (it) { return G.items[it.id]; }).map(function (it) {
-      return '<button class="is-' + it.rarity + '" data-act="owninfo" data-id="' + it.id + '" aria-label="' + esc(it.name) + ': what it does">' + spr(it.icon) + (G.items[it.id] > 1 ? '<em>' + G.items[it.id] + '</em>' : '') + '</button>';
+      return '<button class="is-' + it.rarity + '" data-act="owninfo" data-id="' + it.id + '" data-n="' + G.items[it.id] + '" aria-label="' + esc(it.name) + ': what it does">' + spr(it.icon) + (G.items[it.id] > 1 ? '<em>' + G.items[it.id] + '</em>' : '') + '</button>';
     }).join('') + '</div><p class="ou-own-info" role="status" hidden></p></div>';
   }
   function ownInfo(el) {
     var box = el.closest('.ou-own'), info = box && box.querySelector('.ou-own-info'), id = el.getAttribute('data-id');
-    var it = D.items.filter(function (x) { return x.id === id; })[0]; if (!info || !it) return;
+    // The count rides on the button: at the end of the week the week (G) is already gone.
+    var it = D.items.filter(function (x) { return x.id === id; })[0], n = Number(el.getAttribute('data-n')) || 1; if (!info || !it) return;
     var again = el.classList.contains('is-picked');
     var all = box.querySelectorAll('.is-picked'); for (var i = 0; i < all.length; i++) all[i].classList.remove('is-picked');
     if (again) { info.hidden = true; return; }
     el.classList.add('is-picked');
-    info.innerHTML = '<b>' + esc(it.name) + '</b> <span>' + D.rarityNames[it.rarity] + (G.items[id] > 1 ? ' · you have ' + G.items[id] : '') + '</span><br>' + itemText(it, G.items[id] || 1);
+    info.innerHTML = '<b>' + esc(it.name) + '</b> <span>' + D.rarityNames[it.rarity] + (n > 1 ? ' · you have ' + n : '') + '</span><br>' + itemText(it, n);
     info.hidden = false;
   }
 
@@ -1192,10 +1194,17 @@
     if (G) G.newAch.push(id);
     if (!quiet) { toast('Achievement: ' + a.name); sfx.achieve(); }
   }
+  /* An achievement wears the drawing of the item it opens up, in that
+     item's rarity, with a gleam across it once earned (owner 2026-11-13);
+     one that opens nothing has an `icon` of its own in game.json. */
+  function achIcon(a) {
+    var it = a.unlocks && D.items.filter(function (x) { return x.id === a.unlocks; })[0];
+    return '<span class="ou-ach-i is-' + (it ? it.rarity : 'gold') + '">' + spr((it && it.icon) || a.icon || 'bell') + '</span>';
+  }
   function achList(ids) {
     return '<div class="ou-achs">' + ids.map(function (id) {
       var a = achOf(id), got = !!save.ach[id];
-      return '<div class="ou-ach' + (got ? ' is-got' : '') + '">' + spr(got ? 'bell' : 'plate') + '<span><b>' + esc(a.name) + '</b>' + esc(a.text) +
+      return '<div class="ou-ach' + (got ? ' is-got' : '') + '">' + achIcon(a) + '<span><b>' + esc(a.name) + '</b>' + esc(a.text) +
         (a.unlocks ? '<small>' + (got ? 'Unlocked: ' : 'Unlocks ') + esc(itemName(a.unlocks)) + '</small>' : '') + '</span></div>';
     }).join('') + '</div>';
   }
@@ -1329,16 +1338,94 @@
   function fryerItem() { return D.items.filter(function (it) { return it.id === 'fryer'; })[0]; }
 
   /* A day's rarity by its slips (game.json, ranks). */
-  function rankChip(slips) {
-    if (slips == null) return '';
-    var r = D.ranks.filter(function (x) { return slips <= x.max; })[0] || D.ranks[D.ranks.length - 1];
-    var pips = '<i></i>'.repeat({ normal: 1, rare: 2, epic: 3, legendary: 4 }[r.rarity] || 1);
-    return ' <em class="ou-rank is-' + r.rarity + '" title="' + plural(slips, 'slip', 'slips') + '">' + pips + (r.name || D.rarityNames[r.rarity]) + '</em>';
+  function rankOf(slips) {
+    if (slips == null) return null;
+    return D.ranks.filter(function (x) { return slips <= x.max; })[0] || D.ranks[D.ranks.length - 1];
+  }
+  /* What a day's row says: "Flawless", or "Epic · 1 slip". */
+  function rankWords(slips) {
+    var r = rankOf(slips); if (!r) return '';
+    return r.name || D.rarityNames[r.rarity] + ' · ' + plural(slips, 'slip', 'slips');
+  }
+  /* The day a lost or ended week stopped on wasn't finished, so it wears no rank. */
+  function cutShort(p, i) { return i === p.d && p.w !== 'win' && p.w !== 'late' && p.f === ''; }
+  /* The week's days as rows, each in its day's rarity colour (owner
+     2026-11-13: the whole row, not a tag in it, so a row stays one line).
+     `p` is a kept week (keepWeek). */
+  function dayRows(p) {
+    var rows = p.t.map(function (tips, i) {
+      var cut = cutShort(p, i), r = cut ? null : rankOf(p.s[i]);
+      return '<div' + (r ? ' class="is-' + r.rarity + '"' : '') + '><b>' + D.days[i].short + '</b><span>' + (cut ? 'Closed early' : rankWords(p.s[i])) + '</span><strong>' + money(tips) + '</strong></div>';
+    }).join('');
+    if (p.f !== '') rows += '<div><b>Fri</b><span>Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished') + '</span><strong>' + money(p.f) + '</strong></div>';
+    return rows;
+  }
+  /* The same, small, for Past weeks: a tile a day in its colour. */
+  function dayStrip(p) {
+    var cells = p.t.map(function (tips, i) {
+      var r = cutShort(p, i) ? null : rankOf(p.s[i]);
+      return '<span class="is-' + (r ? r.rarity : 'none') + '" aria-label="' + D.days[i].name + ': ' + money(tips) + (r ? ', ' + rankWords(p.s[i]) : '') + '"><b>' + D.days[i].short + '</b>' + money(tips) + '</span>';
+    });
+    if (p.f !== '') cells.push('<span class="is-cater" aria-label="Catering: ' + money(p.f) + '"><b>Cater</b>' + money(p.f) + '</span>');
+    return '<div class="ou-strip">' + cells.join('') + '</div>';
+  }
+  /* A finished week, kept on the phone (owner 2026-11-13: to find a week's
+     code again later): the last PAST_MAX, newest first. Short keys, as it
+     rides in the save code too: c week code, l level, a when, k kept, w how
+     it ended, d its last day, t tips and s slips each day, f the catering's
+     tips ('' if it never came). */
+  var PAST_MAX = 12;
+  function keepWeek(kept, why) {
+    var p = { c: weekCode(G.run), l: G.level, a: Date.now(), k: kept, w: why, d: G.day,
+      t: G.perDay.slice(0, G.day + 1).map(function (x) { return x || 0; }), s: G.slips.slice(0, G.day + 1), f: G.cater == null ? '' : G.cater };
+    save.past = [p].concat(save.past.filter(function (x) { return x.c !== p.c; })).slice(0, PAST_MAX);
+    return p;
+  }
+  /* How the week ended: [kicker, heading], short enough for one line. */
+  function weekHead(p) {
+    var day = D.days[p.d] || D.days[0];
+    return p.w === 'win' ? ['Week done', 'Catering out on time']
+      : p.w === 'late' ? ['So close', 'Catering out late']
+      : p.w === 'quit' ? ['Week ended · ' + day.name, 'Closed early']
+      : ['Rough week · ' + day.name, 'Three coffees down'];
+  }
+  /* The week as text to share (owner 2026-11-13): a coloured square a day,
+     the tips, and what it kept. Never the week code: that stays private. */
+  var SQUARE = { legendary: '\uD83D\uDFE8', epic: '\uD83D\uDFEA', rare: '\uD83D\uDFE6', normal: '\u2B1C' };
+  function weekText(p) {
+    var lines = ['Order Up, ' + (D.levels[p.l] ? D.levels[p.l].name + ' week' : 'a week') + ': ' + weekHead(p)[1].toLowerCase()];
+    p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] + ' ' : '') + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : cutShort(p, i) ? ' · closed early' : '')); });
+    if (p.f !== '') lines.push('Catering ' + money(p.f));
+    lines.push('Kept ' + money(p.k));
+    lines.push('A little game on The Café’s website, Leavenworth KS' + (STATS.listed ? ': ' + location.origin + '/play' : ''));
+    return lines.join('\n');
+  }
+  /* The phone's own Share sheet where there is one, else the clipboard. */
+  function shareWeek(p) {
+    var text = weekText(p), no = function () { toast('Couldn’t copy here'); };
+    var copy = function () { try { navigator.clipboard.writeText(text).then(function () { toast('Copied: paste it anywhere'); }, no); } catch (e) { no(); } };
+    if (navigator.share) navigator.share({ title: 'Order Up', text: text }).catch(function (e) { if (!e || e.name !== 'AbortError') copy(); });
+    else copy();
+  }
+  function shareButton(i) { return '<button class="ou-btn ou-btn--quiet ou-share" data-act="share" data-i="' + i + '">Share week</button>'; }
+  function showPast(from) {
+    var list = save.past;
+    paper('past',
+      '<div class="ou-top ou-top--back"><span class="ou-kicker">Past weeks</span><h2 class="ou-h">' + (list.length > 1 ? 'Your last ' + list.length + ' weeks' : list.length ? 'Your last week' : 'None yet') + '</h2>' +
+      '<button class="ou-topback" data-act="back">Back</button></div>' +
+      '<div class="ou-body-pad">' + (list.length ? list.map(function (p, i) {
+        var head = weekHead(p), when = new Date(p.a).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        return '<div class="ou-past"><div class="ou-past-head"><span><b>' + esc(head[1]) + '</b><small>' + esc((D.levels[p.l] ? D.levels[p.l].name + ' · ' : '') + when) + '</small></span><strong>' + money(p.k) + '</strong></div>' +
+          dayStrip(p) +
+          '<div class="ou-row ou-row--code">' + codeButton(p.c, '') + shareButton(i) + '</div></div>';
+      }).join('') : '<p class="ou-note">Finish a week and it turns up here with its week code, so the code can be found again later.</p>') +
+      '<p class="ou-fine">The last ' + PAST_MAX + ' weeks, kept on this phone. The save code in Settings carries them too.</p></div>' +
+      '<div class="ou-foot"><button class="ou-btn" data-act="back">Back</button></div>');
+    openOverlay(from);
   }
   function weekOver(win, why) {
     if (!G) return;
     clearBubbles();
-    var cut = !!T && !T.cat && !win;      // the day itself was cut short
     bank();
     // Finishing the week pays, by level (game.json, finish).
     G.finish = win ? (D.finish[G.level] || 0) : 0;
@@ -1359,6 +1446,7 @@
     var kept = Math.max(0, G.tips), spent = Math.max(0, G.earned - G.tips);
     var lvName = level().name, best = kept > (save.keeps[G.level] || 0);
     if (best) { save.keeps[G.level] = kept; save.bestRuns[G.level] = G.run; }
+    var past = keepWeek(kept, win ? 'win' : why);
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
     report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round(G.played), away: Math.round(G.away),
@@ -1377,13 +1465,8 @@
       '<input name="total" type="hidden" value="' + kept + '">' +
       '<p class="ou-fine">Used only to get in touch about the game. Under 13? Ask a grown-up first. <a href="/privacy">Privacy</a></p>' +
       '<button class="ou-btn ou-btn--quiet" type="submit">Send it in</button></form>';
-    var day = D.days[G.day];
-    var head = win ? ['Week done', 'The catering went out on time.']
-      : why === 'late' ? ['So close', 'The catering went out late.']
-      : why === 'quit' ? ['Week ended', 'Closed early on ' + day.name + '.']
-      : ['Rough week', 'Three coffees down on ' + day.name + '.'];
-    var rows = G.perDay.map(function (tips, i) { return '<div><b>' + D.days[i].short + '</b><span>' + (i === G.day && cut ? 'Closed early' : 'Closed at 2pm') + rankChip(G.slips[i]) + '</span><strong>' + money(tips) + '</strong></div>'; }).join('');
-    if (G.cater != null) rows += '<div><b>Fri</b><span>Catering' + (win ? ', on time' : why === 'late' ? ', late' : ', not finished') + '</span><strong>' + money(G.cater) + '</strong></div>';
+    // A heading that fits one line (owner 2026-11-13: a shorter band on top).
+    var head = weekHead(past), rows = dayRows(past);
     if (G.finish) rows += '<div><b></b><span>The week finished</span><strong>+' + money(G.finish) + '</strong></div>';
     rows += '<div><b>Week</b><span>Tips earned</span><strong>' + money(G.earned) + '</strong></div>';
     if (G.bonus) rows += '<div><b></b><span>Free items turned down</span><strong>+' + money(G.bonus) + '</strong></div>';
@@ -1393,8 +1476,9 @@
       '<div class="ou-top' + (win ? ' ou-top--fri' : '') + '"><span class="ou-kicker">' + head[0] + '</span><h2 class="ou-h">' + head[1] + '</h2>' +
       '<span class="ou-label">' + (best ? 'A new best ' + lvName + ' week' : 'Best ' + lvName + ' week: ' + money(save.keeps[G.level] || 0) + ' kept') + '</span></div>' +
       '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' +
-      codeButton(G.run, 'The Café can look this week up by its code. Keep it to yourself: it’s hidden until you tap, so a screenshot you share doesn’t give it away.') +
-      '<p class="ou-fine">Each day is ranked by its slips (walk-outs and burnt food): none is Legendary, one is Epic, two or three Rare.</p>' +
+      '<div class="ou-row ou-row--code">' + codeButton(G.run, '') + shareButton(0) + '</div>' +
+      '<p class="ou-fine">The Café can look this week up by its code. Keep it to yourself: it’s hidden until you tap, and a screenshot or a share never shows it. Past weeks, on the title screen, keeps it for later.</p>' +
+      '<p class="ou-fine">A day’s colour is its slips (walk-outs and burnt food): gold for none, purple for one, blue for two or three.</p>' +
       (G.newAch.length ? '<span class="ou-label">Achievements this week</span>' + achList(G.newAch) : '') +
       ownedRow() + sendIn +
       '<p class="ou-fine">' + TIPS_NOTE + '</p>' +
@@ -1502,7 +1586,7 @@
   function b64(s) { return btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function unb64(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return decodeURIComponent(escape(atob(s))); }
   function saveCode() {
-    var data = b64(JSON.stringify({ v: 1, ach: save.ach, keeps: save.keeps, runs: save.bestRuns, weeks: save.weeks, wins: save.wins, served: save.served }));
+    var data = b64(JSON.stringify({ v: 1, ach: save.ach, keeps: save.keeps, runs: save.bestRuns, weeks: save.weeks, wins: save.wins, served: save.served, past: save.past }));
     return seal('OU1.' + data).then(function (s) { return 'OU1.' + data + '.' + (s || 'x').slice(0, 16); });
   }
   function loadCode(text) {
@@ -1516,6 +1600,10 @@
       for (k in d.keeps || {}) if (D.levels[k] && Number(d.keeps[k]) > (save.keeps[k] || 0)) { save.keeps[k] = Number(d.keeps[k]); save.bestRuns[k] = String((d.runs || {})[k] || ''); n++; }
       for (k in d.served || {}) if (Number(d.served[k]) > (save.served[k] || 0)) save.served[k] = Number(d.served[k]);
       save.weeks = Math.max(save.weeks, Number(d.weeks) || 0); save.wins = Math.max(save.wins, Number(d.wins) || 0);
+      // Past weeks this phone hasn't got, newest first, the last PAST_MAX.
+      var had = save.past.map(function (p) { return p.c; });
+      var more = (Array.isArray(d.past) ? d.past : []).filter(function (p) { return p && typeof p.c === 'string' && D.levels[p.l] && Array.isArray(p.t) && Array.isArray(p.s) && had.indexOf(p.c) === -1; });
+      if (more.length) { save.past = save.past.concat(more).sort(function (a, b) { return b.a - a.a; }).slice(0, PAST_MAX); n++; }
       persist();
       return n ? 'Loaded. Welcome back.' : 'Loaded: nothing new in it for this phone.';
     });
@@ -1580,6 +1668,8 @@
       case 'stats': save.noStats = !save.noStats; save.told = true; persist(); drawSettings(); sfx.tap(); break;
       case 'settings': sfx.tap(); showSettings(); break;
       case 'ach': sfx.tap(); showAch('title'); break;
+      case 'past': sfx.tap(); showPast('title'); break;
+      case 'share': if (save.past[i]) shareWeek(save.past[i]); sfx.tap(); break;
       case 'showcode': showCode(el); sfx.tap(); break;
       case 'install':
         if (installEvt) { var ev = installEvt; installEvt = null; ev.prompt(); if (ev.userChoice) ev.userChoice.then(function () { if (screen === 'settings') drawSettings(); }); }

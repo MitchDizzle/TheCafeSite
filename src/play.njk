@@ -88,12 +88,14 @@ headExtra: |
           <a class="ou-link" href="/privacy">Privacy</a>
         </div>
         <div class="ou-title-links">
+          {#- Sound, music, results and the credits live in Settings (owner
+              2026-11-12: more room on the title). Five links in this order
+              make two lines, three over two; any other order makes three. #}
           <button class="ou-link" data-act="how">How to play</button>
           <button class="ou-link" data-act="box">Recipe Box</button>
-          {#- Sound, music, results and the credits live in Settings (owner
-              2026-11-12: more room on the title). #}
-          <button class="ou-link" data-act="ach">Achievements</button>
           <button class="ou-link" data-act="settings">Settings</button>
+          <button class="ou-link" data-act="ach">Achievements</button>
+          <button class="ou-link" data-act="past">Past weeks</button>
         </div>
       </div>
       <div class="ou-title-foot">
@@ -159,6 +161,7 @@ headExtra: |
     <section class="ou-scr ou-paper" data-scr="how" hidden></section>
     <section class="ou-scr ou-paper" data-scr="settings" hidden></section>
     <section class="ou-scr ou-paper" data-scr="ach" hidden></section>
+    <section class="ou-scr ou-paper" data-scr="past" hidden></section>
 
   </div>
   {# If the game's script doesn't load or falls over, say so and offer the

@@ -158,7 +158,7 @@
     { "max": 999, "rarity": "normal" }
   ],
 
-  "_note_achievements": "Achievements (owner 2026-11-12): earned once, kept on the phone (localStorage, like the save), listed at the end of the week they were earned and on the Achievements screen; Settings can reset them. `unlocks` names an item that is never dealt until this one is earned. What earns each `id` is in play.js (award). Keep `text` saying exactly what it takes.",
+  "_note_achievements": "Achievements (owner 2026-11-12): earned once, kept on the phone (localStorage, like the save), listed at the end of the week they were earned and on the Achievements screen; Settings can reset them. `unlocks` names an item that is never dealt until this one is earned. What earns each `id` is in play.js (award). Keep `text` saying exactly what it takes. Each wears the drawing of the item it `unlocks` (owner 2026-11-13); one that unlocks nothing names its own `icon` (a sprite in partials/game/sprites.njk).",
   "achievements": [
     { "id": "firstweek", "name": "Week One",      "text": "Finish a week, on any level",                         "unlocks": "penny" },
     { "id": "regular",   "name": "Regular",       "text": "Finish a week on Regular",                            "unlocks": "fbpost" },
@@ -168,8 +168,8 @@
     { "id": "pickles",   "name": "Pickle Person", "text": "Ten plates with a pickle spear in one day",           "unlocks": "picklejar" },
     { "id": "family",    "name": "Family Dinner", "text": "Feed family three times in one week",                 "unlocks": "smalltalk" },
     { "id": "frugal",    "name": "Frugal",        "text": "Finish a week without buying anything in the shop",  "unlocks": "goldspat" },
-    { "id": "lucky",     "name": "Lucky Streak",  "text": "Two lucky plates in a row" },
-    { "id": "perfect",   "name": "Perfect Week",  "text": "Five flawless days in one week" }
+    { "id": "lucky",     "name": "Lucky Streak",  "text": "Two lucky plates in a row", "icon": "tipjar" },
+    { "id": "perfect",   "name": "Perfect Week",  "text": "Five flawless days in one week", "icon": "hat" }
   ],
 
   "_note_trouble": "Trouble (owner 2026-11-12: what makes Rush harder instead of only more tickets): some mornings one thing has gone wrong for the day. It is dealt at 6am, said on the morning screen and on the banner, and lasts the shift; never the catering. How often is in `levels` (`trouble`: from which day, 0 = Monday, and the chance out of 100). `share` multiplies how many lunch tickets are the special; `slow` how long the cold spot takes; `chance` out of 100 a ticket is impatient and `speed` how much faster its clock runs; `cost` the tips a burnt food costs; `parts` the foods a No-Show can be (one is out until 11am, and tickets that need it don't come in before then); `after` the seconds burnt food can sit before the inspector fines `fine`; `times` how often the lights go out and `secs` for how long (the flat-top keeps cooking; the tickets can't be read). Each `id` is used in play.js. Owner 2026-11-12: nothing that stops the player outright.",

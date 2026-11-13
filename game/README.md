@@ -60,7 +60,7 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | **Family** | From Wednesday, family may stop by at lunch (§4). Never announced. | |
 | **Friday** | Ends on a **catering order**: five platters, one after another, on one clock. | The catering photos |
 | **Flawless day** | No walk-outs, family fed, nothing burnt: $10 on Monday up to $30 on Friday, in that day's tips, with its own tune (owner 2026-11-12; `game.json` → `clean`). | |
-| **Day ranks** | At the end of the week each day wears a rarity by its slips (walk-outs, family not fed, burnt food): none is Legendary ("Flawless"), one Epic, two or three Rare, more Normal (`ranks`). | Owner 2026-11-12 |
+| **Day ranks** | At the end of the week each day wears a rarity by its slips (walk-outs, family not fed, burnt food): none is Legendary ("Flawless"), one Epic, two or three Rare, more Normal (`ranks`). The whole row takes the colour, with the words ("Flawless", "Epic · 1 slip") in it, not a tag (owner 2026-11-13: the tag pushed each row onto two lines); the day a lost or ended week stopped on reads "Closed early", uncoloured. | Owner 2026-11-12 |
 | **Trouble** | Some mornings one thing has gone wrong for the day (§4). | |
 | **Win** | Finish Friday's catering on time. It pays: $100 on Easy, $250 on Regular, $400 on Rush (`finish`), so a week that bought what it needed and won outscores one that saved its tips and lost. | |
 | **Score** | **The tips the week keeps**: tips earned, less what was spent on items (owner 2026-11-12). Items help a week through, but the best score is a week won with few of them, and the real test is Rush. The best is kept for each level. | |
@@ -68,8 +68,9 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | **Lose** | Three spilled coffees in one day, or the catering goes out late. | |
 
 **The title screen** (owner 2026-11-12: more room) has Start, the three
-levels, and four links: How to play, Recipe Box, **Achievements** and
-**Settings**. Settings holds the sound and music switches, whether results
+levels, and five links in two lines: How to play, Recipe Box, Settings,
+then **Achievements** and **Past weeks** (in that order: any other makes
+three lines). Settings holds the sound and music switches, whether results
 go to The Café (only when `game.statsUrl` is set), "Reset achievements"
 (two taps), and **About**: what the game is, and the
 credit, "Made by Mitch Gardner" (owner 2026-11-12; `CREDIT` in `play.js`),
@@ -85,7 +86,10 @@ cookies, as the game promises). One earned during a shift says so with a
 toast and a three-note tune; the ones earned that day are listed after
 close, and the whole week's on the week's last screen. Eight of them open
 up an item that is never dealt until then, so a new player starts with a
-smaller pool and it grows as they get better:
+smaller pool and it grows as they get better. Each wears the drawing of the
+item it opens up, on that item's rarity colour: grey until earned, then
+lit, with a gold glow and a gleam that runs across it now and then (owner
+2026-11-13). The two that open nothing name an `icon` of their own:
 
 | Achievement | What it takes | Opens up |
 |---|---|---|
@@ -97,8 +101,8 @@ smaller pool and it grows as they get better:
 | Pickle Person | Ten plates with a pickle spear in one day | Pickle Jar |
 | Family Dinner | Feed family three times in one week | Small Talk |
 | Frugal | Finish a week without buying anything in the shop | Golden Spatula |
-| Lucky Streak | Two lucky plates in a row | |
-| Perfect Week | Five flawless days in one week | |
+| Lucky Streak | Two lucky plates in a row | (its own: the tip jar) |
+| Perfect Week | Five flawless days in one week | (its own: the cook's hat) |
 
 All of it is `game.json` → `achievements`; what earns each is `award()` in
 `play.js`. The test shortcut `unlockAll` still owns every item.
@@ -625,8 +629,10 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
 | The pickle rule | At lunch there's a Pickle bin. No ticket asks for it. Tap it to add a pickle spear to any plate before you send it: $1 more in tips. | "Add a pickle spear to any plate" (read as an item you buy) |
 | A walk-out | They left. One coffee down. | FAIL |
 | Day over | After close · Monday · $46 in tips | |
-| Lost the week | Rough week · Three coffees down on Thursday. | Game over |
-| Won the week | Week done · The catering went out on time. | Victory |
+| Lost the week | Rough week · Thursday / Three coffees down | Game over |
+| Won the week | Week done / Catering out on time | Victory |
+| Catering late | So close / Catering out late | |
+| Ended from pause | Week ended · Thursday / Closed early | |
 | Family fed | Mom poured you a coffee | |
 | Family left | They'll bring it up at dinner. | |
 
@@ -690,7 +696,8 @@ themselves. No accounts (owner 2026-11-13: not for a simple game, and the
 plan rules out logins); instead:
 
 - **Save code** (Settings). One line, `OU1.<data>.<seal>`: achievements,
-  best weeks and their week codes, weeks played, the Recipe Box. Sealed
+  best weeks and their week codes, weeks played, the Recipe Box, the past
+  weeks (any the phone hasn't got are added, the last 12 kept). Sealed
   with the same signature the results use, so a code typed wrong or edited
   is turned away. Loading one only adds (the better best week, every
   achievement); settings stay the phone's own. Nothing is sent anywhere.
@@ -723,6 +730,20 @@ the first eight letters of its run id, which the results Sheet files in
 its `run` column. It's hidden until tapped and hides again after six
 seconds, so a screenshot someone shares doesn't give it away; a promotion
 asks for the screenshot publicly and the code privately.
+
+**Past weeks and Share** (owner 2026-11-13). Every finished week (won,
+lost, late or ended) is kept on the phone, the last 12, newest first, in
+`save.past` with short keys (`keepWeek()` in `play.js` says which). The
+title's **Past weeks** lists them: how it ended, the level and date, what
+it kept, a coloured tile a day, the week code (tap to show) and **Share
+week**. The end of a week has the same Share button beside its code. Share
+hands the phone's Share sheet (or, without one, the clipboard) a few lines
+of text: a coloured square and the tips for each day, the catering, what
+was kept, and "A little game on The Café's website, Leavenworth KS", with
+the `/play` link only once `game.listed` is true. **Never the week code**:
+it stays private. The headings at the end of a week are one line each
+("Catering out on time"), the day in the kicker, so the band on top stays
+short.
 
 - **A page of the site:** `src/play.njk` → `/play`, on `layouts/base.njk`
   with no nav or footer (like the home page), `noSiteJs: true`.
