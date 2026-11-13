@@ -20,9 +20,15 @@ name: Specials from the kitchen board
 
 on:
   schedule:
-    # Every half hour, 5am to 6pm Central (UTC 11:07 to 23:37). GitHub may
-    # start a scheduled run some minutes late.
-    - cron: '7,37 11-23 * * *'
+    # Twice a day (Mitch 2026-11-13: deploy when the board has sent a backup
+    # and at the end of the day, not every half hour): after the board's 2pm
+    # backup and at the end of the day. 20:20 and 23:50 UTC are 2:20pm and
+    # 5:50pm Central in winter, 3:20pm and 6:50pm in summer. GitHub may start
+    # a scheduled run some minutes late. Nothing new, no deploy. Run it by
+    # hand (Actions > Specials from the kitchen board > Run workflow) for a
+    # day that can't wait.
+    - cron: '20 20 * * *'
+    - cron: '50 23 * * *'
   workflow_dispatch:
 
 permissions:

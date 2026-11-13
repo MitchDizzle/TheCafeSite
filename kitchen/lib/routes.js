@@ -360,10 +360,11 @@ async function handle(req, res) {
       }
       if (saved.days.some((d) => d > localDate())) message += " The rest go into Square by themselves on the morning of each day.";
       // The days saved go to the website through the GitHub backup (plan.js,
-      // siteExport); the site picks them up within the hour.
+      // siteExport); the site picks them up after 2pm and at the end of the
+      // day (.github/workflows/specials-from-board.yml).
       if (saved.days.length && cfg.backupRepo) {
         pushOffsite();
-        message += " The website gets them within the hour.";
+        message += " The website gets them this afternoon (after 2pm) or by the end of the day.";
       }
       return send(res, 200, { ok: true, message });
     } catch (err) {

@@ -216,7 +216,7 @@
     screen({ title: "Specials", back: true,
       body: `<details class="m-how"><summary>How this works</summary>
         <p class="m-note">Type the main dish, its sides and the soup for each day, then Save. Each morning the kitchen PC puts that day's specials into Square by itself; saving today puts it in now.</p>
-        <p class="m-note">Days saved here go to the website by themselves (the /menu box and the weekly post) within the hour. Days the website lists fill in here on their own, so specials put on the website another way show up here too.</p>
+        <p class="m-note">Days saved here go to the website by themselves (the /menu box and the weekly post) after 2pm and at the end of the day. Days the website lists fill in here on their own, so specials put on the website another way show up here too.</p>
         <p class="m-note">More, under each day, has the rest: extra sides, modifiers, the photo, its words and prices. It says what's in use there.</p>
         <p class="m-note">Comes with sets Side 1 and Side 2 on Lunch Special too: each side is picked for the counter already and can be swapped for a deli salad. Choice of side picks Chef's Choice. Two sides with "or" between ("tossed salad or cooked broccoli") pick nothing, so the counter or the customer picks one.</p>
         </details>
