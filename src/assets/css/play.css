@@ -279,6 +279,24 @@
 .ou-set small { display: block; font: 400 13px/1.3 Lato, sans-serif; color: #4A5A62; margin-top: 2px; }
 .ou-set i { flex: none; font: 900 13px/1 Lato, sans-serif; font-style: normal; letter-spacing: .1em; text-transform: uppercase; padding: 7px 10px; border-radius: 999px; background: var(--steel-light); border: 2px solid var(--steel-dark); }
 .ou-set[aria-pressed="true"] i { background: var(--mint); border-color: var(--teal-dark); }
+.ou-reset { width: 100%; margin-top: 4px; }
+/* Achievements: a row each, earned ones in mint. */
+.ou-achs { display: grid; gap: 6px; margin: 4px 0 10px; }
+.ou-ach { display: flex; gap: 10px; align-items: center; padding: 8px 10px; background: #fff; border: 2px dashed var(--steel-dark); border-radius: 12px; font: 400 14px/1.3 Lato, sans-serif; text-align: left; color: #4A5A62; }
+.ou-ach > .ou-i { width: 34px; height: 34px; flex: none; opacity: .45; filter: grayscale(1); }
+.ou-ach b { display: block; font: 700 16px/1.2 "Playfair Display", Georgia, serif; color: var(--text-dark); }
+.ou-ach small { display: block; font: 700 11px/1.2 Lato, sans-serif; letter-spacing: .1em; text-transform: uppercase; margin-top: 3px; color: var(--teal); }
+.ou-ach.is-got { border: 2px solid var(--teal-dark); background: #E3F6F2; color: var(--text-dark); }
+.ou-ach.is-got > .ou-i { opacity: 1; filter: none; }
+/* A day's rank at the end of the week, in the rarity colours. */
+.ou-rank { display: inline-flex; align-items: center; gap: 2px; margin-left: 6px; padding: 2px 6px; border-radius: 6px; font: 700 10px/1 Lato, sans-serif; font-style: normal; letter-spacing: .1em; text-transform: uppercase; vertical-align: 1px; background: var(--r-normal); color: var(--text-dark); }
+.ou-rank i { width: 5px; height: 5px; background: currentColor; transform: rotate(45deg); margin-right: 2px; }
+.ou-rank.is-rare { background: var(--r-rare); color: #fff; } .ou-rank.is-epic { background: var(--r-epic); color: #fff; }
+.ou-rank.is-legendary { background: linear-gradient(90deg, #E5AE25, #FFE58A 50%, #E5AE25); color: var(--text-dark); box-shadow: 0 0 6px rgba(255, 210, 80, .8); }
+/* Power Flicker: the kitchen goes dark and the tickets can't be read; the flat-top glows on. */
+.ou-stage.is-dark .ou-rail, .ou-stage.is-dark .ou-pass, .ou-stage.is-dark .ou-table, .ou-stage.is-dark .ou-bins { filter: brightness(.3); transition: filter .15s; }
+.ou-stage.is-dark .ou-griddle { filter: brightness(.55); }
+.ou-stage.is-dark .ou-ticket .ou-tname, .ou-stage.is-dark .ou-ticket .ou-parts { visibility: hidden; }
 .ou-credits { margin-top: 16px; font: 400 15px/1.4 Lato, sans-serif; }
 .ou-credits p { margin: 6px 0 10px; }
 .ou-credit b { display: block; font: 700 24px/1.2 "Playfair Display", Georgia, serif; }

@@ -59,7 +59,8 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | **Flipping** | Eggs, bacon, burgers and chicken stop cooking half way until they're turned (§4). | The flat-top |
 | **Family** | From Wednesday, family may stop by at lunch (§4). Never announced. | |
 | **Friday** | Ends on a **catering order**: five platters, one after another, on one clock. | The catering photos |
-| **Clean shift** | No walk-outs, family fed, nothing burnt: $10 on Monday up to $30 on Friday, in that day's tips, with a chime (owner 2026-11-12; `game.json` → `clean`). | |
+| **Flawless day** | No walk-outs, family fed, nothing burnt: $10 on Monday up to $30 on Friday, in that day's tips, with its own tune (owner 2026-11-12; `game.json` → `clean`). | |
+| **Day ranks** | At the end of the week each day wears a rarity by its slips (walk-outs, family not fed, burnt food): none is Legendary ("Flawless"), one Epic, two or three Rare, more Normal (`ranks`). | Owner 2026-11-12 |
 | **Trouble** | Some mornings one thing has gone wrong for the day (§4). | |
 | **Win** | Finish Friday's catering on time. It pays: $100 on Easy, $250 on Regular, $400 on Rush (`finish`), so a week that bought what it needed and won outscores one that saved its tips and lost. | |
 | **Score** | **The tips the week keeps**: tips earned, less what was spent on items (owner 2026-11-12). Items help a week through, but the best score is a week won with few of them, and the real test is Rush. The best is kept for each level. | |
@@ -67,9 +68,10 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | **Lose** | Three spilled coffees in one day, or the catering goes out late. | |
 
 **The title screen** (owner 2026-11-12: more room) has Start, the three
-levels, and three links: How to play, Recipe Box and **Settings**. Settings
-holds the sound and music switches, whether results go to The Café (only
-when `game.statsUrl` is set), and **About**: what the game is, and the
+levels, and four links: How to play, Recipe Box, **Achievements** and
+**Settings**. Settings holds the sound and music switches, whether results
+go to The Café (only when `game.statsUrl` is set), "Reset achievements"
+(two taps), and **About**: what the game is, and the
 credit, "Made by Mitch Gardner" (owner 2026-11-12; `CREDIT` in `play.js`),
 with the version. Pause keeps its own sound and music buttons.
 
@@ -77,7 +79,29 @@ with the version. Pause keeps its own sound and music buttons.
 for every ticket and special by its real name, which turns into the café's
 own photo once it has been served 10 times; the best week; weeks finished.
 
-**Not built yet:** unlocks (new tickets, items or trouble opening up as a player gets better; owner 2026-11-12 likes the idea, nothing chosen yet).
+**Achievements and unlocks** (owner 2026-11-12). Ten achievements, each
+earned once and kept on the phone (localStorage, with the save: no
+cookies, as the game promises). One earned during a shift says so with a
+toast and a three-note tune; the ones earned that day are listed after
+close, and the whole week's on the week's last screen. Eight of them open
+up an item that is never dealt until then, so a new player starts with a
+smaller pool and it grows as they get better:
+
+| Achievement | What it takes | Opens up |
+|---|---|---|
+| Week One | Finish a week, on any level | Lucky Penny |
+| Regular | Finish a week on Regular | Facebook Post |
+| Rush Hour | Finish a week on Rush | Bottomless Coffee |
+| Flawless | A day with no walk-outs and nothing burnt | Second Plate |
+| Multitasker | Send the lunch special with three things on the flat-top | Big Tipper |
+| Pickle Person | Ten plates with a pickle spear in one day | Pickle Jar |
+| Family Dinner | Feed family three times in one week | Small Talk |
+| Frugal | Finish a week without buying anything in the shop | Golden Spatula |
+| Lucky Streak | Two lucky plates in a row | |
+| Perfect Week | Five flawless days in one week | |
+
+All of it is `game.json` → `achievements`; what earns each is `award()` in
+`play.js`. The test shortcut `unlockAll` still owns every item.
 
 ---
 
@@ -136,7 +160,7 @@ prices and how many of each can be owned are in `game.json` → `items`,
 | Free Refills (2) | Every ticket waits 3 seconds longer (each) |
 | Bench Scraper | Burnt food clears itself off the flat-top |
 | Facebook Post (2) | The special is posted: more lunch tickets are for it (22 in 100, then 36, then 50; `tuning.postShare`). Two-sided specials tip the most, so it pays best with one |
-| **Lucky Penny** (3) | A plate has an 8% chance (each) to be a lucky one and tip double (owner 2026-11-12: crit builds) |
+| **Lucky Penny** (3) | Every plate already has a 3% chance to be lucky and tip double (`tuning.luckyBase`); each penny adds 8% (owner 2026-11-12: crit builds) |
 
 **Rare**
 
@@ -151,7 +175,7 @@ prices and how many of each can be owned are in `game.json` → `items`,
 | **Triple Chocolate Cookie** (2) | Once a day, tap it: every ticket's clock starts over |
 | Heavy Spatula | Food flips itself (never offered on Easy, where nothing flips) |
 | Second Plate | A small plate beside Scrap: tap it to swap the two plates, so a half-made plate can wait while a quicker ticket goes out. Send only sends the front plate |
-| **Big Tipper** | Lucky plates tip triple, not double. Needs a Lucky Penny to do anything |
+| **Big Tipper** | Lucky plates tip triple, not double. Works on the 3% every plate has; better with a Lucky Penny |
 | Small Talk | What family says clears itself, and never blocks a tap (never offered on Easy, where family doesn't come) |
 
 **Epic**
@@ -207,8 +231,8 @@ the best week is remembered for each one by itself. All of it is
 | | Easy | Regular | Rush |
 |---|---|---|---|
 | Flipping | none | a tap or a swipe | a swipe only |
-| Tickets wait | 90% longer | 27% longer | 10% longer |
-| Tickets come | 60% slower | 5% slower | as written |
+| Tickets wait | 90% longer | 27% longer | 5% longer |
+| Tickets come | 60% slower | 5% slower | 2% faster |
 | Done food lasts | 60% longer | as written | 10% shorter |
 | Family | never | from Wednesday | from Tuesday, more often |
 | Trouble | never | 35% of mornings from Wednesday | every morning from Tuesday |
@@ -245,15 +269,18 @@ if it is left, never the same two days running, and never on the catering.
 |---|---|
 | Bad Review | Fewer lunch tickets are for the special (30% as many) |
 | Broken Stove | One spot on the flat-top is out today (striped, "Out today") |
-| Cold Spot | One spot cooks 70% slower (blue edge, "Cold spot") |
-| Impatient | About one ticket in three is in a hurry: its clock runs 50% faster (dashed edge, "Impatient") |
+| Cold Spot | One spot cooks 50% slower (blue edge, "Cold spot") |
+| Impatient | About one ticket in four is in a hurry: its clock runs 35% faster (dashed edge, "Impatient") |
 | Accident | Anything that burns costs $2 in tips |
+| No-Show | One food's delivery didn't come (eggs, toast, potatoes or cheese): its bin is out until 11am, and no ticket asks for it before then. Fewer kinds of breakfast, so fewer tips |
+| Health Inspector | Burnt food left on the flat-top 3 seconds costs $3, once (the Bench Scraper clears it first) |
+| Power Flicker | Twice a day, once at breakfast and once at lunch, the lights go out for 3.5 seconds: the kitchen goes dark and the tickets can't be read, but everything still works and the flat-top keeps cooking |
 
 All of it is `game.json` → `trouble`, and how often is each level's
-`trouble` line. More ideas to try: a **No-Show** (a supplier didn't come:
-one bin is out until lunch), a **Health Inspector** (a burnt food left on
-the flat-top for 5 seconds is a walk-out), a **Power Flicker** (the flat-top
-stops for 3 seconds once).
+`trouble` line. **Nothing stops the player outright** (owner 2026-11-12:
+"stunlocks suck"): the first idea for the flicker stopped the flat-top for
+3 seconds, which could end a run by itself; now it only takes the light.
+Impatient and the Cold Spot were softened at the same time.
 
 ### Family at the counter
 
@@ -514,9 +541,11 @@ the top of the music block in `play.js`.
 
 - Also made in the browser (Web Audio), so there are no sound files and
   nothing to license: a sizzle, a ticket tick, a "done" ping, the order bell, a low
-  note for a walk-out, a bright run of four notes when a day closes (owner
-  2026-11-12), with two high chimes on top for a clean shift, and a quick
-  two-note chime for a lucky plate. Short and quiet, no music.
+  note for a walk-out, a quick two-note chime for a lucky plate, and three
+  tunes (owner 2026-11-12): a day closing (up the chord to a held note), a
+  flawless day instead (a longer run two octaves up with a sparkle on top),
+  and an achievement (three notes, the last held). Short and quiet, no
+  music.
 - If real recordings are ever wanted (this kitchen's own flat-top and
   bell), list each one's source beside it.
 
@@ -694,6 +723,13 @@ eased, the steady bot lost all of its Rush weeks, by Wednesday. The bot
 never has to swipe, so a person on Rush does worse than its numbers.
 The 11am hold (lunch now always runs its full length) made Regular a
 little harder, so its waits went from 22% to 27% longer.
+
+Later the same day the troubles were softened and three added, and the
+item pool starts smaller (achievements open the rest). Rush came out easier
+(the steady bot won 6 of 10), so its waits went from 10% to 5% longer and
+tickets come 2% faster: then 4 of 12 at 70 taps a minute, 7 of 10 at 90.
+The bot reads the tickets straight from the game, so the Power Flicker
+doesn't slow it down; a person will feel it.
 
 What keeps a hard day from being an impossible one (`tuning.fair`): a
 ticket never waits less than the time it takes to make; with two four-part

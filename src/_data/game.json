@@ -102,7 +102,7 @@
     { "id": "refills",   "name": "Free Refills",       "rarity": "normal", "price": 35, "max": 2, "icon": "pot",         "text": "Every ticket waits {n} longer", "per": 3, "unit": "s" },
     { "id": "fbpost",    "name": "Facebook Post",      "rarity": "normal", "price": 30, "max": 2, "icon": "post",        "text": "The special is posted: it's on {n} of lunch tickets", "base": 22, "per": 14, "unit": "%" },
     { "id": "scraper",   "name": "Bench Scraper",      "rarity": "normal", "price": 25, "icon": "scraper",               "text": "Burnt food clears itself off the flat-top" },
-    { "id": "penny",     "name": "Lucky Penny",        "rarity": "normal", "price": 30, "max": 3, "icon": "penny",        "text": "A plate has a {n} chance to be a lucky one and tip double", "per": 8, "unit": "%" },
+    { "id": "penny",     "name": "Lucky Penny",        "rarity": "normal", "price": 30, "max": 3, "icon": "penny",        "text": "A plate has a {n} chance to be a lucky one and tip double", "base": 3, "per": 8, "unit": "%" },
 
     { "id": "flattop",   "name": "Second Flat-Top",    "rarity": "rare",   "price": 90, "icon": "flattop",               "text": "Two more spots on the griddle" },
     { "id": "urn",       "name": "Coffee Urn",         "rarity": "rare",   "price": 75, "icon": "urn",                   "text": "At 11am, one spilled coffee is poured again" },
@@ -113,7 +113,7 @@
     { "id": "cookie",    "name": "Triple Chocolate Cookie", "rarity": "rare", "price": 80, "max": 2, "icon": "cookie",   "text": "{n} a day, tap it: every ticket's clock starts over", "per": 1, "unit": "times" },
     { "id": "spatula",   "name": "Heavy Spatula",      "rarity": "rare",   "price": 70, "icon": "spatula",               "text": "Food flips itself (not offered on Easy, where nothing needs flipping)" },
     { "id": "spare",     "name": "Second Plate",       "rarity": "rare",   "price": 75, "icon": "plates",                "text": "A second plate beside the first: tap it to swap them, and park a half-made plate while a quicker ticket goes out" },
-    { "id": "bigtipper", "name": "Big Tipper",         "rarity": "rare",   "price": 70, "icon": "bigtip",                "text": "Lucky plates tip triple, not double (a Lucky Penny makes them lucky)" },
+    { "id": "bigtipper", "name": "Big Tipper",         "rarity": "rare",   "price": 70, "icon": "bigtip",                "text": "Lucky plates tip triple, not double (any plate has a 3% chance to be lucky; a Lucky Penny adds more)" },
     { "id": "smalltalk", "name": "Small Talk",         "rarity": "rare",   "price": 70, "icon": "talk",                  "text": "You answer family without looking up: what they say clears itself" },
 
     { "id": "linecook",  "name": "Line Cook",          "rarity": "epic",   "price": 180, "icon": "hat",                   "text": "A second cook sends out a ticket that is about to walk out, once every 14 seconds" },
@@ -144,16 +144,41 @@
   "_note_finish": "Finishing the week pays (2026-11-12, from the bot: a week that bought what it needed and won scored less than one that bought nothing and lost on Thursday). Tips added when Friday's catering goes out on time, by level. Counted in tips earned and kept, sent as `finish` with the week.",
   "finish": { "easy": 100, "normal": 250, "hard": 400 },
 
-  "_note_clean": "A clean shift (owner 2026-11-12): no walk-outs, family fed, nothing burnt. `bonus` is the tips it adds, by day (Monday first), counted in that day's tips.",
+  "_note_clean": "A flawless day (owner 2026-11-12): no walk-outs, family fed, nothing burnt. `bonus` is the tips it adds, by day (Monday first), counted in that day's tips.",
   "clean": { "bonus": [10, 15, 20, 25, 30] },
 
-  "_note_trouble": "Trouble (owner 2026-11-12: what makes Rush harder instead of only more tickets): some mornings one thing has gone wrong for the day. It is dealt at 6am, said on the morning screen and on the banner, and lasts the shift; never the catering. How often is in `levels` (`trouble`: from which day, 0 = Monday, and the chance out of 100). `share` multiplies how many lunch tickets are the special; `slow` how long the cold spot takes; `chance` out of 100 a ticket is impatient and `speed` how much faster its clock runs; `cost` the tips a burnt food costs. Each `id` is used in play.js.",
+  "_note_ranks": "At the end of the week each day gets a rarity by its slips (walk-outs, family not fed, food burnt), in the rarity colours: the first line whose `max` it is at or under. Owner 2026-11-12.",
+  "ranks": [
+    { "max": 0, "rarity": "legendary", "name": "Flawless" },
+    { "max": 1, "rarity": "epic" },
+    { "max": 3, "rarity": "rare" },
+    { "max": 999, "rarity": "normal" }
+  ],
+
+  "_note_achievements": "Achievements (owner 2026-11-12): earned once, kept on the phone (localStorage, like the save), listed at the end of the week they were earned and on the Achievements screen; Settings can reset them. `unlocks` names an item that is never dealt until this one is earned. What earns each `id` is in play.js (award). Keep `text` saying exactly what it takes.",
+  "achievements": [
+    { "id": "firstweek", "name": "Week One",      "text": "Finish a week, on any level",                         "unlocks": "penny" },
+    { "id": "regular",   "name": "Regular",       "text": "Finish a week on Regular",                            "unlocks": "fbpost" },
+    { "id": "rush",      "name": "Rush Hour",     "text": "Finish a week on Rush",                               "unlocks": "bottomless" },
+    { "id": "flawless",  "name": "Flawless",      "text": "A day with no walk-outs and nothing burnt",           "unlocks": "spare" },
+    { "id": "multitask", "name": "Multitasker",   "text": "Send the lunch special with three things on the flat-top", "unlocks": "bigtipper" },
+    { "id": "pickles",   "name": "Pickle Person", "text": "Ten plates with a pickle spear in one day",           "unlocks": "picklejar" },
+    { "id": "family",    "name": "Family Dinner", "text": "Feed family three times in one week",                 "unlocks": "smalltalk" },
+    { "id": "frugal",    "name": "Frugal",        "text": "Finish a week without buying anything in the shop",  "unlocks": "goldspat" },
+    { "id": "lucky",     "name": "Lucky Streak",  "text": "Two lucky plates in a row" },
+    { "id": "perfect",   "name": "Perfect Week",  "text": "Five flawless days in one week" }
+  ],
+
+  "_note_trouble": "Trouble (owner 2026-11-12: what makes Rush harder instead of only more tickets): some mornings one thing has gone wrong for the day. It is dealt at 6am, said on the morning screen and on the banner, and lasts the shift; never the catering. How often is in `levels` (`trouble`: from which day, 0 = Monday, and the chance out of 100). `share` multiplies how many lunch tickets are the special; `slow` how long the cold spot takes; `chance` out of 100 a ticket is impatient and `speed` how much faster its clock runs; `cost` the tips a burnt food costs; `parts` the foods a No-Show can be (one is out until 11am, and tickets that need it don't come in before then); `after` the seconds burnt food can sit before the inspector fines `fine`; `times` how often the lights go out and `secs` for how long (the flat-top keeps cooking; the tickets can't be read). Each `id` is used in play.js. Owner 2026-11-12: nothing that stops the player outright.",
   "trouble": [
     { "id": "review",    "name": "Bad Review",   "icon": "post",      "text": "Someone posted about a cold plate: fewer lunch tickets are for the special", "share": 0.3 },
     { "id": "stove",     "name": "Broken Stove", "icon": "flattop",   "text": "One spot on the flat-top is out today" },
-    { "id": "cold",      "name": "Cold Spot",    "icon": "flattop",   "text": "One spot on the flat-top cooks slow", "slow": 1.7 },
-    { "id": "impatient", "name": "Impatient",    "icon": "cup-spilled", "text": "Some tickets are in a hurry: their clock runs faster", "chance": 30, "speed": 1.5 },
-    { "id": "accident",  "name": "Accident",     "icon": "scraper",   "text": "Anything that burns costs $2 in tips", "cost": 2 }
+    { "id": "cold",      "name": "Cold Spot",    "icon": "flattop",   "text": "One spot on the flat-top cooks slow", "slow": 1.5 },
+    { "id": "impatient", "name": "Impatient",    "icon": "cup-spilled", "text": "Some tickets are in a hurry: their clock runs faster", "chance": 25, "speed": 1.35 },
+    { "id": "accident",  "name": "Accident",     "icon": "scraper",   "text": "Anything that burns costs $2 in tips", "cost": 2 },
+    { "id": "noshow",    "name": "No-Show",      "icon": "board",     "text": "The {part} delivery didn't come: none until 11am", "parts": ["egg", "toast", "potatoes", "cheese"] },
+    { "id": "inspector", "name": "Health Inspector", "icon": "spatula", "text": "Burnt food left on the flat-top 3 seconds costs $3", "after": 3, "fine": 3 },
+    { "id": "outage",    "name": "Power Flicker", "icon": "sun",      "text": "The lights go out twice for a few seconds: the flat-top stays hot", "times": 2, "secs": 3.5 }
   ],
 
   "_note_days": "How hard each day is. `every`: seconds between tickets. `patience`: multiplies how long a ticket waits. `tier`: the hardest ticket that can come in. `family`: the chance, out of 100, that family comes by at lunch. `burn`: seconds done food lasts before it burns.",
@@ -165,7 +190,7 @@
     { "name": "Friday",    "short": "Fri", "every": 2.4, "patience": 0.62, "tier": 3, "family": 85, "burn": 6 }
   ],
 
-  "_note_tuning": "dayLength: seconds a shift takes. breakfastShare: the part of it before 11am. cups: coffees a day. rail: tickets that fit. waitBase + waitPerPart x parts: seconds a ticket waits. lateAt: the share of its time left when a ticket turns red. toGo: chance out of 100 a lunch ticket is to go. specialShare: chance out of 100 a lunch ticket is the special; postShare is added for each Facebook Post owned. fair: what keeps a hard day from being an impossible one. A ticket never waits less than cookTimes x its longest cook + perPart seconds a part + base. With bigAtOnce tickets of bigParts parts already up, the next one is a small one. After a walk-out the tickets still up get breath more seconds and nothing new comes for breathHold seconds.",
+  "_note_tuning": "dayLength: seconds a shift takes. breakfastShare: the part of it before 11am. cups: coffees a day. rail: tickets that fit. waitBase + waitPerPart x parts: seconds a ticket waits. lateAt: the share of its time left when a ticket turns red. toGo: chance out of 100 a lunch ticket is to go. luckyBase: chance out of 100 any plate is a lucky one and tips double (owner 2026-11-12; the Lucky Penny adds to it). specialShare: chance out of 100 a lunch ticket is the special; postShare is added for each Facebook Post owned. fair: what keeps a hard day from being an impossible one. A ticket never waits less than cookTimes x its longest cook + perPart seconds a part + base. With bigAtOnce tickets of bigParts parts already up, the next one is a small one. After a walk-out the tickets still up get breath more seconds and nothing new comes for breathHold seconds.",
   "tuning": {
     "dayLength": 100,
     "breakfastShare": 0.44,
@@ -177,6 +202,7 @@
     "lateAt": 0.28,
     "toGo": 30,
     "specialShare": 22,
+    "luckyBase": 3,
     "postShare": 14,
     "plateMax": 5,
     "fair": { "cookTimes": 1.5, "perPart": 1.3, "base": 2.5, "bigParts": 4, "bigAtOnce": 2, "breath": 4, "breathHold": 3.5 }
@@ -186,7 +212,7 @@
   "levels": {
     "easy":   { "name": "Easy",    "text": "No flipping, no distractions, tickets wait longer.",          "flip": "none",  "wait": 1.9,  "every": 1.6,  "burn": 1.6,  "family": 0 },
     "normal": { "name": "Regular", "text": "Flip eggs and burgers with a tap. Things get busy by Wednesday.", "flip": "tap",   "wait": 1.27, "every": 1.05, "burn": 1.0,  "family": 1, "trouble": { "from": 2, "chance": 35 } },
-    "hard":   { "name": "Rush",    "text": "Flip with a swipe. More tickets, and from Tuesday something goes wrong every day.", "flip": "swipe", "wait": 1.1, "every": 1.0, "burn": 0.9,  "family": 1.5, "familyFloor": 45, "trouble": { "from": 1, "chance": 100 } }
+    "hard":   { "name": "Rush",    "text": "Flip with a swipe. More tickets, and from Tuesday something goes wrong every day.", "flip": "swipe", "wait": 1.05, "every": 0.98, "burn": 0.9,  "family": 1.5, "familyFloor": 45, "trouble": { "from": 1, "chance": 100 } }
   },
 
   "_note_family": "Family at the counter (Wednesday on, see `days`; never on Easy and sooner on Rush, see `levels`). The player is not warned: they just turn up when the week gets hard (owner 2026-11-11). They eat free, they wait a long time, and they talk: a line pops up over the kitchen every `every` seconds and stays until it's tapped. Feed them and they pour you a coffee back (or leave $`leave` if none is spilled); `cookieChance` out of 100 they brought a cookie. Words only, never a face, and no real names. Keep the lines kind: this is somebody's mother.",
