@@ -1347,15 +1347,18 @@
     var r = rankOf(slips); if (!r) return '';
     return r.name || D.rarityNames[r.rarity] + ' · ' + plural(slips, 'slip', 'slips');
   }
-  /* The day a lost or ended week stopped on wasn't finished, so it wears no rank. */
-  function cutShort(p, i) { return i === p.d && p.w !== 'win' && p.w !== 'late' && p.f === ''; }
+  /* The day a week was lost or ended on is never ranked, however clean it
+     was until then (owner 2026-11-13: failing or closing early is never
+     Flawless). Its row says what happened instead. */
+  function cutShort(p, i) { return i === p.d && p.w !== 'win'; }
+  function stopWords(p) { return p.w === 'quit' ? 'Closed early' : p.w === 'late' ? 'Catering late' : 'Three coffees down'; }
   /* The week's days as rows, each in its day's rarity colour (owner
      2026-11-13: the whole row, not a tag in it, so a row stays one line).
      `p` is a kept week (keepWeek). */
   function dayRows(p) {
     var rows = p.t.map(function (tips, i) {
       var cut = cutShort(p, i), r = cut ? null : rankOf(p.s[i]);
-      return '<div' + (r ? ' class="is-' + r.rarity + '"' : '') + '><b>' + D.days[i].short + '</b><span>' + (cut ? 'Closed early' : rankWords(p.s[i])) + '</span><strong>' + money(tips) + '</strong></div>';
+      return '<div' + (r ? ' class="is-' + r.rarity + '"' : '') + '><b>' + D.days[i].short + '</b><span>' + (cut ? stopWords(p) : rankWords(p.s[i])) + '</span><strong>' + money(tips) + '</strong></div>';
     }).join('');
     if (p.f !== '') rows += '<div><b>Fri</b><span>Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished') + '</span><strong>' + money(p.f) + '</strong></div>';
     return rows;
@@ -1364,7 +1367,7 @@
   function dayStrip(p) {
     var cells = p.t.map(function (tips, i) {
       var r = cutShort(p, i) ? null : rankOf(p.s[i]);
-      return '<span class="is-' + (r ? r.rarity : 'none') + '" aria-label="' + D.days[i].name + ': ' + money(tips) + (r ? ', ' + rankWords(p.s[i]) : '') + '"><b>' + D.days[i].short + '</b>' + money(tips) + '</span>';
+      return '<span class="is-' + (r ? r.rarity : 'none') + '" aria-label="' + D.days[i].name + ': ' + money(tips) + ', ' + (r ? rankWords(p.s[i]) : stopWords(p)) + '"><b>' + D.days[i].short + '</b>' + money(tips) + '</span>';
     });
     if (p.f !== '') cells.push('<span class="is-cater" aria-label="Catering: ' + money(p.f) + '"><b>Cater</b>' + money(p.f) + '</span>');
     return '<div class="ou-strip">' + cells.join('') + '</div>';
@@ -1394,18 +1397,98 @@
   var SQUARE = { legendary: '\uD83D\uDFE8', epic: '\uD83D\uDFEA', rare: '\uD83D\uDFE6', normal: '\u2B1C' };
   function weekText(p) {
     var lines = ['Order Up, ' + (D.levels[p.l] ? D.levels[p.l].name + ' week' : 'a week') + ': ' + weekHead(p)[1].toLowerCase()];
-    p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] + ' ' : '') + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : cutShort(p, i) ? ' · closed early' : '')); });
+    p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] + ' ' : '') + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : ' · ' + stopWords(p).toLowerCase())); });
     if (p.f !== '') lines.push('Catering ' + money(p.f));
     lines.push('Kept ' + money(p.k));
     lines.push('A little game on The Café’s website, Leavenworth KS' + (STATS.listed ? ': ' + location.origin + '/play' : ''));
     return lines.join('\n');
   }
-  /* The phone's own Share sheet where there is one, else the clipboard. */
+  /* The week as a picture to share (owner 2026-11-13): the end screen's
+     table, drawn on a canvas in the game's colours and type, 1080 wide.
+     Drawn all at once, with no waiting, so the Share sheet still counts as
+     the tap's (an iPhone refuses one that comes later). Never the code. */
+  var INK = { dark: '#22323A', grey: '#4A5A62', teal: '#2C5E70', tealDark: '#1F4552', cream: '#FAF7F2', mint: '#8ED9D4', red: '#C0392F', line: '#C5CFD3', total: '#EDF1F1' };
+  var ROWINK = {
+    normal: { bg: '#F1F3F4', bar: '#B9C2C6', ink: '#4A5A62' }, rare: { bg: '#D9E6F6', bar: '#2E6DB4', ink: '#2E6DB4' },
+    epic: { bg: '#E6D9F4', bar: '#6E3FA6', ink: '#6E3FA6' }, legendary: { bg: null, bar: '#B8860B', ink: '#6B4E0A' }
+  };
+  function weekPicture(p) {
+    var rows = [];
+    p.t.forEach(function (tips, i) {
+      var r = cutShort(p, i) ? null : rankOf(p.s[i]);
+      rows.push({ day: D.days[i].short, words: r ? rankWords(p.s[i]) : stopWords(p), tips: money(tips), rar: r ? r.rarity : '', caps: true });
+    });
+    if (p.f !== '') rows.push({ day: 'Fri', words: 'Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished'), tips: money(p.f) });
+    rows.push({ day: 'Kept', words: 'your score', tips: money(p.k), total: true });
+    var W = 1080, top = 330, RH = 118, x0 = 60, x1 = W - 60, tableH = rows.length * RH, H = top + 50 + tableH + 190;
+    var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    var c = cv.getContext('2d'), serif = '"Playfair Display", Georgia, serif', sans = 'Lato, "Helvetica Neue", Arial, sans-serif';
+    var spaced = function (txt, x, y, gap, align) {      // letter-spaced capitals, as the game's labels are
+      var w = 0, k; for (k = 0; k < txt.length; k++) w += c.measureText(txt[k]).width + gap;
+      var at = align === 'center' ? x - (w - gap) / 2 : align === 'right' ? x - (w - gap) : x;
+      c.textAlign = 'left'; for (k = 0; k < txt.length; k++) { c.fillText(txt[k], at, y); at += c.measureText(txt[k]).width + gap; }
+    };
+    var round = function (x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
+    c.fillStyle = INK.cream; c.fillRect(0, 0, W, H);
+    // The band on top, as on the end screen.
+    var g = c.createLinearGradient(0, 0, W, top); g.addColorStop(0, INK.tealDark); g.addColorStop(.55, INK.teal); g.addColorStop(1, '#3C7183');
+    c.fillStyle = g; c.fillRect(0, 0, W, top); c.fillStyle = INK.red; c.fillRect(0, top - 14, W, 14);
+    var head = weekHead(p), when = new Date(p.a).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    c.textBaseline = 'alphabetic'; c.fillStyle = INK.cream;
+    c.font = 'italic 400 54px ' + serif; c.textAlign = 'left'; c.fillText(head[0], x0, 104);
+    c.font = '700 92px ' + serif; c.fillText(head[1], x0, 200);
+    c.fillStyle = INK.mint; c.font = '700 30px ' + sans; spaced(((D.levels[p.l] ? D.levels[p.l].name + ' week · ' : '') + when).toUpperCase(), x0, 262, 4);
+    // The table.
+    var ty = top + 50;
+    c.save(); round(x0, ty, x1 - x0, tableH, 30); c.clip();
+    c.fillStyle = '#fff'; c.fillRect(x0, ty, x1 - x0, tableH);
+    rows.forEach(function (r, i) {
+      var y = ty + i * RH, ink = ROWINK[r.rar];
+      if (r.total) { c.fillStyle = INK.total; c.fillRect(x0, y, x1 - x0, RH); }
+      if (ink) {
+        if (ink.bg) c.fillStyle = ink.bg;
+        else { var gg = c.createLinearGradient(x0, y, x1, y + RH); gg.addColorStop(0, '#FFE9A0'); gg.addColorStop(.35, '#FFE07A'); gg.addColorStop(.7, '#F4C542'); gg.addColorStop(1, '#FFE58A'); c.fillStyle = gg; }
+        c.fillRect(x0, y, x1 - x0, RH); c.fillStyle = ink.bar; c.fillRect(x0, y, 16, RH);
+      }
+      if (i) { c.fillStyle = INK.line; c.fillRect(x0, y, x1 - x0, 3); }
+      var base = y + RH / 2 + 18;
+      c.fillStyle = ink || r.total ? INK.dark : INK.red; c.font = '700 56px ' + serif; c.textAlign = 'left'; c.fillText(r.day, x0 + 44, base);
+      if (r.caps) { c.fillStyle = ink ? ink.ink : INK.grey; c.font = '700 30px ' + sans; spaced(r.words.toUpperCase(), x0 + 230, base - 4, 4); }
+      else { c.fillStyle = INK.dark; c.font = '400 36px ' + sans; c.fillText(r.words, x0 + 230, base - 2); }
+      c.fillStyle = INK.dark; c.font = '900 ' + (r.total ? 60 : 50) + 'px ' + sans; c.textAlign = 'right'; c.fillText(r.tips, x1 - 36, base);
+    });
+    c.restore();
+    c.strokeStyle = INK.tealDark; c.lineWidth = 6; round(x0, ty, x1 - x0, tableH, 30); c.stroke();
+    // Whose game it is (game/README.md: name the café, with the town).
+    c.textAlign = 'center'; c.fillStyle = INK.tealDark; c.font = '700 58px ' + serif; c.fillText('Order Up', W / 2, ty + tableH + 100);
+    c.fillStyle = INK.grey; c.font = '400 32px ' + sans; c.fillText('A little game on The Café’s website · Leavenworth, KS', W / 2, ty + tableH + 150);
+    return cv;
+  }
+  /* A canvas as a PNG file, made on the spot (toBlob would wait). */
+  function pngFile(cv, name) {
+    var bin = atob(cv.toDataURL('image/png').split(',')[1]), a = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+    var blob = new Blob([a], { type: 'image/png' });
+    try { return new File([blob], name, { type: 'image/png' }); } catch (e) { blob.name = name; return blob; }
+  }
+  /* Share hands the phone's Share sheet the picture and the text; where it
+     can't take a picture, the text; with no Share sheet at all, the picture
+     is saved and the text copied. */
   function shareWeek(p) {
-    var text = weekText(p), no = function () { toast('Couldn’t copy here'); };
-    var copy = function () { try { navigator.clipboard.writeText(text).then(function () { toast('Copied: paste it anywhere'); }, no); } catch (e) { no(); } };
-    if (navigator.share) navigator.share({ title: 'Order Up', text: text }).catch(function (e) { if (!e || e.name !== 'AbortError') copy(); });
-    else copy();
+    var text = weekText(p), file = null, name = 'order-up-week-' + new Date(p.a).toISOString().slice(0, 10) + '.png';
+    try { file = pngFile(weekPicture(p), name); } catch (e) { file = null; }
+    var copy = function (said) { try { navigator.clipboard.writeText(text).then(function () { toast(said || 'Copied: paste it anywhere'); }, function () { if (said) toast(said); }); } catch (e) { if (said) toast(said); } };
+    var keep = function () {
+      if (!file) { copy(); return; }
+      var url = URL.createObjectURL(file), a = document.createElement('a');
+      a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      copy('Picture saved');
+    };
+    var fail = function (e) { if (!e || e.name !== 'AbortError') keep(); };
+    if (navigator.share && file && navigator.canShare && navigator.canShare({ files: [file] })) navigator.share({ files: [file], text: text, title: 'Order Up' }).catch(fail);
+    else if (navigator.share) navigator.share({ title: 'Order Up', text: text }).catch(fail);
+    else keep();
   }
   function shareButton(i) { return '<button class="ou-btn ou-btn--quiet ou-share" data-act="share" data-i="' + i + '">Share week</button>'; }
   function showPast(from) {

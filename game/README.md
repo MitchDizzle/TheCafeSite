@@ -60,7 +60,7 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | **Family** | From Wednesday, family may stop by at lunch (§4). Never announced. | |
 | **Friday** | Ends on a **catering order**: five platters, one after another, on one clock. | The catering photos |
 | **Flawless day** | No walk-outs, family fed, nothing burnt: $10 on Monday up to $30 on Friday, in that day's tips, with its own tune (owner 2026-11-12; `game.json` → `clean`). | |
-| **Day ranks** | At the end of the week each day wears a rarity by its slips (walk-outs, family not fed, burnt food): none is Legendary ("Flawless"), one Epic, two or three Rare, more Normal (`ranks`). The whole row takes the colour, with the words ("Flawless", "Epic · 1 slip") in it, not a tag (owner 2026-11-13: the tag pushed each row onto two lines); the day a lost or ended week stopped on reads "Closed early", uncoloured. | Owner 2026-11-12 |
+| **Day ranks** | At the end of the week each day wears a rarity by its slips (walk-outs, family not fed, burnt food): none is Legendary ("Flawless"), one Epic, two or three Rare, more Normal (`ranks`). The whole row takes the colour, with the words ("Flawless", "Epic · 1 slip") in it, not a tag (owner 2026-11-13: the tag pushed each row onto two lines); the day a week was lost or ended on is never ranked, however clean it was until then (owner 2026-11-13: failing or closing early is never Flawless): uncoloured, it says "Closed early", "Three coffees down" or "Catering late". The Flawless bonus itself is only ever paid at 2pm, so a day cut short never gets it; Friday's is paid before the catering. | Owner 2026-11-12 |
 | **Trouble** | Some mornings one thing has gone wrong for the day (§4). | |
 | **Win** | Finish Friday's catering on time. It pays: $100 on Easy, $250 on Regular, $400 on Rush (`finish`), so a week that bought what it needed and won outscores one that saved its tips and lost. | |
 | **Score** | **The tips the week keeps**: tips earned, less what was spent on items (owner 2026-11-12). Items help a week through, but the best score is a week won with few of them, and the real test is Rush. The best is kept for each level. | |
@@ -737,11 +737,17 @@ lost, late or ended) is kept on the phone, the last 12, newest first, in
 title's **Past weeks** lists them: how it ended, the level and date, what
 it kept, a coloured tile a day, the week code (tap to show) and **Share
 week**. The end of a week has the same Share button beside its code. Share
-hands the phone's Share sheet (or, without one, the clipboard) a few lines
-of text: a coloured square and the tips for each day, the catering, what
-was kept, and "A little game on The Café's website, Leavenworth KS", with
-the `/play` link only once `game.listed` is true. **Never the week code**:
-it stays private. The headings at the end of a week are one line each
+makes a **picture** of the week (`weekPicture()`: the end screen's table on
+a 1080-wide PNG, drawn on a canvas in the game's colours and type, "Order
+Up" and "A little game on The Café's website · Leavenworth, KS" under it)
+and hands it to the phone's Share sheet with a few lines of text: a
+coloured square and the tips for each day, the catering, what was kept,
+and the same line, with the `/play` link only once `game.listed` is true.
+It's drawn at once, with no waiting, because an iPhone refuses a Share
+sheet that comes after the tap. Where the Share sheet can't take a
+picture, the text alone; with no Share sheet (most computers), the picture
+downloads and the text is copied. **Never the week code**: it stays
+private. The headings at the end of a week are one line each
 ("Catering out on time"), the day in the kicker, so the band on top stays
 short.
 
