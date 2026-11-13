@@ -444,6 +444,10 @@
 .ou-week div.is-rare span { color: var(--r-rare); }
 .ou-week div.is-epic { background: var(--r-epic-own); box-shadow: inset 6px 0 0 var(--r-epic); }
 .ou-week div.is-epic span { color: var(--r-epic); }
+/* The day a week was lost or ended on, and catering that wasn't on time:
+   a soft red (owner 2026-11-13: red for bad, like a late ticket). */
+.ou-week div.is-bad { background: #F8DEDA; box-shadow: inset 6px 0 0 var(--accent-dark); }
+.ou-week div.is-bad span { color: var(--accent-dark); }
 .ou-week div.is-legendary { position: relative; overflow: hidden; background: linear-gradient(100deg, #FFE9A0 0%, #FFE07A 35%, #F4C542 70%, #FFE58A 100%); box-shadow: inset 6px 0 0 #B8860B; }
 .ou-week div.is-legendary span { color: #6B4E0A; }
 .ou-week div.is-legendary::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .75) 50%, transparent 65%); transform: translateX(-100%); animation: ou-shine 3.2s ease-in-out infinite; }
@@ -465,6 +469,7 @@
 .ou-strip .is-epic { background: var(--r-epic-own); border-color: var(--r-epic); }
 .ou-strip .is-legendary { background: linear-gradient(135deg, #FFF3C4, #F4C542); border-color: #B8860B; }
 .ou-strip .is-cater { background: #fff; border-color: var(--teal-dark); }
+.ou-strip .is-bad { background: #F8DEDA; border-color: var(--accent-dark); color: var(--accent-dark); }
 
 .ou-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .ou-rc { background: #fff; border: 2px solid var(--teal-dark); border-radius: 12px; overflow: hidden; display: grid; grid-template-rows: 78px auto; box-shadow: 3px 3px 0 var(--shadow); }

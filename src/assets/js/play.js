@@ -1369,18 +1369,18 @@
   function dayRows(p) {
     var rows = p.t.map(function (tips, i) {
       var cut = cutShort(p, i), r = cut ? null : rankOf(p.s[i]);
-      return '<div' + (r ? ' class="is-' + r.rarity + '"' : '') + '><b>' + D.days[i].short + '</b><span>' + (cut ? stopWords(p) : rankWords(p.s[i])) + '</span><strong>' + money(tips) + '</strong></div>';
+      return '<div class="is-' + (cut ? 'bad' : r ? r.rarity : 'none') + '"><b>' + D.days[i].short + '</b><span>' + (cut ? stopWords(p) : rankWords(p.s[i])) + '</span><strong>' + money(tips) + '</strong></div>';
     }).join('');
-    if (p.f !== '') rows += '<div><b>Fri</b><span>Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished') + '</span><strong>' + money(p.f) + '</strong></div>';
+    if (p.f !== '') rows += '<div' + (p.w === 'win' ? '' : ' class="is-bad"') + '><b>Fri</b><span>Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished') + '</span><strong>' + money(p.f) + '</strong></div>';
     return rows;
   }
   /* The same, small, for Past weeks: a tile a day in its colour. */
   function dayStrip(p) {
     var cells = p.t.map(function (tips, i) {
-      var r = cutShort(p, i) ? null : rankOf(p.s[i]);
-      return '<span class="is-' + (r ? r.rarity : 'none') + '" aria-label="' + D.days[i].name + ': ' + money(tips) + ', ' + (r ? rankWords(p.s[i]) : stopWords(p)) + '"><b>' + D.days[i].short + '</b>' + money(tips) + '</span>';
+      var cut = cutShort(p, i), r = cut ? null : rankOf(p.s[i]);
+      return '<span class="is-' + (cut ? 'bad' : r ? r.rarity : 'none') + '" aria-label="' + D.days[i].name + ': ' + money(tips) + ', ' + (r ? rankWords(p.s[i]) : stopWords(p)) + '"><b>' + D.days[i].short + '</b>' + money(tips) + '</span>';
     });
-    if (p.f !== '') cells.push('<span class="is-cater" aria-label="Catering: ' + money(p.f) + '"><b>Cater</b>' + money(p.f) + '</span>');
+    if (p.f !== '') cells.push('<span class="is-' + (p.w === 'win' ? 'cater' : 'bad') + '" aria-label="Catering' + (p.w === 'win' ? '' : ', late') + ': ' + money(p.f) + '"><b>Cater</b>' + money(p.f) + '</span>');
     return '<div class="ou-strip">' + cells.join('') + '</div>';
   }
   /* A finished week, kept on the phone (owner 2026-11-13: to find a week's
@@ -1405,10 +1405,10 @@
   }
   /* The week as text to share (owner 2026-11-13): a coloured square a day,
      the tips, and what it kept. Never the week code: that stays private. */
-  var SQUARE = { legendary: '\uD83D\uDFE8', epic: '\uD83D\uDFEA', rare: '\uD83D\uDFE6', normal: '\u2B1C' };
+  var SQUARE = { legendary: '\uD83D\uDFE8', epic: '\uD83D\uDFEA', rare: '\uD83D\uDFE6', normal: '\u2B1C', bad: '\uD83D\uDFE5' };
   function weekText(p) {
     var lines = ['Order Up, ' + (D.levels[p.l] ? D.levels[p.l].name + ' week' : 'a week') + ': ' + weekHead(p)[1].toLowerCase()];
-    p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] + ' ' : '') + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : ' · ' + stopWords(p).toLowerCase())); });
+    p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] : SQUARE.bad) + ' ' + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : ' · ' + stopWords(p).toLowerCase())); });
     if (p.f !== '') lines.push('Catering ' + money(p.f));
     if (p.b) lines.push('Performance bonus +' + money(p.b));
     lines.push('Kept ' + money(p.k));
@@ -1422,15 +1422,16 @@
   var INK = { dark: '#22323A', grey: '#4A5A62', teal: '#2C5E70', tealDark: '#1F4552', cream: '#FAF7F2', mint: '#8ED9D4', red: '#C0392F', line: '#C5CFD3', total: '#EDF1F1' };
   var ROWINK = {
     normal: { bg: '#F1F3F4', bar: '#B9C2C6', ink: '#4A5A62' }, rare: { bg: '#D9E6F6', bar: '#2E6DB4', ink: '#2E6DB4' },
-    epic: { bg: '#E6D9F4', bar: '#6E3FA6', ink: '#6E3FA6' }, legendary: { bg: null, bar: '#B8860B', ink: '#6B4E0A' }
+    epic: { bg: '#E6D9F4', bar: '#6E3FA6', ink: '#6E3FA6' }, legendary: { bg: null, bar: '#B8860B', ink: '#6B4E0A' },
+    bad: { bg: '#F8DEDA', bar: '#A02F26', ink: '#A02F26' }
   };
   function weekPicture(p) {
     var rows = [];
     p.t.forEach(function (tips, i) {
       var r = cutShort(p, i) ? null : rankOf(p.s[i]);
-      rows.push({ day: D.days[i].short, words: r ? rankWords(p.s[i]) : stopWords(p), tips: money(tips), rar: r ? r.rarity : '', caps: true });
+      rows.push({ day: D.days[i].short, words: r ? rankWords(p.s[i]) : stopWords(p), tips: money(tips), rar: r ? r.rarity : 'bad', caps: true });
     });
-    if (p.f !== '') rows.push({ day: 'Fri', words: 'Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished'), tips: money(p.f) });
+    if (p.f !== '') rows.push({ day: 'Fri', words: 'Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished'), tips: money(p.f), rar: p.w === 'win' ? '' : 'bad' });
     if (p.b) rows.push({ day: '', words: 'Performance bonus', tips: '+' + money(p.b) });
     rows.push({ day: 'Kept', words: 'your score', tips: money(p.k), total: true });
     var W = 1080, top = 330, RH = 118, x0 = 60, x1 = W - 60, tableH = rows.length * RH, H = top + 50 + tableH + 190;
@@ -1575,7 +1576,7 @@
       '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' +
       '<div class="ou-row ou-row--code">' + codeButton(G.run, '') + shareButton(0) + '</div>' +
       '<p class="ou-fine">The Café can look this week up by its code. Keep it to yourself: it’s hidden until you tap, and a screenshot or a share never shows it. Past weeks, on the title screen, keeps it for later.</p>' +
-      '<p class="ou-fine">A day’s colour is its slips (walk-outs and burnt food): gold for none, purple for one, blue for two or three.</p>' +
+      '<p class="ou-fine">A day’s colour is its slips (walk-outs and burnt food): gold for none, purple for one, blue for two or three. Red is where the week went wrong.</p>' +
       (G.newAch.length ? '<span class="ou-label">Achievements this week</span>' + achList(G.newAch) : '') +
       ownedRow() + sendIn +
       '<p class="ou-fine">' + TIPS_NOTE + '</p>' +
