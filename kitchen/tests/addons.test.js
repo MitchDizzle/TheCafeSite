@@ -107,3 +107,27 @@ test("online orders are never split", () => {
   assert.equal(split(web([li(1, "Cheeseburger", { uid: "A" }), li(1, "Reuben", { uid: "B" })])).tickets.length, 1);
   assert.equal(kitchenLines.WEBORDER00000002, undefined);
 });
+
+// Client 2026-11-13: a Square Terminal sale sometimes came up already at
+// 1:30 "waiting". Square handed it over late; the board counts from when it
+// got it.
+test("a counter sale Square hands over late is timed from when the board got it", () => {
+  const o = phoneOrder([li(1, "Cheeseburger", { uid: "A" })], { state: "COMPLETED", created_at: minutesFromNow(-1.5), fulfillments: [] });
+  const t = split(o).tickets[0];
+  assert.ok(Math.abs(Date.parse(t.boardAt) - Date.now()) < 2000, "counts from now");
+  assert.ok(Date.parse(t.createdAt) < Date.now() - 80000, "Square's time is kept");
+  // and it stays so on the next check
+  assert.ok(Math.abs(Date.parse(split(o).tickets[0].boardAt) - Date.now()) < 2000);
+});
+
+test("orders already in Square when the board starts keep their rung-up time", () => {
+  const o = phoneOrder([li(1, "Cheeseburger", { uid: "A" })], { state: "COMPLETED", created_at: minutesFromNow(-1.5), fulfillments: [] });
+  const t = splitAdded(o, toTicket(o).ticket, Date.now(), { startup: true }).tickets[0];
+  assert.equal(t.boardAt, toTicket(o).ticket.boardAt);
+  assert.equal(split(o).tickets[0].boardAt, toTicket(o).ticket.boardAt);
+});
+
+test("one seen long after it was rung up (the board was off) keeps its rung-up time", () => {
+  const o = phoneOrder([li(1, "Cheeseburger", { uid: "A" })], { state: "COMPLETED", created_at: minutesFromNow(-25), fulfillments: [] });
+  assert.equal(split(o).tickets[0].boardAt, toTicket(o).ticket.boardAt);
+});

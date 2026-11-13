@@ -11,8 +11,14 @@
 //     keeps them in step with the site, but it NEVER changes today's names
 //     once they're in Square (its sides, yes), an earlier day, or a day set
 //     on the front page;
-//   - the front page. A day changed there is the front's from then on: the
-//     website's copy no longer touches it.
+//   - the front page. A day changed there is the front's (from: "front",
+//     savedAt) until the website has it: the board hands those days to the
+//     website through the GitHub backup (siteExport -> site-specials.json,
+//     read by the site's "Specials from the kitchen board" Action, which puts
+//     them in src/_data/specials.json with the save's time as boardSavedAt).
+//     Once the website lists the day with that same boardSavedAt, the day is
+//     the website's again, so a fix made there later (by hand or by Claude)
+//     comes through as any website day does. Mitch 2026-11-13.
 // Kept in data\specials-plan.json (gitignored).
 const fs = require("fs");
 const path = require("path");
@@ -25,7 +31,7 @@ const SITE_MINUTES = 30;
 const RETRY_MINUTES = 5; // after Square refuses the morning's write
 const PLAN_DAYS = 14; // how far ahead Specials reaches
 
-// days:    { "YYYY-MM-DD": { from: "site" | "front", items: { "<dailyItems name>": { today, prices: { "<size>" | "": "10.50" } } },
+// days:    { "YYYY-MM-DD": { from: "site" | "front", savedAt? (a front day: when it was saved), items: { "<dailyItems name>": { today, prices: { "<size>" | "": "10.50" } } },
 //            sides?: [...], anySide?: true } }  (anySide: the plate comes with a choice of side)
 // notes:   { "YYYY-MM-DD": { description } }, the words Photo post puts under the photo. Kept
 //            apart from `days`, so writing them doesn't make a website day the front's.
@@ -168,6 +174,15 @@ async function pullSite() {
     for (const d of listed) {
       if (d.date < today) continue;
       const have = plan.days[d.date];
+      // A day set here that the website now has, from this very save (the
+      // sync stamps it boardSavedAt): it's the website's again, so a later
+      // fix there reaches the board. Saved here again since, it stays ours
+      // until the website has that save too.
+      if (have && have.from === "front" && have.savedAt && d.boardSavedAt === have.savedAt) {
+        have.from = "site";
+        delete have.savedAt;
+        console.log(`The website has ${d.date}'s specials from the front page now.`);
+      }
       if (have && have.from !== "site") continue; // set on the front page: theirs
       // Today is never changed once it's in Square: from then on only the
       // front page changes it. Until then the website's latest wins, so a day
@@ -384,7 +399,7 @@ function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}, 
     const anySide = !!(change && change.anySide === true);
     const sides = anySide ? [] : (Array.isArray(change && change.sides) ? change.sides : []).map(cleanText).filter(Boolean).slice(0, 6);
     next[date] = Object.keys(items).length || sides.length || anySide
-      ? { from: "front", items, ...(sides.length ? { sides } : {}), ...(anySide ? { anySide: true } : {}) } : null;
+      ? { from: "front", savedAt: new Date().toISOString(), items, ...(sides.length ? { sides } : {}), ...(anySide ? { anySide: true } : {}) } : null;
   }
   // The words Photo post puts under the photo. They don't touch the day
   // itself, so a day from the website stays the website's.
@@ -470,4 +485,37 @@ function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}, 
   return { days, notes: noted, photos: picked, lists: withLists };
 }
 
-module.exports = { SITE_MINUTES, RETRY_MINUTES, plan, savePlan, siteFieldFor, pullSite, planView, savePlanDays, listsFor, modsFor, modOption, extrasOn, counterOnlyFor };
+// The days set here that the website doesn't have yet, as the website's
+// specials.json writes a day, for the GitHub backup (offsite.js puts it there
+// as site-specials.json; the site's Action reads it). Today and later only; a
+// day with neither a plate nor a soup isn't one. `price` only when typed here.
+function siteExport() {
+  const today = localDate();
+  const days = [];
+  let stamped = false;
+  for (const [date, day] of Object.entries(plan.days).sort(([a], [b]) => a.localeCompare(b))) {
+    if (date < today || !day || day.from !== "front") continue;
+    const out = { date };
+    for (const [name, it] of Object.entries(day.items || {})) {
+      const field = siteFieldFor(name);
+      if (field === "special" || field === "soup") {
+        if (it.today) out[field] = it.today;
+        if (field === "special" && it.prices && it.prices[""]) out.price = Number(it.prices[""]);
+      }
+    }
+    if (!out.special && !out.soup) continue;
+    if (day.anySide) out.anySide = true;
+    else if ((day.sides || []).length) out.sides = day.sides;
+    // A day saved before the sync existed: stamped now, once.
+    if (!day.savedAt) { day.savedAt = new Date().toISOString(); stamped = true; }
+    out.savedAt = day.savedAt;
+    days.push(out);
+  }
+  if (stamped) savePlan();
+  return {
+    _note: "Written by the kitchen board (TheCafeSite kitchen/lib/specials/plan.js, siteExport): the specials days set on its front page that the website doesn't have yet. The website's 'Specials from the kitchen board' Action puts them in src/_data/specials.json.",
+    days,
+  };
+}
+
+module.exports = { siteExport, SITE_MINUTES, RETRY_MINUTES, plan, savePlan, siteFieldFor, pullSite, planView, savePlanDays, listsFor, modsFor, modOption, extrasOn, counterOnlyFor };

@@ -3,10 +3,10 @@
 // ready orders that clear themselves, the demo, and Reset for the day.
 const { pageVersions } = require("./pages");
 const { MOCK, MUTE, cfg } = require("./config");
-const { fetchOrders } = require("./square");
+const { fetchOrders, clock } = require("./square");
 const { live } = require("./live");
-const { bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, pinned, autoOff, readySince, byHand, dueSeen, state, saveState } = require("./state");
-const { splitAdded } = require("./addons");
+const { bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront, pinned, autoOff, readySince, byHand, dueSeen, kitchenLines, state, saveState } = require("./state");
+const { splitAdded, seenLate } = require("./addons");
 const { toTicket, markSameTable, keepTablesTogether, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
 const { withMockStates } = require("./square-status");
 const { statsToday, recordHistory } = require("./stats");
@@ -50,6 +50,7 @@ let pollTimer = null;
 let nextPollAt = null; // when the next scheduled Square check runs, for the board's countdown ring
 let polling = null; // the in-flight poll, so "check now" never runs two at once
 const logged = new Set(); // order ids already announced in the console
+let lookedOnce = false; // a check of Square has worked since the board started
 
 // Someone has the front page or the phone page open: they ask the kitchen
 // PC for orders every few seconds, so after hours that's someone working
@@ -113,7 +114,7 @@ async function pollOnce() {
       if (ticket) {
         if (isDemo(o.id)) ticket.demo = true;
         // Items added after the kitchen had it come up as cards of their own.
-        const split = splitAdded(o, ticket);
+        const split = splitAdded(o, ticket, Date.now(), { startup: !lookedOnce });
         if (split.changed) linesChanged = true;
         for (const t of split.tickets) {
           if (t.addOn && !logged.has(t.id)) {
@@ -126,15 +127,21 @@ async function pollOnce() {
       if (!logged.has(o.id) && !isDemo(o.id)) {
         logged.add(o.id);
         const why = ticket ? hiddenReason(ticket, Date.now()) : reason;
+        // Square slow to hand it over (this PC's clock taken off): worth
+        // knowing if it keeps happening.
+        const lag = seenLate(o, kitchenLines[o.id]);
+        const late = lag ? Math.round((lag - clock.offsetMs) / 1000) : 0;
         console.log(
           `${new Date().toLocaleTimeString()}  order ...${o.id.slice(-4)}: ` +
-            (why ? `not shown (${why})` : "on the board")
+            (why ? `not shown (${why})` : "on the board") +
+            (late >= 30 ? `, ${late} s after it was rung up (timed from now)` : "")
         );
       }
     }
     if (retimed(live.all) || linesChanged) saveState();
     markSameTable(live.all);
     live.lastOkAt = new Date().toISOString();
+    lookedOnce = true;
     if (live.lastError) console.log("Square connection restored");
     live.lastError = null;
     autoHandoff();

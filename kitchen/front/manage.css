@@ -168,6 +168,11 @@
 .d-chips:empty { display: none; }
 .d-chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.3rem 0.25rem 0.65rem; border-radius: 999px; background: var(--teal); color: #fff; font-weight: 700; }
 .d-chip button { font: inherit; font-size: 0.9rem; line-height: 1; width: 1.6rem; height: 1.6rem; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.2); color: #fff; cursor: pointer; }
+.d-more { margin: 0.3rem 0 0; border-top: 1px solid var(--line); }
+.d-more > summary { cursor: pointer; font-weight: 700; color: var(--action-dark); padding: 0.6rem 0 0.3rem; }
+.d-more > summary small { font-weight: 400; color: var(--muted); margin-left: 0.4rem; }
+.d-more[data-used] > summary small { color: var(--teal-dark); }
+.d-more-body { display: grid; gap: 0.6rem; padding: 0.3rem 0 0; }
 .d-prices > summary { cursor: pointer; font-weight: 700; color: var(--action-dark); padding: 0.25rem 0; }
 .d-prices > summary small { font-weight: 400; color: var(--muted); margin-left: 0.4rem; }
 .d-price-item { margin-top: 0.6rem; }

@@ -112,10 +112,10 @@
       const n = dishPhotos(name).length;
       return n ? `The usual: ${n} photo${n === 1 ? "" : "s"} of ${name}${n > 1 ? ", taking turns" : ""}` : name ? `The usual: no photo of ${name} yet` : "The usual";
     };
-    const photoHtml = (d, it) => {
+    const photoHtml = (d, it, what) => {
       const pick = (d.photoPick || {})[it.key] || "";
       return `<details class="d-photo" data-key="${esc(it.key)}" data-pick="${esc(pick)}">
-        <summary>Photo <span class="d-photo-now">${esc(photoNow(pick, (d.plan && d.plan.items[it.key] || {}).today))}</span></summary>
+        <summary>Photo, ${esc(String(what).toLowerCase())} <span class="d-photo-now">${esc(photoNow(pick, (d.plan && d.plan.items[it.key] || {}).today))}</span></summary>
         <div class="d-photo-body"></div>
       </details>`;
     };
@@ -141,6 +141,22 @@
         </div>`;
       Front.photoThumbs(box);
     };
+    // What's set under More on a day, for its summary, so nothing there is
+    // out of sight without a word (Mitch 2026-11-13: the screen shows only
+    // the main dish, its sides and the soup; the rest folds away).
+    const moreInUse = (d) => {
+      const plan = d.plan;
+      const used = [];
+      const x = d.extras || {};
+      if (((x.front && x.front.sides) || []).length || (x.site || []).length) used.push("extra sides");
+      if (((d.lists && d.lists.lists) || []).length) used.push("preset modifiers");
+      if (((d.mods && d.mods.words) || []).length) used.push("specials modifiers");
+      if (Object.values(d.photoPick || {}).some(Boolean)) used.push("photo");
+      if (d.note && d.note.description) used.push("photo words");
+      // A website day always carries the website's price; only one typed here counts.
+      if (plan && plan.from === "front" && Object.values(plan.items || {}).some((it) => Object.values(it.prices || {}).some(Boolean))) used.push("price");
+      return used;
+    };
     const dayHtml = (d) => {
       const plan = d.plan;
       const isToday = d.date === r.today;
@@ -148,6 +164,11 @@
       const what = summary(plan);
       const shown = r.items.filter((it) => !isSalad(it.key) || isToday || (plan && plan.items[it.key]));
       const planned = (it) => (plan && plan.items[it.key]) || { today: "", prices: {} };
+      // The plate first, its sides under it, then the soup (and a salad).
+      const ordered = [...shown.filter((it) => isPlate(it.key)), ...shown.filter((it) => !isPlate(it.key))];
+      const label = (it) => (isPlate(it.key) ? "Main dish" : /soup/i.test(it.key) ? "Soup of the day" : it.name);
+      const plate = shown.find((it) => isPlate(it.key));
+      const used = moreInUse(d);
       return `<details class="m-day${isToday ? " today" : ""}" data-date="${d.date}"${isToday ? " open" : ""}>
         <summary>
           <span class="d-date">${isToday ? '<span class="d-tag now">Today</span> ' : ""}${esc(words(d.date, { weekday: "short", month: "short", day: "numeric" }))}${tag}</span>
@@ -155,31 +176,37 @@
         </summary>
         <div class="d-body">
           ${status(d)}
-          ${shown.map((it) => {
+          ${ordered.map((it) => {
             // Today: what Square has now, when it has a name in it.
             const name = isToday && r.live && r.live[it.key] ? r.live[it.key] : planned(it).today || "";
             return `<div class="d-item" data-key="${esc(it.key)}">
-              <label class="m-field">${esc(it.name)}
-                <input type="text" data-field="today" value="${esc(name)}" maxlength="60" autocomplete="off"
+              <label class="m-field">${esc(label(it))}
+                <input type="text" data-field="today" value="${esc(name)}" maxlength="60" autocomplete="off" autocapitalize="words"
                   placeholder="${/soup/i.test(it.key) ? "e.g. Chicken Dumpling" : isSalad(it.key) ? "e.g. Cobb" : "e.g. Meatloaf"}"></label>
-              ${isPlate(it.key) ? sidesHtml(plan, d.date) + extrasHtml(d) + presetsHtml(d) + modsHtml(d) : ""}
-              ${photos.length ? photoHtml(d, it) : ""}
+              ${isPlate(it.key) ? sidesHtml(plan, d.date) : ""}
             </div>`;
           }).join("")}
-          <label class="m-field">Words under the photo, for Photo post
-            <textarea data-field="desc" rows="2" maxlength="200" placeholder="${esc(photoWords(plan) || "e.g. Served with mashed potatoes & gravy")}">${esc((d.note && d.note.description) || "")}</textarea></label>
-          <details class="d-prices">
-            <summary>Prices <small>blank keeps the price Square has</small></summary>
-            ${shown.map((it) => `<div class="d-price-item" data-key="${esc(it.key)}">
-              <p class="d-price-name">${esc(it.name)}</p>
-              <div class="m-prices">${it.sizes.map((sz) => `<label class="m-price" data-size="${esc(sz.size)}">
-                <span>${esc(sz.size || "Price")}</span>
-                <span class="m-money">$<input type="text" inputmode="decimal" data-field="price" value="${esc((planned(it).prices || {})[sz.size] || "")}"
-                  placeholder="${esc(sz.price || "at the till")}" aria-label="${esc(`${it.name} ${sz.size || ""} price`)}"></span>
-              </label>`).join("")}</div>
-            </div>`).join("")}
+          <details class="d-more"${used.length ? " data-used" : ""}>
+            <summary>More <small>${used.length ? esc(`in use: ${used.join(", ")}`) : "extra sides, modifiers, photo, prices"}</small></summary>
+            <div class="d-more-body">
+              ${plate ? extrasHtml(d) + presetsHtml(d) + modsHtml(d) : ""}
+              ${photos.length ? ordered.map((it) => photoHtml(d, it, label(it))).join("") : ""}
+              <label class="m-field">Words under the photo, for Photo post
+                <textarea data-field="desc" rows="2" maxlength="200" placeholder="${esc(photoWords(plan) || "e.g. Served with mashed potatoes & gravy")}">${esc((d.note && d.note.description) || "")}</textarea></label>
+              <details class="d-prices">
+                <summary>Prices <small>blank keeps the price Square has</small></summary>
+                ${ordered.map((it) => `<div class="d-price-item" data-key="${esc(it.key)}">
+                  <p class="d-price-name">${esc(it.name)}</p>
+                  <div class="m-prices">${it.sizes.map((sz) => `<label class="m-price" data-size="${esc(sz.size)}">
+                    <span>${esc(sz.size || "Price")}</span>
+                    <span class="m-money">$<input type="text" inputmode="decimal" data-field="price" value="${esc((planned(it).prices || {})[sz.size] || "")}"
+                      placeholder="${esc(sz.price || "at the till")}" aria-label="${esc(`${it.name} ${sz.size || ""} price`)}"></span>
+                  </label>`).join("")}</div>
+                </div>`).join("")}
+              </details>
+              <button type="button" class="d-clear" data-clear>Clear this day</button>
+            </div>
           </details>
-          <button type="button" class="d-clear" data-clear>Clear this day</button>
         </div>
       </details>`;
     };
@@ -188,8 +215,9 @@
       : `<p class="m-site m-note">The website's specials were read at ${fmtTime(r.site.checkedAt)}.</p>`) : "";
     screen({ title: "Specials", back: true,
       body: `<details class="m-how"><summary>How this works</summary>
-        <p class="m-note">Each morning the kitchen PC puts that day's specials into Square by itself. Saving today puts it in now.
-        Days the website lists fill in on their own; a day changed here stays as you typed it.</p>
+        <p class="m-note">Type the main dish, its sides and the soup for each day, then Save. Each morning the kitchen PC puts that day's specials into Square by itself; saving today puts it in now.</p>
+        <p class="m-note">Days saved here go to the website by themselves (the /menu box and the weekly post) after 2pm and at the end of the day. Days the website lists fill in here on their own, so specials put on the website another way show up here too.</p>
+        <p class="m-note">More, under each day, has the rest: extra sides, modifiers, the photo, its words and prices. It says what's in use there.</p>
         <p class="m-note">Comes with sets Side 1 and Side 2 on Lunch Special too: each side is picked for the counter already and can be swapped for a deli salad. Choice of side picks Chef's Choice. Two sides with "or" between ("tossed salad or cooked broccoli") pick nothing, so the counter or the customer picks one.</p>
         </details>
         ${site}
@@ -248,7 +276,8 @@
         return;
       }
       // A dish renamed: its usual photos change, so the picker is drawn again.
-      const box = e.target.matches('[data-field="today"]') && e.target.closest(".d-item").querySelector(".d-photo");
+      const box = e.target.matches('[data-field="today"]')
+        && e.target.closest(".m-day").querySelector(`.d-photo[data-key="${CSS.escape(e.target.closest(".d-item").dataset.key)}"]`);
       if (box) {
         box.querySelector(".d-photo-now").textContent = photoNow(box.dataset.pick, e.target.value.trim());
         box.querySelector(".d-photo-body").innerHTML = "";

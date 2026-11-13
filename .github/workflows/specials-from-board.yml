@@ -1,0 +1,100 @@
+name: Specials from the kitchen board
+
+# The specials typed on the kitchen board (Manage > Specials) go onto the
+# website by themselves (Mitch 2026-11-13). The board pushes the days it has
+# that the website doesn't to its private GitHub backup, as
+# site-specials.json (kitchen/lib/specials/plan.js, siteExport); this reads
+# that file, puts those days into src/_data/specials.json on main
+# (scripts/specials-from-board.js), commits, and starts a deploy. Nothing
+# changed, nothing happens.
+#
+# Set up once (kitchen/README.md, "Specials onto the website"):
+#   - the repository variable KITCHEN_DATA_REPO: the backup repo, owner/name;
+#   - the secret KITCHEN_DATA_KEY: the private half of a READ-ONLY deploy key
+#     on that repo.
+# Until both are there it says so and stops.
+#
+# Specials put on the website another way (by hand, or by Claude) still work:
+# the board reads them as always, and a board day the website already has is
+# never written again unless it's saved again on the board.
+
+on:
+  schedule:
+    # Twice a day (Mitch 2026-11-13: deploy when the board has sent a backup
+    # and at the end of the day, not every half hour): after the board's 2pm
+    # backup and at the end of the day. 20:20 and 23:50 UTC are 2:20pm and
+    # 5:50pm Central in winter, 3:20pm and 6:50pm in summer. GitHub may start
+    # a scheduled run some minutes late. Nothing new, no deploy. Run it by
+    # hand (Actions > Specials from the kitchen board > Run workflow) for a
+    # day that can't wait.
+    - cron: '20 20 * * *'
+    - cron: '50 23 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: specials-from-board
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Read the board's specials
+        id: read
+        env:
+          KEY: ${{ secrets.KITCHEN_DATA_KEY }}
+          REPO: ${{ vars.KITCHEN_DATA_REPO }}
+        run: |
+          if [ -z "$KEY" ] || [ -z "$REPO" ]; then
+            echo "::notice::Not set up yet: the KITCHEN_DATA_REPO variable and KITCHEN_DATA_KEY secret (kitchen/README.md, Specials onto the website)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/kitchen_data
+          chmod 600 ~/.ssh/kitchen_data
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/kitchen_data -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          # Only the one small file, not the photos.
+          git clone -q --depth 1 --filter=blob:none --no-checkout "git@github.com:${REPO}.git" "$RUNNER_TEMP/kitchen-data"
+          if ! git -C "$RUNNER_TEMP/kitchen-data" checkout -q HEAD -- site-specials.json 2>/dev/null; then
+            echo "::notice::No site-specials.json in the backup yet: the kitchen board writes it with its next backup."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          cp "$RUNNER_TEMP/kitchen-data/site-specials.json" "$RUNNER_TEMP/board.json"
+          rm -f ~/.ssh/kitchen_data
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Put them in specials.json
+        id: apply
+        if: steps.read.outputs.ready == 'true'
+        run: |
+          days=$(node scripts/specials-from-board.js "$RUNNER_TEMP/board.json" src/_data/specials.json)
+          if [ -z "$days" ]; then
+            echo "Nothing new from the board."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/_data/specials.json
+          git commit -q -m "Specials from the kitchen board: $days"
+          git push -q origin HEAD:main
+          echo "Put on the website: $days"
+          echo "days=$days" >> "$GITHUB_OUTPUT"
+
+      # A push made by this workflow doesn't start the deploy by itself
+      # (GitHub's rule for its own token), so it's started by name.
+      - name: Deploy
+        if: steps.apply.outputs.days != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main

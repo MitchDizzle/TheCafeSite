@@ -72,7 +72,7 @@
      migrate() with SAVE_VER raised. Never rename an item's or an
      achievement's id: saves and weeks left half way are keyed by them. */
   var KEY = 'orderup.v1', SAVE_VER = 2;
-  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0, bestRuns: {}, past: [] };
+  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0, bestRuns: {}, past: [], itemLife: {} };
   var loadedSum = '';
   try {
     var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -107,6 +107,7 @@
   if (!save.ach || typeof save.ach !== 'object') save.ach = {};
   if (!save.bestRuns || typeof save.bestRuns !== 'object') save.bestRuns = {};
   if (!Array.isArray(save.past)) save.past = [];
+  if (!save.itemLife || typeof save.itemLife !== 'object') save.itemLife = {};
   migrate();
   /* One step per change of shape, oldest first. A save from any earlier
      version walks up through all of them. */
@@ -364,17 +365,22 @@
   var speed = 1;     // debug only
 
   function has(id) { return (G && G.items[id]) || 0; }
+  /* What each item did this week (owner 2026-11-13): days on the line, tips
+     it brought in, and its count (saves, plates, flips: ITEM_DID says what).
+     Kept with the week and added to save.itemLife at the end; never sent. */
+  function ist(id) { var s = G.ist[id]; if (!s) s = G.ist[id] = { d: 0, tips: 0, n: 0, paid: 0 }; return s; }
+  function credit(id, tips, n) { if (!G || !has(id)) return; var s = ist(id); s.tips += tips || 0; s.n += n || 0; }
   /* How hard: the level the week was started on (game.json, levels). */
   function level() { return D.levels[(G && G.level) || save.level] || D.levels.normal; }
 
   function newRun() {
-    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, bought: 0, bonus: 0, perf: 0, friClean: 0, sale: false, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false, trouble: null, troubleDay: -1, lastTrouble: null, troublePart: '', slips: [], fed: 0, newAch: [] };
+    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, bought: 0, bonus: 0, perf: 0, friClean: 0, sale: false, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false, trouble: null, troubleDay: -1, lastTrouble: null, troublePart: '', slips: [], fed: 0, newAch: [], ist: {} };
     report('start', {});
     showDawn();
   }
   /* A week left half way is kept each morning and picked up from that morning. */
   function keepRun() {
-    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, bought: G.bought, bonus: G.bonus, perDay: G.perDay.slice(0, G.day), items: G.items, trouble: G.trouble, troubleDay: G.troubleDay, troublePart: G.troublePart, slips: G.slips.slice(0, G.day), fed: G.fed };
+    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, bought: G.bought, bonus: G.bonus, perDay: G.perDay.slice(0, G.day), items: G.items, trouble: G.trouble, troubleDay: G.troubleDay, troublePart: G.troublePart, slips: G.slips.slice(0, G.day), fed: G.fed, ist: G.ist };
     persist();
   }
   function resumeRun() {
@@ -382,7 +388,7 @@
     for (var id in r.items) if (D.items.some(function (it) { return it.id === id; })) items[id] = r.items[id];
     G = { level: r.level, run: r.run || rid(), began: r.began || Date.now(), played: r.played || 0, away: r.away || 0, day: r.day, tips: r.tips || 0, earned: r.earned || 0, bought: r.bought || 0, bonus: r.bonus || 0, sale: false, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false,
       trouble: troubleOf(r.trouble) ? r.trouble : null, troubleDay: r.troubleDay == null ? -1 : r.troubleDay, lastTrouble: null,
-      troublePart: D.parts[r.troublePart] ? r.troublePart : '', slips: Array.isArray(r.slips) ? r.slips.slice() : [], fed: r.fed || 0, newAch: [] };
+      troublePart: D.parts[r.troublePart] ? r.troublePart : '', slips: Array.isArray(r.slips) ? r.slips.slice() : [], fed: r.fed || 0, newAch: [], ist: (r.ist && typeof r.ist === 'object') ? r.ist : {} };
     showDawn();
   }
 
@@ -413,6 +419,7 @@
       var lunchStart = TU.breakfastShare * T.len;
       T.familyAt = lunchStart + 6 + rand() * (T.len - lunchStart - 26);
     }
+    for (var oid in G.items) ist(oid).d++;
     dirtyAll();
     show('shift');
     $('#ou-pausebox').hidden = true;
@@ -440,8 +447,8 @@
   function trouble(id) { return T && !T.cat && T.trouble && T.trouble.id === id ? T.trouble : null; }
   function dealTrouble() {
     var tr = level().trouble;
-    if (has('horseshoe')) return null;       // the Horseshoe: no trouble, any day
     if (!tr || G.day < tr.from || rand() * 100 >= tr.chance) return null;
+    if (has('horseshoe')) { credit('horseshoe', 0, 1); return null; }      // the Horseshoe: no trouble, any day
     var list = D.trouble.filter(function (x) { return x.id !== G.lastTrouble; });
     var got = pick(list);
     G.troublePart = got.parts ? pick(got.parts) : '';
@@ -480,13 +487,15 @@
       age: 0, togo: false, usual: false, special: false, family: false, catering: false, boarded: false, late: false, auto: null, hurry: false
     };
     for (var key in o) t[key] = o[key];
-    t.total = (TU.waitBase + TU.waitPerPart * t.parts.length) * day.patience * level().wait + itemPer('refills') * has('refills');
+    t.gift = {};      // seconds each item gave this ticket, to tell a save
+    t.total = (TU.waitBase + TU.waitPerPart * t.parts.length) * day.patience * level().wait;
     // Never less than it takes to make: the longest thing on it has to cook,
     // and every part is a tap or two. Luck can make a day hard, not undoable.
     var longest = 0;
     t.parts.forEach(function (p) { longest = Math.max(longest, D.parts[p].cook || 0); });
     t.total = Math.max(t.total, longest * TU.fair.cookTimes + TU.fair.perPart * t.parts.length + TU.fair.base);
-    if (t.togo && has('clamshell')) t.total += 8;
+    if (has('refills')) { t.gift.refills = itemPer('refills') * has('refills'); t.total += t.gift.refills; }
+    if (t.togo && has('clamshell')) { t.total += 8; t.gift.clamshell = 8; }
     if (t.family) t.total = D.family.wait;
     if (t.catering) t.total = 1;
     t.left = t.total;
@@ -498,9 +507,11 @@
     var day = D.days[G.day], lunch = T.bins === 'lunch', recipe, o = {};
     // The Facebook Post (up to two): each puts the special on more lunch tickets.
     var review = trouble('review');
-    if (lunch && rand() * 100 < (TU.specialShare + TU.postShare * has('fbpost')) * (review ? review.share : 1)) {
+    var roll = rand() * 100, share = review ? review.share : 1;
+    if (lunch && roll < (TU.specialShare + TU.postShare * has('fbpost')) * share) {
       recipe = { id: 'sp-' + T.special.id, name: T.special.name, when: 'lunch', parts: ['special'].concat(T.special.sides.map(function () { return 'side'; })) };
       o.special = true;
+      if (roll >= TU.specialShare * share) o.posted = true;      // here only by the Facebook Post
     } else if (!lunch && has('rollcase') && rand() < 0.3) {
       recipe = D.rollRecipe;
     } else {
@@ -565,6 +576,8 @@
       for (var i = 0; i < n; i++) if (!T.grill[i]) { at = i; break; }
       if (at === -1) { toast('The flat-top is full'); sfx.bad(); return; }
       T.grill[at] = { part: part, t: 0, state: 'raw', gone: 0, flipped: false, wait: 0 };
+      if (at >= TU.griddle) credit('flattop', 0, 1);
+      if (has('press')) credit('press', 0, info.cook - info.cook / (1 + itemPer('press') / 100 * has('press')));
       dirty.grill = dirty.bins = true; sfx.sizzle();
     } else {
       if (T.plate.length >= TU.plateMax) { toast('The plate is full'); sfx.bad(); return; }
@@ -577,13 +590,22 @@
     if (it.state === 'raw') { hintFlash('Not done yet'); return; }
     if (it.state === 'burnt') { T.grill[i] = null; dirty.grill = dirty.bins = true; sfx.tap(); return; }
     if (T.plate.length >= TU.plateMax) { toast('The plate is full'); sfx.bad(); return; }
+    if (it.state === 'done') heatSave(it.t - cookTime(it.part, i));
     T.plate.push(it.part); T.plateNew = T.plate.length - 1; T.grill[i] = null;
     dirty.grill = dirty.plate = dirty.rail = dirty.bins = true; sfx.tap();
   }
   /* Food that flips (game.json, parts) stops at the half until it's turned.
      `how` is tap, swipe or key. On Rush only a swipe turns it; a keyboard
      always can, so the game is never out of reach without a touch screen. */
+  /* Food taken or turned after it would have burnt without the Warming
+     Shelf, or the Golden Spatula: a save for that item. */
+  function heatSave(over) {
+    var base = D.days[G.day].burn * level().burn;
+    if (over < base) return;
+    if (has('goldspat') && over >= burnSecs()) credit('goldspat', 0, 1); else credit('shelf', 0, 1);
+  }
   function flipIt(it) {
+    if (it.state === 'flip') heatSave(it.wait);
     it.flipped = true; it.state = 'raw'; it.wait = 0; it.flipNow = true;
     dirty.grill = true; sfx.sizzle();
   }
@@ -600,7 +622,7 @@
      it is (nothing on a plate goes cold); Send only ever sends the front one. */
   function swapPlates() {
     if (!has('spare') || (!T.plate.length && !T.spare.length)) return;
-    var t = T.plate; T.plate = T.spare; T.spare = t; T.plateNew = -1;
+    var t = T.plate; T.plate = T.spare; T.spare = t; T.plateNew = -1; credit('spare', 0, 1);
     dirty.plate = dirty.rail = true; sfx.tap();
   }
   function tapPlateItem(i) { T.plate.splice(i, 1); dirty.plate = dirty.rail = true; sfx.tap(); }
@@ -620,24 +642,53 @@
 
   /* A ticket goes out: by Send, or by a helper (`by` names who). */
   function complete(t, kind, by) {
-    var tip = t.parts.length + (t.special ? 2 : 0);
+    var tip = t.parts.length + (t.special ? 2 : 0), adds = {};
     var frac = t.left / t.total;
     if (!t.catering) tip += frac > 0.5 ? 2 : frac > 0.25 ? 1 : 0;
     if (t.catering) tip += 2;
     if (t.rid === 'roll') tip = itemPer('rollcase');
-    if (kind === 'pickle') tip += 1 + itemPer('picklejar') * has('picklejar');
-    else if (t.parts.indexOf('pickle') !== -1 || kind === 'wild') tip += itemPer('picklejar') * has('picklejar');
-    tip += itemPer('tipjar') * has('tipjar');
+    if (kind === 'pickle') tip += 1;
+    if (kind === 'pickle' || t.parts.indexOf('pickle') !== -1 || kind === 'wild') adds.picklejar = itemPer('picklejar') * has('picklejar');
+    adds.tipjar = itemPer('tipjar') * has('tipjar');
+    var base = tip, mults = [];      // [item, factor]: who made the plate tip more
+    tip += adds.picklejar || 0; tip += adds.tipjar;
     var mult = 1;
-    if (t.special && has('drink')) mult *= 2;
-    if (t.n <= itemPer('earlybird') && has('earlybird') && !t.catering) mult *= 2;
-    if (t.usual) mult *= 3;
-    if (has('fryer')) mult *= 3;
+    if (t.special && has('drink')) { mult *= 2; mults.push(['drink', 2]); }
+    if (t.n <= itemPer('earlybird') && has('earlybird') && !t.catering) { mult *= 2; mults.push(['earlybird', 2]); }
+    if (t.usual) { mult *= 3; mults.push(['regular', 3]); }
+    if (has('fryer')) { mult *= 3; mults.push(['fryer', 3]); }
     // The Lucky Penny: a chance a plate is a lucky one (the Big Tipper makes it triple).
-    var lucky = !t.family && rand() * 100 < TU.luckyBase + itemPer('penny') * has('penny');
-    if (lucky) mult *= has('bigtipper') ? 3 : 2;
+    var luckyPct = TU.luckyBase + itemPer('penny') * has('penny');
+    var lucky = !t.family && rand() * 100 < luckyPct;
+    if (lucky) {
+      mult *= has('bigtipper') ? 3 : 2;
+      // A lucky plate the Penny made: its share of the chance.
+      mults.push(['penny', Math.pow(2, has('penny') ? (luckyPct - TU.luckyBase) / luckyPct : 0)]);
+      if (has('bigtipper')) mults.push(['bigtipper', 1.5]);
+    }
     tip *= mult;
     if (t.family) tip = 0;
+    else {
+      // Who brought what in: what an item adds, times every multiplier; what
+      // multipliers add to the rest, shared by how much each multiplies.
+      for (var a in adds) if (adds[a]) credit(a, adds[a] * mult, 0);
+      var gain = base * (mult - 1), lnAll = Math.log(mult);
+      mults.forEach(function (m) { if (lnAll > 0 && m[1] > 1) credit(m[0], gain * Math.log(m[1]) / lnAll, 0); });
+      if (t.rid === 'roll') credit('rollcase', base, 1);
+      if (t.posted) credit('fbpost', 2, 1);
+      if (t.usual) credit('regular', 0, 1);
+      if (lucky && has('penny') && luckyPct > TU.luckyBase) credit('penny', 0, 1);
+      if (kind === 'wild') credit('bigdill', 0, 1);
+      if (by === 'Counter Help') credit('counter', tip, 1);
+      if (by === 'Line Cook') credit('linecook', tip, 1);
+      // Sent in time only because of the seconds items gave it: a save, for
+      // the one that gave the most.
+      if (!by && !t.catering) {
+        var g = 0, top = null;
+        for (var gi in t.gift) { g += t.gift[gi]; if (!top || t.gift[gi] > t.gift[top]) top = gi; }
+        if (top && t.left < g) credit(top, 0, 1);
+      }
+    }
     // Achievements earned at the pass.
     if (!t.family) { if (lucky && T.lastLucky) award('lucky'); T.lastLucky = lucky; }
     if (kind === 'pickle' && ++T.pickles >= 10) award('pickles');
@@ -646,7 +697,11 @@
     removeTicket(t);
     T.served++; T.tips += tip; G.tips += tip; G.earned += tip;
     save.served[t.rid] = (save.served[t.rid] || 0) + 1;
-    if (has('bell')) T.tickets.forEach(function (o) { if (!o.catering) o.left = Math.min(o.total, o.left + 2); });
+    if (has('bell')) T.tickets.forEach(function (o) {
+      if (o.catering) return;
+      var was = o.left; o.left = Math.min(o.total, o.left + 2);
+      if (o.left > was) o.gift.bell = (o.gift.bell || 0) + o.left - was;
+    });
     dirty.hud = dirty.rail = true; popTips();
     sfx.bell();
 
@@ -701,7 +756,7 @@
         // for it to go (owner 2026-11-12: a short break between the two).
         T.bins = 'lunch'; T.spawnIn = BANNER_S + 0.3; dirty.bins = dirty.pass = true;
         banner('11am', 'Lunch. ' + T.special.name + ' is on.');
-        if (has('urn') && T.cups < TU.cups) { T.cups++; dirty.hud = true; setTimeout(function () { toast('Coffee Urn: one coffee poured again'); }, 1900); }
+        if (has('urn') && T.cups < TU.cups) { T.cups++; dirty.hud = true; credit('urn', 0, 1); setTimeout(function () { toast('Coffee Urn: one coffee poured again'); }, 1900); }
       }
       if (!T.closing && T.t >= T.len) {
         T.closing = true; dirty.pass = true;
@@ -732,7 +787,7 @@
       // The Line Cook, when ready, takes the ticket that is about to walk out:
       // never the one being made unless it was lost anyway (owner 2026-11-12).
       if (t.left <= LINE_AT && T.lineT >= LINE_S && has('linecook') && !t.family) { T.lineT = 0; complete(t, 'exact', 'Line Cook'); continue; }
-      if (t.left <= 0.4 && !t.boarded && has('board') && !t.family) { t.boarded = true; t.left += 6; toast('Kitchen Board: #' + t.n + ' waits a little longer'); }
+      if (t.left <= 0.4 && !t.boarded && has('board') && !t.family) { t.boarded = true; t.left += 6; t.gift.board = 6; toast('Kitchen Board: #' + t.n + ' waits a little longer'); }
       if (t.left <= 0 && qaState.godMode && !t.family) { t.left = t.total; continue; }
       if (t.left <= 0) walkOut(t);
     }
@@ -746,7 +801,7 @@
       if (it.state === 'burnt') {
         var insp = trouble('inspector');
         if (insp && !it.fined) { it.sat = (it.sat || 0) + dt; if (it.sat >= insp.after) { it.fined = true; lose(insp.fine, 'Health Inspector: burnt food left out costs'); } }
-        if (has('scraper')) { it.gone += dt; if (it.gone > 0.9) { T.grill[i] = null; dirty.grill = dirty.bins = true; } }
+        if (has('scraper')) { it.gone += dt; if (it.gone > 0.9) { T.grill[i] = null; dirty.grill = dirty.bins = true; credit('scraper', 0, 1); } }
         continue;
       }
       if (it.state === 'flip') {       // waiting to be turned: this side is still on the heat
@@ -757,7 +812,7 @@
       it.t += dt;
       if (it.state === 'raw' && flips && D.parts[it.part].flip && !it.flipped && it.t >= cook / 2) {
         it.t = cook / 2;
-        if (has('spatula')) flipIt(it); else { it.state = 'flip'; it.wait = 0; dirty.grill = true; sfx.done(); }
+        if (has('spatula')) { flipIt(it); credit('spatula', 0, 1); } else { it.state = 'flip'; it.wait = 0; dirty.grill = true; sfx.done(); }
       }
       else if (it.state === 'raw' && it.t >= cook) { it.state = 'done'; dirty.grill = true; sfx.done(); }
       else if (it.state === 'done' && !gold && it.t >= cook + burnAfter) { it.state = 'burnt'; dirty.grill = true; burnt(); }
@@ -776,7 +831,7 @@
     }
     if (has('bottomless') && T.cups < TU.cups && T.cups > 0) {
       T.dry += dt;
-      if (T.dry >= 25) { T.dry = 0; T.cups++; dirty.hud = true; toast('Bottomless Coffee: poured again'); }
+      if (T.dry >= 25) { T.dry = 0; T.cups++; dirty.hud = true; credit('bottomless', 0, 1); toast('Bottomless Coffee: poured again'); }
     }
 
     // family
@@ -788,7 +843,7 @@
     for (i = T.bubbles.length - 1; i >= 0; i--) {
       if (T.bubbles[i].auto == null) continue;
       T.bubbles[i].auto -= dt;
-      if (T.bubbles[i].auto <= 0) dropBubble(T.bubbles[i].id);
+      if (T.bubbles[i].auto <= 0) { credit('smalltalk', 0, 1); dropBubble(T.bubbles[i].id); }
     }
   }
 
@@ -903,7 +958,8 @@
   function eatCookie() {
     if (!T.cookies || !T.tickets.length) { if (T.cookies) toast('Save it for a full rail'); return; }
     T.cookies--; dirty.pass = true;
-    T.tickets.forEach(function (t) { if (!t.catering) { t.left = t.total; t.late = false; } });
+    T.tickets.forEach(function (t) { if (!t.catering) { t.left = t.total; t.late = false; t.gift = {}; } });
+    credit('cookie', 0, 1);
     if (T.cat) T.cat.left = Math.min(T.cat.total, T.cat.left + 15);
     dirty.rail = true;
     toast(T.cat ? 'Cookies for the crew: 15 more seconds' : 'Cookies for the line: every clock starts over');
@@ -1167,7 +1223,8 @@
     var all = box.querySelectorAll('.is-picked'); for (var i = 0; i < all.length; i++) all[i].classList.remove('is-picked');
     if (again) { info.hidden = true; return; }
     el.classList.add('is-picked');
-    info.innerHTML = '<b>' + esc(it.name) + '</b> <span>' + D.rarityNames[it.rarity] + (n > 1 ? ' · you have ' + n : '') + '</span><br>' + itemText(it, n);
+    info.innerHTML = '<b>' + esc(it.name) + '</b> <span>' + D.rarityNames[it.rarity] + (n > 1 ? ' · you have ' + n : '') + '</span><br>' + itemText(it, n) +
+      (G && G.ist && G.ist[id] && G.ist[id].d ? '<br><small>This week: ' + didText(id, G.ist[id]) + '</small>' : '');
     info.hidden = false;
   }
 
@@ -1343,6 +1400,37 @@
     return out;
   }
   function own(it) { G.items[it.id] = (G.items[it.id] || 0) + 1; }
+
+  /* What each item's count means (owner 2026-11-13: how long it was had, and
+     what it brought in or saved). Tips items show the tips; the rest their
+     count. */
+  var ITEM_DID = {
+    press: ['second of cooking saved', 'seconds of cooking saved'], shelf: ['food kept from burning', 'foods kept from burning'],
+    bell: ['ticket saved', 'tickets saved'], clamshell: ['to-go ticket saved', 'to-go tickets saved'], refills: ['ticket saved', 'tickets saved'],
+    board: ['ticket saved', 'tickets saved'], scraper: ['burnt food cleared', 'burnt foods cleared'], flattop: ['food on the new spots', 'foods on the new spots'],
+    urn: ['coffee poured again', 'coffees poured again'], bottomless: ['coffee poured again', 'coffees poured again'],
+    counter: ['plate sent', 'plates sent'], linecook: ['ticket saved', 'tickets saved'], cookie: ['clock started over', 'clocks started over'],
+    spatula: ['flip', 'flips'], spare: ['plate swap', 'plate swaps'], smalltalk: ['line answered', 'lines answered'],
+    horseshoe: ['trouble kept away', 'troubles kept away'], goldspat: ['food kept from burning', 'foods kept from burning'],
+    bigdill: ['plate finished by a pickle', 'plates finished by a pickle'], penny: ['lucky plate', 'lucky plates'], regular: ['usual', 'usuals'],
+    rollcase: ['cinnamon roll', 'cinnamon rolls'], fbpost: ['extra special', 'extra specials']
+  };
+  function didText(id, s) {
+    var n = Math.round(s.n), words = ITEM_DID[id], out = [];
+    if (s.tips >= 0.5) out.push('+' + money(Math.round(s.tips)) + ' in tips');
+    if (words && (n || !out.length)) out.push(n + ' ' + (n === 1 ? words[0] : words[1]));
+    return out.join(' · ') || 'nothing yet';
+  }
+  function itemTable(stats) {
+    var list = D.items.filter(function (it) { return stats[it.id]; });
+    if (!list.length) return '';
+    return '<span class="ou-label">Your line this week</span><div class="ou-istats">' + list.map(function (it) {
+      var s = stats[it.id];
+      return '<div class="is-' + it.rarity + '">' + spr(it.icon) + '<b>' + esc(it.name) + '</b>' +
+        '<span>' + plural(s.d, 'day', 'days') + (s.paid ? ' · paid ' + money(s.paid) : ' · free') + '</span>' +
+        '<strong>' + didText(it.id, s) + '</strong></div>';
+    }).join('') + '</div>';
+  }
   /* The Deep Fryer (Legendary, owner 2026-11-12): a real item with real
      stats, priced past anything a week pays. It's never dealt by the odds;
      it turns up by itself in about one shop in three. */
@@ -1540,6 +1628,12 @@
       if (!G.bought) award('frugal', true);
       if (G.slips.length >= D.days.length && G.slips.every(function (s) { return s === 0; })) award('perfect', true);
     }
+    // Each item's week, added to every week before (kept on the phone only).
+    for (var li in G.ist) {
+      var L = save.itemLife[li] || (save.itemLife[li] = { weeks: 0, d: 0, tips: 0, n: 0, paid: 0 }), w = G.ist[li];
+      L.weeks++; L.d += w.d; L.tips += w.tips; L.n += w.n; L.paid += w.paid;
+    }
+    var itemRows = itemTable(G.ist);
     var kept = Math.max(0, G.tips), spent = Math.max(0, G.earned - G.tips);
     var lvName = level().name, best = kept > (save.keeps[G.level] || 0);
     if (best) { save.keeps[G.level] = kept; save.bestRuns[G.level] = G.run; }
@@ -1578,7 +1672,7 @@
       '<p class="ou-fine">The Café can look this week up by its code. Keep it to yourself: it’s hidden until you tap, and a screenshot or a share never shows it. Past weeks, on the title screen, keeps it for later.</p>' +
       '<p class="ou-fine">A day’s colour is its slips (walk-outs and burnt food): gold for none, purple for one, blue for two or three. Red is where the week went wrong.</p>' +
       (G.newAch.length ? '<span class="ou-label">Achievements this week</span>' + achList(G.newAch) : '') +
-      ownedRow() + sendIn +
+      itemRows + sendIn +
       '<p class="ou-fine">' + TIPS_NOTE + '</p>' +
       '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="box">Recipe Box</button><a class="ou-btn ou-btn--quiet" href="/menu">The real menu</a></div>' +
       '</div><div class="ou-foot"><button class="ou-btn" data-act="home">Back to the title</button></div>');
@@ -1792,7 +1886,7 @@
         resetArmed = false; save.ach = {}; persist(); drawSettings(); toast('Achievements reset'); sfx.bad(); break;
       case 'fryer':
         var fry = fryerItem();
-        if (fry && G.tips >= fry.price) { G.tips -= fry.price; G.bought++; own(fry); sfx.win(); drawClose(); break; }
+        if (fry && G.tips >= fry.price) { G.tips -= fry.price; G.bought++; own(fry); ist('fryer').paid += fry.price; sfx.win(); drawClose(); break; }
         sfx.bad(); el.classList.remove('is-nope'); void el.offsetWidth; el.classList.add('is-nope'); break;
       case 'how': showHow(screen); break;
       case 'box': showBox(screen === 'over' ? 'over' : 'title'); break;
@@ -1818,7 +1912,7 @@
         var it = G.shop[i], cost = priceOf(it);
         if (G.sold.indexOf(i) !== -1) break;
         if (G.tips < cost) { sfx.bad(); break; }
-        G.tips -= cost; G.bought++; own(it); G.sold.push(i); sfx.buy(); drawClose(); break;
+        G.tips -= cost; G.bought++; own(it); ist(it.id).paid += cost; G.sold.push(i); sfx.buy(); drawClose(); break;
       case 'reroll':
         if (G.tips < G.reroll) break;
         G.tips -= G.reroll; G.reroll += D.reroll.step; G.shop = deal(3, [], true); G.sold = []; G.fryer = rand() * 100 < (D.legendaryChance || 0); sfx.tap(); drawClose(); break;

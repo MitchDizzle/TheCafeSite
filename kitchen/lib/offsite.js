@@ -23,7 +23,8 @@
 //                         plus the ones moved off this PC
 // git keeps every earlier version, so the files are simply overwritten.
 // Pushed by backup.js with the local copies (on start, at 2pm and from
-// Manage -> Back up now), and tried again every 10 minutes after a
+// Manage -> Back up now), and by Specials after a day is saved there (for
+// the website, site-specials.json), and tried again every 10 minutes after a
 // failure. Never in test mode or on a development copy. git runs as its
 // own process, so the board and the orders carry on while it pushes.
 const fs = require("fs");
@@ -110,6 +111,9 @@ this README, tools/ and HOW-TO-READ.md from its own copies.
 - tools/read-history.js: reads both; HOW-TO-READ.md says how, and what each
   field means
 - specials-plan.json, state.json: the board's specials plan and cleared tickets
+- site-specials.json: the specials days set on the board that the website
+  doesn't have yet; the website's "Specials from the kitchen board" Action
+  reads it (with a read-only deploy key) and puts them on the website
 - reservations.json: the reservations book (names and phone numbers)
 - start-log.txt: each start and update, step by step with the time, to see
   which step made one slow
@@ -174,6 +178,13 @@ function copyIn() {
     // One deleted in Saved photos goes from the repo too (git still has it).
     for (const name of fs.readdirSync(path.join(REPO, "photos"))) if (!keep.has(name)) fs.rmSync(path.join(REPO, "photos", name), { force: true });
   }
+  // The specials days set on the front page, for the website to pick up
+  // (plan.js, siteExport). Required here, not at the top: plan.js loads Square's side.
+  try {
+    const { siteExport } = require("./specials/plan");
+    put(path.join(REPO, "site-specials.json"), `${JSON.stringify(siteExport(), null, 2)}
+`);
+  } catch (err) { console.error(`Backup, the specials for the website: ${err.message}`); }
   put(path.join(REPO, "README.md"), README);
 }
 

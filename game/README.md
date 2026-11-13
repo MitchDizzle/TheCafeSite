@@ -284,6 +284,34 @@ as a fourth card, 3% of the time the shop is stocked (a lucky sight), with a dar
 diamonds. Tapping it without the money shakes its head. It is still the
 honest answer on /feedback: there's no fryer, not for now.
 
+### What each item did (owner 2026-11-13)
+
+The end of the week lists every item under **Your line this week**: the
+days it was on the line, what it cost (or free), and what it did. Tips items
+show the tips they brought in; the rest show a count (`ITEM_DID` in
+`play.js` names it: tickets saved, foods kept from burning, flips,
+coffees poured again, troubles kept away…). Tapping an owned item during
+the week shows the same "This week" line.
+
+How it's counted (`credit()` in `play.js`):
+
+- **Tips.** What an item adds to a plate (Tip Jar, Pickle Jar) counts at
+  the plate's full multiplier; what multipliers (Drink Included, Early Bird,
+  the Regular, the Fryer, a lucky plate) add to the rest is shared between
+  them by how much each multiplies. The Lucky Penny gets its share of the
+  lucky chance, the Big Tipper the step from double to triple. The roll
+  case gets each roll's own tip, the Facebook Post the special's $2 on the
+  specials it brought. Counter Help and the Line Cook show the whole tip of
+  what they sent, so theirs overlap with the others'; the rest share a
+  plate's tip without counting any of it twice.
+- **Saves.** A ticket sent with less time left than items had given it
+  (Free Refills, Clamshells, the Order Bell, the Kitchen Board) is a save
+  for whichever gave it the most. Food taken or turned after it would have
+  burnt without the Warming Shelf (or the Golden Spatula) is a save for it.
+
+It's kept with a week left half way and, at the end, added to
+`save.itemLife` (every week together). Kept on the phone only; never sent.
+
 ---
 
 ## 4. How hard: levels, flipping, family
