@@ -52,14 +52,16 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | **Dawn** | Before each shift, pick the day's special from three. One side is a quicker plate; two sides tip more. | `specials.json`, the weekly posts |
 | **Day** | One shift, 6am – 2pm, about 100 seconds. A clock on the HUD runs the real hours. | The hours |
 | **Breakfast** (6am – 11am) | Eggs, bacon, toast, potatoes, biscuit and gravy, burritos | `menu.json` breakfast |
-| **Lunch** (11am – 2pm) | Burgers, wraps, salads, soup, sides, the special. The bins turn over at 11am, once the last breakfast ticket is out. | "Starting at 11am" |
+| **Lunch** (11am – 2pm) | Burgers, wraps, salads, soup, sides, the special. The bins turn over at 11am, once the last breakfast ticket is out, and **the clock waits at 11:00 until then** (owner 2026-11-12), so finishing breakfast never costs lunch tickets. | "Starting at 11am" |
 | **The pickle spear** | At lunch, any plate can take one: $1 more. Never required. | Nearly every plate in the photos |
 | **Lives** | Three **coffee cups**. A ticket that runs out of time is a walk-out and spills one. They are poured again each morning. | |
 | **After close** | Pick one item of three, free. Then the shop: three more for tips, and "Restock" for a new three. | |
 | **Flipping** | Eggs, bacon, burgers and chicken stop cooking half way until they're turned (§4). | The flat-top |
 | **Family** | From Wednesday, family may stop by at lunch (§4). Never announced. | |
 | **Friday** | Ends on a **catering order**: five platters, one after another, on one clock. | The catering photos |
-| **Win** | Finish Friday's catering on time. | |
+| **Clean shift** | No walk-outs, family fed, nothing burnt: $10 on Monday up to $30 on Friday, in that day's tips, with a chime (owner 2026-11-12; `game.json` → `clean`). | |
+| **Trouble** | Some mornings one thing has gone wrong for the day (§4). | |
+| **Win** | Finish Friday's catering on time. It pays: $100 on Easy, $250 on Regular, $400 on Rush (`finish`), so a week that bought what it needed and won outscores one that saved its tips and lost. | |
 | **Score** | **The tips the week keeps**: tips earned, less what was spent on items (owner 2026-11-12). Items help a week through, but the best score is a week won with few of them, and the real test is Rush. The best is kept for each level. | |
 | **Tips are points** | Said on How to play and under every finished week: "Tips in the game are points, not money. At The Café, real tips go to the cooks and the people who work there." So nobody reads the game's tips as the café's money. | Owner 2026-11-12 |
 | **Lose** | Three spilled coffees in one day, or the catering goes out late. | |
@@ -68,7 +70,7 @@ starting at 11am with a drink included, no fryer, closed weekends.
 for every ticket and special by its real name, which turns into the café's
 own photo once it has been served 10 times; the best week; weeks finished.
 
-**Not built yet:** unlocks (new tickets opening up over many runs).
+**Not built yet:** unlocks (new tickets, items or trouble opening up as a player gets better; owner 2026-11-12 likes the idea, nothing chosen yet).
 
 ---
 
@@ -89,6 +91,14 @@ nothing in the shop by Wednesday's close has an even chance, at that close
 and Thursday's, of finding everything 40% off, shown with the old price
 struck through (`sale`). The Deep Fryer is never on sale.
 
+**Numbers that grow** (owner 2026-11-12): where an item can be owned more
+than once, its card says the number, highlighted, as it will be once bought
+("Food cooks **40%** faster"), and "You have 1 · now 20%" under it. In
+`game.json` the text carries `{n}`, and `per`, `base` and `unit` make the
+number; `play.js` reads the same numbers, so the card and what it does
+can't drift apart. The pick screen no longer explains the diamonds: the
+colours and the words say it.
+
 **What does that do again?** Every "On your line" row (the morning, after
 close, the end of the week, and pause) is a row of buttons: tap an item for
 its name, rarity and what it does.
@@ -108,17 +118,18 @@ prices and how many of each can be owned are in `game.json` → `items`,
 
 | Name | Does |
 |---|---|
-| Grill Press (2) | Food cooks a fifth faster |
-| Warming Shelf (2) | Done food waits 5 more seconds before it burns |
+| Grill Press (2) | Food cooks 20% faster (each) |
+| Warming Shelf (2) | Done food waits 5 seconds longer before it burns (each) |
 | Order Bell | Each plate sent gives the other tickets 2 more seconds |
-| Pickle Jar (3) | A plate with a pickle spear tips $1 more |
-| Tip Jar (2) | Every plate tips $1 more |
+| Pickle Jar (3) | A plate with a pickle spear tips $1 more (each) |
+| Tip Jar (2) | Every plate tips $1 more (each) |
 | Clamshells | To-go tickets wait 8 seconds longer |
 | Early Bird | The first three tickets of the day tip double |
 | Cinnamon Roll Case | Breakfast brings cinnamon roll tickets: one tap, $3 |
-| Free Refills (2) | Every ticket waits 3 seconds longer |
+| Free Refills (2) | Every ticket waits 3 seconds longer (each) |
 | Bench Scraper | Burnt food clears itself off the flat-top |
 | Facebook Post (2) | The special is posted: more lunch tickets are for it (22 in 100, then 36, then 50; `tuning.postShare`). Two-sided specials tip the most, so it pays best with one |
+| **Lucky Penny** (3) | A plate has an 8% chance (each) to be a lucky one and tip double (owner 2026-11-12: crit builds) |
 
 **Rare**
 
@@ -133,6 +144,7 @@ prices and how many of each can be owned are in `game.json` → `items`,
 | **Triple Chocolate Cookie** (2) | Once a day, tap it: every ticket's clock starts over |
 | Heavy Spatula | Food flips itself (never offered on Easy, where nothing flips) |
 | Second Plate | A small plate beside Scrap: tap it to swap the two plates, so a half-made plate can wait while a quicker ticket goes out. Send only sends the front plate |
+| **Big Tipper** | Lucky plates tip triple, not double. Needs a Lucky Penny to do anything |
 | Small Talk | What family says clears itself, and never blocks a tap (never offered on Easy, where family doesn't come) |
 
 **Epic**
@@ -188,10 +200,11 @@ the best week is remembered for each one by itself. All of it is
 | | Easy | Regular | Rush |
 |---|---|---|---|
 | Flipping | none | a tap or a swipe | a swipe only |
-| Tickets wait | 60% longer | 22% longer | 18% shorter |
-| Tickets come | 40% slower | 5% slower | 15% faster |
-| Done food lasts | 50% longer | as written | 20% shorter |
+| Tickets wait | 90% longer | 27% longer | 10% longer |
+| Tickets come | 60% slower | 5% slower | as written |
+| Done food lasts | 60% longer | as written | 10% shorter |
 | Family | never | from Wednesday | from Tuesday, more often |
+| Trouble | never | 35% of mornings from Wednesday | every morning from Tuesday |
 
 "As written" is the day's own numbers in `game.json` → `days`, which get
 harder from Monday to Friday on every level.
@@ -211,6 +224,29 @@ done food burns on. Toast and potatoes don't flip.
 - After the flip the food shows its cooked side, with grill marks, while
   the ring finishes filling.
 - The Heavy Spatula (Rare) flips for you.
+
+### Trouble
+
+Rush was more tickets and shorter waits until 2026-11-12, and nearly
+impossible (owner). Now it is a little gentler on pace and asks for
+something else: **some mornings one thing has gone wrong** for the day
+(owner's idea, "curses"). It is dealt at 6am, shown on the morning screen
+(a dashed ink card, never red) and on the day's banner, kept with the week
+if it is left, never the same two days running, and never on the catering.
+
+| Trouble | What it does |
+|---|---|
+| Bad Review | Fewer lunch tickets are for the special (30% as many) |
+| Broken Stove | One spot on the flat-top is out today (striped, "Out today") |
+| Cold Spot | One spot cooks 70% slower (blue edge, "Cold spot") |
+| Impatient | About one ticket in three is in a hurry: its clock runs 50% faster (dashed edge, "Impatient") |
+| Accident | Anything that burns costs $2 in tips |
+
+All of it is `game.json` → `trouble`, and how often is each level's
+`trouble` line. More ideas to try: a **No-Show** (a supplier didn't come:
+one bin is out until lunch), a **Health Inspector** (a burnt food left on
+the flat-top for 5 seconds is a walk-out), a **Power Flicker** (the flat-top
+stops for 3 seconds once).
 
 ### Family at the counter
 
@@ -471,7 +507,9 @@ the top of the music block in `play.js`.
 
 - Also made in the browser (Web Audio), so there are no sound files and
   nothing to license: a sizzle, a ticket tick, a "done" ping, the order bell, a low
-  note for a walk-out. Short and quiet, no music.
+  note for a walk-out, a bright run of four notes when a day closes (owner
+  2026-11-12), with two high chimes on top for a clean shift, and a quick
+  two-note chime for a lucky plate. Short and quiet, no music.
 - If real recordings are ever wanted (this kitchen's own flat-top and
   bell), list each one's source beside it.
 
@@ -629,6 +667,26 @@ by having to swipe:
 | Rush | 70 | a steady thumb | 4 of 12 | Tuesday, Wednesday |
 | Rush | 90 | a quick thumb | 11 of 12 | Wednesday |
 | Rush | 120 | a very quick one | 12 of 12 | |
+
+**After trouble, the clean shift and the finish bonus** (2026-11-12, owner:
+Rush "nearly impossible", and buying items sank the score). The bot was
+updated to report trouble and clean shifts, and run 10 weeks each, wasting
+one beat in seven (`slip: 0.15`), buying whatever it can afford:
+
+| Level | Taps a minute | Weeks won | Kept, won weeks | Kept, lost weeks |
+|---|---|---|---|---|
+| Regular | 60 | 5 of 10 | $414 – $469 | $65 – $174 |
+| Regular | 75 | 9 of 10 | $442 – $567 | $127 |
+| Rush | 70 | 4 of 10 | $589 – $644 | $92 – $146 |
+| Rush | 90 | 6 of 10 | $568 – $872 | $17 – $141 |
+
+Before the finish bonus, a Rush week that bought what it needed and won
+kept $46 – $290, less than one that bought nothing and lost on Thursday
+($205 – $536): the score punished the only way through. Before Rush was
+eased, the steady bot lost all of its Rush weeks, by Wednesday. The bot
+never has to swipe, so a person on Rush does worse than its numbers.
+The 11am hold (lunch now always runs its full length) made Regular a
+little harder, so its waits went from 22% to 27% longer.
 
 What keeps a hard day from being an impossible one (`tuning.fair`): a
 ticket never waits less than the time it takes to make; with two four-part

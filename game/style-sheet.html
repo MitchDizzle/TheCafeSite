@@ -182,6 +182,7 @@ section > .wrap > .lede { margin: 0 0 22px; max-width: 64ch; }
 .gear svg { width: 44px; height: 44px; overflow: visible; }
 .gear b { font-family: "Playfair Display", serif; font-size: 17px; display: block; line-height: 1.15; }
 .gear span { font-size: 14px; line-height: 1.25; display: block; }
+.gear b.num { display: inline; font: 900 1em Lato, sans-serif; background: #8ED9D4; border-radius: 4px; padding: 0 3px; }
 .gear .buy { background: var(--accent); color: #fff; border-radius: 10px; font: 700 16px Lato; padding: 12px 10px; min-width: 56px; text-align: center; border: 2px solid var(--teal-dark); }
 .gear--off { opacity: .55; }
 .gear--off .buy { background: var(--steel); color: var(--text-dark); }
@@ -556,6 +557,24 @@ footer { padding: 40px 0 48px; font-size: 14px; color: #4A5A62; }
 
   <!-- The Facebook Post (an item): a phone showing a post of the special.
        No Facebook logo: the café's own post, not the brand. -->
+  <!-- The Lucky Penny (an item): a copper penny, a shine on it. -->
+  <symbol id="s-penny" viewBox="0 0 64 64">
+    <circle cx="32" cy="34" r="22" fill="#C8783E" stroke="#1F4552" stroke-width="2.5"/>
+    <circle cx="32" cy="34" r="16" fill="none" stroke="#A55E2C" stroke-width="2.5"/>
+    <path d="M37.5 29.5a7 7 0 1 0 0 9M33 24v20" stroke="#7E4420" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <path d="M18 26c2-5 6-8 11-9" stroke="#E9A774" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M50 6l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#F4C542" stroke="#1F4552" stroke-width="1.6" stroke-linejoin="round"/>
+  </symbol>
+
+  <!-- The Big Tipper (an item): a folded bill, a coin on top. -->
+  <symbol id="s-bigtip" viewBox="0 0 64 64">
+    <rect x="8" y="20" width="44" height="26" rx="3" fill="#B9DDA6" stroke="#1F4552" stroke-width="2.5" transform="rotate(-8 30 33)"/>
+    <circle cx="30" cy="33" r="7" fill="none" stroke="#5E8F4A" stroke-width="2.5" transform="rotate(-8 30 33)"/>
+    <path d="M14 24h6M40 42h6" stroke="#5E8F4A" stroke-width="2.5" stroke-linecap="round" transform="rotate(-8 30 33)"/>
+    <circle cx="46" cy="44" r="11" fill="#F4C542" stroke="#1F4552" stroke-width="2.5"/>
+    <path d="M50 39.500h-5a2.500 2.500 0 0 0 0 5h2a2.500 2.500 0 0 1 0 5h-5M46.500 36.500v15" stroke="#9C7414" stroke-width="2.200" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
   <symbol id="s-post" viewBox="0 0 64 64">
     <rect x="16" y="4" width="32" height="56" rx="6" fill="#22323A" stroke="#1F4552" stroke-width="2.5"/>
     <rect x="20" y="11" width="24" height="40" rx="2" fill="#FAF7F2"/>
@@ -755,7 +774,7 @@ footer { padding: 40px 0 48px; font-size: 14px; color: #4A5A62; }
     <h2>Rarity</h2>
     <p class="lede">Every item is Normal, Rare or Epic. The band says so in words and in diamonds (one, two, three), so colour is never the only signal: gray for Normal, blue for Rare, purple for Epic, as most games do it (owner 2026-11-12), and gold for the one Legendary, which shines (rays turn behind it in the game). The better ones turn up more as the week goes on. No red: red stays for buttons and late tickets.</p>
     <div class="rarity">
-      <div class="gear rar-normal"><span class="rar"><i></i>Normal</span><svg viewBox="0 0 64 64"><use href="#s-jar" filter="url(#sh)"/></svg><div><b>Pickle Jar</b><span>A plate with a pickle spear tips $1 more</span></div><span class="buy">$25</span></div>
+      <div class="gear rar-normal"><span class="rar"><i></i>Normal</span><svg viewBox="0 0 64 64"><use href="#s-jar" filter="url(#sh)"/></svg><div><b>Pickle Jar</b><span>A plate with a pickle spear tips <b class="num">$1</b> more</span></div><span class="buy">$25</span></div>
       <div class="gear rar-rare"><span class="rar"><i></i><i></i>Rare</span><svg viewBox="0 0 64 64"><use href="#s-cookie" filter="url(#sh)"/></svg><div><b>Triple Chocolate Cookie</b><span>Once a day, tap it: every ticket’s clock starts over</span></div><span class="buy">$80</span></div>
       <div class="gear rar-epic"><span class="rar"><i></i><i></i><i></i>Epic</span><svg viewBox="0 0 64 64"><use href="#s-hat" filter="url(#sh)"/></svg><div><b>Line Cook</b><span>A second cook sends out a ticket that is about to walk out, once every 14 seconds</span></div><span class="buy">$180</span></div>
       <div class="gear rar-legendary"><span class="rar"><i></i><i></i><i></i><i></i>Legendary</span><svg viewBox="0 0 64 64"><use href="#s-fryer" filter="url(#sh)"/></svg><div><b>Deep Fryer</b><span>Every plate tips triple</span></div><span class="buy">$1,500</span></div>

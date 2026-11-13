@@ -241,7 +241,11 @@
     spill: function () { tone(320, 0.45, 'sawtooth', 0.045, 80); },
     buy: function () { tone(660, 0.09, 'triangle', 0.06); tone(990, 0.16, 'triangle', 0.06, 0, 0.08); },
     win: function () { [660, 830, 990, 1320].forEach(function (f, i) { tone(f, 0.22, 'triangle', 0.06, 0, i * 0.12); }); },
-    talk: function () { tone(300, 0.07, 'sine', 0.04); tone(360, 0.07, 'sine', 0.04, 0, 0.08); }
+    talk: function () { tone(300, 0.07, 'sine', 0.04); tone(360, 0.07, 'sine', 0.04, 0, 0.08); },
+    // The day is done: a bright little run up, apart from the week's win.
+    close: function () { [784, 988, 1175, 1568].forEach(function (f, i) { tone(f, 0.2, 'sine', 0.06, 0, i * 0.09); }); },
+    clean: function () { tone(2093, 0.25, 'sine', 0.035, 0, 0.42); tone(2637, 0.3, 'sine', 0.03, 0, 0.5); },
+    lucky: function () { tone(1568, 0.08, 'triangle', 0.05); tone(2093, 0.18, 'triangle', 0.05, 0, 0.07); }
   };
   function buzz(ms) { if (save.sound && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { /* no matter */ } } }
 
@@ -336,19 +340,20 @@
   function level() { return D.levels[(G && G.level) || save.level] || D.levels.normal; }
 
   function newRun() {
-    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, bought: 0, bonus: 0, sale: false, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
+    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, bought: 0, bonus: 0, sale: false, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false, trouble: null, troubleDay: -1, lastTrouble: null };
     report('start', {});
     showDawn();
   }
   /* A week left half way is kept each morning and picked up from that morning. */
   function keepRun() {
-    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, bought: G.bought, bonus: G.bonus, perDay: G.perDay.slice(0, G.day), items: G.items };
+    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, bought: G.bought, bonus: G.bonus, perDay: G.perDay.slice(0, G.day), items: G.items, trouble: G.trouble, troubleDay: G.troubleDay };
     persist();
   }
   function resumeRun() {
     var r = save.run, items = {};
     for (var id in r.items) if (D.items.some(function (it) { return it.id === id; })) items[id] = r.items[id];
-    G = { level: r.level, run: r.run || rid(), began: r.began || Date.now(), played: r.played || 0, away: r.away || 0, day: r.day, tips: r.tips || 0, earned: r.earned || 0, bought: r.bought || 0, bonus: r.bonus || 0, sale: false, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false };
+    G = { level: r.level, run: r.run || rid(), began: r.began || Date.now(), played: r.played || 0, away: r.away || 0, day: r.day, tips: r.tips || 0, earned: r.earned || 0, bought: r.bought || 0, bonus: r.bonus || 0, sale: false, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false,
+      trouble: troubleOf(r.trouble) ? r.trouble : null, troubleDay: r.troubleDay == null ? -1 : r.troubleDay, lastTrouble: null };
     showDawn();
   }
 
@@ -362,8 +367,10 @@
       cookies: has('cookie'),
       usualAt: has('regular') ? [3 + Math.floor(rand() * 3), 9 + Math.floor(rand() * 4)] : [],
       familyAt: null, fam: null, bubbles: [], cat: null, endIn: null, lastClock: '', lastSky: -1,
-      taps: 0, gaps: [], lastTap: 0, untrusted: 0, played: 0, away: 0, banked: 0, awayBanked: 0
+      taps: 0, gaps: [], lastTap: 0, untrusted: 0, played: 0, away: 0, banked: 0, awayBanked: 0,
+      trouble: troubleOf(G.trouble), coldAt: -1, slips: 0, clean: 0
     };
+    if (T.trouble && T.trouble.id === 'cold') T.coldAt = Math.floor(rand() * usable());
     var lv = level(), famChance = day.family * lv.family;
     if (G.day >= 1 && lv.familyFloor) famChance = Math.max(famChance, lv.familyFloor);
     if (rand() * 100 < famChance) {
@@ -374,11 +381,39 @@
     show('shift');
     $('#ou-pausebox').hidden = true;
     $('#ou-bubbles').innerHTML = '';
-    banner(day.name, 'Open at 6am. Breakfast first.');
+    banner(day.name, T.trouble ? 'Trouble today: ' + T.trouble.name + '.' : 'Open at 6am. Breakfast first.');
   }
 
   var LINE_S = 14, LINE_AT = 0.5;      // the Line Cook: seconds to be ready again, and how close to walking out a ticket must be
-  function usable() { return Math.min(6, TU.griddle + 2 * has('flattop')); }
+  /* The spots on the flat-top: all of them, and the ones that work today
+     (a Broken Stove takes one out, drawn last). */
+  function spots() { return Math.min(6, TU.griddle + 2 * has('flattop')); }
+  function usable() { return spots() - (trouble('stove') ? 1 : 0); }
+  /* Seconds a food takes in spot i: the Grill Press speeds it, a Cold Spot slows it. */
+  function cookTime(part, i) {
+    var c = D.parts[part].cook / (1 + itemPer('press') / 100 * has('press')), cold = trouble('cold');
+    return cold && i === T.coldAt ? c * cold.slow : c;
+  }
+  function burnSecs() { return D.days[G.day].burn * level().burn + itemPer('shelf') * has('shelf'); }
+
+  /* ---------- trouble ----------
+     Some mornings one thing has gone wrong for the day (game.json, trouble;
+     how often is the level's). Dealt at 6am, kept with the week, never the
+     same two days running, and never on the catering. */
+  function troubleOf(id) { return id ? D.trouble.filter(function (x) { return x.id === id; })[0] || null : null; }
+  function trouble(id) { return T && !T.cat && T.trouble && T.trouble.id === id ? T.trouble : null; }
+  function dealTrouble() {
+    var tr = level().trouble;
+    if (!tr || G.day < tr.from || rand() * 100 >= tr.chance) return null;
+    var list = D.trouble.filter(function (x) { return x.id !== G.lastTrouble; });
+    return pick(list).id;
+  }
+  /* Something burnt: a slip (no clean shift), and with an Accident it costs. */
+  function burnt() {
+    sfx.bad(); T.slips++;
+    var a = trouble('accident'), loss = a ? Math.min(a.cost, Math.max(0, T.tips)) : 0;
+    if (loss) { T.tips -= loss; G.tips -= loss; G.earned -= loss; dirty.hud = true; toast('Accident: burnt food costs ' + money(loss)); }
+  }
 
   /* The clock runs 6am to 2pm, but breakfast (to 11am) and lunch each get the
      share of the shift game.json gives them, so it ticks at two speeds. */
@@ -398,10 +433,10 @@
     var day = D.days[G.day];
     var t = {
       id: ++uid, n: T.seq++, rid: recipe.id, name: recipe.name, when: recipe.when || 'lunch', parts: recipe.parts.slice(),
-      age: 0, togo: false, usual: false, special: false, family: false, catering: false, boarded: false, late: false, auto: null
+      age: 0, togo: false, usual: false, special: false, family: false, catering: false, boarded: false, late: false, auto: null, hurry: false
     };
     for (var key in o) t[key] = o[key];
-    t.total = (TU.waitBase + TU.waitPerPart * t.parts.length) * day.patience * level().wait + 3 * has('refills');
+    t.total = (TU.waitBase + TU.waitPerPart * t.parts.length) * day.patience * level().wait + itemPer('refills') * has('refills');
     // Never less than it takes to make: the longest thing on it has to cook,
     // and every part is a tap or two. Luck can make a day hard, not undoable.
     var longest = 0;
@@ -418,7 +453,8 @@
   function spawnTicket() {
     var day = D.days[G.day], lunch = T.bins === 'lunch', recipe, o = {};
     // The Facebook Post (up to two): each puts the special on more lunch tickets.
-    if (lunch && rand() * 100 < TU.specialShare + TU.postShare * has('fbpost')) {
+    var review = trouble('review');
+    if (lunch && rand() * 100 < (TU.specialShare + TU.postShare * has('fbpost')) * (review ? review.share : 1)) {
       recipe = { id: 'sp-' + T.special.id, name: T.special.name, when: 'lunch', parts: ['special'].concat(T.special.sides.map(function () { return 'side'; })) };
       o.special = true;
     } else if (!lunch && has('rollcase') && rand() < 0.22) {
@@ -435,6 +471,8 @@
     }
     if (lunch && rand() * 100 < TU.toGo) o.togo = true;
     if (T.usualAt.indexOf(T.seq) !== -1) o.usual = true;
+    var hurry = trouble('impatient');
+    if (hurry && !o.usual && rand() * 100 < hurry.chance) o.hurry = true;
     T.tickets.push(makeTicket(recipe, o));
     dirty.rail = true;
     sfx.ticket();
@@ -543,14 +581,17 @@
     if (!t.catering) tip += frac > 0.5 ? 2 : frac > 0.25 ? 1 : 0;
     if (t.catering) tip += 2;
     if (t.rid === 'roll') tip = 3;
-    if (kind === 'pickle') tip += 1 + has('picklejar');
-    else if (t.parts.indexOf('pickle') !== -1 || kind === 'wild') tip += has('picklejar');
-    tip += has('tipjar');
+    if (kind === 'pickle') tip += 1 + itemPer('picklejar') * has('picklejar');
+    else if (t.parts.indexOf('pickle') !== -1 || kind === 'wild') tip += itemPer('picklejar') * has('picklejar');
+    tip += itemPer('tipjar') * has('tipjar');
     var mult = 1;
     if (t.special && has('drink')) mult *= 2;
     if (t.n <= 3 && has('earlybird') && !t.catering) mult *= 2;
     if (t.usual) mult *= 3;
     if (has('fryer')) mult *= 3;
+    // The Lucky Penny: a chance a plate is a lucky one (the Big Tipper makes it triple).
+    var lucky = !t.family && has('penny') && rand() * 100 < itemPer('penny') * has('penny');
+    if (lucky) mult *= has('bigtipper') ? 3 : 2;
     tip *= mult;
     if (t.family) tip = 0;
 
@@ -564,6 +605,7 @@
     if (t.family) { familyFed(t); return; }
     var words = by ? by + ' sent #' + t.n + (kind === 'pickle' ? ', with a pickle' : '') : (kind === 'pickle' ? 'Order up, with a pickle' : kind === 'wild' ? 'Order up. Big Dill.' : 'Order up');
     if (t.usual) words = 'The usual';
+    if (lucky) { words = 'Lucky plate x' + (has('bigtipper') ? 3 : 2); sfx.lucky(); }
     toast(words + ' · ' + money(tip));
 
     if (t.catering) {
@@ -579,7 +621,7 @@
   }
 
   function walkOut(t) {
-    removeTicket(t);
+    removeTicket(t); T.slips++;
     if (t.family) { familyGone(); toast('They’ll bring it up at dinner.'); return; }
     T.cups--; T.walk++; T.dry = 0; dirty.hud = true;
     // A breath: the tickets still up wait a little longer and the next one
@@ -599,9 +641,11 @@
       T.cat.left -= dt;
       if (T.cat.left <= 0) { T.ended = true; weekOver(false, 'late'); return; }
     } else {
-      T.t += dt;
+      // At 11am the clock waits for the last breakfast ticket (owner 2026-11-12),
+      // so finishing breakfast never eats into lunch.
       var bs = TU.breakfastShare * T.len;
-      if (T.phase === 'breakfast' && T.t >= bs) { T.phase = 'lunch'; }
+      if (!(T.phase === 'lunch' && T.bins === 'breakfast')) T.t += dt;
+      if (T.phase === 'breakfast' && T.t >= bs) { T.phase = 'lunch'; T.t = bs; }
       // The bins turn over only once the last breakfast ticket is out, so
       // nobody is left holding a ticket they can no longer make.
       if (T.phase === 'lunch' && T.bins === 'breakfast' && !T.tickets.some(function (x) { return x.when === 'breakfast'; })) {
@@ -632,7 +676,7 @@
     for (i = T.tickets.length - 1; i >= 0; i--) {
       t = T.tickets[i]; t.age += dt;
       if (t.catering) continue;
-      t.left -= dt;
+      t.left -= t.hurry && trouble('impatient') ? dt * trouble('impatient').speed : dt;
       // Counter Help adds the pickle spear at lunch, as a player would.
       if (t.auto != null) { t.auto -= dt; if (t.auto <= 0) { complete(t, T.bins === 'lunch' && t.parts.indexOf('pickle') === -1 ? 'pickle' : 'exact', 'Counter Help'); continue; } }
       // The Line Cook, when ready, takes the ticket that is about to walk out:
@@ -645,17 +689,17 @@
     if (T.ended) return;
 
     // the flat-top
-    var faster = 1 + 0.2 * has('press'), burnAfter = day.burn * level().burn + 5 * has('shelf'), gold = has('goldspat'), flips = level().flip !== 'none';
+    var burnAfter = burnSecs(), gold = has('goldspat'), flips = level().flip !== 'none';
     for (i = 0; i < T.grill.length; i++) {
       var it = T.grill[i]; if (!it) continue;
-      var cook = D.parts[it.part].cook / faster;
+      var cook = cookTime(it.part, i);
       if (it.state === 'burnt') {
         if (has('scraper')) { it.gone += dt; if (it.gone > 0.9) { T.grill[i] = null; dirty.grill = dirty.bins = true; } }
         continue;
       }
       if (it.state === 'flip') {       // waiting to be turned: this side is still on the heat
         it.wait += dt;
-        if (!gold && it.wait >= burnAfter) { it.state = 'burnt'; dirty.grill = true; sfx.bad(); }
+        if (!gold && it.wait >= burnAfter) { it.state = 'burnt'; dirty.grill = true; burnt(); }
         continue;
       }
       it.t += dt;
@@ -664,7 +708,7 @@
         if (has('spatula')) flipIt(it); else { it.state = 'flip'; it.wait = 0; dirty.grill = true; sfx.done(); }
       }
       else if (it.state === 'raw' && it.t >= cook) { it.state = 'done'; dirty.grill = true; sfx.done(); }
-      else if (it.state === 'done' && !gold && it.t >= cook + burnAfter) { it.state = 'burnt'; dirty.grill = true; sfx.bad(); }
+      else if (it.state === 'done' && !gold && it.t >= cook + burnAfter) { it.state = 'burnt'; dirty.grill = true; burnt(); }
     }
 
     // helpers
@@ -697,6 +741,13 @@
   }
 
   function endDay() {
+    // A clean shift (owner 2026-11-12): no walk-outs, family fed, nothing burnt.
+    if (!T.slips && T.served) {
+      var cb = D.clean.bonus[Math.min(G.day, D.clean.bonus.length - 1)];
+      T.clean = cb; T.tips += cb; G.tips += cb; G.earned += cb;
+    }
+    sfx.close(); if (T.clean) sfx.clean();
+    G.lastTrouble = G.trouble;
     G.perDay[G.day] = T.tips;
     (G.log = G.log || [])[G.day] = [T.tips, T.served, T.walk];
     var gaps = T.gaps.slice().sort(function (a, b) { return a - b; });
@@ -705,7 +756,7 @@
       taps: T.taps, gmin: gaps.length ? gaps[0] : '', gmed: gaps.length ? gaps[Math.floor(gaps.length / 2)] : '', u: T.untrusted });
     save.seen = true; persist();
     clearBubbles();
-    if (G.day >= D.days.length - 1) startCatering(); else showClose();
+    if (G.day >= D.days.length - 1) { startCatering(); if (T.clean) setTimeout(function () { if (T) toast('Clean shift · ' + money(T.clean)); }, 2100); } else showClose();
   }
 
   /* How long a week took is the time it was played: the shifts, with pauses
@@ -822,12 +873,13 @@
       var have = aim && aim.t === t ? aim.have : null, cls = 'ou-ticket', flag = '';
       if (t.age < 0.25) cls += ' is-new';
       if (t.togo) cls += ' is-togo';
+      if (t.hurry) cls += ' is-hurry';
       if (t.late) cls += ' is-late';
       if (have) cls += ' is-aim';
       if (t.special) { cls += ' is-special'; flag = 'Special'; }
       if (t.usual) { cls += ' is-usual'; flag = 'x3'; }
       if (t.family) { cls += ' is-family'; flag = 'Free'; }
-      var label = t.family ? esc(t.who.replace(/^Your /, '')) :t.catering ? 'Catering' : '#' + t.n + (t.late ? ' · Late' : t.togo ? ' · To go' : t.usual ? ' · The usual' : '');
+      var label = t.family ? esc(t.who.replace(/^Your /, '')) :t.catering ? 'Catering' : '#' + t.n + (t.late ? ' · Late' : t.hurry ? ' · Impatient' : t.togo ? ' · To go' : t.usual ? ' · The usual' : '');
       var parts = t.parts.map(function (p, i) { return '<span' + (have && have[i] ? ' class="is-have"' : '') + '>' + partSprite(p) + '</span>'; }).join('');
       return '<div class="' + cls + '" data-id="' + t.id + '"' + (flag ? ' data-flag="' + flag + '"' : '') + '>' +
         '<span class="ou-label">' + label + '</span><span class="ou-tname">' + esc(t.name) + '</span>' +
@@ -838,15 +890,16 @@
   }
 
   function drawGrill() {
-    var n = usable(), html = '', swipe = level().flip === 'swipe';
-    for (var i = 0; i < n; i++) {
-      var it = T.grill[i];
-      if (!it) { html += '<div class="ou-spot"></div>'; continue; }
+    var n = usable(), all = spots(), html = '', swipe = level().flip === 'swipe';
+    for (var i = 0; i < all; i++) {
+      if (i >= n) { html += '<div class="ou-spot is-broken" data-tag="Out today" aria-label="Broken: out today"></div>'; continue; }
+      var it = T.grill[i], cold = trouble('cold') && i === T.coldAt ? ' is-cold' : '';
+      if (!it) { html += '<div class="ou-spot' + cold + '"' + (cold ? ' data-tag="Cold spot"' : '') + '></div>'; continue; }
       var name = D.parts[it.part].name;
       var tag = it.state === 'done' ? 'Pull' : it.state === 'burnt' ? 'Burnt' : it.state === 'flip' ? (swipe ? 'Swipe' : 'Flip') : '';
       var says = it.state === 'raw' ? 'cooking' : it.state === 'flip' ? 'ready to flip' : it.state;
       var pale = it.state === 'flip' || (it.state === 'raw' && !it.flipped);      // the side that's up is still raw
-      html += '<button class="ou-spot is-' + it.state + (it.flipped ? ' is-turned' : '') + (it.flipNow ? ' is-flipping' : '') + '" data-act="spot" data-i="' + i + '"' +
+      html += '<button class="ou-spot is-' + it.state + cold + (it.flipped ? ' is-turned' : '') + (it.flipNow ? ' is-flipping' : '') + '" data-act="spot" data-i="' + i + '"' +
         (tag ? ' data-tag="' + tag + '"' : '') + ' aria-label="' + name + ', ' + says + '">' +
         '<svg class="ou-ring" viewBox="0 0 64 64" aria-hidden="true"><circle class="ou-ring-bg" cx="32" cy="32" r="29"/><circle class="ou-ring-fg" cx="32" cy="32" r="29"/></svg>' +
         '<span class="ou-food ou-sh">' + partSprite(it.part, '', pale) + '</span>' +
@@ -854,7 +907,7 @@
         '</button>';
       it.flipNow = false;
     }
-    var el = $('#ou-griddle'); el.className = 'ou-griddle is-n' + n; el.innerHTML = html;
+    var el = $('#ou-griddle'); el.className = 'ou-griddle is-n' + all; el.innerHTML = html;
     for (var j = 0; j < n; j++) if (T.grill[j]) T.grill[j].fg = el.children[j].querySelector('.ou-ring-fg');
   }
 
@@ -969,10 +1022,10 @@
       var f = t.catering ? T.cat.left / T.cat.total : t.left / t.total;
       t.bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, f)).toFixed(3) + ')';
     }
-    var day = D.days[G.day], faster = 1 + 0.2 * has('press'), burnAfter = day.burn * level().burn + 5 * has('shelf'), gold = has('goldspat');
+    var burnAfter = burnSecs(), gold = has('goldspat');
     for (i = 0; i < T.grill.length; i++) {
       var it = T.grill[i]; if (!it || !it.fg || it.state === 'burnt') continue;
-      var cook = D.parts[it.part].cook / faster;
+      var cook = cookTime(it.part, i);
       var left = it.state === 'raw' ? 1 - it.t / cook : gold ? 0 : it.state === 'flip' ? it.wait / burnAfter : (it.t - cook) / burnAfter;
       it.fg.style.strokeDashoffset = (182.2 * Math.max(0, Math.min(1, left))).toFixed(1);
     }
@@ -1043,17 +1096,22 @@
     var all = box.querySelectorAll('.is-picked'); for (var i = 0; i < all.length; i++) all[i].classList.remove('is-picked');
     if (again) { info.hidden = true; return; }
     el.classList.add('is-picked');
-    info.innerHTML = '<b>' + esc(it.name) + '</b> <span>' + D.rarityNames[it.rarity] + (G.items[id] > 1 ? ' · you have ' + G.items[id] : '') + '</span><br>' + esc(it.text);
+    info.innerHTML = '<b>' + esc(it.name) + '</b> <span>' + D.rarityNames[it.rarity] + (G.items[id] > 1 ? ' · you have ' + G.items[id] : '') + '</span><br>' + itemText(it, G.items[id] || 1);
     info.hidden = false;
   }
 
+  function troubleCard() {
+    var tr = troubleOf(G.trouble); if (!tr) return '';
+    return '<div class="ou-trouble" role="note">' + spr(tr.icon) + '<span><span class="ou-label">Trouble today</span><b>' + esc(tr.name) + '</b>' + esc(tr.text) + '</span></div>';
+  }
   function showDawn() {
     var day = D.days[G.day], friday = G.day === D.days.length - 1;
+    if (G.troubleDay !== G.day) { G.trouble = dealTrouble(); G.troubleDay = G.day; }
     keepRun();
     G.offers = shuffle(D.specials).slice(0, 3);
     paper('dawn',
       '<div class="ou-top ou-top--dawn ou-top--back"><button class="ou-topback" data-act="home">Back</button><span class="ou-kicker">Today’s special</span><h2 class="ou-h">' + day.name + ', 6am</h2><span class="ou-label">Pick the plate for lunch</span></div>' +
-      '<div class="ou-body-pad">' + G.offers.map(function (s, i) {
+      '<div class="ou-body-pad">' + troubleCard() + G.offers.map(function (s, i) {
         return '<button class="ou-card ou-card--special" data-act="special" data-i="' + i + '">' +
           '<span class="ou-ci">' + (s.photo ? '<img src="' + esc(s.photo) + '" alt="" loading="lazy">' : spr('special')) + '</span>' +
           '<span><b>' + esc(s.name) + '</b><span class="ou-ct">' + esc(s.sides.join(', ')) + '</span>' +
@@ -1077,12 +1135,27 @@
     }
     return out;
   }
+  /* An item's number, for k of it owned (game.json: per, base, unit), and its
+     text with that number highlighted (owner 2026-11-12: "20%", and more
+     with each one). */
+  function itemPer(id) { var it = D.items.filter(function (x) { return x.id === id; })[0]; return it ? it.per : 0; }
+  function numText(it, k) {
+    var n = (it.base || 0) + it.per * k;
+    return it.unit === '%' ? n + '%' : it.unit === '$' ? money(n) : it.unit === 's' ? plural(n, 'second', 'seconds')
+      : it.unit === 'times' ? (n === 1 ? 'Once' : n === 2 ? 'Twice' : n + ' times') : String(n);
+  }
+  function itemText(it, k) {
+    if (it.per == null || it.text.indexOf('{n}') === -1) return esc(it.text);
+    var bits = it.text.split('{n}');
+    return esc(bits[0]) + '<b class="ou-num">' + esc(numText(it, k)) + '</b>' + esc(bits.slice(1).join(''));
+  }
   function itemCard(it, act, i, extra) {
     var pips = '<i></i>'.repeat({ normal: 1, rare: 2, epic: 3, legendary: 4 }[it.rarity] || 1);
     return '<button class="ou-card is-' + it.rarity + (extra.cls || '') + '" data-act="' + act + '" data-i="' + i + '">' +
       '<span class="ou-rar">' + pips + D.rarityNames[it.rarity] + '</span>' +
       '<span class="ou-ci ou-sh">' + spr(it.icon) + '</span>' +
-      '<span><b>' + esc(it.name) + '</b><span class="ou-ct">' + esc(it.text) + '</span>' + (has(it.id) ? '<span class="ou-own">You have ' + has(it.id) + '</span>' : '') + '</span>' +
+      '<span><b>' + esc(it.name) + '</b><span class="ou-ct">' + itemText(it, has(it.id) + (extra.sold ? 0 : 1)) + '</span>' +
+      (has(it.id) ? '<span class="ou-own">You have ' + has(it.id) + (it.per != null && !extra.sold ? ' · now ' + numText(it, has(it.id)).toLowerCase() : '') + '</span>' : '') + '</span>' +
       (extra.price ? '<span class="ou-price' + (extra.was ? ' is-sale' : '') + '">' + (extra.was ? '<s>' + extra.was + '</s>' : '') + extra.price + '</span>' : '<span></span>') + '</button>';
   }
 
@@ -1109,15 +1182,15 @@
   function drawClose() {
     var day = D.days[G.day], next = D.days[G.day + 1], body, foot = '';
     if (G.stage === 'pick') {
-      body = '<span class="ou-label">Pick one, free</span>' + G.pick.map(function (it, i) { return itemCard(it, 'pick', i, {}); }).join('') +
-        '<p class="ou-note">One diamond is Normal, two is Rare, three is Epic. The better ones turn up more as the week goes on.</p>';
+      body = (T.clean ? '<p class="ou-clean"><b>Clean shift: +' + money(T.clean) + '.</b> No walk-outs, nothing burnt.</p>' : '') +
+        '<span class="ou-label">Pick one, free</span>' + G.pick.map(function (it, i) { return itemCard(it, 'pick', i, {}); }).join('');
       foot = '<div class="ou-foot"><button class="ou-btn ou-btn--quiet" data-act="skip">None tonight · ' + money(skipBonus()) + ' in tips instead</button></div>';
     } else {
       body = '<span class="ou-label">The shop</span>' +
         (G.sale ? '<p class="ou-sale"><b>' + D.sale.off + '% off tonight.</b> You haven’t bought a thing all week, so the supplier cut you a deal.</p>' : '') +
         G.shop.map(function (it, i) {
         var sold = G.sold.indexOf(i) !== -1, cost = priceOf(it), poor = !sold && G.tips < cost;
-        return itemCard(it, 'buy', i, { price: sold ? 'Yours' : money(cost), was: !sold && cost !== it.price ? money(it.price) : '', cls: sold ? ' is-sold' : poor ? ' is-poor' : '' });
+        return itemCard(it, 'buy', i, { sold: sold, price: sold ? 'Yours' : money(cost), was: !sold && cost !== it.price ? money(it.price) : '', cls: sold ? ' is-sold' : poor ? ' is-poor' : '' });
       }).join('') +
         // The one thing that is never for sale: there is no fryer (see /feedback).
         (G.fryer && fryerItem() && !has('fryer') ? itemCard(fryerItem(), 'fryer', 0, { price: money(fryerItem().price), cls: G.tips < fryerItem().price ? ' is-poor' : '' }) : '') +
@@ -1154,6 +1227,9 @@
     clearBubbles();
     var cut = !!T && !T.cat && !win;      // the day itself was cut short
     bank();
+    // Finishing the week pays, by level (game.json, finish).
+    G.finish = win ? (D.finish[G.level] || 0) : 0;
+    if (G.finish) { G.tips += G.finish; G.earned += G.finish; }
     if (T && G.perDay[G.day] == null) G.perDay[G.day] = T.cat ? T.tipsBefore : T.tips;
     if (T && T.cat && G.cater == null) G.cater = T.tips - T.tipsBefore;
     // The week's score is what's left in the tip jar: tips earned less what
@@ -1165,8 +1241,8 @@
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
     report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round(G.played), away: Math.round(G.away),
-      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent, bonus: G.bonus });
-    lastRun = { run: G.run, lvl: G.level, total: kept, earned: G.earned, spent: spent, bonus: G.bonus, days: weekDays(), cater: G.cater == null ? '' : G.cater,
+      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent, bonus: G.bonus, finish: G.finish });
+    lastRun = { run: G.run, lvl: G.level, total: kept, earned: G.earned, spent: spent, bonus: G.bonus, finish: G.finish, days: weekDays(), cater: G.cater == null ? '' : G.cater,
       why: win ? 'win' : why, day: G.day, items: Object.keys(G.items), secs: Math.round(G.played) };
     // After a finished week (not one that was quit), and only if results go
     // anywhere: a first name, and a way to reach them if they want one.
@@ -1187,6 +1263,7 @@
       : ['Rough week', 'Three coffees down on ' + day.name + '.'];
     var rows = G.perDay.map(function (tips, i) { return '<div><b>' + D.days[i].short + '</b><span>' + (i === G.day && cut ? 'Closed early' : 'Closed at 2pm') + '</span><strong>' + money(tips) + '</strong></div>'; }).join('');
     if (G.cater != null) rows += '<div><b>Fri</b><span>Catering' + (win ? ', on time' : why === 'late' ? ', late' : ', not finished') + '</span><strong>' + money(G.cater) + '</strong></div>';
+    if (G.finish) rows += '<div><b></b><span>The week finished</span><strong>+' + money(G.finish) + '</strong></div>';
     rows += '<div><b>Week</b><span>Tips earned</span><strong>' + money(G.earned) + '</strong></div>';
     if (G.bonus) rows += '<div><b></b><span>Free items turned down</span><strong>+' + money(G.bonus) + '</strong></div>';
     rows += '<div><b></b><span>Spent on items</span><strong>' + (spent ? '−' + money(spent) : '$0') + '</strong></div>';
@@ -1226,7 +1303,7 @@
       li('spatula', '<b>Pull it when the ring is full.</b> Leave it and it burns. Tap burnt food to scrap it.') +
       li('bell', '<b>Tap Send</b> when the plate has what a ticket shows. Faster plates tip more.') +
       li('pickle', '<b>At lunch there’s a Pickle bin.</b> No ticket asks for it. Tap it to add a pickle spear to any plate before you send it: $1 more in tips.') +
-      li('cup-spilled', '<b>A ticket that runs out is a walk-out.</b> Three in a day and the week is over.') +
+      li('cup-spilled', '<b>A ticket that runs out is a walk-out.</b> Three in a day and the week is over. A day with no walk-outs and nothing burnt pays extra.') +
       li('jar', '<b>After close,</b> pick one item for free. More cost tips, and <b>your score is the tips you keep</b>, so buy only what gets you through.') +
       li('tipjar', '<b>Tips here are points, not money.</b> At The Café, real tips go to the cooks and the people who work there.') +
       '</ul></div><div class="ou-foot"><button class="ou-btn" data-act="back">Got it</button></div>');
@@ -1315,7 +1392,7 @@
     var name = form.elements.name.value.replace(/\s+/g, ' ').trim(), contact = form.elements.contact ? form.elements.contact.value.trim() : '';
     if (!name) { form.elements.name.focus(); return; }
     if (lastRun) report('score', { run: lastRun.run, lvl: lastRun.lvl, name: name, contact: contact, total: Number(form.elements.total.value), web: form.elements.website.value ? 1 : 0,
-      earned: lastRun.earned, spent: lastRun.spent, bonus: lastRun.bonus, days: lastRun.days, cater: lastRun.cater, why: lastRun.why, day: lastRun.day, items: lastRun.items, secs: lastRun.secs });
+      earned: lastRun.earned, spent: lastRun.spent, bonus: lastRun.bonus, finish: lastRun.finish, days: lastRun.days, cater: lastRun.cater, why: lastRun.why, day: lastRun.day, items: lastRun.items, secs: lastRun.secs });
     form.outerHTML = '<p class="ou-note ou-sent" role="status">Sent. Thank you!</p>';
   });
 

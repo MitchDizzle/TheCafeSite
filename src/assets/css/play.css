@@ -122,6 +122,9 @@
 .ou-ticket .ou-timer { height: 8px; margin: 4px -6px 0; background: var(--steel-light); border-top: 2px solid var(--teal-dark); overflow: hidden; flex: none; }
 .ou-ticket .ou-timer i { display: block; height: 100%; width: 100%; background: var(--teal); transform-origin: 0 50%; }
 .ou-ticket.is-togo { background: #E9F3F5; }
+/* Impatient (trouble): a dashed edge and a striped clock that runs fast. */
+.ou-ticket.is-hurry { outline: 2px dashed var(--teal-dark); outline-offset: -5px; }
+.ou-ticket.is-hurry .ou-timer i { background-image: repeating-linear-gradient(-45deg, rgba(255, 255, 255, .45) 0 4px, transparent 4px 8px); }
 .ou-ticket.is-aim { outline: 3px solid var(--teal-dark); outline-offset: 1px; transform: translateY(3px); }
 .ou-ticket.is-late .ou-timer i { background: var(--accent); }
 .ou-ticket.is-late .ou-label { color: var(--accent); }
@@ -170,6 +173,12 @@
 .ou-spot[data-tag]::after { content: attr(data-tag); position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%); font: 700 10px/1 Lato, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--text-dark); background: var(--mint); border-radius: 6px; padding: 2px 6px; border: 1.5px solid var(--teal-dark); z-index: 3; white-space: nowrap; }
 .ou-spot.is-flip[data-tag]::after { background: var(--gold); }
 .ou-spot.is-burnt[data-tag]::after { background: var(--steel); }
+/* Trouble on the flat-top: a spot that's out, and a cold one (blue, solid edge). */
+.ou-spot.is-broken { border-style: solid !important; border-color: rgba(230, 236, 238, .35) !important;
+    background: repeating-linear-gradient(45deg, rgba(0, 0, 0, .28) 0 8px, rgba(0, 0, 0, .1) 8px 16px); }
+.ou-spot.is-broken[data-tag]::after { background: var(--steel); }
+.ou-spot.is-cold { border-style: solid !important; border-color: #8EC8E8 !important; background: rgba(142, 200, 232, .14); }
+.ou-spot.is-cold:not([data-act])[data-tag]::after { background: #CFE6F4; }
 .ou-spot.is-burnt .ou-food { filter: brightness(.36) saturate(.5); }
 .ou-spot.is-burnt .ou-ring { display: none; }
 .ou-spot.is-burnt::before { content: ""; position: absolute; inset: 14% 22%; background:
@@ -328,6 +337,13 @@
 .ou-card.is-nope { animation: ou-shake .3s ease-in-out 1; }
 .ou-price.is-sale { display: flex; flex-direction: column; justify-content: center; gap: 2px; line-height: 1; }
 .ou-price s { font: 700 11px/1 Lato, sans-serif; opacity: .8; }
+/* An item's number (owner 2026-11-12): highlighted, and it grows with each one owned. */
+.ou-card b.ou-num, .ou-own-info b.ou-num, b.ou-num { display: inline; font-family: Lato, sans-serif; font-size: 1em; font-weight: 900; line-height: inherit; background: var(--mint); color: var(--text-dark); border-radius: 4px; padding: 0 3px; white-space: nowrap; }
+.ou-clean { margin: 0 0 10px; padding: 8px 10px; border: 2px solid var(--teal-dark); border-radius: 10px; background: #E3F6F2; font: 400 14px/1.3 Lato, sans-serif; }
+/* Trouble today, on the morning screen: ink and steel, never red. */
+.ou-trouble { display: flex; gap: 10px; align-items: center; margin: 0 0 10px; padding: 9px 11px; background: var(--steel-light); border: 2px dashed var(--text-dark); border-radius: 12px; font: 400 14px/1.3 Lato, sans-serif; text-align: left; }
+.ou-trouble > .ou-i { width: 40px; height: 40px; flex: none; filter: grayscale(.6); }
+.ou-trouble b { display: block; font: 700 17px/1.2 "Playfair Display", Georgia, serif; }
 .ou-sale { margin: 0 0 8px; padding: 8px 10px; border: 2px dashed var(--teal-dark); border-radius: 10px; background: #FFF6D6; font: 400 14px/1.3 Lato, sans-serif; }
 .ou-pausecard .ou-row .ou-btn { letter-spacing: .08em; padding: 14px 6px; }
 .ou-card--special { grid-template-columns: 52px 1fr auto; padding-top: 10px !important; }

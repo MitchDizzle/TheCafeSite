@@ -59,12 +59,14 @@ window.ouBot = async function (opt) {
     ou.save.level = opt.level;
     click('[data-act=start]');
     if (ou.screen === 'how') click('[data-scr=how] [data-act=back]');
-    var days = [], guard = 0, lastDay = -1, walk = [], began = Date.now();
+    var days = [], guard = 0, lastDay = -1, walk = [], began = Date.now(), troubles = [], cleans = [], items = {};
     while (ou.screen !== 'over' && Date.now() - began < 120000) {
       guard++;
       var s = ou.screen;
-      if (s === 'dawn') click('[data-act=special]');
+      if (ou.G) items = Object.assign({}, ou.G.items);
+      if (s === 'dawn') { troubles[ou.G.day] = ou.G.trouble || '-'; click('[data-act=special]'); }
       else if (s === 'close') {
+        if (ou.T) { cleans[ou.G.day] = ou.T.clean || 0; days[ou.G.day] = ou.T.tips; }
         if (ou.G.stage === 'pick') click('[data-act=pick]');
         else {
           var bought = false;
@@ -73,7 +75,7 @@ window.ouBot = async function (opt) {
         }
       } else if (s === 'shift') {
         var T = ou.T;
-        if (T) { lastDay = ou.G.day; walk[lastDay] = T.walk; days[lastDay] = T.tips; }
+        if (T) { lastDay = ou.G.day; walk[lastDay] = T.walk; days[lastDay] = T.tips; cleans[lastDay] = T.clean || 0; }
         if (T && !T.ended) { for (var k = 0, n = Math.ceil(step / 0.05); k < n; k++) ou.tick(step / n); if (Math.random() >= opt.slip) act(); if (guard % 40) continue; }
         else { await sleep(60); continue; }
       }
@@ -81,7 +83,7 @@ window.ouBot = async function (opt) {
     }
     var head = q('[data-scr=over] .ou-h');
     var r = { ended: head ? head.textContent : '?', day: D.days[lastDay] ? D.days[lastDay].short : '?', tips: days, walk: walk, week: (q('[data-scr=over] .is-total strong') || {}).textContent,
-      items: [].map.call(document.querySelectorAll('#ou-stage [data-scr=over] .ou-own-row span'), function (e) { return e.title; }) };
+      items: Object.keys(items), trouble: troubles.slice(), clean: cleans.slice() };
     results.push(r); (window.__weeks = window.__weeks || []).push(r); if (opt.log) console.log(JSON.stringify(r));
   }
   ou.speed(1);
