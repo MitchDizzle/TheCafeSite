@@ -280,6 +280,24 @@
 .ou-set i { flex: none; font: 900 13px/1 Lato, sans-serif; font-style: normal; letter-spacing: .1em; text-transform: uppercase; padding: 7px 10px; border-radius: 999px; background: var(--steel-light); border: 2px solid var(--steel-dark); }
 .ou-set[aria-pressed="true"] i { background: var(--mint); border-color: var(--teal-dark); }
 .ou-reset { width: 100%; margin-top: 4px; }
+/* Settings boxes: home screen, save code. */
+.ou-setbox { margin: 12px 0; padding: 10px 12px; background: #fff; border: 2px solid var(--teal-dark); border-radius: 12px; }
+.ou-setbox .ou-fine { margin: 4px 0 8px; }
+.ou-setbox .ou-btn { width: 100%; }
+.ou-code { display: block; width: 100%; box-sizing: border-box; margin: 8px 0 0; padding: 8px; font: 400 12px/1.35 ui-monospace, Menlo, Consolas, monospace; color: var(--text-dark); background: var(--cream); border: 2px solid var(--steel-dark); border-radius: 8px; resize: none; word-break: break-all; }
+.ou-code-load { margin-top: 8px; }
+.ou-code-msg { margin: 6px 0 0; font: 700 13px/1.3 Lato, sans-serif; color: var(--teal-dark); }
+.ou-code-msg:empty { display: none; }
+.ou-bests { list-style: none; margin: 0 0 8px; padding: 0; font: 400 14px/1.5 Lato, sans-serif; }
+.ou-bests span { color: #4A5A62; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+/* A finished week's code, to look it up in the results. */
+.ou-weekcode { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; width: 100%; margin: 10px 0; padding: 8px 12px !important; background: #fff !important; color: var(--text-dark) !important; border: 2px dashed var(--teal-dark) !important; border-radius: 12px; text-align: left; }
+.ou-weekcode b { font: 700 15px/1 Lato, sans-serif; color: var(--teal); }
+.ou-weekcode.is-shown b { font: 700 18px/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; color: var(--text-dark); }
+.ou-bests .ou-weekcode { display: inline-flex; width: auto; margin: 2px 0 2px 8px; padding: 3px 8px !important; }
+.ou-bests .ou-weekcode .ou-label { display: none; }
+.ou-bests .ou-weekcode b { font-size: 12px; }
+.ou-weekcode small { flex-basis: 100%; font: 400 12px/1.3 Lato, sans-serif; color: #4A5A62; }
 /* Achievements: a row each, earned ones in mint. */
 .ou-achs { display: grid; gap: 6px; margin: 4px 0 10px; }
 .ou-ach { display: flex; gap: 10px; align-items: center; padding: 8px 10px; background: #fff; border: 2px dashed var(--steel-dark); border-radius: 12px; font: 400 14px/1.3 Lato, sans-serif; text-align: left; color: #4A5A62; }

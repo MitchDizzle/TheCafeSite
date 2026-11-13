@@ -27,6 +27,9 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/studio/files");
 
   eleventyConfig.addPassthroughCopy("src/favicon.svg");
+  // Order Up's home-screen install: its manifest and a do-nothing service worker.
+  eleventyConfig.addPassthroughCopy("src/order-up.webmanifest");
+  eleventyConfig.addPassthroughCopy("src/ou-sw.js");
   eleventyConfig.addPassthroughCopy("src/robots.txt");
   eleventyConfig.addPassthroughCopy("src/sitemap.xml");
 

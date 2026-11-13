@@ -3,6 +3,7 @@
 # ============================================================
 
 AddDefaultCharset UTF-8
+AddType application/manifest+json .webmanifest
 
 # No directory listings
 Options -Indexes

@@ -72,7 +72,7 @@
      migrate() with SAVE_VER raised. Never rename an item's or an
      achievement's id: saves and weeks left half way are keyed by them. */
   var KEY = 'orderup.v1', SAVE_VER = 2;
-  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0 };
+  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0, bestRuns: {} };
   var loadedSum = '';
   try {
     var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -105,6 +105,7 @@
   }
   if (!Array.isArray(save.qa)) save.qa = [];
   if (!save.ach || typeof save.ach !== 'object') save.ach = {};
+  if (!save.bestRuns || typeof save.bestRuns !== 'object') save.bestRuns = {};
   migrate();
   /* One step per change of shape, oldest first. A save from any earlier
      version walks up through all of them. */
@@ -1354,7 +1355,7 @@
     }
     var kept = Math.max(0, G.tips), spent = Math.max(0, G.earned - G.tips);
     var lvName = level().name, best = kept > (save.keeps[G.level] || 0);
-    if (best) save.keeps[G.level] = kept;
+    if (best) { save.keeps[G.level] = kept; save.bestRuns[G.level] = G.run; }
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
     report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round(G.played), away: Math.round(G.away),
@@ -1389,6 +1390,7 @@
       '<div class="ou-top' + (win ? ' ou-top--fri' : '') + '"><span class="ou-kicker">' + head[0] + '</span><h2 class="ou-h">' + head[1] + '</h2>' +
       '<span class="ou-label">' + (best ? 'A new best ' + lvName + ' week' : 'Best ' + lvName + ' week: ' + money(save.keeps[G.level] || 0) + ' kept') + '</span></div>' +
       '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' +
+      codeButton(G.run, 'The Café can look this week up by its code. Keep it to yourself: it’s hidden until you tap, so a screenshot you share doesn’t give it away.') +
       '<p class="ou-fine">Each day is ranked by its slips (walk-outs and burnt food): none is Legendary, one is Epic, two or three Rare.</p>' +
       (G.newAch.length ? '<span class="ou-label">Achievements this week</span>' + achList(G.newAch) : '') +
       ownedRow() + sendIn +
@@ -1445,6 +1447,14 @@
       row('sound', 'Sound', save.sound, 'The sizzle, the bell, the tickets.') +
       row('music', 'Music', save.music, 'Slow jazz, made as it plays.') +
       (STATS.url ? row('stats', 'Send how my weeks go', !save.noStats, 'No name: the level, the days and the tips, so The Café can see if it’s too hard.') : '') +
+      '<div class="ou-setbox"><span class="ou-label">On your home screen</span>' + installHtml() + '</div>' +
+      '<div class="ou-setbox"><span class="ou-label">Save code</span>' +
+      '<p class="ou-fine">Your achievements, best weeks and Recipe Box as one line of text. Keep it somewhere, and load it on another phone, another browser, or after the phone forgets.</p>' +
+      bestList() +
+      '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="savecopy">Copy code</button><button class="ou-btn ou-btn--quiet" data-act="saveopen">Load code</button></div>' +
+      '<textarea class="ou-code" id="ou-code" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Save code" hidden></textarea>' +
+      '<button class="ou-btn ou-code-load" data-act="saveload" hidden>Load this code</button>' +
+      '<p class="ou-code-msg" id="ou-code-msg" role="status"></p></div>' +
       '<button class="ou-btn ou-btn--quiet ou-reset" data-act="achreset">' + (resetArmed ? 'Tap again to reset every achievement' : 'Reset achievements') + '</button>' +
       '<div class="ou-credits"><span class="ou-label">About</span>' +
       '<p>A little game from <b>The Café</b> in Leavenworth, Kansas. The tickets are the real menu, the specials were real specials, and the photos in the Recipe Box are the real plates.</p>' +
@@ -1452,6 +1462,79 @@
       '<p class="ou-fine">Every drawing, sound and note of music is made in the game itself. ' + esc(TIPS_NOTE) + '</p>' +
       '<div class="ou-row"><a class="ou-btn ou-btn--quiet" href="/menu">Menu</a><a class="ou-btn ou-btn--quiet" href="/privacy">Privacy</a></div></div>' +
       '</div><div class="ou-foot"><button class="ou-btn" data-act="back">Back</button></div>');
+  }
+  /* A week's code: the first eight of its run id, which the results Sheet
+     files in its `run` column (owner 2026-11-13: to check a week someone
+     enters in a promotion, search the Sheet for it). */
+  function weekCode(run) { return String(run || '').slice(0, 8); }
+  /* The code shows only while tapped, and hides again after a few seconds
+     (owner 2026-11-13: so a shared screenshot never gives it away). It
+     isn't written on the page at all until then. */
+  var codeTimer = 0;
+  function codeButton(run, note) {
+    return '<button class="ou-weekcode" data-act="showcode" data-run="' + esc(weekCode(run)) + '" aria-label="Show the week code">' +
+      '<span class="ou-label">Week code</span><b>Tap to show</b>' + (note ? '<small>' + note + '</small>' : '') + '</button>';
+  }
+  function showCode(el) {
+    var b = el.querySelector('b'), all = stage.querySelectorAll('.ou-weekcode.is-shown');
+    for (var i = 0; i < all.length; i++) { all[i].classList.remove('is-shown'); all[i].querySelector('b').textContent = 'Tap to show'; }
+    clearTimeout(codeTimer);
+    b.textContent = el.getAttribute('data-run'); el.classList.add('is-shown');
+    codeTimer = setTimeout(function () { el.classList.remove('is-shown'); b.textContent = 'Tap to show'; }, 6000);
+  }
+  function bestList() {
+    var lv = Object.keys(D.levels).filter(function (id) { return save.keeps[id]; });
+    if (!lv.length) return '';
+    return '<ul class="ou-bests">' + lv.map(function (id) {
+      return '<li><b>' + esc(D.levels[id].name) + '</b> ' + money(save.keeps[id]) + (save.bestRuns[id] ? codeButton(save.bestRuns[id], '') : '') + '</li>';
+    }).join('') + '</ul>';
+  }
+
+  /* ---------- the save code (owner 2026-11-13) ----------
+     Everything worth keeping, as one line: OU1.<data>.<seal>. The seal is
+     the same signature the results use, so a code that was typed wrong or
+     changed is turned away. Loading one adds to what the phone already has
+     (the better of each best week, every achievement); it never takes
+     anything away, and the settings stay the phone's own. */
+  function b64(s) { return btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function unb64(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return decodeURIComponent(escape(atob(s))); }
+  function saveCode() {
+    var data = b64(JSON.stringify({ v: 1, ach: save.ach, keeps: save.keeps, runs: save.bestRuns, weeks: save.weeks, wins: save.wins, served: save.served }));
+    return seal('OU1.' + data).then(function (s) { return 'OU1.' + data + '.' + (s || 'x').slice(0, 16); });
+  }
+  function loadCode(text) {
+    var m = String(text || '').replace(/\s+/g, '').match(/^(OU1\.[A-Za-z0-9_-]+)\.([0-9a-fx]{1,16})$/);
+    if (!m) return Promise.resolve('That doesn’t look like a save code.');
+    return seal(m[1]).then(function (s) {
+      if ((s || 'x').slice(0, 16) !== m[2]) return 'That code has been changed or cut short, so it can’t be loaded.';
+      var d; try { d = JSON.parse(unb64(m[1].slice(4))); } catch (e) { return 'That code can’t be read.'; }
+      var n = 0, k;
+      for (k in d.ach || {}) if (achOf(k) && !save.ach[k]) { save.ach[k] = d.ach[k]; n++; }
+      for (k in d.keeps || {}) if (D.levels[k] && Number(d.keeps[k]) > (save.keeps[k] || 0)) { save.keeps[k] = Number(d.keeps[k]); save.bestRuns[k] = String((d.runs || {})[k] || ''); n++; }
+      for (k in d.served || {}) if (Number(d.served[k]) > (save.served[k] || 0)) save.served[k] = Number(d.served[k]);
+      save.weeks = Math.max(save.weeks, Number(d.weeks) || 0); save.wins = Math.max(save.wins, Number(d.wins) || 0);
+      persist();
+      return n ? 'Loaded. Welcome back.' : 'Loaded: nothing new in it for this phone.';
+    });
+  }
+
+  /* ---------- on the home screen (owner 2026-11-13) ----------
+     Android and desktop Chrome offer an install prompt we can show from a
+     button; iPhones only from Safari's Share menu; Facebook's own browser
+     can't at all. The button says whichever is true here. */
+  var installEvt = null, UA = navigator.userAgent || '';
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; if (screen === 'settings') drawSettings(); });
+  window.addEventListener('appinstalled', function () { installEvt = null; if (screen === 'settings') drawSettings(); });
+  try { if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('/ou-sw.js', { scope: '/play' }); } catch (e) { /* no matter */ }
+  function installHtml() {
+    var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+    var ios = /iPhone|iPad|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1), inApp = /FBAN|FBAV|FB_IAB|Instagram|Messenger/.test(UA);
+    var keep = ' Copy your save code first: on an iPhone the home-screen game keeps its own progress.';
+    if (standalone) return '<p class="ou-fine">You’re playing from your home screen. Nice.</p>';
+    if (inApp) return '<p class="ou-fine">Facebook’s own browser can’t do it. Open the ⋯ menu, choose <b>Open in browser</b>, then come back to Settings.' + keep + '</p>';
+    if (installEvt) return '<button class="ou-btn" data-act="install">Add to Home Screen</button>';
+    if (ios) return '<p class="ou-fine">In Safari, tap the <b>Share</b> button, then <b>Add to Home Screen</b>.' + keep + '</p>';
+    return '<p class="ou-fine">Open your browser’s menu and choose <b>Add to Home screen</b> or <b>Install app</b>.</p>';
   }
   function drawTitle() {
     var lv = D.levels[save.level], best = save.keeps[save.level] || 0, run = save.run;
@@ -1494,6 +1577,25 @@
       case 'stats': save.noStats = !save.noStats; save.told = true; persist(); drawSettings(); sfx.tap(); break;
       case 'settings': sfx.tap(); showSettings(); break;
       case 'ach': sfx.tap(); showAch('title'); break;
+      case 'showcode': showCode(el); sfx.tap(); break;
+      case 'install':
+        if (installEvt) { var ev = installEvt; installEvt = null; ev.prompt(); if (ev.userChoice) ev.userChoice.then(function () { if (screen === 'settings') drawSettings(); }); }
+        break;
+      case 'savecopy':
+        saveCode().then(function (code) {
+          var box = $('#ou-code'), msg = $('#ou-code-msg'); if (!box) return;
+          box.hidden = false; box.value = code; box.readOnly = true; box.select();
+          $('[data-act="saveload"]').hidden = true;
+          var done = function (ok) { msg.textContent = ok ? 'Copied. Paste it somewhere safe, like a note or a message to yourself.' : 'Select the code above and copy it.'; };
+          try { navigator.clipboard.writeText(code).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); }
+        });
+        sfx.tap(); break;
+      case 'saveopen':
+        var box2 = $('#ou-code'); box2.hidden = false; box2.readOnly = false; box2.value = ''; box2.focus();
+        $('[data-act="saveload"]').hidden = false; $('#ou-code-msg').textContent = 'Paste your code, then Load.'; sfx.tap(); break;
+      case 'saveload':
+        loadCode($('#ou-code').value).then(function (words) { drawSettings(); $('#ou-code-msg').textContent = words; drawTitle(); });
+        break;
       case 'achreset':             // two taps, so it isn't lost to a stray one
         if (!resetArmed) { resetArmed = true; drawSettings(); sfx.tap(); break; }
         resetArmed = false; save.ach = {}; persist(); drawSettings(); toast('Achievements reset'); sfx.bad(); break;

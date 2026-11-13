@@ -683,11 +683,30 @@ be no safer. Rules for every update:
   notice, so the results Sheet can tell weeks apart.
 
 One limit no update can fix: iPhones (Safari) clear a site's stored data
-if the site isn't opened for about seven days, and anyone can clear it
-themselves. Achievements are kept on the phone, so they can be lost that
-way. Keeping them for sure would need accounts and a server, which the
-plan rules out; a "save code" to copy and paste back is the cheap middle
-ground if it's ever wanted.
+if the site isn't opened for about seven days, Facebook's own browser keeps
+its own storage apart from the phone's browser, and anyone can clear it
+themselves. No accounts (owner 2026-11-13: not for a simple game, and the
+plan rules out logins); instead:
+
+- **Save code** (Settings). One line, `OU1.<data>.<seal>`: achievements,
+  best weeks and their week codes, weeks played, the Recipe Box. Sealed
+  with the same signature the results use, so a code typed wrong or edited
+  is turned away. Loading one only adds (the better best week, every
+  achievement); settings stay the phone's own. Nothing is sent anywhere.
+- **Add to Home Screen** (Settings). `order-up.webmanifest`, the icons in
+  `assets/game/` (drawn in `game/icon.svg`, made by `node
+  game/make-icons.js`) and `ou-sw.js`, a service worker that does nothing
+  but make Android offer the install (it caches nothing, so it can never
+  serve an old game). Android Chrome gets a real button; an iPhone is told
+  Safari's Share → Add to Home Screen; Facebook's browser is told to open
+  the page in the phone's browser first. An iPhone's home-screen game keeps
+  its own storage, which is why the save code comes first.
+
+**Week codes** (owner 2026-11-13). Every finished week shows a week code,
+the first eight letters of its run id, which the results Sheet files in
+its `run` column. It's hidden until tapped and hides again after six
+seconds, so a screenshot someone shares doesn't give it away; a promotion
+asks for the screenshot publicly and the code privately.
 
 - **A page of the site:** `src/play.njk` → `/play`, on `layouts/base.njk`
   with no nav or footer (like the home page), `noSiteJs: true`.
