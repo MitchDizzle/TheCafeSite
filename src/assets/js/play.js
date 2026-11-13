@@ -1711,18 +1711,38 @@
   var waved = false; try { waved = sessionStorage.getItem('ou.inapp') === '1'; } catch (e) { /* no matter */ }
   if (inApp && !waved) {
     var android = /Android/.test(UA);
-    // Android can hand the page straight to Chrome; an iPhone app's browser can't be left from a link.
-    var chrome = 'intent://' + location.host + location.pathname + '#Intent;scheme=https;package=com.android.chrome;end';
+    // Android can hand the page to the phone's own browser, whichever it is
+    // (owner 2026-11-13: not Chrome by name): an https intent with no app
+    // named goes to the default browser, or asks which. An iPhone app's
+    // browser can't be left from a link.
+    var outLink = 'intent://' + location.host + location.pathname + '#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end';
     $('#ou-inapp').innerHTML = '<p id="ou-inapp-h"><b>You’re in ' + esc(inApp === 'an app' ? 'an app’s' : inApp + '’s') + ' browser</b></p>' +
-      '<p>It can forget your game: weeks, best scores and achievements may not be here next time. Play in ' + (android ? 'Chrome' : 'Safari') + ' to keep them.</p>' +
-      (android ? '<a class="ou-btn" href="' + esc(chrome) + '">Open in Chrome</a>'
+      '<p>It can forget your game: weeks, best scores and achievements may not be here next time. Play in your phone’s own browser to keep them.</p>' +
+      (android ? '<a class="ou-btn" href="' + esc(outLink) + '">Open in my browser</a>'
         : '<p class="ou-inapp-how">Tap <b>⋯</b> (or the share button) at the top or bottom of the screen, then <b>Open in browser</b> or <b>Open in Safari</b>.</p>') +
       '<button class="ou-btn ou-btn--ghost" data-inapp="ok">Play here anyway</button>' +
       '<p class="ou-inapp-fine">Already have progress here? Copy your save code in Settings first.</p>';
     $('#ou-inapp').hidden = false;
   } else if (STATS.url && !save.told) $('#ou-told').hidden = false;
+  /* The game opened from the home screen for the first time, with nothing
+     saved (owner 2026-11-13): on an iPhone the home-screen game keeps its
+     own storage, apart from Safari's, so offer the save code from there. On
+     Android it shares the browser's, and this never shows. */
+  var standaloneNow = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+  if (standaloneNow && !inApp && !save.weeks && !Object.keys(save.ach).length && !save.run) {
+    $('#ou-inapp').innerHTML = '<p id="ou-inapp-h"><b>On your home screen</b></p>' +
+      '<p>Played in your browser before? This home-screen game starts fresh on some phones. Bring your progress over with your save code: in the browser, Settings → Copy code; here, Load code.</p>' +
+      '<button class="ou-btn" data-inapp="load">Load my save code</button>' +
+      '<button class="ou-btn ou-btn--ghost" data-inapp="ok">Start fresh</button>';
+    $('#ou-inapp').hidden = false; $('#ou-told').hidden = true;
+  }
   stage.addEventListener('click', function (e) {
     if (!e.target.closest || !e.target.closest('[data-inapp]')) return;
+    if (e.target.closest('[data-inapp="load"]')) {
+      $('#ou-inapp').hidden = true; showSettings();
+      var box = $('#ou-code'); if (box) { box.hidden = false; box.readOnly = false; box.focus(); $('[data-act="saveload"]').hidden = false; $('#ou-code-msg').textContent = 'Paste your code, then Load.'; }
+      return;
+    }
     $('#ou-inapp').hidden = true;
     try { sessionStorage.setItem('ou.inapp', '1'); } catch (err) { /* no matter */ }
     if (STATS.url && !save.told) $('#ou-told').hidden = false;

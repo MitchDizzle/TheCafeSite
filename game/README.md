@@ -699,14 +699,21 @@ plan rules out logins); instead:
   but make Android offer the install (it caches nothing, so it can never
   serve an old game). Android Chrome gets a real button; an iPhone is told
   Safari's Share → Add to Home Screen; Facebook's browser is told to open
-  the page in the phone's browser first. An iPhone's home-screen game keeps
-  its own storage, which is why the save code comes first.
+  the page in the phone's browser first.
+- **Installing doesn't erase anything**, but where the progress lives
+  differs. On Android the home-screen game shares the browser's storage,
+  so everything is there. On an iPhone the home-screen game has storage of
+  its own: it starts empty, and Safari keeps its copy. So the iPhone
+  instructions say to copy the save code first, and the first time the
+  home-screen game opens with nothing saved it offers "Load my save code"
+  (or "Start fresh").
 
 **A warning in an app's browser** (owner 2026-11-13). Opened inside
 Facebook, Messenger, Instagram, TikTok, Snapchat, Pinterest, LinkedIn,
 LINE or any Android app's web view, the title screen first says so: the
-game may forget everything there. On Android, "Open in Chrome" hands the
-page to Chrome; on an iPhone (where no link can leave the app) it says
+game may forget everything there. On Android, "Open in my browser" hands
+the page to the phone's default browser (an https intent naming no app, so
+the phone picks, or asks; owner 2026-11-13: not Chrome by name); on an iPhone (where no link can leave the app) it says
 where the "Open in browser" item is. "Play here anyway" waves it off for
 the visit. `/play?inapp` shows it in any browser, to see how it looks.
 
