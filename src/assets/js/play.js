@@ -424,6 +424,7 @@
   function trouble(id) { return T && !T.cat && T.trouble && T.trouble.id === id ? T.trouble : null; }
   function dealTrouble() {
     var tr = level().trouble;
+    if (has('horseshoe')) return null;       // the Horseshoe: no trouble, any day
     if (!tr || G.day < tr.from || rand() * 100 >= tr.chance) return null;
     var list = D.trouble.filter(function (x) { return x.id !== G.lastTrouble; });
     var got = pick(list);
@@ -1192,14 +1193,22 @@
       '<div class="ou-foot"><button class="ou-btn" data-act="back">Back</button></div>');
     openOverlay(from);
   }
+  /* Late in the week the items that only earn turn up less (owner
+     2026-11-13: by then the player is after getting through). */
+  function weighted(pool) {
+    var late = G.day >= D.lateShop.fromDay, w = pool.map(function (it) { return late && it.kind === 'tips' ? D.lateShop.tips : 1; });
+    var sum = w.reduce(function (a, b) { return a + b; }, 0), x = rand() * sum;
+    for (var i = 0; i < pool.length; i++) { x -= w[i]; if (x <= 0) return pool[i]; }
+    return pool[pool.length - 1];
+  }
   function deal(n, not) {
     var odds = D.odds[Math.min(G.day, D.odds.length - 1)], out = [];
     var falls = { epic: ['epic', 'rare', 'normal'], rare: ['rare', 'normal', 'epic'], normal: ['normal', 'rare', 'epic'] };
     for (var k = 0; k < n; k++) {
       var roll = rand() * 100, rar = roll < odds.epic ? 'epic' : roll < odds.epic + odds.rare ? 'rare' : 'normal', got = null;
       for (var f = 0; f < 3 && !got; f++) {
-        var pool = D.items.filter(function (it) { return it.rarity === falls[rar][f] && has(it.id) < (it.max || 1) && out.indexOf(it) === -1 && not.indexOf(it.id) === -1 && !(it.id === 'spatula' && level().flip === 'none') && !(it.id === 'smalltalk' && !level().family) && !locked(it.id); });
-        if (pool.length) got = pick(pool);
+        var pool = D.items.filter(function (it) { return it.rarity === falls[rar][f] && has(it.id) < (it.max || 1) && out.indexOf(it) === -1 && not.indexOf(it.id) === -1 && !(it.id === 'spatula' && level().flip === 'none') && !(it.id === 'smalltalk' && !level().family) && !(it.id === 'horseshoe' && !level().trouble) && !locked(it.id); });
+        if (pool.length) got = weighted(pool);
       }
       if (got) out.push(got);
     }

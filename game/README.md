@@ -145,6 +145,42 @@ Rares were made likelier on 2026-11-12 (owner): over a week a player sees 24 car
 prices and how many of each can be owned are in `game.json` → `items`,
 `odds`. What an item *does* is in `play.js` under the same `id`.
 
+**Rarity is how often, price is what it's worth** (owner 2026-11-13). Until
+then an Epic cost more than a Rare because it was an Epic, and the bot
+showed the cheap Normals were the best buys by far (Free Refills earned
+$2.40 back for every $1, Golden Spatula about $0.25). Now each price
+follows what the item did for the bot when handed over on Monday (8
+Regular weeks each, steady pace, no other items), aiming at about $1.40
+back a dollar for the ones that only earn and a little less for the ones
+that keep a week alive, since getting through is worth more than tips:
+
+| Item | Extra tips a week | Old price | New price |
+|---|---|---|---|
+| Counter Help | +$150 | $95 | $110 |
+| Line Cook | +$102, and the most weeks won | $180 | $130 |
+| Free Refills | +$85 | $35 | $55 |
+| Heavy Spatula | +$73 | $70 | $60 |
+| Order Bell | +$66 | $35 | $45 |
+| Tip Jar | +$63 | $40 | $45 |
+| The Regular | +$57 | $70 | $50 |
+| Early Bird | +$56 | $30 | $40 |
+| Warming Shelf | +$49 | $30 | $35 |
+| Facebook Post | +$46 | $30 | $35 |
+| Golden Spatula | +$43 | $165 | $90 |
+| Bottomless Coffee | +$38, a week won | $165 | $100 |
+| Big Dill | +$25 | $155 | $80 |
+| Clamshells, Bench Scraper | about nothing | $25 | $15 |
+
+Items the bot can't use well (the Second Plate, the Second Flat-Top's
+extra spots, Small Talk, pickles) were priced by judgement, lower than
+before. The fryer is still $1,500.
+
+**Late in the week, getting through** (owner 2026-11-13). Items that only
+earn (`"kind": "tips"`: Pickle Jar, Tip Jar, Early Bird, Cinnamon Roll Case,
+Facebook Post, Lucky Penny, Drink Included, The Regular, Big Tipper) turn up
+about a third as often from Wednesday's close (`lateShop`), when they have
+little time left to pay for themselves.
+
 **Normal**
 
 | Name | Does |
@@ -186,6 +222,7 @@ prices and how many of each can be owned are in `game.json` → `items`,
 | Golden Spatula | Nothing burns. Ever. |
 | Big Dill | A pickle spear can stand in for any one missing part |
 | Bottomless Coffee | A spilled coffee pours itself again after 25 seconds with no walk-out |
+| **Horseshoe** | No trouble, any day (owner 2026-11-13). Never offered on Easy, which has none |
 
 **The helpers** work by themselves. Counter Help takes the one-item tickets
 (a side, a cup of soup, a side of eggs) and at lunch adds the pickle spear,
@@ -730,6 +767,10 @@ item pool starts smaller (achievements open the rest). Rush came out easier
 tickets come 2% faster: then 4 of 12 at 70 taps a minute, 7 of 10 at 90.
 The bot reads the tickets straight from the game, so the Power Flicker
 doesn't slow it down; a person will feel it.
+
+After the repricing (2026-11-13), buying whatever it can afford: Regular
+4 of 10 at 60, 8 of 10 at 75; Rush 2 of 10 at 70, 9 of 10 at 90. About as
+before (10 weeks is a small sample); cheaper Epics help a quick player most.
 
 What keeps a hard day from being an impossible one (`tuning.fair`): a
 ticket never waits less than the time it takes to make; with two four-part
