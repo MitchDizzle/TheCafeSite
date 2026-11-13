@@ -791,7 +791,8 @@
     var gaps = T.gaps.slice().sort(function (a, b) { return a - b; });
     bank();
     report('day', { day: G.day, tips: T.tips, plates: T.served, walk: T.walk, secs: Math.round(T.played), away: Math.round(T.away),
-      taps: T.taps, gmin: gaps.length ? gaps[0] : '', gmed: gaps.length ? gaps[Math.floor(gaps.length / 2)] : '', u: T.untrusted });
+      taps: T.taps, gmin: gaps.length ? gaps[0] : '', gmed: gaps.length ? gaps[Math.floor(gaps.length / 2)] : '', u: T.untrusted,
+      slips: T.slips, trouble: T.trouble ? T.trouble.id : '' });
     save.seen = true; persist();
     clearBubbles();
     if (G.day >= D.days.length - 1) { startCatering(); if (T.clean) setTimeout(function () { if (T) toast('Flawless day · ' + money(T.clean)); }, 2100); } else showClose();
@@ -1328,7 +1329,7 @@
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
     report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round(G.played), away: Math.round(G.away),
-      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent, bonus: G.bonus, finish: G.finish });
+      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent, bonus: G.bonus, finish: G.finish, ach: G.newAch.slice() });
     lastRun = { run: G.run, lvl: G.level, total: kept, earned: G.earned, spent: spent, bonus: G.bonus, finish: G.finish, days: weekDays(), cater: G.cater == null ? '' : G.cater,
       why: win ? 'win' : why, day: G.day, items: Object.keys(G.items), secs: Math.round(G.played) };
     // After a finished week (not one that was quit), and only if results go
