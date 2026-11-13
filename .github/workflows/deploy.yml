@@ -20,6 +20,9 @@ on:
       - 'social/**'
       - 'square/**'
       - 'game/**'
+  # Started by name too: by "Specials from the kitchen board" after it
+  # commits the board's specials (its own push can't start this), or by hand.
+  workflow_dispatch:
 
 # One deploy at a time. A push runs once, for its newest commit, however many
 # commits it carries. Pushes close together queue rather than overlap on the

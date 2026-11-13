@@ -17,7 +17,7 @@ const { applyToday } = require("./specials/today");
 const { photoSetup, savePhotoPost, savedPhotos, savedPhotoFile, deleteSavedPhotos, clearBackedUpPhotos } = require("./photo-post");
 const { allPhotos, photoFile } = require("./specials/photos");
 const { backupNow } = require("./backup");
-const { offsiteStatus } = require("./offsite");
+const { offsiteStatus, pushOffsite } = require("./offsite");
 const { checkPage } = require("./check");
 const { syncNow, saveReservation, actOn, markSeated, manageView } = require("./reservations");
 const { power, checkUpdates, boardCheckedIn } = require("./system");
@@ -359,6 +359,12 @@ async function handle(req, res) {
           : " Today's is in Square now.";
       }
       if (saved.days.some((d) => d > localDate())) message += " The rest go into Square by themselves on the morning of each day.";
+      // The days saved go to the website through the GitHub backup (plan.js,
+      // siteExport); the site picks them up within the hour.
+      if (saved.days.length && cfg.backupRepo) {
+        pushOffsite();
+        message += " The website gets them within the hour.";
+      }
       return send(res, 200, { ok: true, message });
     } catch (err) {
       console.error(`Specials: ${err.message}`);
