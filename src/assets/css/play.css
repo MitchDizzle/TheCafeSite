@@ -271,6 +271,11 @@
 .ou-title .ou-told p b { font: 700 18px/1.2 "Playfair Display", Georgia, serif; }
 .ou-told .ou-btn--ghost { color: var(--text-dark) !important; border-color: var(--teal-dark) !important; }
 .ou-told .ou-link { color: var(--accent) !important; justify-self: start; padding: 4px 0 !important; }
+/* The in-app browser warning: the same card, top of the stack. */
+.ou-inapp { z-index: 9; }
+.ou-inapp .ou-btn { text-align: center; text-decoration: none; }
+.ou-title .ou-inapp p.ou-inapp-how { padding: 8px 10px; background: #fff; border: 2px dashed var(--teal-dark); border-radius: 10px; font-size: 14px; }
+.ou-title .ou-inapp p.ou-inapp-fine { font-size: 13px; color: #4A5A62; }
 .ou-pausenote { margin: -4px 0 4px; color: #4A5A62; }
 
 /* Settings: a switch a row, then who made it. */

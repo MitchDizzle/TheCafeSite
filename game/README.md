@@ -702,6 +702,14 @@ plan rules out logins); instead:
   the page in the phone's browser first. An iPhone's home-screen game keeps
   its own storage, which is why the save code comes first.
 
+**A warning in an app's browser** (owner 2026-11-13). Opened inside
+Facebook, Messenger, Instagram, TikTok, Snapchat, Pinterest, LinkedIn,
+LINE or any Android app's web view, the title screen first says so: the
+game may forget everything there. On Android, "Open in Chrome" hands the
+page to Chrome; on an iPhone (where no link can leave the app) it says
+where the "Open in browser" item is. "Play here anyway" waves it off for
+the visit. `/play?inapp` shows it in any browser, to see how it looks.
+
 **Week codes** (owner 2026-11-13). Every finished week shows a week code,
 the first eight letters of its run id, which the results Sheet files in
 its `run` column. It's hidden until tapped and hides again after six

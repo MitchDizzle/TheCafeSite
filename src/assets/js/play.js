@@ -1528,10 +1528,10 @@
   try { if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('/ou-sw.js', { scope: '/play' }); } catch (e) { /* no matter */ }
   function installHtml() {
     var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
-    var ios = /iPhone|iPad|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1), inApp = /FBAN|FBAV|FB_IAB|Instagram|Messenger/.test(UA);
+    var ios = /iPhone|iPad|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
     var keep = ' Copy your save code first: on an iPhone the home-screen game keeps its own progress.';
     if (standalone) return '<p class="ou-fine">You’re playing from your home screen. Nice.</p>';
-    if (inApp) return '<p class="ou-fine">Facebook’s own browser can’t do it. Open the ⋯ menu, choose <b>Open in browser</b>, then come back to Settings.' + keep + '</p>';
+    if (inApp) return '<p class="ou-fine">' + esc(inApp === 'an app' ? 'This app’s' : inApp + '’s') + ' own browser can’t do it. Open the ⋯ menu, choose <b>Open in browser</b>, then come back to Settings.' + keep + '</p>';
     if (installEvt) return '<button class="ou-btn" data-act="install">Add to Home Screen</button>';
     if (ios) return '<p class="ou-fine">In Safari, tap the <b>Share</b> button, then <b>Add to Home Screen</b>.' + keep + '</p>';
     return '<p class="ou-fine">Open your browser’s menu and choose <b>Add to Home screen</b> or <b>Install app</b>.</p>';
@@ -1698,7 +1698,35 @@
   /* The first time, and only if results go anywhere: say what the game keeps
      and sends, with a choice. No cookies are used; this is about the phone's
      storage and the anonymous results (see /privacy). */
-  if (STATS.url && !save.told) $('#ou-told').hidden = false;
+  /* An app's own browser (owner 2026-11-13): Facebook's, Instagram's,
+     TikTok's and the like keep their own storage and can drop it, so a week,
+     the best scores and the achievements may not be there next time. Warn
+     before the first tap, and offer the way out. Once waved off, not again
+     this visit. */
+  var INAPP = [[/FBAN|FBAV|FB_IAB|FBIOS/, 'Facebook'], [/Messenger/, 'Messenger'], [/Instagram/, 'Instagram'], [/musical_ly|Bytedance|TikTok/i, 'TikTok'],
+    [/Snapchat/, 'Snapchat'], [/Pinterest/, 'Pinterest'], [/LinkedInApp/, 'LinkedIn'], [/Line\//, 'LINE'], [/; wv\)/, 'an app']];
+  var inApp = null;
+  INAPP.some(function (x) { if (x[0].test(UA)) { inApp = x[1]; return true; } return false; });
+  if (/[?&]inapp\b/.test(location.search)) inApp = 'Facebook';      // /play?inapp shows the warning, to see how it looks
+  var waved = false; try { waved = sessionStorage.getItem('ou.inapp') === '1'; } catch (e) { /* no matter */ }
+  if (inApp && !waved) {
+    var android = /Android/.test(UA);
+    // Android can hand the page straight to Chrome; an iPhone app's browser can't be left from a link.
+    var chrome = 'intent://' + location.host + location.pathname + '#Intent;scheme=https;package=com.android.chrome;end';
+    $('#ou-inapp').innerHTML = '<p id="ou-inapp-h"><b>You’re in ' + esc(inApp === 'an app' ? 'an app’s' : inApp + '’s') + ' browser</b></p>' +
+      '<p>It can forget your game: weeks, best scores and achievements may not be here next time. Play in ' + (android ? 'Chrome' : 'Safari') + ' to keep them.</p>' +
+      (android ? '<a class="ou-btn" href="' + esc(chrome) + '">Open in Chrome</a>'
+        : '<p class="ou-inapp-how">Tap <b>⋯</b> (or the share button) at the top or bottom of the screen, then <b>Open in browser</b> or <b>Open in Safari</b>.</p>') +
+      '<button class="ou-btn ou-btn--ghost" data-inapp="ok">Play here anyway</button>' +
+      '<p class="ou-inapp-fine">Already have progress here? Copy your save code in Settings first.</p>';
+    $('#ou-inapp').hidden = false;
+  } else if (STATS.url && !save.told) $('#ou-told').hidden = false;
+  stage.addEventListener('click', function (e) {
+    if (!e.target.closest || !e.target.closest('[data-inapp]')) return;
+    $('#ou-inapp').hidden = true;
+    try { sessionStorage.setItem('ou.inapp', '1'); } catch (err) { /* no matter */ }
+    if (STATS.url && !save.told) $('#ou-told').hidden = false;
+  });
   stage.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-told]'); if (!b) return;
     save.told = true; save.noStats = b.getAttribute('data-told') === 'no'; persist();

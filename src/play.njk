@@ -72,6 +72,10 @@ headExtra: |
         </div>
         <div class="ou-levels" id="ou-levels" role="group" aria-label="How hard"></div>
         <p class="ou-level-text" id="ou-level-text"></p>
+        {# Opened inside an app's own browser (Facebook, Instagram, TikTok…),
+           which can forget everything: say so, and how to get out (owner
+           2026-11-13). play.js fills it in and decides. #}
+        <div class="ou-told ou-inapp" id="ou-inapp" hidden role="dialog" aria-labelledby="ou-inapp-h"></div>
         {# Shown once, the first time, and only when results go somewhere
            (site.json game.statsUrl). play.js decides. #}
         <div class="ou-told" id="ou-told" hidden role="dialog" aria-labelledby="ou-told-h">
