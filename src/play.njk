@@ -80,8 +80,9 @@ headExtra: |
         <div class="ou-title-links">
           <button class="ou-link" data-act="how">How to play</button>
           <button class="ou-link" data-act="box">Recipe Box</button>
-          <button class="ou-link" data-act="sound" id="ou-sound-title">Sound: off</button>
-          <button class="ou-link" data-act="music" id="ou-music-title">Music: off</button>
+          {#- Sound, music, results and the credits live in Settings (owner
+              2026-11-12: more room on the title). #}
+          <button class="ou-link" data-act="settings">Settings</button>
         </div>
       </div>
       <div class="ou-title-foot">
@@ -145,6 +146,7 @@ headExtra: |
     <section class="ou-scr ou-paper" data-scr="over" hidden></section>
     <section class="ou-scr ou-paper" data-scr="box" hidden></section>
     <section class="ou-scr ou-paper" data-scr="how" hidden></section>
+    <section class="ou-scr ou-paper" data-scr="settings" hidden></section>
 
   </div>
   {# If the game's script doesn't load or falls over, say so and offer the

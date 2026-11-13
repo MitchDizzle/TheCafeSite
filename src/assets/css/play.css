@@ -273,6 +273,15 @@
 .ou-told .ou-link { color: var(--accent) !important; justify-self: start; padding: 4px 0 !important; }
 .ou-pausenote { margin: -4px 0 4px; color: #4A5A62; }
 
+/* Settings: a switch a row, then who made it. */
+.ou-set { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin: 0 0 8px; padding: 11px 12px !important; background: #fff !important; border: 2px solid var(--teal-dark) !important; border-radius: 12px; text-align: left; color: var(--text-dark) !important; }
+.ou-set b { display: block; font: 700 17px/1.2 "Playfair Display", Georgia, serif; }
+.ou-set small { display: block; font: 400 13px/1.3 Lato, sans-serif; color: #4A5A62; margin-top: 2px; }
+.ou-set i { flex: none; font: 900 13px/1 Lato, sans-serif; font-style: normal; letter-spacing: .1em; text-transform: uppercase; padding: 7px 10px; border-radius: 999px; background: var(--steel-light); border: 2px solid var(--steel-dark); }
+.ou-set[aria-pressed="true"] i { background: var(--mint); border-color: var(--teal-dark); }
+.ou-credits { margin-top: 16px; font: 400 15px/1.4 Lato, sans-serif; }
+.ou-credits p { margin: 6px 0 10px; }
+.ou-credit b { display: block; font: 700 24px/1.2 "Playfair Display", Georgia, serif; }
 .ou-version { display: block; font: 400 11px/1.2 Lato, sans-serif; color: var(--mint); opacity: .75; }
 
 /* Send in your score (the week-over screen, only when results go somewhere). */

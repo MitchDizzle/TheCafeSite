@@ -1073,11 +1073,11 @@
   function closeOverlay() { if (pushed) history.back(); else leaveOverlay(); }
   window.addEventListener('popstate', function () {
     pushed = false;
-    if (screen === 'box' || screen === 'how') leaveOverlay();
+    if (screen === 'box' || screen === 'how' || screen === 'settings') leaveOverlay();
   });
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape' && e.key !== 'Backspace') return;
-    if (screen === 'box' || screen === 'how') { e.preventDefault(); closeOverlay(); }
+    if (screen === 'box' || screen === 'how' || screen === 'settings') { e.preventDefault(); closeOverlay(); }
     else if (e.key === 'Escape' && screen === 'shift' && T) setPaused(!T.paused);
   });
 
@@ -1310,6 +1310,28 @@
     openOverlay(from);
   }
 
+  /* Settings, and who made it (owner 2026-11-12): sound, music, whether
+     results go to The Café, and the credits. Kept off the title for room. */
+  var CREDIT = 'Mitch Gardner';
+  function showSettings() { drawSettings(); openOverlay('title'); }
+  function drawSettings() {
+    var row = function (act, label, on, note) {
+      return '<button class="ou-set" data-act="' + act + '" aria-pressed="' + on + '"><span><b>' + label + '</b>' + (note ? '<small>' + note + '</small>' : '') + '</span><i>' + (on ? 'On' : 'Off') + '</i></button>';
+    };
+    paper('settings',
+      '<div class="ou-top ou-top--back"><span class="ou-kicker">Settings</span><h2 class="ou-h">Order Up</h2><span class="ou-label">Version ' + esc(OrderUp.version) + '</span>' +
+      '<button class="ou-topback" data-act="back">Back</button></div>' +
+      '<div class="ou-body-pad">' +
+      row('sound', 'Sound', save.sound, 'The sizzle, the bell, the tickets.') +
+      row('music', 'Music', save.music, 'Slow jazz, made as it plays.') +
+      (STATS.url ? row('stats', 'Send how my weeks go', !save.noStats, 'No name: the level, the days and the tips, so The Café can see if it’s too hard.') : '') +
+      '<div class="ou-credits"><span class="ou-label">About</span>' +
+      '<p>A little game from <b>The Café</b> in Leavenworth, Kansas. The tickets are the real menu, the specials were real specials, and the photos in the Recipe Box are the real plates.</p>' +
+      '<p class="ou-credit"><span class="ou-label">Made by</span><b>' + esc(CREDIT) + '</b></p>' +
+      '<p class="ou-fine">Every drawing, sound and note of music is made in the game itself. ' + esc(TIPS_NOTE) + '</p>' +
+      '<div class="ou-row"><a class="ou-btn ou-btn--quiet" href="/menu">Menu</a><a class="ou-btn ou-btn--quiet" href="/privacy">Privacy</a></div></div>' +
+      '</div><div class="ou-foot"><button class="ou-btn" data-act="back">Back</button></div>');
+  }
   function drawTitle() {
     var lv = D.levels[save.level], best = save.keeps[save.level] || 0, run = save.run;
     $('#ou-best').textContent = best ? 'Best ' + lv.name + ' week: ' + money(best) + ' kept · ' + plural(save.wins, 'week', 'weeks') + ' finished' : 'Monday to Friday, 6am to 2pm';
@@ -1322,9 +1344,8 @@
     go.setAttribute('data-act', run ? 'continue' : 'start');
     $('#ou-fresh').hidden = !run;
     $('#ou-confirm').hidden = true;
-    var snd = 'Sound: ' + (save.sound ? 'on' : 'off'), mus = 'Music: ' + (save.music ? 'on' : 'off');
-    $('#ou-sound-title').textContent = snd; $('#ou-sound-pause').textContent = snd;
-    $('#ou-music-title').textContent = mus; $('#ou-music-pause').textContent = mus;
+    $('#ou-sound-pause').textContent = 'Sound: ' + (save.sound ? 'on' : 'off');
+    $('#ou-music-pause').textContent = 'Music: ' + (save.music ? 'on' : 'off');
   }
 
   /* ---------- 8. taps ---------- */
@@ -1348,7 +1369,9 @@
       case 'leave': $('#ou-pausebox').hidden = true; if (T) T.ended = true; clearBubbles(); G = null; T = null; show('title'); drawTitle(); break;
       case 'continue': sfx.tap(); if (save.run) resumeRun(); else newRun(); break;
       case 'level': if (D.levels[el.getAttribute('data-level')]) { save.level = el.getAttribute('data-level'); persist(); drawTitle(); sfx.tap(); } break;
-      case 'music': save.music = !save.music; persist(); drawTitle(); break;
+      case 'music': save.music = !save.music; persist(); drawTitle(); if (screen === 'settings') drawSettings(); break;
+      case 'stats': save.noStats = !save.noStats; save.told = true; persist(); drawSettings(); sfx.tap(); break;
+      case 'settings': sfx.tap(); showSettings(); break;
       case 'fryer':
         var fry = fryerItem();
         if (fry && G.tips >= fry.price) { G.tips -= fry.price; G.bought++; own(fry); sfx.win(); drawClose(); break; }
@@ -1356,7 +1379,7 @@
       case 'how': showHow(screen); break;
       case 'box': showBox(screen === 'over' ? 'over' : 'title'); break;
       case 'back': closeOverlay(); break;
-      case 'sound': save.sound = !save.sound; persist(); drawTitle(); sfx.done(); break;
+      case 'sound': save.sound = !save.sound; persist(); drawTitle(); if (screen === 'settings') drawSettings(); sfx.done(); break;
       case 'special': sfx.tap(); startDay(G.offers[i]); break;
       case 'bin': if (live) tapBin(el.getAttribute('data-part')); break;
       case 'spot': if (live && performance.now() - grabbedAt > 500) spotGesture(i, e.detail === 0 ? 'key' : 'tap'); break;   // a touch or mouse was dealt with on pointerup

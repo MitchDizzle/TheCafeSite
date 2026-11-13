@@ -66,6 +66,13 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | **Tips are points** | Said on How to play and under every finished week: "Tips in the game are points, not money. At The Café, real tips go to the cooks and the people who work there." So nobody reads the game's tips as the café's money. | Owner 2026-11-12 |
 | **Lose** | Three spilled coffees in one day, or the catering goes out late. | |
 
+**The title screen** (owner 2026-11-12: more room) has Start, the three
+levels, and three links: How to play, Recipe Box and **Settings**. Settings
+holds the sound and music switches, whether results go to The Café (only
+when `game.statsUrl` is set), and **About**: what the game is, and the
+credit, "Made by Mitch Gardner" (owner 2026-11-12; `CREDIT` in `play.js`),
+with the version. Pause keeps its own sound and music buttons.
+
 **Between runs** (kept on the phone only, §13): the **Recipe Box**, a card
 for every ticket and special by its real name, which turns into the café's
 own photo once it has been served 10 times; the best week; weeks finished.
