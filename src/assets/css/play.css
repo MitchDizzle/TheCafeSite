@@ -412,6 +412,13 @@
 .ou-pause-own:empty { display: none; }
 .ou-pause-own .ou-own-row { justify-content: center; }
 .ou-own-row button em { position: absolute; right: -4px; bottom: -4px; font: 900 10px/1 Lato, sans-serif; font-style: normal; background: var(--teal-dark); color: var(--cream); border-radius: 999px; padding: 2px 4px; }
+.ou-shophead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+/* Restock: small, beside the shop's name, a refresh arrow and its price. */
+.ou-restock { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px !important; background: #fff !important; color: var(--text-dark) !important;
+    border: 2px solid var(--teal-dark) !important; border-radius: 999px; font: 900 14px/1 Lato, sans-serif; box-shadow: 0 3px 0 var(--steel-dark); }
+.ou-restock svg { width: 16px; height: 16px; }
+.ou-restock:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--steel-dark); }
+.ou-restock[disabled] { opacity: .45; box-shadow: none; }
 .ou-wallet { position: absolute; right: 14px; top: 14px; text-align: right; line-height: 1.05; }
 .ou-wallet b { font: 900 22px/1 Lato, sans-serif; display: block; }
 

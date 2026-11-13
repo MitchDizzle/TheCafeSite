@@ -55,7 +55,7 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | **Lunch** (11am – 2pm) | Burgers, wraps, salads, soup, sides, the special. The bins turn over at 11am, once the last breakfast ticket is out, and **the clock waits at 11:00 until then** (owner 2026-11-12), so finishing breakfast never costs lunch tickets. | "Starting at 11am" |
 | **The pickle spear** | At lunch, any plate can take one: $1 more. Never required. | Nearly every plate in the photos |
 | **Lives** | Three **coffee cups**. A ticket that runs out of time is a walk-out and spills one. They are poured again each morning. | |
-| **After close** | Pick one item of three, free. Then the shop: three more for tips, and "Restock" for a new three. | |
+| **After close** | "Tuesday results": the day's tips, plates and walk-outs, and what there is to spend. Pick one item of three, free. Then the shop: three more for tips, and a small Restock button beside "The shop" (a refresh arrow, $5, then $10, $15…) for a new three (owner 2026-11-13: moved up out of the foot, and cheaper). | |
 | **Flipping** | Eggs, bacon, burgers and chicken stop cooking half way until they're turned (§4). | The flat-top |
 | **Family** | From Wednesday, family may stop by at lunch (§4). Never announced. | |
 | **Friday** | Ends on a **catering order**: five platters, one after another, on one clock. | The catering photos |
@@ -564,7 +564,8 @@ hints beside the plate through that day.
 
 **Nobody scrolls to find the button** (owner 2026-11-11). A paper screen is
 a band on top, a middle that scrolls, and a foot that stays put with the way
-on or the way back in it: "Got it", "Restock" and "Open Tue", "Start a new
+on or the way back in it: "Got it", "Open Wednesday" (one full-width button;
+Restock moved up beside the shop's name, owner 2026-11-13), "Start a new
 week", "Back". The Recipe Box, the longest page, has Back in its top band as
 well. The phone's own back button, the browser's, Backspace and Escape all
 leave the Recipe Box and How to play the way the Back button does, instead

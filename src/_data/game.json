@@ -136,7 +136,7 @@
   "lateShop": { "fromDay": 2, "tips": 0.35 },
   "lastShop": { "day": 3, "off": 50 },
   "rarityNames": { "normal": "Normal", "rare": "Rare", "epic": "Epic", "legendary": "Legendary" },
-  "reroll": { "first": 10, "step": 10 },
+  "reroll": { "first": 5, "step": 5 },
 
   "_note_skip": "After close the free item can be turned down for tips instead (owner 2026-11-12): `bonus` is the tips by which close it is (Monday's first). More later in the week, when an item has fewer days left to pay for itself. Counted in tips earned, so it adds to the score.",
   "skip": { "bonus": [15, 25, 35, 50] },

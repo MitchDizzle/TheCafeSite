@@ -1288,7 +1288,11 @@
         '<span class="ou-label">Pick one, free</span>' + G.pick.map(function (it, i) { return itemCard(it, 'pick', i, {}); }).join('');
       foot = '<div class="ou-foot"><button class="ou-btn ou-btn--quiet" data-act="skip">None tonight · ' + money(skipBonus()) + ' in tips instead</button></div>';
     } else {
-      body = '<span class="ou-label">The shop</span>' +
+      // Restock sits beside the shop's name, so the foot is one big button (owner 2026-11-13).
+      body = '<div class="ou-shophead"><span class="ou-label">The shop</span>' +
+        '<button class="ou-restock" data-act="reroll"' + (G.tips < G.reroll ? ' disabled' : '') + ' aria-label="Restock the shop for ' + money(G.reroll) + '">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        money(G.reroll) + '</button></div>' +
         (G.sale && offTonight() === D.sale.off ? '<p class="ou-sale"><b>' + D.sale.off + '% off tonight.</b> You haven’t bought a thing all week, so the supplier cut you a deal.</p>'
           : G.day === D.lastShop.day ? '<p class="ou-sale"><b>Half price tonight.</b> One day left: everything’s ' + D.lastShop.off + '% off.</p>' : '') +
         G.shop.map(function (it, i) {
@@ -1298,12 +1302,11 @@
         // The one thing that is never for sale: there is no fryer (see /feedback).
         (G.fryer && fryerItem() && !has('fryer') ? itemCard(fryerItem(), 'fryer', 0, { price: money(fryerItem().price), cls: G.tips < fryerItem().price ? ' is-poor' : '' }) : '') +
         '';
-      foot = '<div class="ou-foot"><div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="reroll"' + (G.tips < G.reroll ? ' disabled' : '') + '>Restock · ' + money(G.reroll) + '</button>' +
-        '<button class="ou-btn" data-act="next">Open ' + next.short + '</button></div></div>';
+      foot = '<div class="ou-foot"><button class="ou-btn" data-act="next">Open ' + next.name + '</button></div>';
     }
     paper('close',
-      '<div class="ou-top ou-top--wallet"><span class="ou-kicker">After close</span><h2 class="ou-h">' + day.name + ' · ' + money(T.tips) + ' in tips</h2>' +
-      '<span class="ou-label">Closed at 2pm · ' + plural(T.served, 'plate', 'plates') + ' · ' + plural(T.walk, 'walk-out', 'walk-outs') + '</span>' +
+      '<div class="ou-top ou-top--wallet"><span class="ou-kicker">' + day.name + ' results</span><h2 class="ou-h">' + money(T.tips) + ' in tips</h2>' +
+      '<span class="ou-label">' + plural(T.served, 'plate', 'plates') + ' · ' + plural(T.walk, 'walk-out', 'walk-outs') + '</span>' +
       '<div class="ou-wallet"><span class="ou-label">To spend</span><b>' + money(G.tips) + '</b></div></div>' +
       '<div class="ou-body-pad">' + body + ownedRow() + '</div>' + foot);
   }
