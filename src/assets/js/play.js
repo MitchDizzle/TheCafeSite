@@ -66,8 +66,13 @@
   }
 
   /* ---------- 1. the save ---------- */
-  var KEY = 'orderup.v1';
-  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {} };
+  /* The save's key and shape. Updates must keep old saves working (owner
+     2026-11-13), so: KEY never changes, a new field gets a default in `save`
+     below, and anything that changes the meaning of a field gets a step in
+     migrate() with SAVE_VER raised. Never rename an item's or an
+     achievement's id: saves and weeks left half way are keyed by them. */
+  var KEY = 'orderup.v1', SAVE_VER = 2;
+  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0 };
   var loadedSum = '';
   try {
     var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -100,6 +105,15 @@
   }
   if (!Array.isArray(save.qa)) save.qa = [];
   if (!save.ach || typeof save.ach !== 'object') save.ach = {};
+  migrate();
+  /* One step per change of shape, oldest first. A save from any earlier
+     version walks up through all of them. */
+  function migrate() {
+    if (save.ver < 2) {
+      // 2 (game 1.2): achievements began. Nothing to move; just the mark.
+      save.ver = 2;
+    }
+  }
 
   /* ---------- test shortcuts ----------
      For trying things on a phone, where there's no ?debug. From the console:
@@ -378,7 +392,7 @@
       cups: TU.cups, spawnIn: BANNER_S + 0.3, seq: 1, served: 0, walk: 0, tips: 0,
       special: special, dry: 0, lineT: 0, urnDone: false,
       cookies: has('cookie'), pickles: 0, lastLucky: false,
-      usualAt: has('regular') ? [3 + Math.floor(rand() * 3), 9 + Math.floor(rand() * 4)] : [],
+      usualAt: has('regular') ? [3 + Math.floor(rand() * 3), 9 + Math.floor(rand() * 4), 15 + Math.floor(rand() * 4)] : [],
       familyAt: null, fam: null, bubbles: [], cat: null, endIn: null, lastClock: '', lastSky: -1,
       taps: 0, gaps: [], lastTap: 0, untrusted: 0, played: 0, away: 0, banked: 0, awayBanked: 0,
       trouble: troubleOf(G.trouble), coldAt: -1, slips: 0, clean: 0
@@ -485,7 +499,7 @@
     if (lunch && rand() * 100 < (TU.specialShare + TU.postShare * has('fbpost')) * (review ? review.share : 1)) {
       recipe = { id: 'sp-' + T.special.id, name: T.special.name, when: 'lunch', parts: ['special'].concat(T.special.sides.map(function () { return 'side'; })) };
       o.special = true;
-    } else if (!lunch && has('rollcase') && rand() < 0.22) {
+    } else if (!lunch && has('rollcase') && rand() < 0.3) {
       recipe = D.rollRecipe;
     } else {
       var gentle = !save.seen && G.day === 0 && T.seq <= 2;
@@ -608,13 +622,13 @@
     var frac = t.left / t.total;
     if (!t.catering) tip += frac > 0.5 ? 2 : frac > 0.25 ? 1 : 0;
     if (t.catering) tip += 2;
-    if (t.rid === 'roll') tip = 3;
+    if (t.rid === 'roll') tip = itemPer('rollcase');
     if (kind === 'pickle') tip += 1 + itemPer('picklejar') * has('picklejar');
     else if (t.parts.indexOf('pickle') !== -1 || kind === 'wild') tip += itemPer('picklejar') * has('picklejar');
     tip += itemPer('tipjar') * has('tipjar');
     var mult = 1;
     if (t.special && has('drink')) mult *= 2;
-    if (t.n <= 3 && has('earlybird') && !t.catering) mult *= 2;
+    if (t.n <= itemPer('earlybird') && has('earlybird') && !t.catering) mult *= 2;
     if (t.usual) mult *= 3;
     if (has('fryer')) mult *= 3;
     // The Lucky Penny: a chance a plate is a lucky one (the Big Tipper makes it triple).
@@ -1195,20 +1209,20 @@
   }
   /* Late in the week the items that only earn turn up less (owner
      2026-11-13: by then the player is after getting through). */
-  function weighted(pool) {
-    var late = G.day >= D.lateShop.fromDay, w = pool.map(function (it) { return late && it.kind === 'tips' ? D.lateShop.tips : 1; });
+  function weighted(pool, shop) {
+    var late = shop && G.day >= D.lateShop.fromDay, w = pool.map(function (it) { return late && it.kind === 'tips' ? D.lateShop.tips : 1; });
     var sum = w.reduce(function (a, b) { return a + b; }, 0), x = rand() * sum;
     for (var i = 0; i < pool.length; i++) { x -= w[i]; if (x <= 0) return pool[i]; }
     return pool[pool.length - 1];
   }
-  function deal(n, not) {
+  function deal(n, not, shop) {
     var odds = D.odds[Math.min(G.day, D.odds.length - 1)], out = [];
     var falls = { epic: ['epic', 'rare', 'normal'], rare: ['rare', 'normal', 'epic'], normal: ['normal', 'rare', 'epic'] };
     for (var k = 0; k < n; k++) {
       var roll = rand() * 100, rar = roll < odds.epic ? 'epic' : roll < odds.epic + odds.rare ? 'rare' : 'normal', got = null;
       for (var f = 0; f < 3 && !got; f++) {
         var pool = D.items.filter(function (it) { return it.rarity === falls[rar][f] && has(it.id) < (it.max || 1) && out.indexOf(it) === -1 && not.indexOf(it.id) === -1 && !(it.id === 'spatula' && level().flip === 'none') && !(it.id === 'smalltalk' && !level().family) && !(it.id === 'horseshoe' && !level().trouble) && !locked(it.id); });
-        if (pool.length) got = weighted(pool);
+        if (pool.length) got = weighted(pool, shop);
       }
       if (got) out.push(got);
     }
@@ -1241,7 +1255,7 @@
   function showClose() {
     // What was earned since the last close (all of the week's are listed again at the end).
     G.tonightAch = G.newAch.slice(G.achShown || 0); G.achShown = G.newAch.length;
-    G.stage = 'pick'; G.pick = deal(3, []); G.shop = []; G.sold = []; G.reroll = D.reroll.first; G.sale = false;
+    G.stage = 'pick'; G.pick = deal(3, [], false); G.shop = []; G.sold = []; G.reroll = D.reroll.first; G.sale = false;
     drawClose();
   }
   /* What turning down the free item pays tonight (owner 2026-11-12): more
@@ -1252,13 +1266,18 @@
      Thursday an item has little time left to pay for itself). Decided once
      a close, kept through a restock. */
   function toShop() {
-    G.stage = 'shop'; G.shop = deal(3, []); G.fryer = rand() * 100 < (D.legendaryChance || 0);
+    G.stage = 'shop'; G.shop = deal(3, [], true); G.fryer = rand() * 100 < (D.legendaryChance || 0);
     G.sale = G.day >= D.sale.fromDay && !G.bought && rand() * 100 < D.sale.chance;
     drawClose();
   }
+  /* The shop's price tonight: the careful week's sale, or Thursday's half
+     price (owner 2026-11-13: an item bought then has only Friday left), the
+     bigger of the two. Never the Deep Fryer. */
+  function offTonight() { return Math.max(G.sale ? D.sale.off : 0, G.day === D.lastShop.day ? D.lastShop.off : 0); }
   function priceOf(it) {
-    if (!G.sale || it.rarity === 'legendary') return it.price;
-    return Math.max(5, Math.round(it.price * (100 - D.sale.off) / 500) * 5);
+    var off = offTonight();
+    if (!off || it.rarity === 'legendary') return it.price;
+    return Math.max(5, Math.round(it.price * (100 - off) / 500) * 5);
   }
   function drawClose() {
     var day = D.days[G.day], next = D.days[G.day + 1], body, foot = '';
@@ -1269,7 +1288,8 @@
       foot = '<div class="ou-foot"><button class="ou-btn ou-btn--quiet" data-act="skip">None tonight · ' + money(skipBonus()) + ' in tips instead</button></div>';
     } else {
       body = '<span class="ou-label">The shop</span>' +
-        (G.sale ? '<p class="ou-sale"><b>' + D.sale.off + '% off tonight.</b> You haven’t bought a thing all week, so the supplier cut you a deal.</p>' : '') +
+        (G.sale && offTonight() === D.sale.off ? '<p class="ou-sale"><b>' + D.sale.off + '% off tonight.</b> You haven’t bought a thing all week, so the supplier cut you a deal.</p>'
+          : G.day === D.lastShop.day ? '<p class="ou-sale"><b>Half price tonight.</b> One day left: everything’s ' + D.lastShop.off + '% off.</p>' : '') +
         G.shop.map(function (it, i) {
         var sold = G.sold.indexOf(i) !== -1, cost = priceOf(it), poor = !sold && G.tips < cost;
         return itemCard(it, 'buy', i, { sold: sold, price: sold ? 'Yours' : money(cost), was: !sold && cost !== it.price ? money(it.price) : '', cls: sold ? ' is-sold' : poor ? ' is-poor' : '' });
@@ -1508,7 +1528,7 @@
         G.tips -= cost; G.bought++; own(it); G.sold.push(i); sfx.buy(); drawClose(); break;
       case 'reroll':
         if (G.tips < G.reroll) break;
-        G.tips -= G.reroll; G.reroll += D.reroll.step; G.shop = deal(3, []); G.sold = []; G.fryer = rand() * 100 < (D.legendaryChance || 0); sfx.tap(); drawClose(); break;
+        G.tips -= G.reroll; G.reroll += D.reroll.step; G.shop = deal(3, [], true); G.sold = []; G.fryer = rand() * 100 < (D.legendaryChance || 0); sfx.tap(); drawClose(); break;
       case 'next': G.day++; sfx.tap(); showDawn(); break;
     }
     musicSync();
@@ -1592,6 +1612,7 @@
      start` only: .eleventy.js cuts everything between these two markers out
      of the play.js it builds for the live site. Keep the markers as they are. */
   if (/[?&]debug\b/.test(location.search)) {
+    STATS.url = '';      // test weeks never reach the results Sheet
     window.__ou = {
       D: D, get G() { return G; }, get T() { return T; }, get screen() { return screen; }, save: save,
       speed: function (v) { speed = v; },

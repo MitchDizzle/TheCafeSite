@@ -175,11 +175,35 @@ Items the bot can't use well (the Second Plate, the Second Flat-Top's
 extra spots, Small Talk, pickles) were priced by judgement, lower than
 before. The fryer is still $1,500.
 
-**Late in the week, getting through** (owner 2026-11-13). Items that only
-earn (`"kind": "tips"`: Pickle Jar, Tip Jar, Early Bird, Cinnamon Roll Case,
-Facebook Post, Lucky Penny, Drink Included, The Regular, Big Tipper) turn up
-about a third as often from Wednesday's close (`lateShop`), when they have
-little time left to pay for themselves.
+**Every item has a kind** (`kind` in `game.json`): **tips** (it only earns:
+Pickle Jar, Tip Jar, Early Bird, Cinnamon Roll Case, Facebook Post, Lucky
+Penny, Drink Included, The Regular, Big Tipper, and the Deep Fryer) or
+**survive** (it helps a day through: everything else, the Horseshoe
+included).
+
+**Late in the week, getting through** (owner 2026-11-13). From Wednesday's
+close the shop deals tips items about a third as often (`lateShop`), when
+they have little time left to pay for themselves. **The free pick is never
+shifted**: it is dealt by rarity alone, every night.
+
+**Tips items are worth taking** (owner 2026-11-13: one that barely pays for
+itself is a bad buy). They were made stronger, or cheaper, so one bought on
+Monday earns back two to three times its price over a week played to the
+end (less in a week lost early), and a free one beats "None tonight"
+through Wednesday: Pickle Jar $2 a pickle plate (was $1), Early Bird the
+first five tickets (was three), Cinnamon Roll Case $4 a roll and more of
+them (was $3), Facebook Post +20 in 100 each (was 14, now $25), Lucky Penny
++12% each (was 8%), The Regular three times a day (was twice), Big Tipper
+$30. Measured at a pace that finishes weeks (6 weeks each, Regular): Tip Jar
++$130 a week a jar at $1 a plate (tried at $2: 4.4 times its price, too much),
+Drink Included about +$90 doubling the special (tripling: 5.5 times),
+Lucky Penny +$88, The Regular +$106, Early Bird +$71. Commons stay modest:
+each is a nudge, not a carry.
+
+**Thursday's shop is half price** (`lastShop`; owner 2026-11-13). Whoever
+gets through Thursday will most likely get through Friday, so an item
+bought then has to be cheap to be worth it. The careful week's 40% sale
+doesn't stack with it: the bigger of the two applies.
 
 **Normal**
 
@@ -635,6 +659,36 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
 
 ## 13. How it's built
 
+### Updating without breaking anyone's save (owner 2026-11-13)
+
+Everything a player has (best weeks, weeks played, the Recipe Box, a week
+left half way, achievements, settings) is in the phone's `localStorage`
+under `orderup.v1`. Not cookies: the game promises none, and a cookie would
+be no safer. Rules for every update:
+
+- **Never change the key** `orderup.v1`, and never change `sumOf()` (the
+  check value): either would wipe or flag every player's save.
+- **Never rename an item's or an achievement's id.** Saves, weeks left half
+  way, unlocks and the results Sheet all go by them. To retire one, take it
+  out of `game.json`: a save that has it simply ignores it, and anything it
+  unlocked opens up.
+- **A new thing in the save gets a default** in the `save` object at the top
+  of `play.js`; an old save just picks up the default.
+- **A change in what a saved field means** gets a step in `migrate()` and a
+  higher `SAVE_VER`, so an old save walks up through every step.
+- **A week left half way** resumes on the new rules, with the items it had.
+  That's fine for prices and numbers; a change to how a day works should be
+  tried with a week saved on the old version.
+- **Raise `game.version`** in `site.json` with each change players will
+  notice, so the results Sheet can tell weeks apart.
+
+One limit no update can fix: iPhones (Safari) clear a site's stored data
+if the site isn't opened for about seven days, and anyone can clear it
+themselves. Achievements are kept on the phone, so they can be lost that
+way. Keeping them for sure would need accounts and a server, which the
+plan rules out; a "save code" to copy and paste back is the cheap middle
+ground if it's ever wanted.
+
 - **A page of the site:** `src/play.njk` → `/play`, on `layouts/base.njk`
   with no nav or footer (like the home page), `noSiteJs: true`.
   **Listed or not is one switch:** `site.json` → `game.listed`. False (now):
@@ -771,6 +825,10 @@ doesn't slow it down; a person will feel it.
 After the repricing (2026-11-13), buying whatever it can afford: Regular
 4 of 10 at 60, 8 of 10 at 75; Rush 2 of 10 at 70, 9 of 10 at 90. About as
 before (10 weeks is a small sample); cheaper Epics help a quick player most.
+
+After the tips items were made worth taking and Thursday went half price
+(2026-11-13): Regular 6 of 10 at 60, 10 of 10 at 75; Rush 3 of 10 at 70,
+9 of 10 at 90. Regular a little easier than before.
 
 What keeps a hard day from being an impossible one (`tuning.fair`): a
 ticket never waits less than the time it takes to make; with two four-part
