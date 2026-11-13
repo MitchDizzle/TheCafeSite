@@ -401,6 +401,14 @@
 .ou-card--special img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ou-chip { display: inline-block; font: 700 12px/1 Lato, sans-serif; background: var(--steel-light); border: 1.5px solid var(--teal-dark); border-radius: 999px; padding: 4px 8px; margin: 3px 3px 0 0; }
 .ou-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ou-istats { display: grid; gap: 6px; margin: 6px 0 12px; }
+/* The week's items: icon, name and days, then what it did. */
+.ou-istats > div { display: grid; grid-template-columns: 34px 1fr; column-gap: 8px; align-items: center; padding: 6px 8px; background: var(--r-normal-bg); border: 2px solid var(--teal-dark); border-radius: 10px; }
+.ou-istats > div.is-rare { background: var(--r-rare-own); } .ou-istats > div.is-epic { background: var(--r-epic-own); }
+.ou-istats svg { grid-row: span 3; width: 34px; height: 34px; }
+.ou-istats b { font: 900 15px/1.2 Lato, sans-serif; }
+.ou-istats span { font: 700 12px/1.3 Lato, sans-serif; color: #4A5A62; }
+.ou-istats strong { font: 900 14px/1.3 Lato, sans-serif; color: var(--teal-dark); }
 .ou-own-row { display: flex; flex-wrap: wrap; gap: 4px; }
 .ou-own-row button { width: 40px; height: 40px; position: relative; background: var(--r-normal-bg) !important; border: 2px solid var(--teal-dark) !important; border-radius: 9px; padding: 3px !important; display: block; }
 .ou-own-row button.is-rare { background: var(--r-rare-own) !important; } .ou-own-row button.is-epic { background: var(--r-epic-own) !important; }
