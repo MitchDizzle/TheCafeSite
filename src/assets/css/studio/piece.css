@@ -54,6 +54,14 @@
     }
 }
 
+/* studioTransparent: an ad that someone else places on their own page (the
+   Lansing Lions basketball program). Nothing behind the artwork, so the
+   exported PNG keeps its alpha; export-studio.js tells Chrome to paint a
+   clear background. */
+.piece-body--clear {
+    background: transparent;
+}
+
 /* Width/height come from the layout's inline <style>, driven by the
    canvasW / canvasH front matter. */
 .canvas {

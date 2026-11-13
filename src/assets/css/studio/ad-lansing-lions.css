@@ -1,0 +1,131 @@
+/* ============================================================
+   Lansing Lions basketball program ad — 1050 × 600 px, exported at 2x
+   Piece: src/studio/ad-lansing-lions.njk
+
+   The program lays business-card ads on red or black pages and adds a
+   glow round each. So the card carries its own ground (the hero's teal)
+   and the corners outside its rounded edge are transparent: nothing of
+   ours fights their background. Teal ground, so no red text (1.3:1);
+   the red is only the wordmark's offset, as everywhere else.
+   ============================================================ */
+
+.lionsad {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    border-radius: 40px;
+    color: var(--cream);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* The teal part: everything above the cream band, centred in the space. */
+.lionsad-main {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 22px 0 16px;
+}
+
+/* A thin cream rule inside the teal, like the profile picture's ring. */
+.lionsad-frame {
+    position: absolute;
+    inset: 14px 14px 0;
+    border: 2px solid var(--cream);
+    border-bottom: 0;
+    border-radius: 28px 28px 0 0;
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.lionsad-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.lionsad-wordmark {
+    --mark-w: 560px;
+}
+
+.lionsad-tag {
+    margin-top: 14px;
+    font-size: 21px;
+    font-weight: 400;
+    letter-spacing: 0.24em;
+    color: var(--mint);
+}
+
+.lionsad-hours {
+    margin-top: 6px;
+    font-size: 29px;
+    font-weight: 700;
+    color: var(--cream);
+}
+
+.lionsad-hours .p-label {
+    font-size: inherit;
+    letter-spacing: 0.04em;
+    text-transform: none;
+}
+
+.lionsad-dot {
+    margin: 0 0.45em;
+    color: var(--mint);
+}
+
+.lionsad-catering {
+    margin-top: 14px;
+}
+
+.lionsad-cater-kicker {
+    font-size: 32px;
+    color: var(--mint);
+}
+
+.lionsad-cater-line {
+    margin-top: 2px;
+    font-size: 40px;
+    color: var(--cream);
+}
+
+/* Cream band across the bottom: the part someone copies a number from,
+   dark ink on light, inside the card's rounded corners. */
+.lionsad-band {
+    width: 100%;
+    padding: 14px 40px 20px;
+    background: var(--cream);
+    color: var(--teal-dark);
+    border-radius: 0 0 40px 40px;
+}
+
+.lionsad-phone {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 50px;
+    line-height: 1.05;
+    letter-spacing: 0.02em;
+}
+
+.lionsad-contact {
+    margin-top: 4px;
+    font-weight: 700;
+    font-size: 27px;
+    line-height: 1.2;
+}
+
+.lionsad-contact .lionsad-dot {
+    color: var(--teal);
+}
+
+.lionsad-address {
+    margin-top: 4px;
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-dark);
+}

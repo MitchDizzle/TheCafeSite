@@ -23,6 +23,8 @@
                  comes out the wrong sheet size, which is easy to blame on
                  the print dialog. Give the width first and the shape follows.
      pageCss     optional — the piece's own stylesheet
+     studioTransparent optional — no ground behind the canvas, and the PNG
+                 export keeps the alpha (for an ad placed on someone else's page)
      studio*     optional — see src/studio/index.njk for the board fields
 #}<!DOCTYPE html>
 <html lang="en">
@@ -50,7 +52,7 @@
 {#- `pageSize` means this piece is destined for paper, which changes how its
     PROOF should look: white ground, not the dark screen offcut. See
     .piece-body--paper in piece.css. Social pieces keep the dark ground. -#}
-<body class="piece-body{% if pageSize %} piece-body--paper{% endif %}">
+<body class="piece-body{% if pageSize %} piece-body--paper{% endif %}{% if studioTransparent %} piece-body--clear{% endif %}">
 {{ content | safe }}
 </body>
 </html>
