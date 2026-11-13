@@ -30,7 +30,7 @@ Header colors (amber and red mean time and nothing else on the board):
 | Amber | 8–15 min | due within 10 min |
 | Red | over 15 min | past due |
 
-- **The timer:** a counter order counts up from when it was rung ("17:09 waiting"). A pickup or DoorDash order shows the time it's due, "Due 10:13", with "in 8 min" or "3 min late" under it, so the two never look alike.
+- **The timer:** a counter order counts up from when it was rung ("17:09 waiting"), timed by this PC's own clock from when it reached the board (client 2026-11-13: a sale came up already at 1:30 "waiting"; the kitchen PC's clock was about a minute fast, and Square's time was compared with it). The board checks its clock against Square's and writes "this PC's clock is 57 s fast" in the start log when it's 20 s or more off: then Windows Settings > Time & language > Date & time > **Sync now** (pickup "in 8 min" times still go by the clock). An order Square really is slow with is logged as "on the board, 40 s after it was rung up". Orders already in Square when the board starts, or seen more than 10 minutes after they were rung (the board was off), keep their rung-up time. A pickup or DoorDash order shows the time it's due, "Due 10:13", with "in 8 min" or "3 min late" under it, so the two never look alike.
 - **The header names Online or DoorDash.** Counter, which is most tickets, isn't written. Every ticket says TO GO or FOR HERE.
 - **Four tickets across** on the 1920-wide screen, kept large for the cooks who don't see well (client 2026-10-13), with a slim Done to fit more of each ticket. Five across fits nine tickets but smaller: `minmax(15rem, 1fr)` in `.board` in `board.html`.
 

@@ -781,7 +781,9 @@
       const over = Math.floor(-until / 6e4);
       return { cls: "late", pre: "Due", text, sub: over < 1 ? "now" : `${over} min late` };
     }
-    const since = now - Date.parse(t.createdAt);
+    // From when it went on the board: an order Square was slow to hand
+    // over counts from when it came up, not from 1:30 (lib/addons.js).
+    const since = now - Date.parse(t.boardAt || t.createdAt);
     const cls = since >= COUNTER_LATE * 6e4 ? "late" : since >= COUNTER_WARN * 6e4 ? "warn" : "";
     return { cls, text: mmss(since), sub: "waiting" };
   }

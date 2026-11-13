@@ -14,7 +14,34 @@ const SQUARE_VERSION = "2025-01-23";
 // came up with nothing picked). Orders stay where they were tested.
 const CATALOG_VERSION = "2025-05-21";
 
+// How far this PC's clock is from Square's, from the Date on Square's
+// answers (to the second): positive when the PC is fast. Found 2026-11-13:
+// the kitchen PC ran about a minute fast (its GitHub backups are dated a
+// minute after GitHub got them), so a counter order rung up a second ago
+// came up already at 1:00+ "waiting". The board's timers no longer depend on
+// it (lib/addons.js), but due times ("in 8 min") still do, so it's written
+// to the start log (read from the backup) whenever it's 20 s or more.
+const clock = { offsetMs: 0, checkedAt: null, toldAt: 0 };
+const CLOCK_WARN_MS = 20000;
+function readClock(res, sentAt) {
+  const said = Date.parse(res.headers.get("date") || "");
+  if (!said) return;
+  // Square's second, against the middle of the call; its Date is cut to the
+  // second, so +0.5 s on average.
+  const now = Date.now();
+  clock.offsetMs = Math.round((sentAt + now) / 2 - (said + 500));
+  clock.checkedAt = new Date(now).toISOString();
+  if (Math.abs(clock.offsetMs) >= CLOCK_WARN_MS && now - clock.toldAt > 6 * 36e5) {
+    clock.toldAt = now;
+    const s = Math.round(Math.abs(clock.offsetMs) / 1000);
+    const text = `this PC's clock is ${s} s ${clock.offsetMs > 0 ? "fast" : "slow"} (Windows: Settings > Time & language > Date & time > Sync now)`;
+    console.log(`${new Date().toLocaleTimeString()}  ${text}`);
+    try { require("./startlog").note(text); } catch {}
+  }
+}
+
 async function square(method, endpoint, body) {
+  const sentAt = Date.now();
   const res = await fetch(API + endpoint, {
     method,
     headers: {
@@ -25,6 +52,7 @@ async function square(method, endpoint, body) {
     body: body ? JSON.stringify(body) : undefined,
     signal: AbortSignal.timeout(15000),
   });
+  if (res.headers && res.headers.get) readClock(res, sentAt);
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     const detail = (json.errors || []).map((e) => e.detail || e.code).join("; ");
@@ -80,4 +108,4 @@ async function fetchOrders() {
   return [...open, ...completed];
 }
 
-module.exports = { API, SQUARE_VERSION, square, locations, resolveLocations, fetchOrders };
+module.exports = { clock, API, SQUARE_VERSION, square, locations, resolveLocations, fetchOrders };

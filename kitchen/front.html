@@ -783,7 +783,7 @@
         late = until < 0;
         text = late ? `${mins(-until)} min late` : `Due in ${mins(until)} min`;
       } else {
-        text = `Cooking ${mins(now - Date.parse(o.createdAt))} min`;
+        text = `Cooking ${mins(now - Date.parse(o.boardAt || o.createdAt))} min`;
       }
       el.textContent = text;
       el.classList.toggle("late", late);
