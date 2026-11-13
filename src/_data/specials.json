@@ -124,6 +124,45 @@
         "Mashed Potatoes",
         "Green Beans"
       ]
+    },
+    {
+      "date": "2026-11-16",
+      "soup": "Chicken Dumpling",
+      "special": "Chicken Bacon Avocado Wrap",
+      "anySide": true,
+      "boardSavedAt": "2026-11-13T20:37:00.835Z"
+    },
+    {
+      "date": "2026-11-17",
+      "soup": "Broccoli Cheese",
+      "special": "Lasagna",
+      "anySide": true,
+      "boardSavedAt": "2026-11-13T20:37:00.835Z"
+    },
+    {
+      "date": "2026-11-18",
+      "soup": "French Onion",
+      "special": "Chicken Fried Chicken",
+      "sides": [
+        "Mashed Potatoes & Country Gravy"
+      ],
+      "boardSavedAt": "2026-11-13T20:37:00.835Z"
+    },
+    {
+      "date": "2026-11-19",
+      "soup": "Chicken Tortilla Soup",
+      "special": "BBQ Ribs",
+      "sides": [
+        "Mac & Cheese",
+        "Baked Beans"
+      ],
+      "boardSavedAt": "2026-11-13T20:37:00.835Z"
+    },
+    {
+      "date": "2026-11-20",
+      "special": "Pot Roast",
+      "anySide": true,
+      "boardSavedAt": "2026-11-13T20:37:00.835Z"
     }
   ]
 }
