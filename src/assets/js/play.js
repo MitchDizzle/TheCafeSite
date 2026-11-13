@@ -368,7 +368,7 @@
   function level() { return D.levels[(G && G.level) || save.level] || D.levels.normal; }
 
   function newRun() {
-    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, bought: 0, bonus: 0, sale: false, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false, trouble: null, troubleDay: -1, lastTrouble: null, troublePart: '', slips: [], fed: 0, newAch: [] };
+    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, bought: 0, bonus: 0, perf: 0, friClean: 0, sale: false, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false, trouble: null, troubleDay: -1, lastTrouble: null, troublePart: '', slips: [], fed: 0, newAch: [] };
     report('start', {});
     showDawn();
   }
@@ -795,10 +795,13 @@
   function endDay() {
     // A flawless day (owner 2026-11-12): no walk-outs, family fed, nothing burnt.
     T.dark = 0;
+    var last = G.day >= D.days.length - 1;
     if (!T.slips && T.served) {
       var cb = D.clean.bonus[Math.min(G.day, D.clean.bonus.length - 1)];
-      T.clean = cb; T.tips += cb; G.tips += cb; G.earned += cb;
-      award('flawless', true);
+      // Friday's is held for the performance bonus, paid only if the
+      // catering goes out on time (owner 2026-11-13; cateringDone).
+      if (last) G.friClean = cb;
+      else { T.clean = cb; T.tips += cb; G.tips += cb; G.earned += cb; award('flawless', true); }
     }
     if (T.clean) sfx.flawless(); else sfx.close();
     G.slips[G.day] = T.slips;
@@ -812,7 +815,7 @@
       slips: T.slips, trouble: T.trouble ? T.trouble.id : '' });
     save.seen = true; persist();
     clearBubbles();
-    if (G.day >= D.days.length - 1) { startCatering(); if (T.clean) setTimeout(function () { if (T) toast('Flawless day · ' + money(T.clean)); }, 2100); } else showClose();
+    if (last) { startCatering(); if (G.friClean) setTimeout(function () { if (T) toast('Flawless lunch: its bonus comes at the end'); }, 2100); } else showClose();
   }
 
   /* How long a week took is the time it was played: the shifts, with pauses
@@ -836,11 +839,19 @@
     banner('Catering order', plural(T.cat.n, 'platter', 'platters') + ', one clock.');
   }
   function cateringDone() {
-    var bonus = D.catering.bonus + Math.floor(T.cat.left / 4);
+    var bonus = D.catering.bonus;
     T.tips += bonus; G.tips += bonus; G.earned += bonus;
     T.ended = true;
     G.cater = T.tips - T.tipsBefore;
-    setTimeout(function () { weekOver(true, 'win'); }, 900);
+    // The performance bonus (owner 2026-11-13), paid at the end of a won week
+    // and said before the results: Friday's flawless-lunch bonus, held since
+    // 2pm, and the time left on the catering clock (game.json, performance).
+    var clean = G.friClean || 0, quick = Math.floor(Math.max(0, T.cat.left) / D.performance.secondsPerDollar);
+    G.perf = clean + quick; G.tips += G.perf; G.earned += G.perf;
+    if (clean) award('flawless', true);
+    banner('Performance bonus +' + money(G.perf), clean ? 'A flawless lunch, and ' + money(quick) + ' for time to spare' : money(quick) + ' for time to spare on the clock');
+    if (clean) sfx.flawless(); else sfx.achieve();
+    setTimeout(function () { weekOver(true, 'win'); }, 900 + BANNER_S * 1000);
   }
 
   /* ---------- 5. family at the counter ----------
@@ -1376,11 +1387,11 @@
      code again later): the last PAST_MAX, newest first. Short keys, as it
      rides in the save code too: c week code, l level, a when, k kept, w how
      it ended, d its last day, t tips and s slips each day, f the catering's
-     tips ('' if it never came). */
+     tips ('' if it never came), b the performance bonus. */
   var PAST_MAX = 12;
   function keepWeek(kept, why) {
     var p = { c: weekCode(G.run), l: G.level, a: Date.now(), k: kept, w: why, d: G.day,
-      t: G.perDay.slice(0, G.day + 1).map(function (x) { return x || 0; }), s: G.slips.slice(0, G.day + 1), f: G.cater == null ? '' : G.cater };
+      t: G.perDay.slice(0, G.day + 1).map(function (x) { return x || 0; }), s: G.slips.slice(0, G.day + 1), f: G.cater == null ? '' : G.cater, b: G.perf || 0 };
     save.past = [p].concat(save.past.filter(function (x) { return x.c !== p.c; })).slice(0, PAST_MAX);
     return p;
   }
@@ -1399,6 +1410,7 @@
     var lines = ['Order Up, ' + (D.levels[p.l] ? D.levels[p.l].name + ' week' : 'a week') + ': ' + weekHead(p)[1].toLowerCase()];
     p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] + ' ' : '') + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : ' · ' + stopWords(p).toLowerCase())); });
     if (p.f !== '') lines.push('Catering ' + money(p.f));
+    if (p.b) lines.push('Performance bonus +' + money(p.b));
     lines.push('Kept ' + money(p.k));
     lines.push('A little game on The Café’s website, Leavenworth KS' + (STATS.listed ? ': ' + location.origin + '/play' : ''));
     return lines.join('\n');
@@ -1419,6 +1431,7 @@
       rows.push({ day: D.days[i].short, words: r ? rankWords(p.s[i]) : stopWords(p), tips: money(tips), rar: r ? r.rarity : '', caps: true });
     });
     if (p.f !== '') rows.push({ day: 'Fri', words: 'Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished'), tips: money(p.f) });
+    if (p.b) rows.push({ day: '', words: 'Performance bonus', tips: '+' + money(p.b) });
     rows.push({ day: 'Kept', words: 'your score', tips: money(p.k), total: true });
     var W = 1080, top = 330, RH = 118, x0 = 60, x1 = W - 60, tableH = rows.length * RH, H = top + 50 + tableH + 190;
     var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -1533,7 +1546,7 @@
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
     report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round(G.played), away: Math.round(G.away),
-      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent, bonus: G.bonus, finish: G.finish, ach: G.newAch.slice() });
+      items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent, bonus: G.bonus, finish: G.finish, perf: G.perf || 0, ach: G.newAch.slice() });
     lastRun = { run: G.run, lvl: G.level, total: kept, earned: G.earned, spent: spent, bonus: G.bonus, finish: G.finish, days: weekDays(), cater: G.cater == null ? '' : G.cater,
       why: win ? 'win' : why, day: G.day, items: Object.keys(G.items), secs: Math.round(G.played) };
     // After a finished week (not one that was quit), and only if results go
@@ -1551,6 +1564,7 @@
     // A heading that fits one line (owner 2026-11-13: a shorter band on top).
     var head = weekHead(past), rows = dayRows(past);
     if (G.finish) rows += '<div><b></b><span>The week finished</span><strong>+' + money(G.finish) + '</strong></div>';
+    if (G.perf) rows += '<div><b></b><span>Performance bonus</span><strong>+' + money(G.perf) + '</strong></div>';
     rows += '<div><b>Week</b><span>Tips earned</span><strong>' + money(G.earned) + '</strong></div>';
     if (G.bonus) rows += '<div><b></b><span>Free items turned down</span><strong>+' + money(G.bonus) + '</strong></div>';
     rows += '<div><b></b><span>Spent on items</span><strong>' + (spent ? '−' + money(spent) : '$0') + '</strong></div>';

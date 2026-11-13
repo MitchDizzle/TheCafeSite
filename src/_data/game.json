@@ -144,11 +144,14 @@
   "_note_sale": "A week that has bought nothing in the shop by `fromDay`'s close (0 = Monday, so 2 = Wednesday's) has `chance` out of 100, at each close from then on, of finding everything `off` percent cheaper (owner 2026-11-12: by Thursday an item has little time left to pay off, and the prices were out of reach). Prices round to $5. Not the Deep Fryer.",
   "sale": { "fromDay": 2, "chance": 50, "off": 40 },
 
-  "_note_finish": "Finishing the week pays (2026-11-12, from the bot: a week that bought what it needed and won scored less than one that bought nothing and lost on Thursday). Tips added when Friday's catering goes out on time, by level. Counted in tips earned and kept, sent as `finish` with the week.",
+  "_note_finish": "Finishing the week pays (2026-11-12, from the bot: a week that bought what it needed and won scored less than one that bought nothing and lost on Thursday). Tips added when Friday's catering goes out on time, by level. The performance bonus is apart from this (`performance`). Counted in tips earned and kept, sent as `finish` with the week.",
   "finish": { "easy": 100, "normal": 250, "hard": 400 },
 
   "_note_clean": "A flawless day (owner 2026-11-12): no walk-outs, family fed, nothing burnt. `bonus` is the tips it adds, by day (Monday first), counted in that day's tips.",
   "clean": { "bonus": [10, 15, 20, 25, 30] },
+
+  "_note_performance": "The performance bonus (owner 2026-11-13): paid when Friday's catering goes out on time, said in a banner before the results and listed in them. It is Friday's flawless-day bonus (`clean`, held from 2pm instead of paid then, so a week that fails on the catering never gets it) plus a dollar for every `secondsPerDollar` seconds left on the catering clock (that part was in the catering's own tips before). Counted in tips earned and kept, sent as `perf` with the week.",
+  "performance": { "secondsPerDollar": 4 },
 
   "_note_ranks": "At the end of the week each day gets a rarity by its slips (walk-outs, family not fed, food burnt), in the rarity colours: the first line whose `max` it is at or under. Owner 2026-11-12.",
   "ranks": [
