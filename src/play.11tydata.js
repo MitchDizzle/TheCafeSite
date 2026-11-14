@@ -38,7 +38,7 @@ module.exports = {
     gameJson: (data) => {
       const game = strip(data.game || {});
       const cfg = (data.site && data.site.game) || {};
-      game.stats = { url: cfg.statsUrl || "", version: String(cfg.version || "1"), askContact: cfg.askContact !== false, listed: !!cfg.listed };
+      game.stats = { url: cfg.statsUrl || "", version: String(cfg.version || "1"), askContact: cfg.askContact !== false, listed: !!cfg.listed, home: (data.site && data.site.url) || "", playAt: cfg.playAt || "" };
       const onMenu = new Set();
       for (const c of (data.menu && data.menu.categories) || []) for (const i of c.items || []) onMenu.add(i.name);
 

@@ -1475,11 +1475,17 @@
      code again later): the last PAST_MAX, newest first. Short keys, as it
      rides in the save code too: c week code, l level, a when, k kept, w how
      it ended, d its last day, t tips and s slips each day, f the catering's
-     tips ('' if it never came), b the performance bonus. */
+     tips ('' if it never came), b the performance bonus, e what finishing
+     paid, x the free items turned down, sp what was spent: with them the
+     picture adds up to what was kept. i the items on the line. */
   var PAST_MAX = 12;
-  function keepWeek(kept, why) {
+  /* What was on the line, { id: how many }, for the picture (owner 2026-11-13). */
+  function lineOf() {
+    var out = {}; D.items.forEach(function (it) { if (G.items[it.id]) out[it.id] = G.items[it.id]; }); return out;
+  }
+  function keepWeek(kept, why, spent) {
     var p = { c: weekCode(G.run), l: G.level, a: Date.now(), k: kept, w: why, d: G.day,
-      t: G.perDay.slice(0, G.day + 1).map(function (x) { return x || 0; }), s: G.slips.slice(0, G.day + 1), f: G.cater == null ? '' : G.cater, b: G.perf || 0 };
+      t: G.perDay.slice(0, G.day + 1).map(function (x) { return x || 0; }), s: G.slips.slice(0, G.day + 1), f: G.cater == null ? '' : G.cater, b: G.perf || 0, e: G.finish || 0, x: G.bonus || 0, sp: spent || 0, i: lineOf() };
     save.past = [p].concat(save.past.filter(function (x) { return x.c !== p.c; })).slice(0, PAST_MAX);
     return p;
   }
@@ -1494,13 +1500,19 @@
   /* The week as text to share (owner 2026-11-13): a coloured square a day,
      the tips, and what it kept. Never the week code: that stays private. */
   var SQUARE = { legendary: '\uD83D\uDFE8', epic: '\uD83D\uDFEA', rare: '\uD83D\uDFE6', normal: '\u2B1C', bad: '\uD83D\uDFE5' };
+  /* Where to play, as the picture and the text say it (owner 2026-11-13):
+     site.json's game.playAt, else the site's own address and /play. */
+  var PLAY_AT = STATS.playAt || String(STATS.home || 'https://lvcafetogo.com').replace(/^https?:\/\//, '').replace(/\/$/, '') + '/play';
   function weekText(p) {
     var lines = ['Order Up, ' + (D.levels[p.l] ? D.levels[p.l].name + ' week' : 'a week') + ': ' + weekHead(p)[1].toLowerCase()];
     p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] : SQUARE.bad) + ' ' + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : ' · ' + stopWords(p).toLowerCase())); });
     if (p.f !== '') lines.push('Catering ' + money(p.f));
+    if (p.e) lines.push('The week finished +' + money(p.e));
     if (p.b) lines.push('Performance bonus +' + money(p.b));
+    if (p.x) lines.push('Free items turned down +' + money(p.x));
+    if (p.sp) lines.push('Spent on items −' + money(p.sp));
     lines.push('Kept ' + money(p.k));
-    lines.push('A little game on The Café’s website, Leavenworth KS' + (STATS.listed ? ': ' + location.origin + '/play' : ''));
+    lines.push('A little game from The Café, Leavenworth KS. Play it at ' + PLAY_AT);
     return lines.join('\n');
   }
   /* The week as a picture to share (owner 2026-11-13): the end screen's
@@ -1513,36 +1525,68 @@
     epic: { bg: '#E6D9F4', bar: '#6E3FA6', ink: '#6E3FA6' }, legendary: { bg: null, bar: '#B8860B', ink: '#6B4E0A' },
     bad: { bg: '#F8DEDA', bar: '#A02F26', ink: '#A02F26' }
   };
-  function weekPicture(p) {
+  /* The game's drawings as images a canvas can draw (owner 2026-11-13: the
+     items on the picture). An image takes a moment to load and the Share
+     sheet can't wait for it, so the end screen and Past weeks load them
+     as they open (iconsFor); one not ready yet is left off. */
+  var ICONS = {};
+  function iconImg(name) {
+    if (ICONS[name]) return ICONS[name];
+    var sym = document.getElementById('s-' + name); if (!sym) return null;
+    // A drawing on its own can't see the page's CSS: each var(--x, fallback) becomes its fallback.
+    var body = sym.innerHTML.replace(/var\(--[a-z0-9-]+,\s*([^)]+)\)/g, '$1');
+    var img = new Image();
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + (sym.getAttribute('viewBox') || '0 0 64 64') + '" width="160" height="160">' + body + '</svg>');
+    return (ICONS[name] = img);
+  }
+  function lineItems(p) {
+    return D.items.filter(function (it) { return p.i && p.i[it.id]; });
+  }
+  function iconsFor(list) { list.forEach(function (p) { lineItems(p).forEach(function (it) { iconImg(it.icon); }); }); }
+  var TILE = { normal: ['#F1F3F4', '#1F4552'], rare: ['#D9E6F6', '#1F4552'], epic: ['#E6D9F4', '#1F4552'], legendary: [null, '#7A5A0E'] };
+  /* One post-sized picture (owner 2026-11-13: it has to fit whole, 4:5 as a
+     feed shows it): the days, the money merged into as few lines as still
+     add up to what was kept, and the items on the line. Rows and tiles shrink
+     to fit; nothing runs off the bottom. */
+  function weekPicture(p, withIcons) {
     var rows = [];
     p.t.forEach(function (tips, i) {
       var r = cutShort(p, i) ? null : rankOf(p.s[i]);
       rows.push({ day: D.days[i].short, words: r ? rankWords(p.s[i]) : stopWords(p), tips: money(tips), rar: r ? r.rarity : 'bad', caps: true });
     });
-    if (p.f !== '') rows.push({ day: 'Fri', words: 'Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished'), tips: money(p.f), rar: p.w === 'win' ? '' : 'bad' });
-    if (p.b) rows.push({ day: '', words: 'Performance bonus', tips: '+' + money(p.b) });
-    rows.push({ day: 'Kept', words: 'your score', tips: money(p.k), total: true });
-    var W = 1080, top = 330, RH = 118, x0 = 60, x1 = W - 60, tableH = rows.length * RH, H = top + 50 + tableH + 190;
+    // The catering, finishing, the performance bonus and free items turned down, as one line.
+    var extra = (p.f === '' ? 0 : p.f) + (p.e || 0) + (p.b || 0) + (p.x || 0);
+    if (p.f !== '') rows.push({ day: 'Fri', words: p.w === 'win' ? 'Catering + bonuses' : p.w === 'late' ? 'Catering, late' : 'Catering, not finished', tips: '+' + money(extra), rar: p.w === 'win' ? '' : 'bad' });
+    else if (extra) rows.push({ day: '', words: 'Bonuses', tips: '+' + money(extra) });
+    // What was spent goes into the Kept line.
+    rows.push({ day: 'Kept', words: p.sp ? 'after ' + money(p.sp) + ' on items' : 'your score', tips: money(p.k), total: true });
+
+    var W = 1080, H = 1350, x0 = 60, x1 = W - 60, top = 250;
+    var items = withIcons ? lineItems(p) : [], PER = 10, TG = 10;
+    var TS = Math.floor((x1 - x0 - (PER - 1) * TG) / PER), tileRows = Math.ceil(items.length / PER);
+    if (tileRows > 2) { PER = Math.ceil(items.length / 2); TS = Math.floor((x1 - x0 - (PER - 1) * TG) / PER); tileRows = 2; }
+    var lineH = items.length ? 52 + tileRows * (TS + TG) : 0, foot = 190;
+    var ty = top + 40, room = H - ty - (items.length ? 34 : 0) - lineH - foot - 10;
+    var RH = Math.min(118, Math.floor(room / rows.length)), k = RH / 118, tableH = rows.length * RH;
+
     var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     var c = cv.getContext('2d'), serif = '"Playfair Display", Georgia, serif', sans = 'Lato, "Helvetica Neue", Arial, sans-serif';
-    var spaced = function (txt, x, y, gap, align) {      // letter-spaced capitals, as the game's labels are
-      var w = 0, k; for (k = 0; k < txt.length; k++) w += c.measureText(txt[k]).width + gap;
-      var at = align === 'center' ? x - (w - gap) / 2 : align === 'right' ? x - (w - gap) : x;
-      c.textAlign = 'left'; for (k = 0; k < txt.length; k++) { c.fillText(txt[k], at, y); at += c.measureText(txt[k]).width + gap; }
+    var spaced = function (txt, x, y, gap) {      // letter-spaced capitals, as the game's labels are
+      c.textAlign = 'left'; for (var j = 0; j < txt.length; j++) { c.fillText(txt[j], x, y); x += c.measureText(txt[j]).width + gap; }
     };
     var round = function (x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
+    var px = function (n) { return Math.round(n * k) + 'px '; };
     c.fillStyle = INK.cream; c.fillRect(0, 0, W, H);
     // The band on top, as on the end screen.
     var g = c.createLinearGradient(0, 0, W, top); g.addColorStop(0, INK.tealDark); g.addColorStop(.55, INK.teal); g.addColorStop(1, '#3C7183');
-    c.fillStyle = g; c.fillRect(0, 0, W, top); c.fillStyle = INK.red; c.fillRect(0, top - 14, W, 14);
+    c.fillStyle = g; c.fillRect(0, 0, W, top); c.fillStyle = INK.red; c.fillRect(0, top - 12, W, 12);
     var head = weekHead(p), when = new Date(p.a).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-    c.textBaseline = 'alphabetic'; c.fillStyle = INK.cream;
-    c.font = 'italic 400 54px ' + serif; c.textAlign = 'left'; c.fillText(head[0], x0, 104);
-    c.font = '700 92px ' + serif; c.fillText(head[1], x0, 200);
-    c.fillStyle = INK.mint; c.font = '700 30px ' + sans; spaced(((D.levels[p.l] ? D.levels[p.l].name + ' week · ' : '') + when).toUpperCase(), x0, 262, 4);
+    c.textBaseline = 'alphabetic'; c.fillStyle = INK.cream; c.textAlign = 'left';
+    c.font = 'italic 400 46px ' + serif; c.fillText(head[0], x0, 82);
+    c.font = '700 80px ' + serif; c.fillText(head[1], x0, 162);
+    c.fillStyle = INK.mint; c.font = '700 28px ' + sans; spaced(((D.levels[p.l] ? D.levels[p.l].name + ' week · ' : '') + when).toUpperCase(), x0, 212, 4);
     // The table.
-    var ty = top + 50;
-    c.save(); round(x0, ty, x1 - x0, tableH, 30); c.clip();
+    c.save(); round(x0, ty, x1 - x0, tableH, 28); c.clip();
     c.fillStyle = '#fff'; c.fillRect(x0, ty, x1 - x0, tableH);
     rows.forEach(function (r, i) {
       var y = ty + i * RH, ink = ROWINK[r.rar];
@@ -1553,17 +1597,40 @@
         c.fillRect(x0, y, x1 - x0, RH); c.fillStyle = ink.bar; c.fillRect(x0, y, 16, RH);
       }
       if (i) { c.fillStyle = INK.line; c.fillRect(x0, y, x1 - x0, 3); }
-      var base = y + RH / 2 + 18;
-      c.fillStyle = ink || r.total ? INK.dark : INK.red; c.font = '700 56px ' + serif; c.textAlign = 'left'; c.fillText(r.day, x0 + 44, base);
-      if (r.caps) { c.fillStyle = ink ? ink.ink : INK.grey; c.font = '700 30px ' + sans; spaced(r.words.toUpperCase(), x0 + 230, base - 4, 4); }
-      else { c.fillStyle = INK.dark; c.font = '400 36px ' + sans; c.fillText(r.words, x0 + 230, base - 2); }
-      c.fillStyle = INK.dark; c.font = '900 ' + (r.total ? 60 : 50) + 'px ' + sans; c.textAlign = 'right'; c.fillText(r.tips, x1 - 36, base);
+      var base = y + RH / 2 + 18 * k;
+      c.fillStyle = ink || r.total ? INK.dark : INK.red; c.font = '700 ' + px(56) + serif; c.textAlign = 'left'; c.fillText(r.day, x0 + 44, base);
+      if (r.caps) { c.fillStyle = ink ? ink.ink : INK.grey; c.font = '700 ' + px(30) + sans; spaced(r.words.toUpperCase(), x0 + 230, base - 4 * k, 4 * k); }
+      else { c.fillStyle = INK.dark; c.font = '400 ' + px(36) + sans; c.textAlign = 'left'; c.fillText(r.words, x0 + 230, base - 2 * k); }
+      c.fillStyle = INK.dark; c.font = '900 ' + px(r.total ? 60 : 50) + sans; c.textAlign = 'right'; c.fillText(r.tips, x1 - 36, base);
     });
     c.restore();
-    c.strokeStyle = INK.tealDark; c.lineWidth = 6; round(x0, ty, x1 - x0, tableH, 30); c.stroke();
-    // Whose game it is (game/README.md: name the café, with the town).
-    c.textAlign = 'center'; c.fillStyle = INK.tealDark; c.font = '700 58px ' + serif; c.fillText('Order Up', W / 2, ty + tableH + 100);
-    c.fillStyle = INK.grey; c.font = '400 32px ' + sans; c.fillText('A little game on The Café’s website · Leavenworth, KS', W / 2, ty + tableH + 150);
+    c.strokeStyle = INK.tealDark; c.lineWidth = 6; round(x0, ty, x1 - x0, tableH, 28); c.stroke();
+    // The items on the line, a tile each in its rarity colour.
+    if (items.length) {
+      var ly = ty + tableH + 34 + 34;
+      c.fillStyle = INK.grey; c.font = '700 26px ' + sans; spaced('ON THE LINE', x0, ly, 5);
+      items.forEach(function (it, n) {
+        var col = n % PER, row = Math.floor(n / PER), tx = x0 + col * (TS + TG), tyy = ly + 18 + row * (TS + TG), tile = TILE[it.rarity] || TILE.normal;
+        round(tx, tyy, TS, TS, Math.round(TS / 5));
+        if (tile[0]) c.fillStyle = tile[0]; else { var tg = c.createLinearGradient(tx, tyy, tx + TS, tyy + TS); tg.addColorStop(0, '#FFF3C4'); tg.addColorStop(1, '#F4C542'); c.fillStyle = tg; }
+        c.fill(); c.strokeStyle = tile[1]; c.lineWidth = 4; c.stroke();
+        var img = iconImg(it.icon), pad = Math.round(TS * 0.1);
+        if (img && img.complete && img.naturalWidth) c.drawImage(img, tx + pad, tyy + pad, TS - 2 * pad, TS - 2 * pad);
+        var many = p.i[it.id];
+        if (many > 1) {
+          var br = Math.round(TS * 0.2);
+          c.fillStyle = INK.tealDark; c.beginPath(); c.arc(tx + TS - 4, tyy + TS - 4, br, 0, Math.PI * 2); c.fill();
+          c.fillStyle = INK.cream; c.font = '900 ' + Math.round(br * 1.2) + 'px ' + sans; c.textAlign = 'center'; c.fillText(String(many), tx + TS - 4, tyy + TS - 4 + br * 0.42); c.textAlign = 'left';
+        }
+      });
+    }
+    // Whose game it is (game/README.md: name the café, with the town), at the foot.
+    // and where to play it (owner 2026-11-13).
+    c.textAlign = 'center'; c.fillStyle = INK.tealDark; c.font = '700 54px ' + serif; c.fillText('Order Up', W / 2, H - 128);
+    var lead = 'Play it at ', site = PLAY_AT; c.font = '400 36px ' + sans; var lw = c.measureText(lead).width; c.font = '900 36px ' + sans; var sw = c.measureText(site).width;
+    c.textAlign = 'left'; c.fillStyle = INK.dark; c.font = '400 36px ' + sans; c.fillText(lead, (W - lw - sw) / 2, H - 76);
+    c.fillStyle = INK.teal; c.font = '900 36px ' + sans; c.fillText(site, (W - lw - sw) / 2 + lw, H - 76);
+    c.textAlign = 'center'; c.fillStyle = INK.grey; c.font = '400 28px ' + sans; c.fillText('A little game from The Café · Leavenworth, KS', W / 2, H - 32);
     return cv;
   }
   /* A canvas as a PNG file, made on the spot (toBlob would wait). */
@@ -1578,7 +1645,9 @@
      is saved and the text copied. */
   function shareWeek(p) {
     var text = weekText(p), file = null, name = 'order-up-week-' + new Date(p.a).toISOString().slice(0, 10) + '.png';
-    try { file = pngFile(weekPicture(p), name); } catch (e) { file = null; }
+    // With the item drawings; if a browser won't let a picture with them be
+    // read back (it calls the canvas tainted), the same picture without.
+    try { file = pngFile(weekPicture(p, true), name); } catch (e) { try { file = pngFile(weekPicture(p, false), name); } catch (e2) { file = null; } }
     var copy = function (said) { try { navigator.clipboard.writeText(text).then(function () { toast(said || 'Copied: paste it anywhere'); }, function () { if (said) toast(said); }); } catch (e) { if (said) toast(said); } };
     var keep = function () {
       if (!file) { copy(); return; }
@@ -1595,6 +1664,7 @@
   function shareButton(i) { return '<button class="ou-btn ou-btn--quiet ou-share" data-act="share" data-i="' + i + '">Share week</button>'; }
   function showPast(from) {
     var list = save.past;
+    iconsFor(list);
     paper('past',
       '<div class="ou-top ou-top--back"><span class="ou-kicker">Past weeks</span><h2 class="ou-h">' + (list.length > 1 ? 'Your last ' + list.length + ' weeks' : list.length ? 'Your last week' : 'None yet') + '</h2>' +
       '<button class="ou-topback" data-act="back">Back</button></div>' +
@@ -1637,7 +1707,7 @@
     var kept = Math.max(0, G.tips), spent = Math.max(0, G.earned - G.tips);
     var lvName = level().name, best = kept > (save.keeps[G.level] || 0);
     if (best) { save.keeps[G.level] = kept; save.bestRuns[G.level] = G.run; }
-    var past = keepWeek(kept, win ? 'win' : why);
+    var past = keepWeek(kept, win ? 'win' : why, spent);
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
     report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round(G.played), away: Math.round(G.away),
@@ -1664,6 +1734,7 @@
     if (G.bonus) rows += '<div><b></b><span>Free items turned down</span><strong>+' + money(G.bonus) + '</strong></div>';
     rows += '<div><b></b><span>Spent on items</span><strong>' + (spent ? '−' + money(spent) : '$0') + '</strong></div>';
     rows += '<div class="is-total"><b>Kept</b><span>your score</span><strong>' + money(kept) + '</strong></div>';
+    iconsFor([past]);
     paper('over',
       '<div class="ou-top' + (win ? ' ou-top--fri' : '') + '"><span class="ou-kicker">' + head[0] + '</span><h2 class="ou-h">' + head[1] + '</h2>' +
       '<span class="ou-label">' + (best ? 'A new best ' + lvName + ' week' : 'Best ' + lvName + ' week: ' + money(save.keeps[G.level] || 0) + ' kept') + '</span></div>' +
