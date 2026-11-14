@@ -1475,11 +1475,13 @@
      code again later): the last PAST_MAX, newest first. Short keys, as it
      rides in the save code too: c week code, l level, a when, k kept, w how
      it ended, d its last day, t tips and s slips each day, f the catering's
-     tips ('' if it never came), b the performance bonus. */
+     tips ('' if it never came), b the performance bonus, e what finishing
+     paid, x the free items turned down, sp what was spent: with them the
+     picture adds up to what was kept. */
   var PAST_MAX = 12;
-  function keepWeek(kept, why) {
+  function keepWeek(kept, why, spent) {
     var p = { c: weekCode(G.run), l: G.level, a: Date.now(), k: kept, w: why, d: G.day,
-      t: G.perDay.slice(0, G.day + 1).map(function (x) { return x || 0; }), s: G.slips.slice(0, G.day + 1), f: G.cater == null ? '' : G.cater, b: G.perf || 0 };
+      t: G.perDay.slice(0, G.day + 1).map(function (x) { return x || 0; }), s: G.slips.slice(0, G.day + 1), f: G.cater == null ? '' : G.cater, b: G.perf || 0, e: G.finish || 0, x: G.bonus || 0, sp: spent || 0 };
     save.past = [p].concat(save.past.filter(function (x) { return x.c !== p.c; })).slice(0, PAST_MAX);
     return p;
   }
@@ -1498,7 +1500,10 @@
     var lines = ['Order Up, ' + (D.levels[p.l] ? D.levels[p.l].name + ' week' : 'a week') + ': ' + weekHead(p)[1].toLowerCase()];
     p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] : SQUARE.bad) + ' ' + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : ' · ' + stopWords(p).toLowerCase())); });
     if (p.f !== '') lines.push('Catering ' + money(p.f));
+    if (p.e) lines.push('The week finished +' + money(p.e));
     if (p.b) lines.push('Performance bonus +' + money(p.b));
+    if (p.x) lines.push('Free items turned down +' + money(p.x));
+    if (p.sp) lines.push('Spent on items −' + money(p.sp));
     lines.push('Kept ' + money(p.k));
     lines.push('A little game on The Café’s website, Leavenworth KS' + (STATS.listed ? ': ' + location.origin + '/play' : ''));
     return lines.join('\n');
@@ -1520,7 +1525,10 @@
       rows.push({ day: D.days[i].short, words: r ? rankWords(p.s[i]) : stopWords(p), tips: money(tips), rar: r ? r.rarity : 'bad', caps: true });
     });
     if (p.f !== '') rows.push({ day: 'Fri', words: 'Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished'), tips: money(p.f), rar: p.w === 'win' ? '' : 'bad' });
+    if (p.e) rows.push({ day: '', words: 'The week finished', tips: '+' + money(p.e) });
     if (p.b) rows.push({ day: '', words: 'Performance bonus', tips: '+' + money(p.b) });
+    if (p.x) rows.push({ day: '', words: 'Free items turned down', tips: '+' + money(p.x) });
+    if (p.sp) rows.push({ day: '', words: 'Spent on items', tips: '−' + money(p.sp) });
     rows.push({ day: 'Kept', words: 'your score', tips: money(p.k), total: true });
     var W = 1080, top = 330, RH = 118, x0 = 60, x1 = W - 60, tableH = rows.length * RH, H = top + 50 + tableH + 190;
     var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -1637,7 +1645,7 @@
     var kept = Math.max(0, G.tips), spent = Math.max(0, G.earned - G.tips);
     var lvName = level().name, best = kept > (save.keeps[G.level] || 0);
     if (best) { save.keeps[G.level] = kept; save.bestRuns[G.level] = G.run; }
-    var past = keepWeek(kept, win ? 'win' : why);
+    var past = keepWeek(kept, win ? 'win' : why, spent);
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
     if (win) sfx.win();
     report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round(G.played), away: Math.round(G.away),
