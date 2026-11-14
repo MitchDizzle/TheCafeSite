@@ -2019,7 +2019,7 @@
     // The café's wordmark and the game's name, as on the title screen (owner
     // 2026-11-13: so every shared week carries the logo); how the week went
     // is in the small line under them, and in the rows.
-    var when = new Date(p.a).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    var when = new Date(p.a).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + new Date(p.a).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
     var mark = withIcons ? markImg() : null, mw = 380, mh = Math.round(mw / MARK_AR);
     c.textBaseline = 'alphabetic'; c.fillStyle = INK.cream; c.textAlign = 'center';
     if (mark && mark.complete && mark.naturalWidth) {
@@ -2088,8 +2088,16 @@
   /* Share hands the phone's Share sheet the picture and the text; where it
      can't take a picture, the text; with no Share sheet at all, the picture
      is saved and the text copied. */
+  /* The picture's file name: the level and the moment the week ended, to
+     the second, on the phone's own clock (owner 2026-11-13), so two weeks
+     never share a name and only the same week shared twice gets a (2).
+     Never the week code. */
+  function shareName(p) {
+    var d = new Date(p.a), two = function (n) { return (n < 10 ? '0' : '') + n; };
+    return 'order-up-' + String(D.levels[p.l] ? D.levels[p.l].name : 'week').toLowerCase() + '-' + d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + '-' + two(d.getHours()) + two(d.getMinutes()) + two(d.getSeconds()) + '.png';
+  }
   function shareWeek(p) {
-    var text = weekText(p), file = null, name = 'order-up-week-' + new Date(p.a).toISOString().slice(0, 10) + '.png';
+    var text = weekText(p), file = null, name = shareName(p);
     // With the item drawings; if a browser won't let a picture with them be
     // read back (it calls the canvas tainted), the same picture without.
     try { file = pngFile(weekPicture(p, true), name); } catch (e) { try { file = pngFile(weekPicture(p, false), name); } catch (e2) { file = null; } }
@@ -2591,7 +2599,7 @@
       findMatch: findMatch, aimTicket: aimTicket, usable: usable, binOpen: binOpen, level: level,
       gesture: function (i, how) { if (T) spotGesture(i, how || 'key'); },
       get music() { return { on: music.on, step: music.step, mood: music.mood, I: music.I, bpm: music.bpm, dark: music.dark, dip: music.dip ? music.dip.gain.value : 1, audio: ac ? ac.state : 'none' }; },
-      intensity: intensity, sfx: sfx, setMood: setMood, weekPicture: weekPicture, iconsFor: iconsFor, bus: function () { return bus; }
+      intensity: intensity, sfx: sfx, setMood: setMood, weekPicture: weekPicture, iconsFor: iconsFor, shareName: shareName, bus: function () { return bus; }
     };
     /* /play?debug&sound: the sound test page (owner 2026-11-13). Every sound
        effect with a button, and the music by hand: its volume, the tune

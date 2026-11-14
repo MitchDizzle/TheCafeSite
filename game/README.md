@@ -910,7 +910,10 @@ It's drawn at once, with no waiting, because an iPhone refuses a Share
 sheet that comes after the tap. Where the Share sheet can't take a
 picture, the text alone; with no Share sheet (most computers), the picture
 downloads and the text is copied. **Never the week code**: it stays
-private. The headings at the end of a week are one line each
+private. The picture's small line carries the date and time the week
+ended, and its file is named by the level and that moment to the second
+(`order-up-regular-2026-11-13-214705.png`, owner 2026-11-13), so a
+phone only adds "(2)" when the same week is shared twice. The headings at the end of a week are one line each
 ("Catering out on time"), the day in the kicker, so the band on top stays
 short.
 
