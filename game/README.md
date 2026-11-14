@@ -654,22 +654,29 @@ and a few notes on top picked at random from a scale that can't clash, all
 through a low-pass so it sounds like a radio in the next room. It never
 plays the same way twice, and it stops when the page is hidden.
 
-**Or heavy metal** (owner 2026-11-13: Settings → Music style, Slow jazz or
-Heavy metal; jazz until changed, kept with the settings). Made the same way,
-as it plays: E minor, a palm-muted low E the riff keeps coming back to and a
-power chord a bar (E, E, C, D, E, E, G, A), two distorted rhythm guitars
-left and right, a bass, drums. Karplus-Strong plucks (a burst of noise
-round a short loop) through a wave-shaper and a cabinet's filters; the
-lead is two saw waves with a bend into each note, vibrato and an echo.
-At its calmest it's slow and heavy, 92 beats a minute in half time (the
-snare on three); as the shift gets hard it goes to full time, the riffs
-get busier (gallops, then straight sixteenths), the ride comes in, then
-a lead guitar and a double kick, up to 126. A week won: E, A, B in a major
-key at 116 with a gallop and a lead; a week lost: 62, slow, with the F a
-half step above E that doom bands lean on. Everything else (the level's
-cap, the lights, the dip under a tune, changing at the next half bar)
-works the same. Its level was measured to sit about where the jazz does.
-The first try (a fixed eight bars at 160) was too fast.
+**Or electronic** (owner 2026-11-13: Settings → Music style, Slow jazz or
+Electronic; jazz until changed, kept with the settings). Retro, the synths
+and drum machines of the eighties, made as it plays like the jazz and
+nobody else's tune: A minor, Am F C G a bar each; a pulsing saw bass; wide
+pads (three saws a note) that duck under every kick; a square-wave
+arpeggio up and down the chord with an echo; a drum machine whose clap
+and snare go into a big room (a made reverb); and a lead synth near the
+top. At its calmest it's 90 beats a minute in half time (the snare on
+three), the bass in eighths; as the shift gets hard the bass pulses in
+sixteenths, the hi-hats and the arpeggio come in, the drums go to full
+time and then four on the floor, the bass jumps the octave, and at the
+top the lead and open hats, up to 120. A week won: C major (C G Am F) at
+112, everything in; a week lost: 70, D minor ending on A major, slow and
+sparse. Everything else (the level's cap, the lights, the dip under a
+tune, changing at the next half bar) works the same. Its level was
+measured to sit with the jazz: a touch under it when calm, level at its
+busiest.
+
+It started the same evening as **heavy metal** (distorted guitars from
+Karplus-Strong plucks through an amp and a cabinet), which the owner said
+sounded more like machines than a band, and louder than the jazz. The
+guitars are still on the sound test page, under Other instruments; the
+game doesn't carry them.
 
 **It follows the shift** (owner 2026-11-13), and never stops or restarts to
 do it. How close the shift is to going wrong (`intensity()` in `play.js`)
@@ -743,7 +750,7 @@ on a clean and a distorted guitar (Karplus-Strong plucks, the distorted
 one through a wave-shaper and cabinet filters, left and right), bass,
 organ, brass, strings, marimba, bells (FM) and flute. Levels were
 measured so each comes out about as loud as the jazz. The music box has a
-**Style** row too, to hear the heavy metal the same way as the jazz.
+**Style** row too, to hear the electronic the same way as the jazz.
 It's in the `?debug` block, so a build cuts it out. On a phone: the PC's
 address on the same Wi-Fi, port 8080 (`http://<the PC's address>:8080/play?debug&sound`).
 

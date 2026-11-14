@@ -123,7 +123,8 @@
       save.ver = 3;
     }
     save.sfxVol = Math.max(0, Math.min(3, save.sfxVol | 0)); save.musicVol = Math.max(0, Math.min(3, save.musicVol | 0));
-    if (save.musicStyle !== 'metal') save.musicStyle = 'jazz';      // owner 2026-11-13: the jazz, or heavy metal
+    if (save.musicStyle === 'metal') save.musicStyle = 'electronic';      // its name for an evening, never released
+    if (save.musicStyle !== 'electronic') save.musicStyle = 'jazz';      // owner 2026-11-13: the jazz, or retro electronic
   }
 
   /* ---------- test shortcuts ----------
@@ -417,15 +418,15 @@
      page lists them as they turn on. */
   var LAYERS = [['walking bass', 0.35], ['ghost snare', 0.45], ['piano stabs', 0.55], ['shaker', 0.6], ['held top note', 0.75]];
   /* The two styles (owner 2026-11-13: Settings picks one). `div` is steps to
-     a beat (jazz in eighths, metal in sixteenths); `span` how many beats a
+     a beat (jazz in eighths, electronic in sixteenths); `span` how many beats a
      minute the busiest shift adds; `lpSpan` how far the radio's low-pass
-     opens with it. Metal: 92 at its calmest, half time (the snare on
-     three), to 126; a week won at 116, a week lost at 62. */
+     opens with it. Electronic: 90 at its calmest, half time (the snare on
+     three), to 120; a week won at 112, a week lost at 70. */
   var STYLES = {
     jazz: { name: 'Slow jazz', div: 2, span: 30, lpSpan: 2600, moods: JAZZ, step: function (a, w, b) { jazzStep(a, w, b); }, layers: LAYERS },
-    metal: { name: 'Heavy metal', div: 4, span: 34, lpSpan: 0, step: function (a, w, b) { metalStep(a, w, b); },
-      moods: { day: { bpm: 92, lp: 9000, swing: 0 }, win: { bpm: 116, lp: 9000, swing: 0 }, lose: { bpm: 62, lp: 6500, swing: 0 } },
-      layers: [['gallops', 0.2], ['full time, not half', 0.3], ['ride', 0.45], ['busy riffs', 0.55], ['lead guitar', 0.65], ['double kick', 0.7]] }
+    electronic: { name: 'Electronic', div: 4, span: 30, lpSpan: 0, step: function (a, w, b) { synthStep(a, w, b); },
+      moods: { day: { bpm: 90, lp: 12000, swing: 0 }, win: { bpm: 112, lp: 12000, swing: 0 }, lose: { bpm: 70, lp: 7000, swing: 0 } },
+      layers: [['bass in sixteenths', 0.25], ['hi-hats', 0.3], ['arpeggio', 0.4], ['full time, not half', 0.45], ['four on the floor', 0.55], ['fast arpeggio, octave bass', 0.6], ['lead synth, open hats', 0.7]] }
   };
   function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
   function sm(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
@@ -438,7 +439,7 @@
     out.connect(lp); lp.connect(duck); duck.connect(dip); dip.connect(vol); vol.connect(bus.lim);
     music.out = out; music.lp = lp; music.duck = duck; music.dip = dip; music.vol = vol;
     music.style = music.wantStyle = save.musicStyle;
-    if (music.style === 'metal') { metalBand(a); metalPlug(true); }
+    if (music.style === 'electronic') { synthBand(a); synthPlug(true); }
   }
   function note(a, when, midi, dur, vol, type) {
     var o = a.createOscillator(), g = a.createGain();
@@ -551,7 +552,7 @@
       // So does the other style, picked in Settings.
       var S = STYLES[music.style];
       if ((music.want !== music.mood || music.wantStyle !== music.style) && music.step % (2 * S.div) === 0) {
-        if (music.wantStyle !== music.style) { music.style = music.wantStyle; if (music.style === 'metal') metalBand(a); metalPlug(music.style === 'metal'); }
+        if (music.wantStyle !== music.style) { music.style = music.wantStyle; if (music.style === 'electronic') synthBand(a); synthPlug(music.style === 'electronic'); }
         music.mood = music.want; music.step = 0; S = STYLES[music.style];
       }
       var M = S.moods[music.mood], day = music.mood === 'day';
@@ -573,156 +574,117 @@
     } else if (!want && music.on) { music.on = false; clearInterval(music.timer); }
   }
 
-  /* ---------- the guitars, and metal as a second style of music ----------
-     Owner 2026-11-13: a heavy metal style beside the jazz, picked in
-     Settings, slower than the first demo and made as it plays the same way.
-     A plucked string is Karplus-Strong: a burst of noise going round a short
-     loop that loses a little each time (the loop's length is the note). A
-     distorted guitar is that pluck through a wave-shaper (the amp) and a
-     speaker cabinet's filters; two of them, left and right, as a band
-     double-tracks its rhythm guitar. The lead is two saw waves through a
-     softer amp, with a bend into each note, vibrato and an echo. */
-  var KS = {};
-  function ksBuf(a, midi, v, decay, dur) {
-    var key = midi + ':' + v + ':' + decay + ':' + dur;
-    if (KS[key]) return KS[key];
-    var sr = a.sampleRate, n = Math.floor(sr * dur), buf = a.createBuffer(1, n, sr), d = buf.getChannelData(0);
-    var N = Math.max(2, Math.round(sr / hz(midi))), line = new Float32Array(N), i, at = 0, nx;
-    for (i = 0; i < N; i++) line[i] = rand() * 2 - 1;
-    for (i = 0; i < n; i++) { nx = at + 1 === N ? 0 : at + 1; d[i] = line[at]; line[at] = decay * 0.5 * (line[at] + line[nx]); at = nx; }
-    return (KS[key] = buf);
-  }
-  function shapeCurve(k) { var n = 2048, c = new Float32Array(n); for (var i = 0; i < n; i++) { var x = i * 2 / n - 1; c[i] = (1 + k) * x / (1 + k * Math.abs(x)); } return c; }
-  /* An amp: a little low cut, the distortion, the mids scooped, a cabinet's top end rolled off. */
-  function amp(a, out, pan, drive, level) {
-    var pre = a.createGain(), hp = a.createBiquadFilter(), sh = a.createWaveShaper(), mid = a.createBiquadFilter(), lp = a.createBiquadFilter(), post = a.createGain();
-    pre.gain.value = drive; hp.type = 'highpass'; hp.frequency.value = 110;
-    sh.curve = shapeCurve(60); sh.oversample = '2x';
-    mid.type = 'peaking'; mid.frequency.value = 700; mid.Q.value = 0.8; mid.gain.value = -6;
-    lp.type = 'lowpass'; lp.frequency.value = 4600; lp.Q.value = 0.9;
-    post.gain.value = level;
-    pre.connect(hp); hp.connect(sh); sh.connect(mid); mid.connect(lp); lp.connect(post);
-    if (a.createStereoPanner) { var p = a.createStereoPanner(); p.pan.value = pan; post.connect(p); p.connect(out); } else post.connect(out);
-    return pre;
-  }
-  function pluck(a, into, midi, t, len, muted, vol, v) {
-    var src = a.createBufferSource(), g = a.createGain(), f = a.createBiquadFilter();
-    src.buffer = ksBuf(a, midi, v || 0, muted ? 0.99 : 0.997, muted ? 0.4 : 2.5);
-    f.type = 'lowpass'; f.frequency.value = muted ? 650 : 7000;
-    g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + Math.max(0.02, len - 0.04)); g.gain.linearRampToValueAtTime(0.0001, t + len);
-    src.connect(f); f.connect(g); g.connect(into); src.start(t); src.stop(t + len + 0.05);
-  }
-  /* A power chord: root, fifth, octave (palm-muted: root and fifth). */
-  function power(a, into, root, t, len, muted, vol, v) {
-    (muted ? [root, root + 7] : [root, root + 7, root + 12]).forEach(function (m, i) { pluck(a, into, m, t + i * 0.005, len, muted, vol, v); });
-  }
+  /* ---------- electronic: the second style of music ----------
+     Owner 2026-11-13: tried first as heavy metal, which came out sounding
+     like machines, so it became retro electronic instead, the synths and
+     drum machines of the eighties: a pulsing bass, an arpeggio, wide pads
+     that duck under the kick, a gated snare in a big room, and a lead near
+     the top. All of it made as it plays, like the jazz, and none of it
+     anybody else's tune. */
   function noiseHit(a, out, t, len, type, f, v, q) {
     var s = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain();
     s.buffer = noiseBuf; s.loop = true; fl.type = type; fl.frequency.value = f; if (q) fl.Q.value = q;
     g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
     s.connect(fl); fl.connect(g); g.connect(out); s.start(t, rand() * 0.5, len + 0.02);
   }
-  var KIT = {
-    kick: function (a, out, t, v) {
-      var o = a.createOscillator(), g = a.createGain();
-      o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.07);
-      g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
-      o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.22);
-      noiseHit(a, out, t, 0.012, 'highpass', 3500, v * 0.6);      // the beater's click
-    },
-    snare: function (a, out, t, v) {
-      var o = a.createOscillator(), g = a.createGain();
-      o.frequency.setValueAtTime(210, t); o.frequency.exponentialRampToValueAtTime(170, t + 0.1);
-      g.gain.setValueAtTime(v * 0.55, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
-      o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.14);
-      noiseHit(a, out, t, 0.24, 'bandpass', 2300, v, 0.5);
-    },
-    hat: function (a, out, t, v) { noiseHit(a, out, t, 0.05, 'highpass', 8000, v); },
-    ride: function (a, out, t, v) { noiseHit(a, out, t, 0.3, 'bandpass', 6500, v, 1.5); },
-    crash: function (a, out, t, v) { noiseHit(a, out, t, 1.8, 'highpass', 4200, v); }
-  };
-  function leadAmp(a, out, echo) {
-    var pre = a.createGain(), sh = a.createWaveShaper(), lp = a.createBiquadFilter(), post = a.createGain(), dl = a.createDelay(1), fb = a.createGain(), wet = a.createGain();
-    pre.gain.value = 3; sh.curve = shapeCurve(30); sh.oversample = '2x'; lp.type = 'lowpass'; lp.frequency.value = 3800; post.gain.value = 0.07;
-    dl.delayTime.value = echo; fb.gain.value = 0.3; wet.gain.value = 0.3;
-    pre.connect(sh); sh.connect(lp); lp.connect(post); post.connect(out); post.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(out);
-    return pre;
-  }
-  function leadNote(a, into, midi, t, len) {
-    var g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain();
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.5, t + 0.012); g.gain.setValueAtTime(0.5, t + Math.max(0.02, len - 0.03)); g.gain.linearRampToValueAtTime(0.0001, t + len);
-    lfo.frequency.value = 5.8; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(len > 0.4 ? 24 : 6, t + Math.min(0.45, len));
-    lfo.connect(lg); lfo.start(t); lfo.stop(t + len + 0.05); g.connect(into);
-    [-7, 7].forEach(function (d) {
-      var o = a.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz(midi);
-      o.detune.setValueAtTime(d - 70, t); o.detune.linearRampToValueAtTime(d, t + 0.05);      // a little bend up into the note
-      lg.connect(o.detune); o.connect(g); o.start(t); o.stop(t + len + 0.05);
+  /* One synth note: oscillators (detuned copies for width), a low-pass that
+     opens and closes like a pluck, and its own loudness shape. */
+  function synVoice(a, out, type, midi, t, len, vol, f0, f1, q, atk, detunes) {
+    var f = a.createBiquadFilter(), g = a.createGain();
+    f.type = 'lowpass'; f.Q.value = q || 1; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + Math.min(len, 0.25));
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + (atk || 0.005));
+    g.gain.setValueAtTime(vol, t + Math.max(atk || 0.005, len * 0.7)); g.gain.linearRampToValueAtTime(0.0001, t + len);
+    f.connect(g); g.connect(out);
+    (detunes || [0]).forEach(function (d) {
+      var o = a.createOscillator(); o.type = type; o.frequency.value = hz(midi); o.detune.value = d;
+      o.connect(f); o.start(t); o.stop(t + len + 0.05);
     });
   }
-  /* The band, made once and plugged into the music only while metal plays
-     (an amp left plugged in still costs the phone something). */
-  function metalBand(a) {
+  /* A room for it: reverb from two seconds of fading noise, made once. */
+  function roomIR(a) {
+    var n = Math.floor(a.sampleRate * 2.2), buf = a.createBuffer(2, n, a.sampleRate);
+    for (var c = 0; c < 2; c++) { var d = buf.getChannelData(c); for (var i = 0; i < n; i++) d[i] = (rand() * 2 - 1) * Math.pow(1 - i / n, 3); }
+    return buf;
+  }
+  /* The band, made once and plugged into the music only while it plays:
+     a dry mix, a pad bus that ducks under each kick, an echo and a room. */
+  function synthBand(a) {
     if (music.band) return music.band;
-    var mix = a.createGain(); mix.gain.value = METAL_MIX;
-    music.band = { mix: mix, L: amp(a, mix, -0.7, 6, 0.1), R: amp(a, mix, 0.7, 6, 0.1), lead: leadAmp(a, mix, 0.34), on: false };
+    var mix = a.createGain(), pump = a.createGain(), rev = a.createConvolver(), revOut = a.createGain(), echo = a.createDelay(1), fb = a.createGain(), echoOut = a.createGain();
+    mix.gain.value = SYNTH_MIX; rev.buffer = roomIR(a); revOut.gain.value = 0.32; fb.gain.value = 0.32; echoOut.gain.value = 0.28;
+    pump.connect(mix); pump.connect(rev); rev.connect(revOut); revOut.connect(mix);
+    echo.connect(fb); fb.connect(echo); echo.connect(echoOut); echoOut.connect(mix); echoOut.connect(rev);
+    music.band = { mix: mix, pump: pump, rev: rev, echo: echo, on: false };
     return music.band;
   }
-  function metalPlug(on) {
+  function synthPlug(on) {
     var b = music.band; if (!b || b.on === on) return;
     b.on = on; if (on) b.mix.connect(music.out); else b.mix.disconnect();
   }
-  var METAL_MIX = 0.38;      // measured: about as loud as the jazz, a little louder at its busiest
-  /* One bar a chord (the power chord's root, MIDI). The day: E minor, with
-     the low E as the pedal the riff keeps coming back to. A week won: E, A,
-     B, in a major key. A week lost: slow, with the F a half step above E that
-     doom bands lean on. */
-  var METAL = {
-    day: { prog: [40, 40, 48, 50, 40, 40, 43, 45], lead: [64, 67, 69, 71, 74, 76, 79, 81] },
-    win: { prog: [40, 40, 45, 47, 40, 40, 45, 47], lead: [64, 66, 68, 71, 73, 76, 78, 80] },
-    lose: { prog: [40, 41, 40, 50, 40, 41, 48, 47], lead: [64, 65, 67, 71, 72, 76] }
+  var SYNTH_MIX = 0.3;      // measured: a touch under the jazz when calm, about level at its busiest (owner 2026-11-13: it sounded louder)
+  /* One chord a bar: the bass note (low), then the pad's chord. The day:
+     A minor, Am F C G, the eighties' favourite four. A week won: C major,
+     C G Am F. A week lost: D minor, slower, ending on A major. */
+  var SYNTH = {
+    day: { prog: [[33, 57, 60, 64], [29, 57, 60, 65], [36, 55, 60, 64], [31, 55, 59, 62]], lead: [69, 72, 74, 76, 79, 81, 84] },
+    win: { prog: [[36, 60, 64, 67], [31, 59, 62, 67], [33, 57, 60, 64], [29, 57, 60, 65]], lead: [72, 74, 76, 79, 81, 84, 86] },
+    lose: { prog: [[38, 57, 62, 65], [33, 57, 60, 64], [34, 58, 62, 65], [33, 57, 61, 64]], lead: [62, 64, 65, 69, 74] }
   };
-  /* A beat of rhythm guitar, by how hard the shift is: x is a palm-muted chug. */
-  var CELLS = [['x---', 'x-x-', 'x--x', 'x---'], ['x-xx', 'xxx-', 'x-x-', 'xx-x'], ['xxxx', 'x-xx', 'xxx-', 'xxxx']];
+  var ARP = [0, 1, 2, 3, 4, 5, 4, 3, 2, 1];      // up the chord and down again, two octaves
   /* One sixteenth note of it. Sixteen to a bar. */
-  function metalStep(a, when, beat) {
-    var b = music.band, mood = music.mood, P = METAL[mood], s = music.step % 16, bi = Math.floor(music.step / 16) % P.prog.length;
-    var root = P.prog[bi], next = P.prog[(bi + 1) % P.prog.length], S16 = beat / 4, out = b.mix, i;
-    var I = mood === 'day' ? music.I : mood === 'win' ? 0.6 : 0.15;
-    var half = mood === 'lose' || (mood === 'day' && I < 0.3);      // half time: the snare on three
-    if (s === 0) {
-      // A new bar: its riff, a beat at a time, busier as the shift gets harder.
-      var r = '';
-      for (i = 0; i < 4; i++) r += pick(CELLS[mood === 'lose' ? 0 : mood === 'win' ? 1 : rand() < sm(0.55, 0.85, I) ? 2 : rand() < sm(0.2, 0.5, I) ? 1 : 0]);
-      music.riff = r; music.ring = half ? 8 : 4; music.chug = root === 40 || rand() < 0.6 ? 40 : root;
-    }
-    var chug = music.riff.charAt(s) === 'x' && s >= music.ring, push = s === 14 && next !== root && mood !== 'lose' && rand() < sm(0.4, 0.7, I) * 0.6;
-    var gtr = function (r, len, muted) {
-      power(a, b.L, r, when, len, muted, 1, 0); power(a, b.R, r, when + 0.009, len, muted, 1, 1);
-      var o = a.createOscillator(), f = a.createBiquadFilter(), g = a.createGain();     // the bass, an octave down
-      o.type = 'sawtooth'; o.frequency.value = hz(r - 12); f.type = 'lowpass'; f.frequency.value = 700;
-      g.gain.setValueAtTime(0.11, when); g.gain.setValueAtTime(0.11, when + Math.max(0.02, len - 0.02)); g.gain.linearRampToValueAtTime(0.0001, when + len);
-      o.connect(f); f.connect(g); g.connect(out); o.start(when); o.stop(when + len + 0.02);
+  function synthStep(a, when, beat) {
+    var b = music.band, mood = music.mood, P = SYNTH[mood], s = music.step % 16, bi = Math.floor(music.step / 16) % P.prog.length;
+    var ch = P.prog[bi], S16 = beat / 4, I = mood === 'day' ? music.I : mood === 'win' ? 0.65 : 0.1;
+    var half = mood === 'lose' || (mood === 'day' && I < 0.45);      // half time: the snare on three
+    var kick = function (v) {
+      var o = a.createOscillator(), g = a.createGain();
+      o.frequency.setValueAtTime(150, when); o.frequency.exponentialRampToValueAtTime(42, when + 0.09);
+      g.gain.setValueAtTime(v, when); g.gain.exponentialRampToValueAtTime(0.0001, when + 0.32);
+      o.connect(g); g.connect(b.mix); o.start(when); o.stop(when + 0.34);
+      b.pump.gain.cancelScheduledValues(when); b.pump.gain.setValueAtTime(0.35, when); b.pump.gain.linearRampToValueAtTime(1, when + beat * 0.45);    // the pads duck under it
     };
-    if (s === 0) gtr(root, S16 * music.ring + 0.02, false);
-    else if (push) gtr(next, S16 * 2 + 0.02, false);
-    else if (chug && !(s === 15 && music.pushed)) gtr(music.chug, S16 * 0.9, true);
-    if (s === 14) music.pushed = push;
-    // Drums.
-    var dbl = mood === 'day' && rand() < sm(0.7, 0.95, I);
-    if (s === 0 || (half && s === 10 && rand() < 0.5) || (!half && chug) || push) KIT.kick(a, out, when, 0.5);
-    else if (dbl) KIT.kick(a, out, when, 0.3);
-    var fill = bi % 4 === 3 && s >= 12 && (mood === 'win' || (mood === 'day' && I > 0.4));
-    if (fill) KIT.snare(a, out, when, 0.2 + 0.04 * (s - 12));
-    else if (half ? s === 8 : s === 4 || s === 12) KIT.snare(a, out, when, 0.3);
-    if (s === 0 && ((mood === 'day' && I > 0.35 && bi % 4 === 0) || (mood === 'win' && bi % 2 === 0) || (mood === 'lose' && bi === 0))) KIT.crash(a, out, when, mood === 'lose' ? 0.06 : 0.08);
-    else if (s % 2 === 0 && mood !== 'lose') { if (I > 0.45) KIT.ride(a, out, when, 0.035); else KIT.hat(a, out, when, 0.045); }
-    else if (mood === 'lose' && s % 4 === 0) KIT.ride(a, out, when, 0.02);
-    // The lead: on the day only near the top, on a week won, and now and then, slowly, on a week lost.
-    var leadP = mood === 'day' ? 0.5 * sm(0.65, 0.9, I) : mood === 'win' ? 0.35 : 0.14;
+    var snare = function (v) {      // a clap and a noise burst, sent into the room
+      noiseHit(a, b.mix, when, 0.16, 'bandpass', 1600, v, 0.8); noiseHit(a, b.mix, when + 0.012, 0.12, 'bandpass', 1300, v * 0.7, 0.8);
+      noiseHit(a, b.rev, when, 0.2, 'bandpass', 1500, v * 1.2, 0.7);
+    };
+    // The pad: the bar's chord, three saws a note, slow in.
+    if (s === 0) ch.slice(1).forEach(function (n) { synVoice(a, b.pump, 'sawtooth', n, when, beat * 4 + 0.15, 0.011, 1500 + 1500 * I, 1500 + 1500 * I, 0.7, 0.18, [-10, 0, 10]); });
+    // The bass: half notes on a week lost, eighths when calm, then pulsing sixteenths, jumping the octave near the top.
+    var every = mood === 'lose' ? 8 : mood === 'day' && I < 0.25 ? 2 : 1;
+    if (s % every === 0) {
+      var up = mood !== 'lose' && I > 0.6 && s % 4 === 2 ? 12 : 0;
+      synVoice(a, b.mix, 'sawtooth', ch[0] + up, when, (every === 8 ? beat * 2 : S16 * every) * 0.92, 0.09, 1600, 320, 4, 0.004, [0, 7]);
+      synVoice(a, b.mix, 'square', ch[0] - 12 + up, when, (every === 8 ? beat * 2 : S16 * every) * 0.92, 0.05, 500, 200, 1, 0.004);
+    }
+    // The arpeggio: in on the day as it gets busy, all through a week won, slow and sparse on a week lost.
+    var arpOn = mood === 'win' || (mood === 'day' && rand() < sm(0.4, 0.6, I)) || (mood === 'lose' && s % 4 === 0);
+    if (arpOn && (mood !== 'day' || I > 0.6 || s % 2 === 0)) {
+      var tones = ch.slice(1).concat(ch.slice(1).map(function (n) { return n + 12; }));
+      var n = tones[ARP[music.step % ARP.length] % tones.length] + (mood === 'lose' ? 0 : 12);
+      synVoice(a, b.mix, 'square', n, when, S16 * (mood === 'lose' ? 3 : 0.9), 0.03, 3600, 900, 2, 0.003);
+      synVoice(a, b.echo, 'square', n, when, S16 * 0.9, 0.022, 3000, 900, 2, 0.003);
+    }
+    // The drum machine.
+    if (mood === 'lose') { if (s === 0) kick(0.32); if (s === 8 && bi % 2 === 1) snare(0.12); }
+    else {
+      var floor = mood === 'win' || I > 0.55;      // four on the floor
+      if (s === 0 || (floor ? s % 4 === 0 : s === 10 && rand() < 0.5)) kick(0.5);
+      var fill = bi % 4 === 3 && s >= 12 && (mood === 'win' || I > 0.6);
+      if (fill) snare(0.1 + 0.03 * (s - 12));
+      else if (half ? s === 8 : s === 4 || s === 12) snare(0.2);
+      if (mood === 'win' || I > 0.3) noiseHit(a, b.mix, when, 0.03, 'highpass', 9000, s % 2 ? 0.03 : 0.018);
+      else if (s % 2 === 0) noiseHit(a, b.mix, when, 0.03, 'highpass', 9000, 0.016);
+      if ((mood === 'win' || I > 0.7) && s % 4 === 2) noiseHit(a, b.mix, when, 0.16, 'highpass', 8000, 0.022);     // open hat on the off-beat
+    }
+    // The lead: on the day near the top, on a week won, and now and then, long, on a week lost.
+    var leadP = mood === 'day' ? 0.45 * sm(0.68, 0.9, I) : mood === 'win' ? 0.3 : 0.12;
     if (s % 2 === 0 && music.step >= (music.leadUntil || 0) && rand() < leadP && (mood !== 'lose' || s % 4 === 0)) {
-      var L = P.lead; music.leadAt = Math.max(0, Math.min(L.length - 1, (music.leadAt == null ? 3 : music.leadAt) + pick([-2, -1, -1, 1, 1, 2])));
-      var steps = mood === 'lose' ? 6 + Math.floor(rand() * 5) : 2 + 2 * Math.floor(rand() * 2);
-      leadNote(a, b.lead, L[music.leadAt], when, steps * S16);
+      var L = P.lead; music.leadAt = Math.max(0, Math.min(L.length - 1, (music.leadAt == null ? 2 : music.leadAt) + pick([-2, -1, -1, 1, 1, 2])));
+      var steps = mood === 'lose' ? 6 + Math.floor(rand() * 5) : 2 + 2 * Math.floor(rand() * 2), len = steps * S16;
+      var lg = a.createGain(); lg.connect(b.mix); lg.connect(b.echo); lg.connect(b.rev);
+      synVoice(a, lg, 'sawtooth', L[music.leadAt], when, len, 0.035, 2600, 1800, 1.5, 0.02, [-6, 6]);
+      synVoice(a, lg, 'square', L[music.leadAt], when, len, 0.02, 2600, 1800, 1.5, 0.02);
+      setTimeout(function () { try { lg.disconnect(); } catch (e) { /* no matter */ } }, (when - a.currentTime + len + 3) * 1000);
       music.leadUntil = music.step + steps;
     }
   }
@@ -2286,7 +2248,7 @@
       '<div class="ou-body-pad">' +
       vol('sfx', 'Sound', save.sfxVol, 'The sizzle, the bell, the tickets.') +
       vol('music', 'Music', save.musicVol, 'Made as it plays, never the same twice. It picks up when the kitchen does.') +
-      // Which music (owner 2026-11-13): the jazz, or heavy metal.
+      // Which music (owner 2026-11-13): the jazz, or retro electronic.
       '<div class="ou-set ou-set--vol" role="group" aria-label="Music style"><span><b>Music style</b></span><span class="ou-seg">' +
         Object.keys(STYLES).map(function (id) { return '<button data-act="style" data-v="' + id + '" aria-pressed="' + (id === save.musicStyle) + '">' + STYLES[id].name + '</button>'; }).join('') + '</span></div>' +
       (STATS.url ? row('stats', 'Send how my weeks go', !save.noStats, 'No name: the level, the days and the tips, so The Café can see if it’s too hard.') : '') +
@@ -2694,7 +2656,7 @@
           '<div class="ou-lab-read" id="ou-lab-read" aria-live="off"></div>' +
           '<button class="ou-btn ou-btn--quiet" data-lab="lights" style="width:100%">Lights out (3.5 seconds)</button>' +
           '<p class="ou-fine">In the game, the shift sets the slider by itself: coffees lost, how near the next walk-out is, how full the rail is, and lunch. Friday it’s the catering clock.</p></div>' +
-          '<h3>Other instruments</h3><p class="ou-fine">Not in the game: what the same tricks can sound like, with no recordings. The guitars and drums are the metal style’s. On the music volume.</p>' +
+          '<h3>Other instruments</h3><p class="ou-fine">Not in the game: what the same tricks can sound like, with no recordings. On the music volume.</p>' +
           INSTS.map(function (x) { return '<div class="ou-lab-sfx"><span><b>' + esc(x[1]) + '</b><small>' + esc(x[2]) + '</small></span><button class="ou-btn ou-btn--quiet" data-lab="inst" data-v="' + x[0] + '">Play</button></div>'; }).join('') +
           '<h3>Sound effects</h3>' +
           '<div class="ou-setbox"><span class="ou-label">Sound volume</span>' + seg('svol', vols, save.sfxVol) + '</div>' +
@@ -2724,7 +2686,43 @@
       };
       /* ---- other instruments (owner 2026-11-13) ----
          Not in the game: what the same tools can be made to sound like,
-         using the guitars and drums of the metal style. On the music volume. */
+         on the music volume. */
+      // The guitars (Karplus-Strong plucks, an amp, a cabinet), here only: the
+      // game itself doesn't use them (owner 2026-11-13: metal sounded like machines).
+      var KS = {};
+      function ksBuf(a, midi, v, decay, dur) {
+        var key = midi + ':' + v + ':' + decay + ':' + dur;
+        if (KS[key]) return KS[key];
+        var sr = a.sampleRate, n = Math.floor(sr * dur), buf = a.createBuffer(1, n, sr), d = buf.getChannelData(0);
+        var N = Math.max(2, Math.round(sr / hz(midi))), line = new Float32Array(N), i, at = 0, nx;
+        for (i = 0; i < N; i++) line[i] = rand() * 2 - 1;
+        for (i = 0; i < n; i++) { nx = at + 1 === N ? 0 : at + 1; d[i] = line[at]; line[at] = decay * 0.5 * (line[at] + line[nx]); at = nx; }
+        return (KS[key] = buf);
+      }
+      function shapeCurve(k) { var n = 2048, c = new Float32Array(n); for (var i = 0; i < n; i++) { var x = i * 2 / n - 1; c[i] = (1 + k) * x / (1 + k * Math.abs(x)); } return c; }
+      /* An amp: a little low cut, the distortion, the mids scooped, a cabinet's top end rolled off. */
+      function amp(a, out, pan, drive, level) {
+        var pre = a.createGain(), hp = a.createBiquadFilter(), sh = a.createWaveShaper(), mid = a.createBiquadFilter(), lp = a.createBiquadFilter(), post = a.createGain();
+        pre.gain.value = drive; hp.type = 'highpass'; hp.frequency.value = 110;
+        sh.curve = shapeCurve(60); sh.oversample = '2x';
+        mid.type = 'peaking'; mid.frequency.value = 700; mid.Q.value = 0.8; mid.gain.value = -6;
+        lp.type = 'lowpass'; lp.frequency.value = 4600; lp.Q.value = 0.9;
+        post.gain.value = level;
+        pre.connect(hp); hp.connect(sh); sh.connect(mid); mid.connect(lp); lp.connect(post);
+        if (a.createStereoPanner) { var p = a.createStereoPanner(); p.pan.value = pan; post.connect(p); p.connect(out); } else post.connect(out);
+        return pre;
+      }
+      function pluck(a, into, midi, t, len, muted, vol, v) {
+        var src = a.createBufferSource(), g = a.createGain(), f = a.createBiquadFilter();
+        src.buffer = ksBuf(a, midi, v || 0, muted ? 0.99 : 0.997, muted ? 0.4 : 2.5);
+        f.type = 'lowpass'; f.frequency.value = muted ? 650 : 7000;
+        g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + Math.max(0.02, len - 0.04)); g.gain.linearRampToValueAtTime(0.0001, t + len);
+        src.connect(f); f.connect(g); g.connect(into); src.start(t); src.stop(t + len + 0.05);
+      }
+      /* A power chord: root, fifth, octave (palm-muted: root and fifth). */
+      function power(a, into, root, t, len, muted, vol, v) {
+        (muted ? [root, root + 7] : [root, root + 7, root + 12]).forEach(function (m, i) { pluck(a, into, m, t + i * 0.005, len, muted, vol, v); });
+      }
       var inst = { out: null };
       var instOut = function () {
         var a = ctx(); if (!a) return null;
