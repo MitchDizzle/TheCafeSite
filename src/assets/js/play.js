@@ -1500,6 +1500,8 @@
   /* The week as text to share (owner 2026-11-13): a coloured square a day,
      the tips, and what it kept. Never the week code: that stays private. */
   var SQUARE = { legendary: '\uD83D\uDFE8', epic: '\uD83D\uDFEA', rare: '\uD83D\uDFE6', normal: '\u2B1C', bad: '\uD83D\uDFE5' };
+  /* Where to play, as the picture and the text say it (owner 2026-11-13). */
+  var PLAY_AT = String(STATS.home || 'https://lvcafetogo.com').replace(/^https?:\/\//, '').replace(/\/$/, '') + '/play';
   function weekText(p) {
     var lines = ['Order Up, ' + (D.levels[p.l] ? D.levels[p.l].name + ' week' : 'a week') + ': ' + weekHead(p)[1].toLowerCase()];
     p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] : SQUARE.bad) + ' ' + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : ' · ' + stopWords(p).toLowerCase())); });
@@ -1509,7 +1511,7 @@
     if (p.x) lines.push('Free items turned down +' + money(p.x));
     if (p.sp) lines.push('Spent on items −' + money(p.sp));
     lines.push('Kept ' + money(p.k));
-    lines.push('A little game on The Café’s website, Leavenworth KS' + (STATS.listed ? ': ' + location.origin + '/play' : ''));
+    lines.push('A little game from The Café, Leavenworth KS. Play it at ' + PLAY_AT);
     return lines.join('\n');
   }
   /* The week as a picture to share (owner 2026-11-13): the end screen's
@@ -1562,7 +1564,7 @@
     var items = withIcons ? lineItems(p) : [], PER = 10, TG = 10;
     var TS = Math.floor((x1 - x0 - (PER - 1) * TG) / PER), tileRows = Math.ceil(items.length / PER);
     if (tileRows > 2) { PER = Math.ceil(items.length / 2); TS = Math.floor((x1 - x0 - (PER - 1) * TG) / PER); tileRows = 2; }
-    var lineH = items.length ? 52 + tileRows * (TS + TG) : 0, foot = 130;
+    var lineH = items.length ? 52 + tileRows * (TS + TG) : 0, foot = 190;
     var ty = top + 40, room = H - ty - (items.length ? 34 : 0) - lineH - foot - 10;
     var RH = Math.min(118, Math.floor(room / rows.length)), k = RH / 118, tableH = rows.length * RH;
 
@@ -1622,8 +1624,12 @@
       });
     }
     // Whose game it is (game/README.md: name the café, with the town), at the foot.
-    c.textAlign = 'center'; c.fillStyle = INK.tealDark; c.font = '700 54px ' + serif; c.fillText('Order Up', W / 2, H - 76);
-    c.fillStyle = INK.grey; c.font = '400 30px ' + sans; c.fillText('A little game on The Café’s website · Leavenworth, KS', W / 2, H - 30);
+    // and where to play it (owner 2026-11-13).
+    c.textAlign = 'center'; c.fillStyle = INK.tealDark; c.font = '700 54px ' + serif; c.fillText('Order Up', W / 2, H - 128);
+    var lead = 'Play it at ', site = PLAY_AT; c.font = '400 36px ' + sans; var lw = c.measureText(lead).width; c.font = '900 36px ' + sans; var sw = c.measureText(site).width;
+    c.textAlign = 'left'; c.fillStyle = INK.dark; c.font = '400 36px ' + sans; c.fillText(lead, (W - lw - sw) / 2, H - 76);
+    c.fillStyle = INK.teal; c.font = '900 36px ' + sans; c.fillText(site, (W - lw - sw) / 2 + lw, H - 76);
+    c.textAlign = 'center'; c.fillStyle = INK.grey; c.font = '400 28px ' + sans; c.fillText('A little game from The Café · Leavenworth, KS', W / 2, H - 32);
     return cv;
   }
   /* A canvas as a PNG file, made on the spot (toBlob would wait). */

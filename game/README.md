@@ -773,14 +773,16 @@ then the money merged into as few lines as still add up ("Catering +
 bonuses" holds the catering, finishing, the performance bonus and free
 items turned down; Kept says what was spent, "after $445 on items"), the
 items **On the line** as tiles in their rarity colours with how many, and
-"Order Up" and "A little game on The Café's website · Leavenworth, KS" at
-the foot. Rows and tiles shrink to fit, so nothing runs off the bottom).
+at the foot "Order Up", **where to play it** ("Play it at
+lvcafetogo.com/play", from `site.json` → `url`; owner 2026-11-13, even
+while the game is unlisted) and "A little game from The Café ·
+Leavenworth, KS". Rows and tiles shrink to fit, so nothing runs off the bottom).
 The item drawings are the sprite sheet's, turned into images as the end
 screen or Past weeks opens (one not loaded by the tap is left off; a
 browser that won't let the picture be read with them gets it without))
 and hands it to the phone's Share sheet with a few lines of text: a
 coloured square and the tips for each day, the catering, what was kept,
-and the same line, with the `/play` link only once `game.listed` is true.
+and where to play it, the same as the picture.
 It's drawn at once, with no waiting, because an iPhone refuses a Share
 sheet that comes after the tap. Where the Share sheet can't take a
 picture, the text alone; with no Share sheet (most computers), the picture
