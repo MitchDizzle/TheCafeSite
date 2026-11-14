@@ -71,11 +71,13 @@ starting at 11am with a drink included, no fryer, closed weekends.
 **The title screen** (owner 2026-11-12: more room) has Start, the three
 levels, and five links in two lines: How to play, Recipe Box, Settings,
 then **Achievements** and **Past weeks** (in that order: any other makes
-three lines). Settings holds the sound and music switches, whether results
+three lines). Settings holds the sound and music volumes (Off, Low, Medium,
+High; §10), whether results
 go to The Café (only when `game.statsUrl` is set), "Reset achievements"
 (two taps), and **About**: what the game is, and the
 credit, "Made by Mitch Gardner" (owner 2026-11-12; `CREDIT` in `play.js`),
-with the version. Pause keeps its own sound and music buttons.
+with the version. Pause keeps its own Sound and Music buttons, each a tap
+from Off to Low, Medium, High and round again.
 
 **Between runs** (kept on the phone only, §13): the **Recipe Box**, a card
 for every ticket and special by its real name, which turns into the café's
@@ -329,6 +331,8 @@ the best week is remembered for each one by itself. All of it is
 | Tickets come | 60% slower | 5% slower | 2% faster |
 | Done food lasts | 60% longer | as written | 10% shorter |
 | Family | never | from Wednesday | from Tuesday, more often |
+| Family says | | three lines a visit, two up at most, quiet while it's busy | as much as it likes |
+| Music picks up | half way at most | to 85% | all the way |
 | Trouble | never | 35% of mornings from Wednesday | every morning from Tuesday |
 
 "As written" is the day's own numbers in `game.json` → `days`, which get
@@ -388,7 +392,12 @@ morning screen, nothing in How to play, no banner when they arrive (owner
   seconds).
 - **They talk.** Every few seconds a speech bubble lands on top of the
   griddle, the plate or the bins and stays there until it's tapped, so the
-  kitchen has to be worked around them. Up to three at once.
+  kitchen has to be worked around them. On Rush, up to three at once, as
+  many as they like. **On Regular only a few** (owner 2026-11-13): three
+  lines a visit, one every six seconds, two up at most, and none while the
+  rail is full or a ticket is late (`levels` → `talk`). Each line comes
+  with a murmur, a voice without words, higher or lower by who; answering
+  gets a grunt to go with the words (§10).
 - **Feed them** and they pour one spilled coffee back (or leave $6 on the
   counter if none is spilled). One time in four they brought a cookie.
 - Let their ticket run out and nothing is lost: "They'll bring it up at
@@ -612,15 +621,29 @@ of leaving the game; Escape during a shift pauses it.
   then sit still. Nothing loops forever except steam, the done food's
   bounce and the cookie's nudge.
 - A late ticket shakes once and its timer turns red.
+- **A flip** goes up, turns over in the air and lands with a little squash
+  and a puff of steam (owner 2026-11-13; it was a quick squash).
+- **Burning food flares up:** a burst of flame (`s-flame`, orange and gold,
+  never red) for under a second, then the smoke and the Burnt tag as before.
+- **A plate sent slides off to the right,** under Send, and a clean one
+  comes in from the left. The one leaving is a copy that can't be tapped;
+  the next plate is ready at once.
+- The flip and the flare-up run on their own clocks (`--ago`), so a redraw
+  of the flat-top half way through doesn't restart or cut them.
 - **`prefers-reduced-motion`:** every animation is off and the game plays
   the same.
 - A short buzz on a walk-out where the phone allows it, off with the sound.
 
 ## 10. Sound and music
 
-Two switches, on the title screen and in pause, both **off until the player
-turns them on** and both remembered. Many people will open this in the
-dining room.
+Two volumes, Sound and Music, each **Off, Low, Medium or High** (owner
+2026-11-13; they were on/off switches): a row of four in Settings, and in
+pause one button each that steps through them. Both are **off until the
+player turns them up** and both remembered (`save.sfxVol`,
+`save.musicVol`; a switch that was on came over as Medium, which is as loud
+as "on" was). Many people will open this in the dining room. Everything
+goes through one limiter on the way out, so High doesn't crackle on a phone
+speaker.
 
 **Music** (owner 2026-11-11: lo-fi jazz, generated). Nothing is recorded or
 downloaded: `play.js` plays it as it goes. An eight-bar loop of jazz chords
@@ -628,21 +651,75 @@ downloaded: `play.js` plays it as it goes. An eight-bar loop of jazz chords
 kick, a brushed snare and hats with a little swing at 74 beats a minute,
 and a few notes on top picked at random from a scale that can't clash, all
 through a low-pass so it sounds like a radio in the next room. It never
-plays the same way twice, and it stops when the page is hidden. Nobody has
-listened to it on a phone speaker yet: the notes, tempo and volumes are at
-the top of the music block in `play.js`.
+plays the same way twice, and it stops when the page is hidden.
 
-**Sound effects:**
+**It follows the shift** (owner 2026-11-13), and never stops or restarts to
+do it. How close the shift is to going wrong (`intensity()` in `play.js`)
+is coffees lost, how near the next walk-out is, how full the rail is, and
+lunch; on Friday, the catering clock. As it rises the tune speeds up (74 to
+104 beats a minute), the low-pass opens so it sounds closer, and layers
+fade in one at a time: a walking bass, ghost notes on the snare, short
+piano stabs, a shaker, and at the very top a held high note. It rises in
+about a second and settles over four, so a close call is heard and the
+calm after it comes back gently. While paused it holds where it was.
 
-- Also made in the browser (Web Audio), so there are no sound files and
-  nothing to license: a sizzle, a ticket tick, a "done" ping, the order bell, a low
-  note for a walk-out, a quick two-note chime for a lucky plate, and three
-  tunes (owner 2026-11-12): a day closing (up the chord to a held note), a
-  flawless day instead (a longer run two octaves up with a sparkle on top),
-  and an achievement (three notes, the last held). Short and quiet, no
-  music.
-- If real recordings are ever wanted (this kitchen's own flat-top and
-  bell), list each one's source beside it.
+- **How far a level lets it go** is `levels` → `music` in `game.json`:
+  Easy 50% (it never gets to the top), Regular 85%, Rush all the way.
+- **The lights going out** (Power Flicker) cut the music for as long as the
+  kitchen is dark, and it comes back with the lights. An easter egg; the
+  café's own speaker is on a battery.
+- **A week won** moves it to its own tune: quicker (96), brighter, a bass
+  that bounces, I VI7 ii V. **A week lost** (three coffees, or the catering
+  late): slow (58), A minor, the chords left to ring. Both come in on the
+  next half bar, from their first bar, so it shifts rather than cuts. A
+  week ended from pause leaves the day's tune. The title and each morning
+  bring the day's tune back.
+- Nobody has heard it on a phone speaker yet. The notes, tempos and
+  volumes are at the top of the music block in `play.js` (`MOODS`,
+  `MUSIC_VOL`); the layers and where they come in are `musicStep()`.
+
+**Sound effects**, also made in the browser (Web Audio), so there are no
+sound files and nothing to license. Short and quiet.
+
+| Sound | When |
+|---|---|
+| Tap | A bin, the plate, a button |
+| Sizzle | Food goes on the flat-top |
+| Flip | Food turned: the spatula's whoosh, a tick, the other side landing (2026-11-13) |
+| Ready | Food ready to flip, or to pull |
+| Flare-up | Food burns: a soft whump and a rush of flame (2026-11-13) |
+| Ticket | A ticket lands on the rail |
+| Plate out | Send: the plate sliding off (2026-11-13), then the bell |
+| Order bell | A plate goes out |
+| Lucky plate | A plate tips double |
+| Nope | Not on a ticket; the flat-top or plate is full; a tap where Rush wants a swipe |
+| Walk-out | One coffee down (and a short buzz where the phone allows) |
+| Family turns up | Their ticket lands; the only warning there is |
+| Family talks | Each speech bubble: three or four sounds of a voice with no words, higher for Mom, Grandma, an aunt or a sister, lower for Dad, Grandpa, an uncle or a brother (2026-11-13) |
+| You answer | Tapping a bubble, or Small Talk answering: a grunt that goes with the reply, "mm-hm", "yep", "sure", a "hmph" for "In a minute", a warm one for "Love you" (2026-11-13) |
+| Lights out / back | Power Flicker: a clunk and the hum winding down; a buzz as they come back (2026-11-13) |
+| Buy | An item picked or bought; a cookie eaten |
+| Day closes | Up the chord to a held note (2026-11-12) |
+| Flawless day | Instead: a longer run two octaves up, a sparkle on top |
+| Achievement | Three notes, the last held |
+| Week won | Four notes up, then the week-won tune |
+| Week lost | Down a minor chord, slowly, the last note held, then the week-lost tune (2026-11-13) |
+
+The voices are a buzz through a vowel's filters (`voice()`): never a word,
+never anyone's real voice.
+
+**Hearing all of it without playing:** `/play?debug&sound` on the dev
+server (`npm start`) is a test page with every sound effect on a button
+(and each voice and reply), and the music by hand: Play and Stop, its
+volume, the tune (the day, week won, week lost), the level, a slider for
+how close the shift is to going wrong, **Build up** (calm to busiest over
+20 seconds, to hear each layer come in), **Calm down**, and **Lights
+out**. A readout says the intensity, the tempo and which layers are in.
+It's in the `?debug` block, so a build cuts it out. On a phone: the PC's
+address on the same Wi-Fi, port 8080 (`http://<the PC's address>:8080/play?debug&sound`).
+
+If real recordings are ever wanted (this kitchen's own flat-top and bell),
+list each one's source beside it.
 
 ---
 
@@ -737,6 +814,11 @@ plan rules out logins); instead:
   serve an old game). Android Chrome gets a real button; an iPhone is told
   Safari's Share → Add to Home Screen; Facebook's browser is told to open
   the page in the phone's browser first.
+- **The same icon in the tab and on a bookmark** (owner 2026-11-13): `/play`
+  sets its own `favicon` (front matter, read by `base.njk`) to
+  `assets/game/icon.svg`, with the 192 PNG beside it for browsers that
+  don't take an SVG. `make-icons.js` writes that SVG copy along with the
+  PNGs, so change `game/icon.svg` and run it, never the copy.
 - **Installing doesn't erase anything**, but where the progress lives
   differs. On Android the home-screen game shares the browser's storage,
   so everything is there. On an iPhone the home-screen game has storage of
@@ -872,6 +954,8 @@ set it up is in the private planning repo, `game-stats/`):
 
 ### Checking the balance
 
+**The sound test page** is `/play?debug&sound` (§10).
+
 **The test handle is for `npm start` only.** `/play?debug` on the dev
 server puts `window.__ou` on the page (the run, the day, `tick()` to move
 the clock by hand, `give('linecook')` to own an item). A build (`npm run
@@ -976,3 +1060,11 @@ again.
 3. The owners' go-ahead, then `game.listed: true`, `/play` in the sitemap,
    and the post.
 4. Later: unlocks across runs; this week's real special as a dawn card.
+5. **The name** (owner 2026-11-13: Order Up and PlateUp are taken). Ideas,
+   and what a rename would touch, are in the private planning repo
+   (`GAME-NAME-AND-VIDEO.md`); the owners decide (GM-1). The save key
+   `orderup.v1` stays whatever the name.
+6. **Send it anyway** (owner 2026-11-13, an idea, not built): a wrong plate
+   sent on purpose, no tips and a slip but no walk-out. His own worry is
+   accidental taps, so only ever behind a long press on Send with a ring
+   filling, never a tap.

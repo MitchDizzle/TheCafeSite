@@ -168,7 +168,17 @@
 .ou-spot.is-done .ou-ring .ou-ring-fg, .ou-spot.is-flip .ou-ring .ou-ring-fg { stroke: var(--flattop-heat); }
 .ou-spot.is-done .ou-ring .ou-ring-bg, .ou-spot.is-flip .ou-ring .ou-ring-bg { stroke: var(--mint); stroke-width: 5; }
 .ou-spot.is-done .ou-food, .ou-spot.is-flip .ou-food { animation: ou-bounce .9s ease-in-out infinite; }
-.ou-spot.is-flipping .ou-food { animation: ou-flip .32s ease-out; }
+/* A flip (owner 2026-11-13): the food goes up, turns over in the air and
+   lands with a little squash and a puff of steam. A flare-up when food
+   burns. Both run on their own clocks (play.js sets --ago, the ms since it
+   started, so a redraw half way picks it up where it was); 520 and 850 ms,
+   the same as FLIP_MS and FLAME_MS in play.js. */
+.ou-spot.is-flipping .ou-food { animation: ou-flip .52s cubic-bezier(.3, .7, .4, 1) both; animation-delay: calc(var(--ago, 0) * -1ms); }
+.ou-puff { position: absolute; left: 50%; top: 58%; width: 70%; height: 30%; max-width: 60px; transform: translateX(-50%); pointer-events: none; z-index: 1;
+    background: radial-gradient(circle at 20% 60%, rgba(230, 236, 238, .85) 0 22%, transparent 24%), radial-gradient(circle at 50% 45%, rgba(230, 236, 238, .85) 0 26%, transparent 28%), radial-gradient(circle at 80% 60%, rgba(230, 236, 238, .85) 0 22%, transparent 24%);
+    opacity: 0; animation: ou-puff .52s ease-out both; animation-delay: calc(var(--ago, 0) * -1ms); }
+.ou-spot .ou-flame { position: absolute; left: 50%; top: 50%; width: 80%; height: 80%; max-width: 66px; max-height: 66px; pointer-events: none; z-index: 4;
+    opacity: 0; animation: ou-flame .85s ease-out both; animation-delay: calc(var(--ago, 0) * -1ms); transform-origin: 50% 90%; }
 /* The word under the food: Pull, Flip (Swipe on Rush) or Burnt. Never colour alone. */
 .ou-spot[data-tag]::after { content: attr(data-tag); position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%); font: 700 10px/1 Lato, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--text-dark); background: var(--mint); border-radius: 6px; padding: 2px 6px; border: 1.5px solid var(--teal-dark); z-index: 3; white-space: nowrap; }
 .ou-spot.is-flip[data-tag]::after { background: var(--gold); }
@@ -206,6 +216,11 @@
 .ou-plate { position: relative; height: min(104px, 100%); width: auto; aspect-ratio: 1; justify-self: center; }
 .ou-plate > .ou-i { position: absolute; inset: 0; }
 .ou-plate.is-bad { animation: ou-shake .3s ease-in-out 1; }
+/* The plate that went out slides off under Send; a clean one comes in from
+   the left (owner 2026-11-13). The one going is a copy, never tappable. */
+.ou-plate.ou-plate-gone { position: absolute; justify-self: auto; aspect-ratio: auto; pointer-events: none; z-index: 1; animation: ou-slide .42s cubic-bezier(.5, 0, .9, .6) both; }
+.ou-plate.is-fresh { animation: ou-platein .26s ease-out .14s both; }
+.ou-sendwrap { position: relative; z-index: 2; }
 .ou .ou-pi { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; }
 .ou-pi.is-new { animation: ou-pop .22s ease-out; }
 .ou-sendwrap { align-self: stretch; display: flex; align-items: center; justify-content: flex-end; }
@@ -284,6 +299,11 @@
 .ou-set small { display: block; font: 400 13px/1.3 Lato, sans-serif; color: #4A5A62; margin-top: 2px; }
 .ou-set i { flex: none; font: 900 13px/1 Lato, sans-serif; font-style: normal; letter-spacing: .1em; text-transform: uppercase; padding: 7px 10px; border-radius: 999px; background: var(--steel-light); border: 2px solid var(--steel-dark); }
 .ou-set[aria-pressed="true"] i { background: var(--mint); border-color: var(--teal-dark); }
+/* A volume: Off, Low, Medium, High in one row (owner 2026-11-13). */
+.ou-set.ou-set--vol { display: block; }
+.ou-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin-top: 8px; }
+.ou .ou-seg button { min-height: 40px; min-width: 0; padding: 4px 2px; border-radius: 9px; border: 2px solid var(--steel-dark); background: var(--steel-light); color: var(--text-dark); font: 700 12px/1.1 Lato, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+.ou .ou-seg button[aria-pressed="true"] { background: var(--mint); border-color: var(--teal-dark); }
 .ou-reset { width: 100%; margin-top: 4px; }
 /* Settings boxes: home screen, save code. */
 .ou-setbox { margin: 12px 0; padding: 10px 12px; background: #fff; border: 2px solid var(--teal-dark); border-radius: 12px; }
@@ -401,6 +421,9 @@
 .ou-trouble b { display: block; font: 700 17px/1.2 "Playfair Display", Georgia, serif; }
 .ou-sale { margin: 0 0 8px; padding: 8px 10px; border: 2px dashed var(--teal-dark); border-radius: 10px; background: #FFF6D6; font: 400 14px/1.3 Lato, sans-serif; }
 .ou-pausecard .ou-row .ou-btn { letter-spacing: .08em; padding: 14px 6px; }
+/* Sound and Music in pause: the word small, the volume under it. A tap steps Off, Low, Medium, High. */
+.ou-pausecard .ou-row [data-act="sound"], .ou-pausecard .ou-row [data-act="music"] { padding: 8px 6px; line-height: 1.15; }
+.ou-pausecard .ou-row [data-act="sound"] span, .ou-pausecard .ou-row [data-act="music"] span { display: block; font-size: 11px; letter-spacing: .14em; color: #4A5A62; margin-bottom: 3px; }
 .ou-card--special { grid-template-columns: 52px 1fr auto; padding-top: 10px !important; }
 .ou-card--special .ou-ci { width: 52px; height: 52px; border-radius: 10px; overflow: hidden; border: 2px solid var(--teal-dark); background: var(--steel-light); }
 .ou-card--special img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -498,7 +521,21 @@
 @keyframes ou-pop { 0% { transform: scale(.82); } 70% { transform: scale(1.06); } 100% { transform: scale(1); } }
 @keyframes ou-drop { 0% { transform: translateY(-26px); opacity: 0; } 100% { transform: none; opacity: 1; } }
 @keyframes ou-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-@keyframes ou-flip { 0% { transform: scaleY(1); } 50% { transform: translateY(-9px) scaleY(-.15); } 100% { transform: scaleY(1); } }
+@keyframes ou-flip {
+    0% { transform: perspective(240px) translateY(0) rotateX(0); }
+    45% { transform: perspective(240px) translateY(-24px) rotateX(200deg) scale(1.08); }
+    78% { transform: perspective(240px) translateY(0) rotateX(360deg) scale(1.06, .84); }
+    100% { transform: perspective(240px) translateY(0) rotateX(360deg) scale(1); }
+}
+@keyframes ou-puff { 0%, 70% { opacity: 0; transform: translateX(-50%) scale(.6); } 80% { opacity: .9; } 100% { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(1.25); } }
+@keyframes ou-flame {
+    0% { opacity: 1; transform: translate(-50%, -45%) scale(.3); }
+    22% { opacity: 1; transform: translate(-50%, -62%) scale(1.18, 1.1); }
+    50% { opacity: 1; transform: translate(-50%, -68%) scale(.94, 1.06); }
+    100% { opacity: 0; transform: translate(-50%, -92%) scale(.55); }
+}
+@keyframes ou-slide { 0% { transform: none; opacity: 1; } 100% { transform: translateX(170px) rotate(10deg); opacity: 0; } }
+@keyframes ou-platein { 0% { transform: translateX(-28px); opacity: 0; } 100% { transform: none; opacity: 1; } }
 @keyframes ou-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @keyframes ou-ready { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 @keyframes ou-nudge { 0%, 86%, 100% { transform: rotate(0); } 90% { transform: rotate(-7deg); } 95% { transform: rotate(7deg); } }

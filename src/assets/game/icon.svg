@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Order Up's home-screen icon (owner 2026-11-13). Rendered to
+       src/assets/game/icon-*.png by game/make-icons.js. Everything sits
+       inside the middle 80% so a round or squircle mask never cuts it. -->
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2C5E70"/><stop offset="1" stop-color="#1F4552"/></linearGradient></defs>
+  <rect width="512" height="512" fill="url(#g)"/>
+  <circle cx="256" cy="266" r="168" fill="#14313B" opacity=".35"/>
+  <g transform="translate(76 76) scale(3)">
+    <path d="M112 60A7.600 7.600 0 0 1 109.900 74.600A7.600 7.600 0 0 1 103.700 88.100A7.600 7.600 0 0 1 94 99.300A7.600 7.600 0 0 1 81.600 107.300A7.600 7.600 0 0 1 67.400 111.500A7.600 7.600 0 0 1 52.600 111.500A7.600 7.600 0 0 1 38.400 107.300A7.600 7.600 0 0 1 26 99.300A7.600 7.600 0 0 1 16.300 88.100A7.600 7.600 0 0 1 10.100 74.600A7.600 7.600 0 0 1 8 60A7.600 7.600 0 0 1 10.100 45.400A7.600 7.600 0 0 1 16.300 31.900A7.600 7.600 0 0 1 26 20.700A7.600 7.600 0 0 1 38.400 12.700A7.600 7.600 0 0 1 52.600 8.500A7.600 7.600 0 0 1 67.400 8.500A7.600 7.600 0 0 1 81.600 12.700A7.600 7.600 0 0 1 94 20.700A7.600 7.600 0 0 1 103.700 31.900A7.600 7.600 0 0 1 109.900 45.400A7.600 7.600 0 0 1 112 60Z" fill="#FAF7F2" stroke="#14313B" stroke-width="2.500" stroke-linejoin="round"/>
+    <circle cx="60" cy="60" r="40" fill="none" stroke="#E6ECEE" stroke-width="3"/>
+  </g>
+  <g transform="translate(128 132) scale(4)">
+    <rect x="11" y="44" width="42" height="10" rx="5" fill="#DDA65E" stroke="#1F4552" stroke-width="2.500"/>
+    <rect x="9" y="35" width="46" height="10" rx="5" fill="#7A4A32" stroke="#1F4552" stroke-width="2.500"/>
+    <path d="M9 34h46l-4 6-4-3-5 5-4-5-6 5-5-5-5 4-4-4-5 3z" fill="#F4C542" stroke="#1F4552" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M8 31c4 3 6-2 10 1s6-2 10 1 6-2 10 1 6-2 10 1 6-2 8 0" fill="none" stroke="#7DBE4F" stroke-width="4" stroke-linecap="round"/>
+    <path d="M10 29c0-11 10-18 22-18s22 7 22 18z" fill="#DDA65E" stroke="#1F4552" stroke-width="2.500" stroke-linejoin="round"/>
+    <path d="M17 22c3-5 8-7 12-7" stroke="#F0C68A" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <ellipse cx="26" cy="20" rx="1.600" ry="1" fill="#FFF8EA"/><ellipse cx="35" cy="17" rx="1.600" ry="1" fill="#FFF8EA"/><ellipse cx="41" cy="22" rx="1.600" ry="1" fill="#FFF8EA"/><ellipse cx="31" cy="24" rx="1.600" ry="1" fill="#FFF8EA"/>
+  </g>
+</svg>

@@ -71,8 +71,8 @@
      below, and anything that changes the meaning of a field gets a step in
      migrate() with SAVE_VER raised. Never rename an item's or an
      achievement's id: saves and weeks left half way are keyed by them. */
-  var KEY = 'orderup.v1', SAVE_VER = 2;
-  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0, bestRuns: {}, past: [], itemLife: {} };
+  var KEY = 'orderup.v1', SAVE_VER = 3;
+  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, sfxVol: 0, musicVol: 0, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0, bestRuns: {}, past: [], itemLife: {} };
   var loadedSum = '';
   try {
     var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -116,6 +116,13 @@
       // 2 (game 1.2): achievements began. Nothing to move; just the mark.
       save.ver = 2;
     }
+    if (save.ver < 3) {
+      // 3 (game 1.5, owner 2026-11-13): sound and music became volumes, Off
+      // to High. A switch that was on is Medium, as loud as "on" was.
+      save.sfxVol = save.sound ? 2 : 0; save.musicVol = save.music ? 2 : 0;
+      save.ver = 3;
+    }
+    save.sfxVol = Math.max(0, Math.min(3, save.sfxVol | 0)); save.musicVol = Math.max(0, Math.min(3, save.musicVol | 0));
   }
 
   /* ---------- test shortcuts ----------
@@ -222,16 +229,38 @@
     if (e && e.isTrusted === false) T.untrusted++;
   }
 
-  /* ---------- sound: made here, no files. Off until it's turned on. ---------- */
-  var ac = null;
+  /* ---------- sound: made here, no files. Off until it's turned on. ----------
+     Two volumes, each Off, Low, Medium or High (owner 2026-11-13; they were
+     on/off switches until then): save.sfxVol and save.musicVol, 0 to 3.
+     Medium is the loudness the old "on" had. Everything goes through one
+     limiter on its way out, so High never crackles on a phone speaker. */
+  var VOL_NAMES = ['Off', 'Low', 'Medium', 'High'];
+  var SFX_VOL = [0, 0.45, 1, 1.7], MUSIC_VOL = [0, 0.22, 0.5, 0.8];
+  var ac = null, bus = null, noiseBuf = null;
   function ctx() {
     try {
       ac = ac || new (window.AudioContext || window.webkitAudioContext)();
       if (ac.state === 'suspended') ac.resume();
+      if (!bus) {
+        var lim = ac.createDynamicsCompressor();
+        lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.2;
+        lim.connect(ac.destination);
+        var fx = ac.createGain(); fx.gain.value = SFX_VOL[save.sfxVol]; fx.connect(lim);
+        bus = { lim: lim, fx: fx };
+        // One second of noise, shared by every hiss, whoosh and drum.
+        var n = ac.sampleRate, ch; noiseBuf = ac.createBuffer(1, n, n); ch = noiseBuf.getChannelData(0);
+        for (var i = 0; i < n; i++) ch[i] = rand() * 2 - 1;
+      }
       return ac;
     } catch (e) { return null; }
   }
-  function audio() { return save.sound ? ctx() : null; }
+  function audio() { return save.sfxVol ? ctx() : null; }
+  /* A volume was changed: follow it at once, with no click. */
+  function setVolumes() {
+    if (!ac || !bus) return;
+    bus.fx.gain.setTargetAtTime(SFX_VOL[save.sfxVol], ac.currentTime, 0.03);
+    if (music.vol) music.vol.gain.setTargetAtTime(MUSIC_VOL[save.musicVol], ac.currentTime, 0.08);
+  }
   function tone(freq, dur, type, vol, slideTo, delay) {
     var a = audio(); if (!a) return;
     var t0 = a.currentTime + (delay || 0);
@@ -239,27 +268,93 @@
     o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t0);
     if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
     g.gain.setValueAtTime(vol || 0.07, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+    o.connect(g); g.connect(bus.fx); o.start(t0); o.stop(t0 + dur + 0.02);
   }
-  function hiss(dur, vol) {
+  function hiss(dur, vol, delay) {
     var a = audio(); if (!a) return;
-    var n = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, n, a.sampleRate), ch = buf.getChannelData(0);
-    for (var i = 0; i < n; i++) ch[i] = (rand() * 2 - 1) * (1 - i / n);
-    var src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
-    f.type = 'highpass'; f.frequency.value = 3200; g.gain.value = vol || 0.05;
-    src.buffer = buf; src.connect(f); f.connect(g); g.connect(a.destination); src.start();
+    var t0 = a.currentTime + (delay || 0), src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+    f.type = 'highpass'; f.frequency.value = 3200;
+    g.gain.setValueAtTime(vol || 0.05, t0); g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+    src.buffer = noiseBuf; src.connect(f); f.connect(g); g.connect(bus.fx); src.start(t0, rand() * 0.5, dur + 0.02);
   }
+  /* Noise through a filter that moves: a whoosh, a slide, a flare-up.
+     The filter goes from f0 up to f1 a third of the way in, then to f2. */
+  function sweep(dur, kind, f0, f1, f2, q, vol, delay) {
+    var a = audio(); if (!a) return;
+    var t0 = a.currentTime + (delay || 0), src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+    f.type = kind; f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t0); f.frequency.exponentialRampToValueAtTime(f1, t0 + dur * 0.33); f.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + Math.min(0.04, dur * 0.25)); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.buffer = noiseBuf; src.connect(f); f.connect(g); g.connect(bus.fx); src.start(t0, rand() * 0.4, dur + 0.05);
+  }
+  /* A voice with no words (owner 2026-11-13: a grunt when family is
+     answered): a buzz through the filters of a vowel. `m` is a closed hum.
+     Pitch goes from f0 to f1. Never a real word, never anyone's voice. */
+  var VOWEL = { m: [['lowpass', 320, 2, 1.6]], u: [['bandpass', 640, 5, 2.4], ['bandpass', 1190, 6, 1.1]], a: [['bandpass', 730, 5, 2.4], ['bandpass', 1090, 6, 1.1]],
+    e: [['bandpass', 530, 5, 2.4], ['bandpass', 1840, 7, 0.9]], o: [['bandpass', 450, 5, 2.4], ['bandpass', 830, 6, 1.1]] };
+  function voice(delay, v, f0, f1, dur, vol) {
+    var a = audio(); if (!a) return;
+    var t0 = a.currentTime + delay, o = a.createOscillator(), g = a.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + 0.03);
+    g.gain.setValueAtTime(vol, t0 + dur * 0.55); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g);
+    VOWEL[v].forEach(function (f) {
+      var b = a.createBiquadFilter(), fg = a.createGain();
+      b.type = f[0]; b.frequency.value = f[1]; b.Q.value = f[2]; fg.gain.value = f[3];
+      g.connect(b); b.connect(fg); fg.connect(bus.fx);
+    });
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+  /* Family's voices sit higher or lower by who is talking. */
+  function pitchOf(who) { return /Mom|Grandma|aunt|sister/.test(who || '') ? 215 : /Dad|Grandpa|uncle|brother/.test(who || '') ? 118 : 165; }
+  var GRUNT = { 'Mm-hm.': 'mmhm', 'Yep.': 'yep', 'Sure.': 'sure', 'In a minute.': 'minute', 'Love you.': 'love' };
   var sfx = {
     tap: function () { tone(540, 0.05, 'triangle', 0.05); },
     sizzle: function () { hiss(0.35, 0.05); },
+    // Turning food (owner 2026-11-13): the spatula's whoosh, a tick, and the
+    // other side hitting the flat-top.
+    flip: function () { sweep(0.16, 'bandpass', 700, 2600, 2200, 1.2, 0.07); tone(1250, 0.03, 'triangle', 0.03, 0, 0.05); hiss(0.32, 0.05, 0.17); },
     done: function () { tone(880, 0.12, 'sine', 0.05); },
+    // Food burns: a soft whump and a flare-up.
+    flame: function () { tone(95, 0.32, 'sine', 0.12, 40); sweep(0.75, 'bandpass', 500, 2400, 800, 0.8, 0.1); hiss(0.5, 0.03, 0.25); },
     bell: function () { tone(1320, 0.5, 'sine', 0.08); tone(1980, 0.35, 'sine', 0.04, 0, 0.05); },
+    // The plate slides off to the right.
+    slide: function () { sweep(0.3, 'lowpass', 2600, 2200, 500, 0.7, 0.06); },
     ticket: function () { tone(720, 0.04, 'square', 0.025); tone(720, 0.04, 'square', 0.025, 0, 0.07); },
     bad: function () { tone(170, 0.16, 'square', 0.035); },
     spill: function () { tone(320, 0.45, 'sawtooth', 0.045, 80); },
     buy: function () { tone(660, 0.09, 'triangle', 0.06); tone(990, 0.16, 'triangle', 0.06, 0, 0.08); },
     win: function () { [660, 830, 990, 1320].forEach(function (f, i) { tone(f, 0.22, 'triangle', 0.06, 0, i * 0.12); }); },
+    // The week is lost: down a minor chord, slowly, the last note held.
+    lose: function () {
+      [880, 659, 523, 440].forEach(function (f, i) { tone(f, i === 3 ? 1.4 : 0.34, 'triangle', 0.055, 0, i * 0.26); });
+      tone(220, 1.6, 'sine', 0.05, 0, 0.78); tone(330, 1.5, 'sine', 0.025, 0, 0.8);
+    },
     talk: function () { tone(300, 0.07, 'sine', 0.04); tone(360, 0.07, 'sine', 0.04, 0, 0.08); },
+    // A speech bubble: somebody talking, three or four sounds and no words.
+    murmur: function (who) {
+      var p = pitchOf(who), at = 0, n = 3 + Math.floor(rand() * 2);
+      for (var i = 0; i < n; i++) {
+        var len = 0.07 + rand() * 0.07, f = p * (0.92 + rand() * 0.22);
+        voice(at, pick(['a', 'e', 'o', 'u']), f, f * (i === n - 1 ? 0.86 : 0.97), len, 0.06);
+        at += len + 0.03 + rand() * 0.04;
+      }
+    },
+    // You answer them (owner 2026-11-13): a grunt that goes with the words.
+    grunt: function (reply) {
+      switch (GRUNT[reply] || reply) {
+        case 'yep': voice(0, 'e', 150, 132, 0.13, 0.07); tone(1900, 0.012, 'square', 0.02, 0, 0.13); break;
+        case 'sure': sweep(0.08, 'highpass', 2600, 2800, 2600, 0.7, 0.03); voice(0.07, 'u', 148, 126, 0.17, 0.07); break;
+        case 'minute': hiss(0.06, 0.02); voice(0.03, 'm', 140, 98, 0.22, 0.08); break;
+        case 'love': voice(0, 'u', 140, 146, 0.12, 0.06); voice(0.15, 'o', 162, 138, 0.24, 0.065); break;
+        default: voice(0, 'm', 138, 130, 0.13, 0.08); voice(0.18, 'm', 152, 178, 0.2, 0.08);      // mm-hm
+      }
+    },
+    // The Power Flicker: a clunk and the hum winding down, then a buzz as
+    // the lights come back. The music stops with them (musicTick).
+    dark: function () { tone(70, 0.16, 'sine', 0.12); tone(1600, 0.02, 'square', 0.02); tone(150, 0.8, 'sawtooth', 0.025, 38, 0.05); },
+    light: function () { tone(120, 0.06, 'square', 0.022); tone(120, 0.05, 'square', 0.02, 0, 0.11); tone(2400, 0.1, 'sine', 0.02, 0, 0.2); },
     // The day is done (owner 2026-11-12: a little achievement tune): up the
     // chord and a held top note.
     close: function () {
@@ -276,33 +371,56 @@
     achieve: function () { tone(988, 0.09, 'square', 0.028); tone(1319, 0.09, 'square', 0.028, 0, 0.1); tone(1976, 0.4, 'triangle', 0.055, 0, 0.2); },
     lucky: function () { tone(1568, 0.08, 'triangle', 0.05); tone(2093, 0.18, 'triangle', 0.05, 0, 0.07); }
   };
-  function buzz(ms) { if (save.sound && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { /* no matter */ } } }
+  function buzz(ms) { if (save.sfxVol && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { /* no matter */ } } }
 
   /* ---------- music: slow lo-fi jazz, made here as it plays ----------
      No recording and no file, so nothing to license or download: an
      eight-bar loop of jazz chords on a soft electric piano, a bass, brushed
      drums with a little swing, and a few notes on top picked at random, all
      through a low-pass so it sounds like a radio in the next room. It never
-     plays the same way twice. Off until it's turned on (its own switch, apart
-     from the sound effects), and it stops when the page is hidden. */
-  var music = { on: false, timer: 0, next: 0, step: 0, out: null, noise: null };
-  var BEAT = 60 / 74;
-  // One bar each: the bass note, then the chord (MIDI numbers). ii V I vi, then IV iii ii V, in C.
-  var BARS = [
-    [38, 53, 57, 60, 64], [43, 53, 57, 59, 64], [36, 52, 55, 59, 62], [45, 55, 59, 60, 64],
-    [41, 57, 60, 64, 67], [40, 55, 59, 62, 64], [38, 53, 57, 60, 64], [43, 53, 57, 59, 64]
-  ];
-  var TOP = [67, 69, 72, 74, 76, 79, 81];     // C major pentatonic: it can't hit a wrong note over these chords
+     plays the same way twice. Off until it's turned on (its own volume,
+     apart from the sound effects), and it stops when the page is hidden.
+
+     It follows the shift (owner 2026-11-13), and never stops to do it: as
+     the next walk-out gets closer and coffees are lost, it gets quicker
+     (74 beats a minute at its calmest, 104 at its busiest), brighter, and
+     busier, one layer at a time. How far a level lets it go is the level's
+     `music` in game.json: Easy never gets past half way. The lights going
+     out (Power Flicker) cut it until they come back. A week won moves it
+     to a brighter, quicker tune; a week lost, to a slow one in a minor key;
+     both at the next half bar, never with a cut. /play?debug&sound on the
+     dev server plays all of it by hand. */
+  var music = { on: false, hold: false, timer: 0, next: 0, step: 0, out: null, lp: null, duck: null, vol: null,
+    mood: 'day', want: 'day', I: 0, bpm: 74, last: 0, force: null, dark: false, testDark: false };
+  var MOODS = {
+    // The day: ii V I vi, then IV iii ii V, in C. One bar each: the bass
+    // note, then the chord (MIDI numbers). The top notes are C major
+    // pentatonic, which can't hit a wrong note over these chords.
+    day: { bpm: 74, swing: 0.09, lp: 2400, top: [67, 69, 72, 74, 76, 79, 81], bars: [
+      [38, 53, 57, 60, 64], [43, 53, 57, 59, 64], [36, 52, 55, 59, 62], [45, 55, 59, 60, 64],
+      [41, 57, 60, 64, 67], [40, 55, 59, 62, 64], [38, 53, 57, 60, 64], [43, 53, 57, 59, 64]] },
+    // A week won: I VI7 ii V, quicker, brighter, a bass that bounces.
+    win: { bpm: 96, swing: 0.06, lp: 4200, top: [72, 74, 76, 79, 81, 84], alt: { 1: [69, 73, 76, 78, 81], 5: [69, 73, 76, 78, 81] }, bars: [
+      [36, 52, 55, 57, 62], [45, 55, 61, 64, 66], [38, 53, 57, 60, 64], [43, 53, 57, 59, 64],
+      [40, 55, 59, 62, 64], [45, 55, 61, 64, 66], [38, 53, 57, 60, 64], [43, 53, 57, 59, 64]] },
+    // A week lost: A minor, slow, the chords left to ring.
+    lose: { bpm: 58, swing: 0.12, lp: 1500, top: [64, 67, 69, 72, 74, 76], alt: { 3: [64, 68, 71, 74, 76], 7: [64, 68, 71, 74, 76] }, bars: [
+      [45, 55, 59, 60, 64], [41, 52, 57, 60, 64], [38, 53, 57, 60, 64], [40, 50, 56, 59, 62],
+      [45, 55, 59, 60, 64], [38, 53, 57, 60, 64], [41, 52, 57, 60, 64], [40, 50, 56, 59, 62]] }
+  };
+  /* What comes in as the shift gets harder, and from how far: the sound test
+     page lists them as they turn on. */
+  var LAYERS = [['walking bass', 0.35], ['ghost snare', 0.45], ['piano stabs', 0.55], ['shaker', 0.6], ['held top note', 0.75]];
   function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  function sm(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+  /* notes → the radio's low-pass → a duck for the lights → the volume → the limiter */
   function musicOut(a) {
-    if (music.out) return music.out;
-    var g = a.createGain(), lp = a.createBiquadFilter();
-    g.gain.value = 0.5; lp.type = 'lowpass'; lp.frequency.value = 2400; lp.Q.value = 0.4;
-    g.connect(lp); lp.connect(a.destination);
-    var len = a.sampleRate, buf = a.createBuffer(1, len, len), ch = buf.getChannelData(0);
-    for (var i = 0; i < len; i++) ch[i] = rand() * 2 - 1;
-    music.noise = buf; music.out = g;
-    return g;
+    if (music.out) return;
+    var out = a.createGain(), lp = a.createBiquadFilter(), duck = a.createGain(), vol = a.createGain();
+    lp.type = 'lowpass'; lp.frequency.value = MOODS.day.lp; lp.Q.value = 0.4;
+    vol.gain.value = MUSIC_VOL[save.musicVol];
+    out.connect(lp); lp.connect(duck); duck.connect(vol); vol.connect(bus.lim);
+    music.out = out; music.lp = lp; music.duck = duck; music.vol = vol;
   }
   function note(a, when, midi, dur, vol, type) {
     var o = a.createOscillator(), g = a.createGain();
@@ -319,41 +437,106 @@
       o.connect(g); g.connect(music.out); o.start(when); o.stop(when + 0.3);
       return;
     }
-    var src = a.createBufferSource(), flt = a.createBiquadFilter(), g2 = a.createGain(), len = kind === 'hat' ? 0.05 : 0.16;
-    src.buffer = music.noise; flt.type = kind === 'hat' ? 'highpass' : 'bandpass'; flt.frequency.value = kind === 'hat' ? 6000 : 1700;
+    var src = a.createBufferSource(), flt = a.createBiquadFilter(), g2 = a.createGain(), len = kind === 'hat' ? 0.05 : kind === 'clap' ? 0.09 : 0.16;
+    src.buffer = noiseBuf; flt.type = kind === 'hat' ? 'highpass' : 'bandpass';
+    flt.frequency.value = kind === 'hat' ? 6000 : kind === 'clap' ? 2400 : 1700;
     g2.gain.setValueAtTime(vol, when); g2.gain.exponentialRampToValueAtTime(0.0001, when + len);
     src.connect(flt); flt.connect(g2); g2.connect(music.out); src.start(when, rand() * 0.5, len + 0.02);
   }
-  /* One eighth note of it. Eight to a bar. */
-  function musicStep(a, step, when) {
-    var bar = BARS[Math.floor(step / 8) % BARS.length], at = step % 8, i;
+  /* One eighth note of it. Eight to a bar. `beat` is a beat's length now. */
+  function musicStep(a, when, beat) {
+    var mood = music.mood, M = MOODS[mood], at = music.step % 8, bi = Math.floor(music.step / 8) % M.bars.length;
+    var bar = M.bars[bi], next = M.bars[(bi + 1) % M.bars.length], top = (M.alt && M.alt[bi]) || M.top, i;
+    if (mood === 'lose') {
+      if (at === 0) {
+        for (i = 1; i < bar.length; i++) note(a, when + (i - 1) * 0.05, bar[i], 3.6, 0.045, i % 2 ? 'sine' : 'triangle');
+        note(a, when, bar[0], 3, 0.15, 'sine'); drum(a, when, 'kick', 0.12);
+      }
+      if (at === 4 && rand() < 0.5) note(a, when, bar[0] + 7, 1.4, 0.08, 'sine');
+      if (at === 2 || at === 6) drum(a, when, 'snare', 0.03);
+      if (at % 2 === 0) drum(a, when, 'hat', 0.014);
+      if (at % 2 === 0 && rand() < 0.2) note(a, when, pick(top), 1.6 + rand(), 0.04, 'triangle');
+      return;
+    }
+    if (mood === 'win') {
+      if (at === 0) for (i = 1; i < bar.length; i++) note(a, when + (i - 1) * 0.012, bar[i], 0.7, 0.05, i % 2 ? 'sine' : 'triangle');
+      if (at === 3) for (i = 1; i < bar.length; i++) note(a, when, bar[i], 0.35, 0.035, 'triangle');
+      if (at % 2 === 0) note(a, when, bar[0] + [0, 7, 12, 7][at / 2], 0.38, 0.13, 'sine');
+      if (at === 0 || at === 4) drum(a, when, 'kick', 0.22);
+      if (at === 2 || at === 6) { drum(a, when, 'snare', 0.09); drum(a, when, 'clap', 0.05); }
+      drum(a, when, 'hat', at % 2 ? 0.025 : 0.04);
+      if (rand() < 0.32) note(a, when, pick(top), 0.3 + rand() * 0.3, 0.05, 'triangle');
+      return;
+    }
+    // The day: at no intensity, the tune as it always was. Each layer fades
+    // in over its own stretch of I, so nothing switches on with a jolt.
+    var I = music.I, walk = sm(0.35, 0.6, I), stab = sm(0.55, 0.8, I), shake = sm(0.6, 0.9, I), hold = sm(0.75, 1, I);
     if (at === 0) {
       for (i = 1; i < bar.length; i++) note(a, when + (i - 1) * 0.018, bar[i], 2.6, 0.05, i % 2 ? 'sine' : 'triangle');   // the chord, rolled a little
-      note(a, when, bar[0], 1.3, 0.16, 'sine');
+      note(a, when, bar[0], 1.3 - 0.6 * walk, 0.16, 'sine');
+      if (hold) note(a, when, bar[bar.length - 1] + 12, beat * 4, 0.03 * hold, 'triangle');
     }
     if (at === 5 && rand() < 0.6) for (i = 2; i < bar.length; i++) note(a, when, bar[i], 1.1, 0.028, 'sine');
-    if (at === 4) note(a, when, bar[0] + (rand() < 0.5 ? 7 : 12), 0.9, 0.11, 'sine');
+    if (stab && (at === 3 || at === 7)) for (i = 2; i < bar.length; i++) note(a, when, bar[i], 0.18, 0.03 * stab, 'triangle');
+    if (at === 4) note(a, when, bar[0] + (rand() < 0.5 ? 7 : 12), 0.9 - 0.4 * walk, 0.11, 'sine');
+    if (at === 2 && rand() < walk) note(a, when, bar[1] - 12, 0.5, 0.11, 'sine');
+    if (at === 6 && rand() < walk) note(a, when, next[0] + (rand() < 0.5 ? 1 : -1), 0.5, 0.11, 'sine');     // a step into the next bar
     if (at === 0 || (at === 5 && rand() < 0.7)) drum(a, when, 'kick', 0.22);
-    if (at === 2 || at === 6) drum(a, when, 'snare', 0.07);
-    drum(a, when, 'hat', at % 2 ? 0.022 : 0.04);
-    if (rand() < (at % 2 ? 0.16 : 0.26)) note(a, when, pick(TOP), 0.9 + rand(), 0.045, 'triangle');
+    if (at === 3 && rand() < sm(0.5, 0.8, I) * 0.6) drum(a, when, 'kick', 0.16);
+    if (at === 2 || at === 6) drum(a, when, 'snare', 0.07 + 0.03 * I);
+    if ((at === 3 || at === 7) && rand() < sm(0.45, 0.75, I)) drum(a, when, 'snare', 0.025);
+    drum(a, when, 'hat', (at % 2 ? 0.022 : 0.04) * (1 + 0.6 * I));
+    if (shake) drum(a, when + beat / 4, 'hat', 0.016 * shake);
+    if (rand() < (at % 2 ? 0.16 : 0.26) * (1 + 0.8 * I)) note(a, when, pick(top), 0.9 + rand() - 0.5 * I, 0.045, 'triangle');
   }
+  /* How close the shift is to going wrong, 0 to 1: coffees lost, how near
+     the next walk-out is, how full the rail is, and lunch. On Friday it's
+     the catering clock. Scaled by the level (game.json, levels: `music`).
+     Null while paused, so the music holds where it was. */
+  function intensity() {
+    if (!T || !G || screen !== 'shift') return 0;
+    if (T.paused) return null;
+    var cap = level().music == null ? 1 : level().music, d, worst = 1;
+    if (T.cat) d = 0.35 + 0.65 * (1 - T.cat.left / T.cat.total);
+    else {
+      T.tickets.forEach(function (t) { if (!t.family && !t.catering) worst = Math.min(worst, t.left / t.total); });
+      d = 0.4 * Math.min(1, (TU.cups - T.cups) / (TU.cups - 1)) + 0.45 * Math.max(0, (0.6 - worst) / 0.6) +
+        0.1 * T.tickets.length / TU.rail + (T.bins === 'lunch' ? 0.1 : 0);
+    }
+    return Math.max(0, Math.min(1, d)) * cap;
+  }
+  function setMood(m) { music.want = m; }
   function musicTick() {
     var a = ac; if (!a || !music.on) return;
-    if (music.next < a.currentTime) music.next = a.currentTime + 0.06;
-    while (music.next < a.currentTime + 0.4) {
-      musicStep(a, music.step, music.next + (music.step % 2 ? BEAT * 0.09 : 0));    // the off-beats come late: swing
-      music.next += BEAT / 2; music.step++;
+    var now = a.currentTime, dt = Math.min(0.5, now - (music.last || now)); music.last = now;
+    // Up quickly (about a second), down slowly, so a close call is heard and
+    // the calm after it comes back gently.
+    var goal = music.force != null ? music.force : music.mood === 'day' ? intensity() : 0;
+    if (goal == null) goal = music.I;
+    music.I += (goal - music.I) * (1 - Math.exp(-dt / (goal > music.I ? 1.2 : 4)));
+    var dark = music.testDark || !!(T && screen === 'shift' && T.dark > 0);
+    if (dark !== music.dark) { music.dark = dark; music.duck.gain.setTargetAtTime(dark ? 0 : 1, now, dark ? 0.03 : 0.4); }
+    if (music.next < now) music.next = now + 0.06;
+    while (music.next < now + 0.4) {
+      // A new tune (a week won or lost, or back to the day) starts on the
+      // next half bar, from its own first bar.
+      if (music.want !== music.mood && music.step % 4 === 0) { music.mood = music.want; music.step = 0; }
+      var M = MOODS[music.mood], day = music.mood === 'day';
+      music.bpm += (M.bpm + (day ? 30 * music.I : 0) - music.bpm) * (day ? 0.15 : 0.3);
+      var beat = 60 / music.bpm;
+      music.lp.frequency.setTargetAtTime(M.lp + (day ? 2600 * music.I : 0), music.next, 0.5);
+      musicStep(a, music.next + (music.step % 2 ? beat * M.swing : 0), beat);    // the off-beats come late: swing
+      music.next += beat / 2; music.step++;
     }
   }
-  /* Start or stop to match the switch. A browser only lets sound start from
+  /* Start or stop to match the volume. A browser only lets sound start from
      a tap, so every tap calls this. */
   function musicSync() {
-    var want = save.music && !document.hidden;
+    var want = save.musicVol > 0 && !document.hidden && !music.hold;
     if (want && !music.on) {
       var a = ctx(); if (!a) return;
-      musicOut(a); music.on = true; music.next = 0;
-      music.timer = setInterval(musicTick, 110); musicTick();
+      musicOut(a); music.on = true; music.next = 0; music.last = 0;
+      music.timer = setInterval(musicTick, 100); musicTick();
     } else if (!want && music.on) { music.on = false; clearInterval(music.timer); }
   }
 
@@ -427,6 +610,7 @@
     banner(day.name, T.trouble ? 'Trouble today: ' + T.trouble.name + '.' : 'Open at 6am. Breakfast first.');
   }
 
+  var FLIP_MS = 520, FLAME_MS = 850;     // how long a flip and a flare-up show (play.css has the same)
   var LINE_S = 14, LINE_AT = 0.5;      // the Line Cook: seconds to be ready again, and how close to walking out a ticket must be
   /* The spots on the flat-top: all of them, and the ones that work today
      (a Broken Stove takes one out, drawn last). */
@@ -459,9 +643,10 @@
     var loss = Math.min(n, Math.max(0, T.tips));
     if (loss) { T.tips -= loss; G.tips -= loss; G.earned -= loss; dirty.hud = true; toast(words + ' ' + money(loss)); }
   }
-  /* Something burnt: a slip (no flawless day), and with an Accident it costs. */
-  function burnt() {
-    sfx.bad(); T.slips++;
+  /* Something burnt: a slip (no flawless day), and with an Accident it costs.
+     It goes up in a burst of flame (owner 2026-11-13; drawGrill). */
+  function burnt(it) {
+    it.burnAt = performance.now(); sfx.flame(); T.slips++;
     var a = trouble('accident'); if (a) lose(a.cost, 'Accident: burnt food costs');
   }
   function troubleText(tr, part) { return tr.text.replace('{part}', part && D.parts[part] ? D.parts[part].name.toLowerCase() : 'egg'); }
@@ -606,8 +791,8 @@
   }
   function flipIt(it) {
     if (it.state === 'flip') heatSave(it.wait);
-    it.flipped = true; it.state = 'raw'; it.wait = 0; it.flipNow = true;
-    dirty.grill = true; sfx.sizzle();
+    it.flipped = true; it.state = 'raw'; it.wait = 0; it.flipAt = performance.now();
+    dirty.grill = true; sfx.flip();
   }
   function spotGesture(i, how) {
     var it = T.grill[i]; if (!it) return;
@@ -636,8 +821,26 @@
       var pl = $('#ou-plate'); pl.classList.remove('is-bad'); void pl.offsetWidth; pl.classList.add('is-bad');
       return;
     }
+    slidePlate();
     T.plate = []; dirty.plate = true;
     complete(m.t, m.kind, false);
+  }
+  /* The plate that went out slides off to the right, under Send, and a clean
+     one is set down (owner 2026-11-13). Only a picture: the next plate is
+     ready at once, and nothing here can be tapped. */
+  var stillMotion = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+  function slidePlate() {
+    var pl = $('#ou-plate');
+    sfx.slide();
+    if (!pl || (stillMotion && stillMotion.matches)) return;
+    var ghost = pl.cloneNode(true), acts = ghost.querySelectorAll('[data-act]');
+    for (var i = 0; i < acts.length; i++) acts[i].removeAttribute('data-act');
+    ghost.removeAttribute('id'); ghost.className = 'ou-plate ou-plate-gone'; ghost.setAttribute('aria-hidden', 'true');
+    ghost.style.left = pl.offsetLeft + 'px'; ghost.style.top = pl.offsetTop + 'px';
+    ghost.style.width = pl.offsetWidth + 'px'; ghost.style.height = pl.offsetHeight + 'px';
+    pl.parentNode.appendChild(ghost);
+    pl.classList.remove('is-fresh'); void pl.offsetWidth; pl.classList.add('is-fresh');
+    setTimeout(function () { ghost.remove(); pl.classList.remove('is-fresh'); }, 480);
   }
 
   /* A ticket goes out: by Send, or by a helper (`by` names who). */
@@ -771,8 +974,8 @@
         }
         if (T.familyAt != null && T.bins === 'lunch' && T.t >= T.familyAt && T.tickets.length < TU.rail) familyArrives();
       }
-      if (T.outs.length && T.t >= T.outs[0] && trouble('outage')) { T.outs.shift(); T.dark = trouble('outage').secs; dirty.rail = true; toast('The lights went out'); sfx.bad(); }
-      if (T.dark > 0) { T.dark -= dt; if (T.dark <= 0) { T.dark = 0; dirty.rail = true; } }
+      if (T.outs.length && T.t >= T.outs[0] && trouble('outage')) { T.outs.shift(); T.dark = trouble('outage').secs; dirty.rail = true; toast('The lights went out'); sfx.dark(); }
+      if (T.dark > 0) { T.dark -= dt; if (T.dark <= 0) { T.dark = 0; dirty.rail = true; sfx.light(); } }
       if (T.closing && !T.tickets.length && T.endIn == null) T.endIn = 0.9;
       if (T.endIn != null) { T.endIn -= dt; if (T.endIn <= 0) { T.ended = true; endDay(); return; } }
     }
@@ -806,7 +1009,7 @@
       }
       if (it.state === 'flip') {       // waiting to be turned: this side is still on the heat
         it.wait += dt;
-        if (!gold && it.wait >= burnAfter) { it.state = 'burnt'; dirty.grill = true; burnt(); }
+        if (!gold && it.wait >= burnAfter) { it.state = 'burnt'; dirty.grill = true; burnt(it); }
         continue;
       }
       it.t += dt;
@@ -815,7 +1018,7 @@
         if (has('spatula')) { flipIt(it); credit('spatula', 0, 1); } else { it.state = 'flip'; it.wait = 0; dirty.grill = true; sfx.done(); }
       }
       else if (it.state === 'raw' && it.t >= cook) { it.state = 'done'; dirty.grill = true; sfx.done(); }
-      else if (it.state === 'done' && !gold && it.t >= cook + burnAfter) { it.state = 'burnt'; dirty.grill = true; burnt(); }
+      else if (it.state === 'done' && !gold && it.t >= cook + burnAfter) { it.state = 'burnt'; dirty.grill = true; burnt(it); }
     }
 
     // helpers
@@ -836,14 +1039,17 @@
 
     // family
     if (T.fam) {
-      T.fam.say -= dt;
-      if (T.fam.say <= 0) { T.fam.say = D.family.every; if (T.bubbles.length < D.family.maxBubbles) addBubble(); }
+      // How much they say is the level's (owner 2026-11-13: on Regular only a
+      // few lines, and they hold off while the rail is full or a ticket is late).
+      var talk = famTalk();
+      if (!(talk.quiet && swamped())) T.fam.say -= dt;
+      if (T.fam.say <= 0) { T.fam.say = talk.every; if (T.bubbles.length < talk.max && T.fam.said < talk.lines) { T.fam.said++; addBubble(); } }
     }
     // Small Talk: each line is answered by itself after a moment.
     for (i = T.bubbles.length - 1; i >= 0; i--) {
       if (T.bubbles[i].auto == null) continue;
       T.bubbles[i].auto -= dt;
-      if (T.bubbles[i].auto <= 0) { credit('smalltalk', 0, 1); dropBubble(T.bubbles[i].id); }
+      if (T.bubbles[i].auto <= 0) { credit('smalltalk', 0, 1); sfx.grunt(T.bubbles[i].reply); dropBubble(T.bubbles[i].id); }
     }
   }
 
@@ -918,7 +1124,7 @@
     var who = pick(D.family.who);
     var t = makeTicket(pick(pool), { family: true, who: who });
     T.tickets.push(t);
-    T.fam = { who: who, say: 1.2 };
+    T.fam = { who: who, say: 1.2, said: 0 };
     dirty.rail = true;       // no banner, no warning: they just turn up (owner 2026-11-11)
     sfx.talk();
   }
@@ -930,20 +1136,31 @@
     } while (!ok && ++tries < 8);
     var used = T.bubbles.map(function (b) { return b.line; });
     var lines = D.family.lines.filter(function (l) { return used.indexOf(l) === -1; });
-    var b = { id: ++uid, x: x, y: y, line: pick(lines.length ? lines : D.family.lines), auto: has('smalltalk') ? 1.3 : null };
+    var b = { id: ++uid, x: x, y: y, line: pick(lines.length ? lines : D.family.lines), auto: has('smalltalk') ? 1.3 : null, reply: pick(D.family.replies) };
     T.bubbles.push(b);
     var el = document.createElement('button');
     el.className = 'ou-bubble'; el.setAttribute('data-act', 'bubble'); el.setAttribute('data-id', b.id);
     el.style.left = Math.round(x) + 'px'; el.style.top = Math.round(y) + 'px';
-    el.innerHTML = '<span class="ou-label">' + esc(T.fam.who) + '</span><b>' + esc(b.line) + '</b><small>' + (b.auto == null ? 'Tap to answer' : esc(pick(D.family.replies))) + '</small>';
+    el.innerHTML = '<span class="ou-label">' + esc(T.fam.who) + '</span><b>' + esc(b.line) + '</b><small>' + (b.auto == null ? 'Tap to answer' : esc(b.reply)) + '</small>';
     if (b.auto != null) el.className += ' is-answered';
-    box.appendChild(el); sfx.talk();
+    box.appendChild(el); sfx.murmur(T.fam.who);
   }
   function dropBubble(id) {
     for (var i = 0; i < T.bubbles.length; i++) if (String(T.bubbles[i].id) === String(id)) T.bubbles.splice(i, 1);
     var el = stage.querySelector('.ou-bubble[data-id="' + id + '"]'); if (el) el.remove();
   }
-  function tapBubble(id) { dropBubble(id); toast(pick(D.family.replies)); sfx.tap(); }
+  /* Answering them: the words as a toast, and a grunt to go with them. */
+  function tapBubble(id) {
+    var b = T.bubbles.filter(function (x) { return String(x.id) === String(id); })[0], reply = b ? b.reply : pick(D.family.replies);
+    dropBubble(id); toast(reply); sfx.grunt(reply);
+  }
+  /* How family talks on this level: game.json levels → talk, else family's own numbers. */
+  function famTalk() {
+    var lv = level().talk || {};
+    return { every: lv.every || D.family.every, max: lv.maxBubbles || D.family.maxBubbles, lines: lv.lines || 99, quiet: !!lv.quietWhenBusy };
+  }
+  /* Too busy to talk: the rail is full, or a ticket is late. */
+  function swamped() { return T.tickets.length >= TU.rail || T.tickets.some(function (t) { return t.late && !t.family; }); }
   function clearBubbles() { if (T) T.bubbles = []; $('#ou-bubbles').innerHTML = ''; }
   function familyGone() { T.fam = null; clearBubbles(); }
   function familyFed(t) {
@@ -1016,7 +1233,7 @@
   }
 
   function drawGrill() {
-    var n = usable(), all = spots(), html = '', swipe = level().flip === 'swipe';
+    var n = usable(), all = spots(), html = '', swipe = level().flip === 'swipe', now = performance.now();
     for (var i = 0; i < all; i++) {
       if (i >= n) { html += '<div class="ou-spot is-broken" data-tag="Out today" aria-label="Broken: out today"></div>'; continue; }
       var it = T.grill[i], cold = trouble('cold') && i === T.coldAt ? ' is-cold' : '';
@@ -1025,13 +1242,19 @@
       var tag = it.state === 'done' ? 'Pull' : it.state === 'burnt' ? 'Burnt' : it.state === 'flip' ? (swipe ? 'Swipe' : 'Flip') : '';
       var says = it.state === 'raw' ? 'cooking' : it.state === 'flip' ? 'ready to flip' : it.state;
       var pale = it.state === 'flip' || (it.state === 'raw' && !it.flipped);      // the side that's up is still raw
-      html += '<button class="ou-spot is-' + it.state + cold + (it.flipped ? ' is-turned' : '') + (it.flipNow ? ' is-flipping' : '') + '" data-act="spot" data-i="' + i + '"' +
+      // A flip in the air and a flare-up run on their own clocks, so a redraw
+      // half way through picks them up where they were (--ago, in ms).
+      var flipAgo = it.flipAt ? now - it.flipAt : 1e9, burnAgo = it.burnAt ? now - it.burnAt : 1e9;
+      var flying = flipAgo < FLIP_MS, flaring = it.state === 'burnt' && burnAgo < FLAME_MS;
+      html += '<button class="ou-spot is-' + it.state + cold + (it.flipped ? ' is-turned' : '') + (flying ? ' is-flipping' : '') + '" data-act="spot" data-i="' + i + '"' +
+        (flying || flaring ? ' style="--ago:' + Math.round(flying ? flipAgo : burnAgo) + '"' : '') +
         (tag ? ' data-tag="' + tag + '"' : '') + ' aria-label="' + name + ', ' + says + '">' +
         '<svg class="ou-ring" viewBox="0 0 64 64" aria-hidden="true"><circle class="ou-ring-bg" cx="32" cy="32" r="29"/><circle class="ou-ring-fg" cx="32" cy="32" r="29"/></svg>' +
         '<span class="ou-food ou-sh">' + partSprite(it.part, '', pale) + '</span>' +
         (it.state === 'burnt' ? '<svg class="ou-smoke" viewBox="0 0 30 16" aria-hidden="true"><path class="ou-steam" d="M5 15c-4-4 4-6 0-11M15 15c-4-4 4-6 0-11M25 15c-4-4 4-6 0-11" stroke="#C5CFD3" stroke-width="2.500" fill="none" stroke-linecap="round"/></svg>' : '') +
+        (flying ? '<i class="ou-puff" aria-hidden="true"></i>' : '') +
+        (flaring ? spr('flame', 'ou-flame') : '') +
         '</button>';
-      it.flipNow = false;
     }
     var el = $('#ou-griddle'); el.className = 'ou-griddle is-n' + all; el.innerHTML = html;
     for (var j = 0; j < n; j++) if (T.grill[j]) T.grill[j].fg = el.children[j].querySelector('.ou-ring-fg');
@@ -1177,6 +1400,7 @@
   /* ---------- 7. the paper screens ---------- */
   function show(name) {
     screen = name;
+    if (name === 'title' || name === 'dawn') setMood('day');      // a new week or a new day: the day's tune again
     var all = stage.querySelectorAll('.ou-scr');
     for (var i = 0; i < all.length; i++) all[i].hidden = all[i].getAttribute('data-scr') !== name;
     var pad = stage.querySelector('[data-scr="' + name + '"] .ou-body-pad'); if (pad) pad.scrollTop = 0;
@@ -1709,7 +1933,9 @@
     if (best) { save.keeps[G.level] = kept; save.bestRuns[G.level] = G.run; }
     var past = keepWeek(kept, win ? 'win' : why, spent);
     save.weeks++; if (win) save.wins++; save.best = Math.max(save.best, kept); save.seen = true; save.run = null; persist();
-    if (win) sfx.win();
+    // The music moves to a tune for how it went (owner 2026-11-13): brighter
+    // for a week won, slow and minor for one lost. Ended from pause: no change.
+    if (win) { sfx.win(); setMood('win'); } else if (why !== 'quit') { sfx.lose(); setMood('lose'); }
     report('end', { day: G.day, why: win ? 'win' : why, total: kept, earned: G.earned, secs: Math.round(G.played), away: Math.round(G.away),
       items: Object.keys(G.items), u: T ? T.untrusted : 0, taps: T ? T.taps : '', days: weekDays(), cater: G.cater == null ? '' : G.cater, spent: spent, bonus: G.bonus, finish: G.finish, perf: G.perf || 0, ach: G.newAch.slice() });
     lastRun = { run: G.run, lvl: G.level, total: kept, earned: G.earned, spent: spent, bonus: G.bonus, finish: G.finish, days: weekDays(), cater: G.cater == null ? '' : G.cater,
@@ -1787,6 +2013,11 @@
   var CREDIT = 'Mitch Gardner', resetArmed = false;
   function showSettings() { resetArmed = false; drawSettings(); openOverlay('title'); }
   function drawSettings() {
+    // Off, Low, Medium, High (owner 2026-11-13), one row of four.
+    var vol = function (kind, label, v, note) {
+      return '<div class="ou-set ou-set--vol" role="group" aria-label="' + label + '"><span><b>' + label + '</b><small>' + note + '</small></span><span class="ou-seg">' +
+        VOL_NAMES.map(function (n, i) { return '<button data-act="vol" data-kind="' + kind + '" data-v="' + i + '" aria-pressed="' + (i === v) + '">' + n + '</button>'; }).join('') + '</span></div>';
+    };
     var row = function (act, label, on, note) {
       return '<button class="ou-set" data-act="' + act + '" aria-pressed="' + on + '"><span><b>' + label + '</b>' + (note ? '<small>' + note + '</small>' : '') + '</span><i>' + (on ? 'On' : 'Off') + '</i></button>';
     };
@@ -1794,8 +2025,8 @@
       '<div class="ou-top ou-top--back"><span class="ou-kicker">Settings</span><h2 class="ou-h">Order Up</h2><span class="ou-label">Version ' + esc(OrderUp.version) + '</span>' +
       '<button class="ou-topback" data-act="back">Back</button></div>' +
       '<div class="ou-body-pad">' +
-      row('sound', 'Sound', save.sound, 'The sizzle, the bell, the tickets.') +
-      row('music', 'Music', save.music, 'Slow jazz, made as it plays.') +
+      vol('sfx', 'Sound', save.sfxVol, 'The sizzle, the bell, the tickets.') +
+      vol('music', 'Music', save.musicVol, 'Slow jazz, made as it plays. It picks up when the kitchen does.') +
       (STATS.url ? row('stats', 'Send how my weeks go', !save.noStats, 'No name: the level, the days and the tips, so The Café can see if it’s too hard.') : '') +
       '<div class="ou-setbox"><span class="ou-label">On your home screen</span>' + installHtml() + '</div>' +
       '<div class="ou-setbox"><span class="ou-label">Save code</span>' +
@@ -1902,8 +2133,8 @@
     go.setAttribute('data-act', run ? 'continue' : 'start');
     $('#ou-fresh').hidden = !run;
     $('#ou-confirm').hidden = true;
-    $('#ou-sound-pause').textContent = 'Sound: ' + (save.sound ? 'on' : 'off');
-    $('#ou-music-pause').textContent = 'Music: ' + (save.music ? 'on' : 'off');
+    $('#ou-sound-pause').innerHTML = '<span>Sound</span>' + VOL_NAMES[save.sfxVol];
+    $('#ou-music-pause').innerHTML = '<span>Music</span>' + VOL_NAMES[save.musicVol];
   }
 
   /* ---------- 8. taps ---------- */
@@ -1927,7 +2158,13 @@
       case 'leave': $('#ou-pausebox').hidden = true; if (T) T.ended = true; clearBubbles(); G = null; T = null; show('title'); drawTitle(); break;
       case 'continue': sfx.tap(); if (save.run) resumeRun(); else newRun(); break;
       case 'level': if (D.levels[el.getAttribute('data-level')]) { save.level = el.getAttribute('data-level'); persist(); drawTitle(); sfx.tap(); } break;
-      case 'music': save.music = !save.music; persist(); drawTitle(); if (screen === 'settings') drawSettings(); break;
+      // Pause's two buttons step through Off, Low, Medium, High; Settings picks one.
+      case 'music': save.musicVol = (save.musicVol + 1) % 4; persist(); setVolumes(); drawTitle(); break;
+      case 'vol':
+        var vk = el.getAttribute('data-kind') === 'music' ? 'musicVol' : 'sfxVol';
+        save[vk] = Math.max(0, Math.min(3, parseInt(el.getAttribute('data-v'), 10) || 0)); persist(); setVolumes(); drawTitle(); drawSettings();
+        if (vk === 'sfxVol') sfx.done();
+        break;
       case 'stats': save.noStats = !save.noStats; save.told = true; persist(); drawSettings(); sfx.tap(); break;
       case 'settings': sfx.tap(); showSettings(); break;
       case 'ach': sfx.tap(); showAch('title'); break;
@@ -1962,7 +2199,7 @@
       case 'how': showHow(screen); break;
       case 'box': showBox(screen === 'over' ? 'over' : 'title'); break;
       case 'back': closeOverlay(); break;
-      case 'sound': save.sound = !save.sound; persist(); drawTitle(); if (screen === 'settings') drawSettings(); sfx.done(); break;
+      case 'sound': save.sfxVol = (save.sfxVol + 1) % 4; persist(); setVolumes(); drawTitle(); sfx.done(); break;
       case 'special': sfx.tap(); startDay(G.offers[i]); break;
       case 'bin': if (live) tapBin(el.getAttribute('data-part')); break;
       case 'spot': if (live && performance.now() - grabbedAt > 500) spotGesture(i, e.detail === 0 ? 'key' : 'tap'); break;   // a touch or mouse was dealt with on pointerup
@@ -2128,8 +2365,133 @@
       give: function (id) { own({ id: id }); dirtyAll(); },
       findMatch: findMatch, aimTicket: aimTicket, usable: usable, binOpen: binOpen, level: level,
       gesture: function (i, how) { if (T) spotGesture(i, how || 'key'); },
-      get music() { return { on: music.on, step: music.step, audio: ac ? ac.state : 'none' }; }
+      get music() { return { on: music.on, step: music.step, mood: music.mood, I: music.I, bpm: music.bpm, dark: music.dark, audio: ac ? ac.state : 'none' }; },
+      intensity: intensity, sfx: sfx, setMood: setMood
     };
+    /* /play?debug&sound: the sound test page (owner 2026-11-13). Every sound
+       effect with a button, and the music by hand: its volume, the tune
+       (the day, a week won, a week lost), the level, a slider for how close
+       the shift is to going wrong, and the lights going out. Dev server only,
+       like the rest of ?debug: on a phone, the PC's address on the same
+       Wi-Fi, port 8080. */
+    if (/[?&]sound\b/.test(location.search)) {
+      $('#ou-told').hidden = true; $('#ou-inapp').hidden = true;
+      var LAB_SFX = [
+        ['tap', 'Tap', 'A bin, the plate, a button.'],
+        ['sizzle', 'Sizzle', 'Food goes on the flat-top.'],
+        ['flip', 'Flip', 'Eggs, bacon, burgers and chicken turned over. New.'],
+        ['done', 'Ready', 'Food is ready to flip, or to pull.'],
+        ['flame', 'Flare-up', 'Food burns, with a burst of flame. New.'],
+        ['ticket', 'Ticket', 'A ticket lands on the rail.'],
+        ['slide', 'Plate out', 'Send: the plate slides off to the right. New.'],
+        ['bell', 'Order bell', 'A plate goes out (straight after the slide).'],
+        ['lucky', 'Lucky plate', 'A plate tips double.'],
+        ['bad', 'Nope', 'Not on a ticket; the flat-top or the plate is full; a tap on Rush where a swipe is wanted.'],
+        ['spill', 'Walk-out', 'A ticket ran out: one coffee down. Buzzes the phone too.'],
+        ['talk', 'Family turns up', 'Their ticket lands. The only warning there is.'],
+        ['murmur', 'Family talks', 'Each speech bubble: a voice with no words, higher or lower by who. New.', [['Mom', 'Mom'], ['Dad', 'Dad'], ['Your cousin', 'Cousin']]],
+        ['grunt', 'You answer', 'Tapping a bubble, or Small Talk answering for you. One for each reply. New.', [['Mm-hm.', 'Mm-hm'], ['Yep.', 'Yep'], ['Sure.', 'Sure'], ['In a minute.', 'Minute'], ['Love you.', 'Love you']]],
+        ['dark', 'Lights out', 'Power Flicker: the kitchen goes dark, and the music with it. New.'],
+        ['light', 'Lights back', 'Three and a half seconds later. New.'],
+        ['buy', 'Buy', 'An item picked or bought; a cookie eaten.'],
+        ['close', 'Day closes', 'The tune at 2pm.'],
+        ['flawless', 'Flawless day', 'Instead of that, for a day with no slips.'],
+        ['achieve', 'Achievement', 'Three notes, the last one held.'],
+        ['win', 'Week won', 'The catering went out on time. The music turns to the week-won tune.'],
+        ['lose', 'Week lost', 'Three coffees down, or the catering late. The music turns to the week-lost tune. New.']
+      ];
+      var lab = { level: save.level, raw: 0, sweep: 0, dark: 0 };
+      var seg = function (what, list, on) {
+        return '<span class="ou-seg">' + list.map(function (x) { return '<button data-lab="' + what + '" data-v="' + x[0] + '" aria-pressed="' + (String(x[0]) === String(on)) + '">' + x[1] + '</button>'; }).join('') + '</span>';
+      };
+      var vols = VOL_NAMES.map(function (n, i) { return [i, n]; });
+      var drawLab = function () {
+        var cap = D.levels[lab.level].music == null ? 1 : D.levels[lab.level].music;
+        paper('lab', '<style>' +
+          '.ou-lab h3{font:700 19px/1.2 "Playfair Display",Georgia,serif;margin:14px 0 6px}' +
+          '.ou-lab .ou-setbox{margin:8px 0}.ou-lab .ou-seg{margin:6px 0 2px}' +
+          '.ou-lab input[type=range]{width:100%;accent-color:#C0392F;height:32px}' +
+          '.ou-lab-read{font:400 13px/1.4 Lato,sans-serif;color:#22323A;background:#E6ECEE;border-radius:8px;padding:8px 10px;margin:8px 0}' +
+          '.ou-lab-sfx{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:8px 0;border-top:1px solid #C5CFD3}' +
+          '.ou-lab-sfx b{font:700 15px/1.2 Lato,sans-serif;display:block}.ou-lab-sfx small{font:400 12.5px/1.3 Lato,sans-serif;color:#4A5A62}' +
+          '.ou-lab-sfx .ou-btn{min-width:64px;padding:10px 8px;font-size:13px}.ou-lab-sfx .ou-seg{grid-column:1/-1}' +
+          '</style><div class="ou-top ou-top--back"><span class="ou-kicker">Test page</span><h2 class="ou-h">Sound and music</h2><span class="ou-label">Dev server only · /play?debug&amp;sound</span>' +
+          '<button class="ou-topback" data-lab="back">Back</button></div>' +
+          '<div class="ou-body-pad ou-lab">' +
+          '<h3>Music</h3>' +
+          '<div class="ou-row"><button class="ou-btn" data-lab="play">Play</button><button class="ou-btn ou-btn--quiet" data-lab="stop">Stop</button></div>' +
+          '<div class="ou-setbox"><span class="ou-label">Music volume</span>' + seg('mvol', vols, save.musicVol) + '</div>' +
+          '<div class="ou-setbox"><span class="ou-label">Tune</span>' + seg('mood', [['day', 'The day'], ['win', 'Week won'], ['lose', 'Week lost']], music.want) +
+          '<span class="ou-label">Level</span>' + seg('level', Object.keys(D.levels).map(function (id) { return [id, D.levels[id].name]; }), lab.level) +
+          '<p class="ou-fine" id="ou-lab-cap">' + capText() + '</p>' +
+          '<span class="ou-label">How close the shift is to going wrong</span>' +
+          '<input type="range" min="0" max="100" step="1" value="' + Math.round(lab.raw * 100) + '" id="ou-lab-raw" aria-label="How close the shift is to going wrong">' +
+          '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-lab="sweep">Build up</button><button class="ou-btn ou-btn--quiet" data-lab="calm">Calm down</button></div>' +
+          '<div class="ou-lab-read" id="ou-lab-read" aria-live="off"></div>' +
+          '<button class="ou-btn ou-btn--quiet" data-lab="lights" style="width:100%">Lights out (3.5 seconds)</button>' +
+          '<p class="ou-fine">In the game, the shift sets the slider by itself: coffees lost, how near the next walk-out is, how full the rail is, and lunch. Friday it’s the catering clock.</p></div>' +
+          '<h3>Sound effects</h3>' +
+          '<div class="ou-setbox"><span class="ou-label">Sound volume</span>' + seg('svol', vols, save.sfxVol) + '</div>' +
+          LAB_SFX.map(function (x) {
+            return '<div class="ou-lab-sfx"><span><b>' + esc(x[1]) + '</b><small>' + esc(x[2]) + '</small></span>' +
+              (x[3] ? '' : '<button class="ou-btn ou-btn--quiet" data-lab="fx" data-v="' + x[0] + '">Play</button>') +
+              (x[3] ? '<span class="ou-seg">' + x[3].map(function (v) { return '<button data-lab="fx" data-v="' + x[0] + '" data-arg="' + esc(v[0]) + '">' + esc(v[1]) + '</button>'; }).join('') + '</span>' : '') + '</div>';
+          }).join('') +
+          '</div><div class="ou-foot"><button class="ou-btn" data-lab="back">Back</button></div>');
+        labForce();
+      };
+      var capText = function () { var c = D.levels[lab.level].music == null ? 1 : D.levels[lab.level].music; return esc(D.levels[lab.level].name) + ' goes up to ' + Math.round(c * 100) + '% of the way (game.json, levels: music).'; };
+      /* Light up the picked button in a row, without drawing the page again (which would scroll it to the top). */
+      var mark = function (what, v) { var all = stage.querySelectorAll('[data-lab="' + what + '"]'); for (var i = 0; i < all.length; i++) all[i].setAttribute('aria-pressed', String(all[i].getAttribute('data-v') === String(v))); };
+      var labForce = function () {
+        var cap = D.levels[lab.level].music == null ? 1 : D.levels[lab.level].music;
+        music.force = lab.raw * cap;
+      };
+      var labRead = function () {
+        var el = stage.querySelector('#ou-lab-read'); if (!el) return;
+        var on = LAYERS.filter(function (x) { return music.I >= x[1]; }).map(function (x) { return x[0]; });
+        el.innerHTML = '<b>' + (music.on ? 'Playing' : 'Stopped') + '</b> · ' + ({ day: 'the day', win: 'week won', lose: 'week lost' }[music.mood]) +
+          (music.want !== music.mood ? ' (changing at the next half bar)' : '') + '<br>Intensity ' + Math.round(music.I * 100) + '% (aiming at ' + Math.round((music.force || 0) * 100) + '%) · ' +
+          Math.round(music.bpm) + ' beats a minute<br>' + (music.mood === 'day' ? 'Layers in: ' + (on.length ? on.join(', ') : 'none, the calm tune') : 'Intensity only shapes the day’s tune') +
+          (music.dark ? '<br><b>Lights out: music cut</b>' : '');
+        var r = stage.querySelector('#ou-lab-raw'); if (r && document.activeElement !== r) r.value = Math.round(lab.raw * 100);
+      };
+      var section = document.createElement('section');
+      section.className = 'ou-scr ou-paper'; section.setAttribute('data-scr', 'lab'); section.hidden = true;
+      stage.appendChild(section);
+      stage.addEventListener('click', function (e) {
+        var b = e.target.closest && e.target.closest('[data-lab]'); if (!b) return;
+        var what = b.getAttribute('data-lab'), v = b.getAttribute('data-v');
+        // A sound needs a tap to start, and a volume above Off: the test page
+        // turns an Off up to Medium rather than play nothing.
+        if (what === 'play') { music.hold = false; if (!save.musicVol) { save.musicVol = 2; persist(); mark('mvol', 2); } ctx(); setVolumes(); musicSync(); }
+        else if (what === 'stop') { music.hold = true; musicSync(); }
+        else if (what === 'mvol') { save.musicVol = +v; persist(); ctx(); setVolumes(); musicSync(); mark(what, v); }
+        else if (what === 'svol') { save.sfxVol = +v; persist(); ctx(); setVolumes(); mark(what, v); sfx.done(); }
+        else if (what === 'mood') { setMood(v); mark(what, v); }
+        else if (what === 'level') { lab.level = v; labForce(); mark(what, v); stage.querySelector('#ou-lab-cap').innerHTML = capText(); }
+        else if (what === 'sweep' || what === 'calm') {
+          clearInterval(lab.sweep);
+          var goal = what === 'sweep' ? 1 : 0, step = what === 'sweep' ? 0.01 : -0.02;
+          lab.sweep = setInterval(function () {
+            lab.raw = Math.max(0, Math.min(1, lab.raw + step)); labForce();
+            if (lab.raw === goal) clearInterval(lab.sweep);
+          }, 200);      // up over 20 seconds, so each layer can be heard coming in
+        }
+        else if (what === 'lights') {
+          clearTimeout(lab.dark); music.testDark = true; if (!save.sfxVol) { save.sfxVol = 2; persist(); mark('svol', 2); } ctx(); setVolumes(); sfx.dark();
+          lab.dark = setTimeout(function () { music.testDark = false; sfx.light(); }, 3500);
+        }
+        else if (what === 'fx') { if (!save.sfxVol) { save.sfxVol = 2; persist(); mark('svol', 2); } ctx(); setVolumes(); if (sfx[v]) sfx[v](b.getAttribute('data-arg') || undefined); }
+        else if (what === 'back') { clearInterval(lab.sweep); music.force = null; music.testDark = false; music.hold = false; setMood('day'); show('title'); drawTitle(); musicSync(); }
+      });
+      stage.addEventListener('input', function (e) {
+        if (e.target.id !== 'ou-lab-raw') return;
+        clearInterval(lab.sweep); lab.raw = (+e.target.value || 0) / 100; labForce();
+      });
+      setInterval(labRead, 250);
+      drawLab();
+    }
     /* /play?debug&cards: one card of each rarity, a sale price and the owned
        row, to judge the look of the rarities without playing to the shop. */
     if (/[?&]cards\b/.test(location.search)) {

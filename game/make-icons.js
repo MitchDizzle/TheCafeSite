@@ -1,5 +1,6 @@
 // Renders game/icon.svg to the PNGs the home-screen install uses
-// (src/assets/game/icon-180.png, -192, -512). Run after changing the icon:
+// (src/assets/game/icon-180.png, -192, -512), and copies the SVG itself to
+// src/assets/game/icon.svg, the tab and bookmark icon on /play. Run after changing the icon:
 //   node game/make-icons.js
 // Needs Chrome or Edge (the same as `npm run build`; CHROME_PATH if it is
 // somewhere unusual).
@@ -15,6 +16,8 @@ if (!chrome) throw new Error('No Chrome or Edge found: set CHROME_PATH');
 const svg = fs.readFileSync(path.join(__dirname, 'icon.svg'), 'utf8');
 const out = path.join(__dirname, '..', 'src', 'assets', 'game');
 fs.mkdirSync(out, { recursive: true });
+fs.writeFileSync(path.join(out, 'icon.svg'), svg);
+console.log('wrote', path.relative(process.cwd(), path.join(out, 'icon.svg')));
 for (const size of [180, 192, 512]) {
   const html = path.join(os.tmpdir(), 'ou-icon-' + size + '.html');
   fs.writeFileSync(html, '<!doctype html><style>html,body{margin:0;background:#1F4552}svg{display:block;width:' + size + 'px;height:' + size + 'px}</style>' + svg);

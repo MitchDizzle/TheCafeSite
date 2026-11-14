@@ -31,7 +31,8 @@
     {%- endif %}
     <link rel="canonical" href="{{ canonical }}">
     {%- endif %}
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    {#- A page can bring its own tab and bookmark icon (`favicon`, an SVG): /play uses the game's home-screen icon. #}
+    <link rel="icon" href="{{ favicon or '/favicon.svg' }}" type="image/svg+xml">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

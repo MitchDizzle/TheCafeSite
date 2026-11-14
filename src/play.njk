@@ -9,10 +9,14 @@ noSiteJs: true
 ogTitle: "Order Up | A little game from The Café"
 ogDescription: "Work the flat-top at The Café in Leavenworth, KS for a week: tickets in, plates out."
 ogImage: "/studio/downloads/share-order-up.png"
+# The tab and bookmark icon is the home-screen icon (owner 2026-11-13), so the game
+# looks the same wherever it is kept. game/make-icons.js writes both.
+favicon: "/assets/game/icon.svg"
 headExtra: |
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@700;900&display=swap" rel="stylesheet">
       <meta name="theme-color" content="#1F4552">
       <link rel="manifest" href="/order-up.webmanifest">
+      <link rel="icon" type="image/png" sizes="192x192" href="/assets/game/icon-192.png">
       <link rel="apple-touch-icon" href="/assets/game/icon-180.png">
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="mobile-web-app-capable" content="yes">
