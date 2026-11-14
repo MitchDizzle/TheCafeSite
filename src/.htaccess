@@ -12,6 +12,12 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # play.lvcafetogo.com → the game (owner 2026-11-13: easier to type). Works
+    # once the subdomain is added at the host, pointed at this same folder,
+    # with its own certificate. One address for the game, so its saves stay put.
+    RewriteCond %{HTTP_HOST} ^play\.lvcafetogo\.com$ [NC]
+    RewriteRule ^ https://lvcafetogo.com/play [R=301,L]
+
     # www.lvcafetogo.com → lvcafetogo.com
     RewriteCond %{HTTP_HOST} ^www\.lvcafetogo\.com$ [NC]
     RewriteRule ^ https://lvcafetogo.com%{REQUEST_URI} [R=301,L]

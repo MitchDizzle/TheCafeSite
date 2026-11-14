@@ -774,8 +774,10 @@ bonuses" holds the catering, finishing, the performance bonus and free
 items turned down; Kept says what was spent, "after $445 on items"), the
 items **On the line** as tiles in their rarity colours with how many, and
 at the foot "Order Up", **where to play it** ("Play it at
-lvcafetogo.com/play", from `site.json` → `url`; owner 2026-11-13, even
-while the game is unlisted) and "A little game from The Café ·
+lvcafetogo.com/play", `site.json` → `game.playAt`; owner 2026-11-13, even
+while the game is unlisted; change it to play.lvcafetogo.com once that
+subdomain opens the game: `src/.htaccess` already sends it to /play, so the
+game keeps one address and every save stays put) and "A little game from The Café ·
 Leavenworth, KS". Rows and tiles shrink to fit, so nothing runs off the bottom).
 The item drawings are the sprite sheet's, turned into images as the end
 screen or Past weeks opens (one not loaded by the tap is left off; a

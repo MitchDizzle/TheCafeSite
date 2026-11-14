@@ -1500,8 +1500,9 @@
   /* The week as text to share (owner 2026-11-13): a coloured square a day,
      the tips, and what it kept. Never the week code: that stays private. */
   var SQUARE = { legendary: '\uD83D\uDFE8', epic: '\uD83D\uDFEA', rare: '\uD83D\uDFE6', normal: '\u2B1C', bad: '\uD83D\uDFE5' };
-  /* Where to play, as the picture and the text say it (owner 2026-11-13). */
-  var PLAY_AT = String(STATS.home || 'https://lvcafetogo.com').replace(/^https?:\/\//, '').replace(/\/$/, '') + '/play';
+  /* Where to play, as the picture and the text say it (owner 2026-11-13):
+     site.json's game.playAt, else the site's own address and /play. */
+  var PLAY_AT = STATS.playAt || String(STATS.home || 'https://lvcafetogo.com').replace(/^https?:\/\//, '').replace(/\/$/, '') + '/play';
   function weekText(p) {
     var lines = ['Order Up, ' + (D.levels[p.l] ? D.levels[p.l].name + ' week' : 'a week') + ': ' + weekHead(p)[1].toLowerCase()];
     p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] : SQUARE.bad) + ' ' + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : ' · ' + stopWords(p).toLowerCase())); });
