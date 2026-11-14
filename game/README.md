@@ -48,7 +48,7 @@ starting at 11am with a drink included, no fryer, closed weekends.
 | Piece | What it is | Real thing it comes from |
 |---|---|---|
 | **Level** | Easy, Regular or Rush, picked on the title screen and kept for the week (§4). | |
-| **Run** | One week, Monday – Friday. No weekends: the café is closed. A week left half way is kept each morning and can be picked up from that morning ("Continue: Wednesday"). | The hours |
+| **Run** | One week, Monday – Friday. No weekends: the café is closed. A week left half way is kept each morning, and after close (owner 2026-11-13): when a day is done, and again with the free pick, the shop and every buy, so it picks up at that night's pick or shop ("Continue: Wed night") with the same cards on offer, or at the morning ("Continue: Thursday") with the same three specials. Closing the game never deals new cards. | The hours |
 | **Dawn** | Before each shift, pick the day's special from three. One side is a quicker plate; two sides tip more. **Each special once a week** (owner 2026-11-13): one served this week is never offered again, and each morning's three are ones not yet seen that week (15 specials, 15 cards a week). The three are dealt once a morning and kept with a week left half way, so leaving and coming back doesn't deal new ones. | `specials.json`, the weekly posts |
 | **Day** | One shift, 6am – 2pm, about 100 seconds. A clock on the HUD runs the real hours. | The hours |
 | **Breakfast** (6am – 11am) | Eggs, bacon, toast, potatoes, biscuit and gravy, burritos | `menu.json` breakfast |
@@ -654,6 +654,23 @@ and a few notes on top picked at random from a scale that can't clash, all
 through a low-pass so it sounds like a radio in the next room. It never
 plays the same way twice, and it stops when the page is hidden.
 
+**Or heavy metal** (owner 2026-11-13: Settings → Music style, Slow jazz or
+Heavy metal; jazz until changed, kept with the settings). Made the same way,
+as it plays: E minor, a palm-muted low E the riff keeps coming back to and a
+power chord a bar (E, E, C, D, E, E, G, A), two distorted rhythm guitars
+left and right, a bass, drums. Karplus-Strong plucks (a burst of noise
+round a short loop) through a wave-shaper and a cabinet's filters; the
+lead is two saw waves with a bend into each note, vibrato and an echo.
+At its calmest it's slow and heavy, 92 beats a minute in half time (the
+snare on three); as the shift gets hard it goes to full time, the riffs
+get busier (gallops, then straight sixteenths), the ride comes in, then
+a lead guitar and a double kick, up to 126. A week won: E, A, B in a major
+key at 116 with a gallop and a lead; a week lost: 62, slow, with the F a
+half step above E that doom bands lean on. Everything else (the level's
+cap, the lights, the dip under a tune, changing at the next half bar)
+works the same. Its level was measured to sit about where the jazz does.
+The first try (a fixed eight bars at 160) was too fast.
+
 **It follows the shift** (owner 2026-11-13), and never stops or restarts to
 do it. How close the shift is to going wrong (`intensity()` in `play.js`)
 is coffees lost, how near the next walk-out is, how full the rail is, and
@@ -724,10 +741,9 @@ out**. A readout says the intensity, the tempo and which layers are in.
 **Other instruments** (owner 2026-11-13, not in the game): a phrase each
 on a clean and a distorted guitar (Karplus-Strong plucks, the distorted
 one through a wave-shaper and cabinet filters, left and right), bass,
-organ, brass, strings, marimba, bells (FM) and flute, and a **heavy metal
-demo**: eight bars in E minor at 160, a gallop riff, power chords, double
-kick, and a lead in bars 5 to 8. Levels were measured so each comes out
-about as loud as the jazz.
+organ, brass, strings, marimba, bells (FM) and flute. Levels were
+measured so each comes out about as loud as the jazz. The music box has a
+**Style** row too, to hear the heavy metal the same way as the jazz.
 It's in the `?debug` block, so a build cuts it out. On a phone: the PC's
 address on the same Wi-Fi, port 8080 (`http://<the PC's address>:8080/play?debug&sound`).
 

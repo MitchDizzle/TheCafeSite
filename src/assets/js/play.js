@@ -72,7 +72,7 @@
      migrate() with SAVE_VER raised. Never rename an item's or an
      achievement's id: saves and weeks left half way are keyed by them. */
   var KEY = 'orderup.v1', SAVE_VER = 3;
-  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, sfxVol: 0, musicVol: 0, seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0, bestRuns: {}, past: [], itemLife: {} };
+  var save = { told: false, noStats: false, best: 0, bests: {}, keeps: {}, weeks: 0, wins: 0, served: {}, sound: false, music: false, sfxVol: 0, musicVol: 0, musicStyle: 'jazz', seen: false, level: 'normal', run: null, id: '', qa: [], sum: '', ach: {}, ver: 0, bestRuns: {}, past: [], itemLife: {} };
   var loadedSum = '';
   try {
     var stored = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -123,6 +123,7 @@
       save.ver = 3;
     }
     save.sfxVol = Math.max(0, Math.min(3, save.sfxVol | 0)); save.musicVol = Math.max(0, Math.min(3, save.musicVol | 0));
+    if (save.musicStyle !== 'metal') save.musicStyle = 'jazz';      // owner 2026-11-13: the jazz, or heavy metal
   }
 
   /* ---------- test shortcuts ----------
@@ -393,9 +394,10 @@
      to a brighter, quicker tune; a week lost, to a slow one in a minor key;
      both at the next half bar, never with a cut. /play?debug&sound on the
      dev server plays all of it by hand. */
-  var music = { on: false, hold: false, timer: 0, next: 0, step: 0, out: null, lp: null, duck: null, vol: null,
+  var music = { on: false, hold: false, timer: 0, next: 0, step: 0, out: null, lp: null, duck: null, vol: null, band: null,
+    style: save.musicStyle, wantStyle: save.musicStyle, riff: '', ring: 8, chug: 40, pushed: false, leadAt: null, leadUntil: 0,
     mood: 'day', want: 'day', I: 0, bpm: 74, last: 0, force: null, dark: false, testDark: false };
-  var MOODS = {
+  var JAZZ = {
     // The day: ii V I vi, then IV iii ii V, in C. One bar each: the bass
     // note, then the chord (MIDI numbers). The top notes are C major
     // pentatonic, which can't hit a wrong note over these chords.
@@ -414,16 +416,29 @@
   /* What comes in as the shift gets harder, and from how far: the sound test
      page lists them as they turn on. */
   var LAYERS = [['walking bass', 0.35], ['ghost snare', 0.45], ['piano stabs', 0.55], ['shaker', 0.6], ['held top note', 0.75]];
+  /* The two styles (owner 2026-11-13: Settings picks one). `div` is steps to
+     a beat (jazz in eighths, metal in sixteenths); `span` how many beats a
+     minute the busiest shift adds; `lpSpan` how far the radio's low-pass
+     opens with it. Metal: 92 at its calmest, half time (the snare on
+     three), to 126; a week won at 116, a week lost at 62. */
+  var STYLES = {
+    jazz: { name: 'Slow jazz', div: 2, span: 30, lpSpan: 2600, moods: JAZZ, step: function (a, w, b) { jazzStep(a, w, b); }, layers: LAYERS },
+    metal: { name: 'Heavy metal', div: 4, span: 34, lpSpan: 0, step: function (a, w, b) { metalStep(a, w, b); },
+      moods: { day: { bpm: 92, lp: 9000, swing: 0 }, win: { bpm: 116, lp: 9000, swing: 0 }, lose: { bpm: 62, lp: 6500, swing: 0 } },
+      layers: [['gallops', 0.2], ['full time, not half', 0.3], ['ride', 0.45], ['busy riffs', 0.55], ['lead guitar', 0.65], ['double kick', 0.7]] }
+  };
   function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
   function sm(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
   /* notes → the radio's low-pass → a duck for the lights → the volume → the limiter */
   function musicOut(a) {
     if (music.out) return;
     var out = a.createGain(), lp = a.createBiquadFilter(), duck = a.createGain(), dip = a.createGain(), vol = a.createGain();
-    lp.type = 'lowpass'; lp.frequency.value = MOODS.day.lp; lp.Q.value = 0.4;
+    lp.type = 'lowpass'; lp.frequency.value = JAZZ.day.lp; lp.Q.value = 0.4;
     vol.gain.value = MUSIC_VOL[save.musicVol];
     out.connect(lp); lp.connect(duck); duck.connect(dip); dip.connect(vol); vol.connect(bus.lim);
     music.out = out; music.lp = lp; music.duck = duck; music.dip = dip; music.vol = vol;
+    music.style = music.wantStyle = save.musicStyle;
+    if (music.style === 'metal') { metalBand(a); metalPlug(true); }
   }
   function note(a, when, midi, dur, vol, type) {
     var o = a.createOscillator(), g = a.createGain();
@@ -447,8 +462,8 @@
     src.connect(flt); flt.connect(g2); g2.connect(music.out); src.start(when, rand() * 0.5, len + 0.02);
   }
   /* One eighth note of it. Eight to a bar. `beat` is a beat's length now. */
-  function musicStep(a, when, beat) {
-    var mood = music.mood, M = MOODS[mood], at = music.step % 8, bi = Math.floor(music.step / 8) % M.bars.length;
+  function jazzStep(a, when, beat) {
+    var mood = music.mood, M = JAZZ[mood], at = music.step % 8, bi = Math.floor(music.step / 8) % M.bars.length;
     var bar = M.bars[bi], next = M.bars[(bi + 1) % M.bars.length], top = (M.alt && M.alt[bi]) || M.top, i;
     if (mood === 'lose') {
       if (at === 0) {
@@ -533,13 +548,18 @@
     while (music.next < now + 0.4) {
       // A new tune (a week won or lost, or back to the day) starts on the
       // next half bar, from its own first bar.
-      if (music.want !== music.mood && music.step % 4 === 0) { music.mood = music.want; music.step = 0; }
-      var M = MOODS[music.mood], day = music.mood === 'day';
-      music.bpm += (M.bpm + (day ? 30 * music.I : 0) - music.bpm) * (day ? 0.15 : 0.3);
+      // So does the other style, picked in Settings.
+      var S = STYLES[music.style];
+      if ((music.want !== music.mood || music.wantStyle !== music.style) && music.step % (2 * S.div) === 0) {
+        if (music.wantStyle !== music.style) { music.style = music.wantStyle; if (music.style === 'metal') metalBand(a); metalPlug(music.style === 'metal'); }
+        music.mood = music.want; music.step = 0; S = STYLES[music.style];
+      }
+      var M = S.moods[music.mood], day = music.mood === 'day';
+      music.bpm += (M.bpm + (day ? S.span * music.I : 0) - music.bpm) * (day ? 0.15 : 0.3) * 2 / S.div;
       var beat = 60 / music.bpm;
-      music.lp.frequency.setTargetAtTime(M.lp + (day ? 2600 * music.I : 0), music.next, 0.5);
-      musicStep(a, music.next + (music.step % 2 ? beat * M.swing : 0), beat);    // the off-beats come late: swing
-      music.next += beat / 2; music.step++;
+      music.lp.frequency.setTargetAtTime(M.lp + (day ? S.lpSpan * music.I : 0), music.next, 0.5);
+      S.step(a, music.next + (music.step % 2 && M.swing ? beat * M.swing : 0), beat);    // the jazz's off-beats come late: swing
+      music.next += beat / S.div; music.step++;
     }
   }
   /* Start or stop to match the volume. A browser only lets sound start from
@@ -551,6 +571,160 @@
       musicOut(a); music.on = true; music.next = 0; music.last = 0;
       music.timer = setInterval(musicTick, 100); musicTick();
     } else if (!want && music.on) { music.on = false; clearInterval(music.timer); }
+  }
+
+  /* ---------- the guitars, and metal as a second style of music ----------
+     Owner 2026-11-13: a heavy metal style beside the jazz, picked in
+     Settings, slower than the first demo and made as it plays the same way.
+     A plucked string is Karplus-Strong: a burst of noise going round a short
+     loop that loses a little each time (the loop's length is the note). A
+     distorted guitar is that pluck through a wave-shaper (the amp) and a
+     speaker cabinet's filters; two of them, left and right, as a band
+     double-tracks its rhythm guitar. The lead is two saw waves through a
+     softer amp, with a bend into each note, vibrato and an echo. */
+  var KS = {};
+  function ksBuf(a, midi, v, decay, dur) {
+    var key = midi + ':' + v + ':' + decay + ':' + dur;
+    if (KS[key]) return KS[key];
+    var sr = a.sampleRate, n = Math.floor(sr * dur), buf = a.createBuffer(1, n, sr), d = buf.getChannelData(0);
+    var N = Math.max(2, Math.round(sr / hz(midi))), line = new Float32Array(N), i, at = 0, nx;
+    for (i = 0; i < N; i++) line[i] = rand() * 2 - 1;
+    for (i = 0; i < n; i++) { nx = at + 1 === N ? 0 : at + 1; d[i] = line[at]; line[at] = decay * 0.5 * (line[at] + line[nx]); at = nx; }
+    return (KS[key] = buf);
+  }
+  function shapeCurve(k) { var n = 2048, c = new Float32Array(n); for (var i = 0; i < n; i++) { var x = i * 2 / n - 1; c[i] = (1 + k) * x / (1 + k * Math.abs(x)); } return c; }
+  /* An amp: a little low cut, the distortion, the mids scooped, a cabinet's top end rolled off. */
+  function amp(a, out, pan, drive, level) {
+    var pre = a.createGain(), hp = a.createBiquadFilter(), sh = a.createWaveShaper(), mid = a.createBiquadFilter(), lp = a.createBiquadFilter(), post = a.createGain();
+    pre.gain.value = drive; hp.type = 'highpass'; hp.frequency.value = 110;
+    sh.curve = shapeCurve(60); sh.oversample = '2x';
+    mid.type = 'peaking'; mid.frequency.value = 700; mid.Q.value = 0.8; mid.gain.value = -6;
+    lp.type = 'lowpass'; lp.frequency.value = 4600; lp.Q.value = 0.9;
+    post.gain.value = level;
+    pre.connect(hp); hp.connect(sh); sh.connect(mid); mid.connect(lp); lp.connect(post);
+    if (a.createStereoPanner) { var p = a.createStereoPanner(); p.pan.value = pan; post.connect(p); p.connect(out); } else post.connect(out);
+    return pre;
+  }
+  function pluck(a, into, midi, t, len, muted, vol, v) {
+    var src = a.createBufferSource(), g = a.createGain(), f = a.createBiquadFilter();
+    src.buffer = ksBuf(a, midi, v || 0, muted ? 0.99 : 0.997, muted ? 0.4 : 2.5);
+    f.type = 'lowpass'; f.frequency.value = muted ? 650 : 7000;
+    g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + Math.max(0.02, len - 0.04)); g.gain.linearRampToValueAtTime(0.0001, t + len);
+    src.connect(f); f.connect(g); g.connect(into); src.start(t); src.stop(t + len + 0.05);
+  }
+  /* A power chord: root, fifth, octave (palm-muted: root and fifth). */
+  function power(a, into, root, t, len, muted, vol, v) {
+    (muted ? [root, root + 7] : [root, root + 7, root + 12]).forEach(function (m, i) { pluck(a, into, m, t + i * 0.005, len, muted, vol, v); });
+  }
+  function noiseHit(a, out, t, len, type, f, v, q) {
+    var s = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain();
+    s.buffer = noiseBuf; s.loop = true; fl.type = type; fl.frequency.value = f; if (q) fl.Q.value = q;
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    s.connect(fl); fl.connect(g); g.connect(out); s.start(t, rand() * 0.5, len + 0.02);
+  }
+  var KIT = {
+    kick: function (a, out, t, v) {
+      var o = a.createOscillator(), g = a.createGain();
+      o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.07);
+      g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.22);
+      noiseHit(a, out, t, 0.012, 'highpass', 3500, v * 0.6);      // the beater's click
+    },
+    snare: function (a, out, t, v) {
+      var o = a.createOscillator(), g = a.createGain();
+      o.frequency.setValueAtTime(210, t); o.frequency.exponentialRampToValueAtTime(170, t + 0.1);
+      g.gain.setValueAtTime(v * 0.55, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.14);
+      noiseHit(a, out, t, 0.24, 'bandpass', 2300, v, 0.5);
+    },
+    hat: function (a, out, t, v) { noiseHit(a, out, t, 0.05, 'highpass', 8000, v); },
+    ride: function (a, out, t, v) { noiseHit(a, out, t, 0.3, 'bandpass', 6500, v, 1.5); },
+    crash: function (a, out, t, v) { noiseHit(a, out, t, 1.8, 'highpass', 4200, v); }
+  };
+  function leadAmp(a, out, echo) {
+    var pre = a.createGain(), sh = a.createWaveShaper(), lp = a.createBiquadFilter(), post = a.createGain(), dl = a.createDelay(1), fb = a.createGain(), wet = a.createGain();
+    pre.gain.value = 3; sh.curve = shapeCurve(30); sh.oversample = '2x'; lp.type = 'lowpass'; lp.frequency.value = 3800; post.gain.value = 0.07;
+    dl.delayTime.value = echo; fb.gain.value = 0.3; wet.gain.value = 0.3;
+    pre.connect(sh); sh.connect(lp); lp.connect(post); post.connect(out); post.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(out);
+    return pre;
+  }
+  function leadNote(a, into, midi, t, len) {
+    var g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.5, t + 0.012); g.gain.setValueAtTime(0.5, t + Math.max(0.02, len - 0.03)); g.gain.linearRampToValueAtTime(0.0001, t + len);
+    lfo.frequency.value = 5.8; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(len > 0.4 ? 24 : 6, t + Math.min(0.45, len));
+    lfo.connect(lg); lfo.start(t); lfo.stop(t + len + 0.05); g.connect(into);
+    [-7, 7].forEach(function (d) {
+      var o = a.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz(midi);
+      o.detune.setValueAtTime(d - 70, t); o.detune.linearRampToValueAtTime(d, t + 0.05);      // a little bend up into the note
+      lg.connect(o.detune); o.connect(g); o.start(t); o.stop(t + len + 0.05);
+    });
+  }
+  /* The band, made once and plugged into the music only while metal plays
+     (an amp left plugged in still costs the phone something). */
+  function metalBand(a) {
+    if (music.band) return music.band;
+    var mix = a.createGain(); mix.gain.value = METAL_MIX;
+    music.band = { mix: mix, L: amp(a, mix, -0.7, 6, 0.1), R: amp(a, mix, 0.7, 6, 0.1), lead: leadAmp(a, mix, 0.34), on: false };
+    return music.band;
+  }
+  function metalPlug(on) {
+    var b = music.band; if (!b || b.on === on) return;
+    b.on = on; if (on) b.mix.connect(music.out); else b.mix.disconnect();
+  }
+  var METAL_MIX = 0.38;      // measured: about as loud as the jazz, a little louder at its busiest
+  /* One bar a chord (the power chord's root, MIDI). The day: E minor, with
+     the low E as the pedal the riff keeps coming back to. A week won: E, A,
+     B, in a major key. A week lost: slow, with the F a half step above E that
+     doom bands lean on. */
+  var METAL = {
+    day: { prog: [40, 40, 48, 50, 40, 40, 43, 45], lead: [64, 67, 69, 71, 74, 76, 79, 81] },
+    win: { prog: [40, 40, 45, 47, 40, 40, 45, 47], lead: [64, 66, 68, 71, 73, 76, 78, 80] },
+    lose: { prog: [40, 41, 40, 50, 40, 41, 48, 47], lead: [64, 65, 67, 71, 72, 76] }
+  };
+  /* A beat of rhythm guitar, by how hard the shift is: x is a palm-muted chug. */
+  var CELLS = [['x---', 'x-x-', 'x--x', 'x---'], ['x-xx', 'xxx-', 'x-x-', 'xx-x'], ['xxxx', 'x-xx', 'xxx-', 'xxxx']];
+  /* One sixteenth note of it. Sixteen to a bar. */
+  function metalStep(a, when, beat) {
+    var b = music.band, mood = music.mood, P = METAL[mood], s = music.step % 16, bi = Math.floor(music.step / 16) % P.prog.length;
+    var root = P.prog[bi], next = P.prog[(bi + 1) % P.prog.length], S16 = beat / 4, out = b.mix, i;
+    var I = mood === 'day' ? music.I : mood === 'win' ? 0.6 : 0.15;
+    var half = mood === 'lose' || (mood === 'day' && I < 0.3);      // half time: the snare on three
+    if (s === 0) {
+      // A new bar: its riff, a beat at a time, busier as the shift gets harder.
+      var r = '';
+      for (i = 0; i < 4; i++) r += pick(CELLS[mood === 'lose' ? 0 : mood === 'win' ? 1 : rand() < sm(0.55, 0.85, I) ? 2 : rand() < sm(0.2, 0.5, I) ? 1 : 0]);
+      music.riff = r; music.ring = half ? 8 : 4; music.chug = root === 40 || rand() < 0.6 ? 40 : root;
+    }
+    var chug = music.riff.charAt(s) === 'x' && s >= music.ring, push = s === 14 && next !== root && mood !== 'lose' && rand() < sm(0.4, 0.7, I) * 0.6;
+    var gtr = function (r, len, muted) {
+      power(a, b.L, r, when, len, muted, 1, 0); power(a, b.R, r, when + 0.009, len, muted, 1, 1);
+      var o = a.createOscillator(), f = a.createBiquadFilter(), g = a.createGain();     // the bass, an octave down
+      o.type = 'sawtooth'; o.frequency.value = hz(r - 12); f.type = 'lowpass'; f.frequency.value = 700;
+      g.gain.setValueAtTime(0.11, when); g.gain.setValueAtTime(0.11, when + Math.max(0.02, len - 0.02)); g.gain.linearRampToValueAtTime(0.0001, when + len);
+      o.connect(f); f.connect(g); g.connect(out); o.start(when); o.stop(when + len + 0.02);
+    };
+    if (s === 0) gtr(root, S16 * music.ring + 0.02, false);
+    else if (push) gtr(next, S16 * 2 + 0.02, false);
+    else if (chug && !(s === 15 && music.pushed)) gtr(music.chug, S16 * 0.9, true);
+    if (s === 14) music.pushed = push;
+    // Drums.
+    var dbl = mood === 'day' && rand() < sm(0.7, 0.95, I);
+    if (s === 0 || (half && s === 10 && rand() < 0.5) || (!half && chug) || push) KIT.kick(a, out, when, 0.5);
+    else if (dbl) KIT.kick(a, out, when, 0.3);
+    var fill = bi % 4 === 3 && s >= 12 && (mood === 'win' || (mood === 'day' && I > 0.4));
+    if (fill) KIT.snare(a, out, when, 0.2 + 0.04 * (s - 12));
+    else if (half ? s === 8 : s === 4 || s === 12) KIT.snare(a, out, when, 0.3);
+    if (s === 0 && ((mood === 'day' && I > 0.35 && bi % 4 === 0) || (mood === 'win' && bi % 2 === 0) || (mood === 'lose' && bi === 0))) KIT.crash(a, out, when, mood === 'lose' ? 0.06 : 0.08);
+    else if (s % 2 === 0 && mood !== 'lose') { if (I > 0.45) KIT.ride(a, out, when, 0.035); else KIT.hat(a, out, when, 0.045); }
+    else if (mood === 'lose' && s % 4 === 0) KIT.ride(a, out, when, 0.02);
+    // The lead: on the day only near the top, on a week won, and now and then, slowly, on a week lost.
+    var leadP = mood === 'day' ? 0.5 * sm(0.65, 0.9, I) : mood === 'win' ? 0.35 : 0.14;
+    if (s % 2 === 0 && music.step >= (music.leadUntil || 0) && rand() < leadP && (mood !== 'lose' || s % 4 === 0)) {
+      var L = P.lead; music.leadAt = Math.max(0, Math.min(L.length - 1, (music.leadAt == null ? 3 : music.leadAt) + pick([-2, -1, -1, 1, 1, 2])));
+      var steps = mood === 'lose' ? 6 + Math.floor(rand() * 5) : 2 + 2 * Math.floor(rand() * 2);
+      leadNote(a, b.lead, L[music.leadAt], when, steps * S16);
+      music.leadUntil = music.step + steps;
+    }
   }
 
   /* ---------- 2. the run and the day ---------- */
@@ -575,9 +749,20 @@
     showDawn();
   }
   /* A week left half way is kept each morning and picked up from that morning. */
-  function keepRun() {
-    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, bought: G.bought, bonus: G.bonus, perDay: G.perDay.slice(0, G.day), items: G.items, trouble: G.trouble, troubleDay: G.troubleDay, troublePart: G.troublePart, slips: G.slips.slice(0, G.day), fed: G.fed, ist: G.ist,
-      usedSp: G.usedSp, seenSp: G.seenSp, offers: G.offers.map(function (x) { return x.id; }), offersDay: G.offersDay };
+  /* Kept each morning, and after close (owner 2026-11-13): when a day is
+     done, and again as the free pick, the shop and every buy change it, so
+     a week left then picks up at that night's pick or shop, with the same
+     cards on offer. Closing the game never deals new ones. */
+  function keepRun(at) {
+    var night = at === 'close', done = night ? G.day + 1 : G.day;
+    var ids = function (list) { return (list || []).map(function (x) { return x.id; }); };
+    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, bought: G.bought, bonus: G.bonus, perDay: G.perDay.slice(0, done), items: G.items, trouble: G.trouble, troubleDay: G.troubleDay, troublePart: G.troublePart, slips: G.slips.slice(0, done), fed: G.fed, ist: G.ist,
+      usedSp: G.usedSp, seenSp: G.seenSp, offers: ids(G.offers), offersDay: G.offersDay, at: night ? 'close' : 'dawn', lastTrouble: G.lastTrouble, log: (G.log || []).slice(0, done) };
+    if (night) {
+      save.run.close = { tips: T.tips, served: T.served, walk: T.walk, clean: T.clean || 0 };
+      save.run.stage = G.stage; save.run.pick = ids(G.pick); save.run.shop = ids(G.shop); save.run.sold = G.sold.slice();
+      save.run.reroll = G.reroll; save.run.sale = !!G.sale; save.run.fryer = !!G.fryer; save.run.ach = (G.tonightAch || []).slice(); save.run.achShown = G.achShown || 0;
+    }
     persist();
   }
   function resumeRun() {
@@ -590,6 +775,20 @@
     // The morning's three, as they were when the week was left (a week picked up again can't deal itself new ones).
     G.offers = (Array.isArray(r.offers) && G.offersDay === G.day ? r.offers : []).map(function (id) { return D.specials.filter(function (x) { return x.id === id; })[0]; }).filter(Boolean);
     if (G.offers.length < 3) G.offersDay = -1;
+    G.lastTrouble = r.lastTrouble || null; if (Array.isArray(r.log)) G.log = r.log.slice();
+    // Left after close: back to that night's pick or shop, as it was.
+    if (r.at === 'close' && r.close) {
+      var item = function (id) { return D.items.filter(function (x) { return x.id === id; })[0]; };
+      G.stage = r.stage === 'shop' ? 'shop' : 'pick';
+      G.pick = (r.pick || []).map(item).filter(Boolean); G.shop = (r.shop || []).map(item).filter(Boolean);
+      G.sold = Array.isArray(r.sold) ? r.sold.slice() : []; G.reroll = r.reroll || D.reroll.first; G.sale = !!r.sale; G.fryer = !!r.fryer;
+      G.tonightAch = Array.isArray(r.ach) ? r.ach.slice() : []; G.achShown = r.achShown || 0;
+      if (G.stage === 'pick' && !G.pick.length) G.pick = deal(3, [], false);
+      if (G.stage === 'shop' && !G.shop.length) G.shop = deal(3, [], true);
+      T = { tips: r.close.tips || 0, served: r.close.served || 0, walk: r.close.walk || 0, clean: r.close.clean || 0, resumed: true };
+      drawClose();
+      return;
+    }
     showDawn();
   }
 
@@ -1487,7 +1686,7 @@
       G.offers.forEach(function (x) { if (G.seenSp.indexOf(x.id) === -1) G.seenSp.push(x.id); });
       G.offersDay = G.day;
     }
-    keepRun();
+    keepRun('dawn');
     paper('dawn',
       '<div class="ou-top ou-top--dawn ou-top--back"><button class="ou-topback" data-act="home">Back</button><span class="ou-kicker">Today’s special</span><h2 class="ou-h">' + day.name + ', 6am</h2><span class="ou-label">Pick the plate for lunch</span></div>' +
       '<div class="ou-body-pad">' + troubleCard() + G.offers.map(function (s, i) {
@@ -1639,6 +1838,7 @@
       '<span class="ou-label">' + plural(T.served, 'plate', 'plates') + ' · ' + plural(T.walk, 'walk-out', 'walk-outs') + '</span>' +
       '<div class="ou-wallet"><span class="ou-label">To spend</span><b>' + money(G.tips) + '</b></div></div>' +
       '<div class="ou-body-pad">' + body + ownedRow() + after + '</div>' + foot);
+    keepRun('close');      // every change after close is kept at once
   }
   /* Tips in the game are points (owner 2026-11-12): said on How to play and
      under every finished week, so nobody reads them as the café's money. */
@@ -2085,7 +2285,10 @@
       '<button class="ou-topback" data-act="back">Back</button></div>' +
       '<div class="ou-body-pad">' +
       vol('sfx', 'Sound', save.sfxVol, 'The sizzle, the bell, the tickets.') +
-      vol('music', 'Music', save.musicVol, 'Slow jazz, made as it plays. It picks up when the kitchen does.') +
+      vol('music', 'Music', save.musicVol, 'Made as it plays, never the same twice. It picks up when the kitchen does.') +
+      // Which music (owner 2026-11-13): the jazz, or heavy metal.
+      '<div class="ou-set ou-set--vol" role="group" aria-label="Music style"><span><b>Music style</b></span><span class="ou-seg">' +
+        Object.keys(STYLES).map(function (id) { return '<button data-act="style" data-v="' + id + '" aria-pressed="' + (id === save.musicStyle) + '">' + STYLES[id].name + '</button>'; }).join('') + '</span></div>' +
       (STATS.url ? row('stats', 'Send how my weeks go', !save.noStats, 'No name: the level, the days and the tips, so The Café can see if it’s too hard.') : '') +
       '<div class="ou-setbox"><span class="ou-label">On your home screen</span>' + installHtml() + '</div>' +
       '<div class="ou-setbox"><span class="ou-label">Save code</span>' +
@@ -2188,7 +2391,7 @@
     }).join('');
     $('#ou-level-text').textContent = lv.text;
     var go = $('#ou-go');
-    go.textContent = run ? 'Continue: ' + D.days[run.day].name : 'Start the week';
+    go.textContent = run ? 'Continue: ' + (run.at === 'close' ? D.days[run.day].short + ' night' : D.days[run.day].name) : 'Start the week';
     go.setAttribute('data-act', run ? 'continue' : 'start');
     $('#ou-fresh').hidden = !run;
     $('#ou-confirm').hidden = true;
@@ -2219,6 +2422,7 @@
       case 'level': if (D.levels[el.getAttribute('data-level')]) { save.level = el.getAttribute('data-level'); persist(); drawTitle(); sfx.tap(); } break;
       // Pause's two buttons step through Off, Low, Medium, High; Settings picks one.
       case 'music': save.musicVol = (save.musicVol + 1) % 4; persist(); setVolumes(); drawTitle(); break;
+      case 'style': if (STYLES[el.getAttribute('data-v')]) { save.musicStyle = el.getAttribute('data-v'); music.wantStyle = save.musicStyle; persist(); drawSettings(); sfx.tap(); } break;
       case 'vol':
         var vk = el.getAttribute('data-kind') === 'music' ? 'musicVol' : 'sfxVol';
         save[vk] = Math.max(0, Math.min(3, parseInt(el.getAttribute('data-v'), 10) || 0)); persist(); setVolumes(); drawTitle(); drawSettings();
@@ -2480,7 +2684,8 @@
           '<h3>Music</h3>' +
           '<div class="ou-row"><button class="ou-btn" data-lab="play">Play</button><button class="ou-btn ou-btn--quiet" data-lab="stop">Stop</button></div>' +
           '<div class="ou-setbox"><span class="ou-label">Music volume</span>' + seg('mvol', vols, save.musicVol) + '</div>' +
-          '<div class="ou-setbox"><span class="ou-label">Tune</span>' + seg('mood', [['day', 'The day'], ['win', 'Week won'], ['lose', 'Week lost']], music.want) +
+          '<div class="ou-setbox"><span class="ou-label">Style</span>' + seg('style', Object.keys(STYLES).map(function (id) { return [id, STYLES[id].name]; }), save.musicStyle) +
+          '<span class="ou-label">Tune</span>' + seg('mood', [['day', 'The day'], ['win', 'Week won'], ['lose', 'Week lost']], music.want) +
           '<span class="ou-label">Level</span>' + seg('level', Object.keys(D.levels).map(function (id) { return [id, D.levels[id].name]; }), lab.level) +
           '<p class="ou-fine" id="ou-lab-cap">' + capText() + '</p>' +
           '<span class="ou-label">How close the shift is to going wrong</span>' +
@@ -2489,10 +2694,8 @@
           '<div class="ou-lab-read" id="ou-lab-read" aria-live="off"></div>' +
           '<button class="ou-btn ou-btn--quiet" data-lab="lights" style="width:100%">Lights out (3.5 seconds)</button>' +
           '<p class="ou-fine">In the game, the shift sets the slider by itself: coffees lost, how near the next walk-out is, how full the rail is, and lunch. Friday it’s the catering clock.</p></div>' +
-          '<h3>Other instruments</h3><p class="ou-fine">Not in the game: what the same tricks can sound like, with no recordings. On the music volume.</p>' +
+          '<h3>Other instruments</h3><p class="ou-fine">Not in the game: what the same tricks can sound like, with no recordings. The guitars and drums are the metal style’s. On the music volume.</p>' +
           INSTS.map(function (x) { return '<div class="ou-lab-sfx"><span><b>' + esc(x[1]) + '</b><small>' + esc(x[2]) + '</small></span><button class="ou-btn ou-btn--quiet" data-lab="inst" data-v="' + x[0] + '">Play</button></div>'; }).join('') +
-          '<div class="ou-setbox"><span class="ou-label">Heavy metal demo</span><p class="ou-fine">Two distorted guitars, left and right, a bass, drums with a double kick, and a lead guitar in bars 5 to 8. E minor, 160 beats a minute, eight bars round and round. The jazz stops while it plays.</p>' +
-          '<div class="ou-row"><button class="ou-btn" data-lab="metal">Play</button><button class="ou-btn ou-btn--quiet" data-lab="metalstop">Stop</button></div></div>' +
           '<h3>Sound effects</h3>' +
           '<div class="ou-setbox"><span class="ou-label">Sound volume</span>' + seg('svol', vols, save.sfxVol) + '</div>' +
           LAB_SFX.map(function (x) {
@@ -2512,65 +2715,23 @@
       };
       var labRead = function () {
         var el = stage.querySelector('#ou-lab-read'); if (!el) return;
-        var on = LAYERS.filter(function (x) { return music.I >= x[1]; }).map(function (x) { return x[0]; });
+        var on = STYLES[music.style].layers.filter(function (x) { return music.I >= x[1]; }).map(function (x) { return x[0]; });
         el.innerHTML = '<b>' + (music.on ? 'Playing' : 'Stopped') + '</b> · ' + ({ day: 'the day', win: 'week won', lose: 'week lost' }[music.mood]) +
           (music.want !== music.mood ? ' (changing at the next half bar)' : '') + '<br>Intensity ' + Math.round(music.I * 100) + '% (aiming at ' + Math.round((music.force || 0) * 100) + '%) · ' +
-          Math.round(music.bpm) + ' beats a minute<br>' + (music.mood === 'day' ? 'Layers in: ' + (on.length ? on.join(', ') : 'none, the calm tune') : 'Intensity only shapes the day’s tune') +
+          Math.round(music.bpm) + ' beats a minute<br>' + STYLES[music.style].name + (music.wantStyle !== music.style ? ' (changing to ' + STYLES[music.wantStyle].name + ' at the next half bar)' : '') + '<br>' + (music.mood === 'day' ? 'Layers in: ' + (on.length ? on.join(', ') : 'none, the calm tune') : 'Intensity only shapes the day’s tune') +
           (music.dark ? '<br><b>Lights out: music cut</b>' : '');
         var r = stage.querySelector('#ou-lab-raw'); if (r && document.activeElement !== r) r.value = Math.round(lab.raw * 100);
       };
-      /* ---- other instruments, and a heavy metal demo (owner 2026-11-13) ----
-         Not in the game: what the same tools can be made to sound like.
-         Plucked strings are Karplus-Strong: a burst of noise going round a
-         short loop that loses a little each time (the loop's length is the
-         note). A distorted guitar is that pluck through a wave-shaper (the
-         amp) and a speaker cabinet's filters, two of them, left and right.
-         The rest are oscillators and filters. All on the music volume. */
-      var inst = { out: null, cache: {}, metal: null };
+      /* ---- other instruments (owner 2026-11-13) ----
+         Not in the game: what the same tools can be made to sound like,
+         using the guitars and drums of the metal style. On the music volume. */
+      var inst = { out: null };
       var instOut = function () {
         var a = ctx(); if (!a) return null;
         if (!save.musicVol) { save.musicVol = 2; persist(); mark('mvol', 2); }
         if (!inst.out) { inst.out = a.createGain(); inst.out.connect(bus.lim); }
         inst.out.gain.setTargetAtTime(MUSIC_VOL[save.musicVol] * 1.6, a.currentTime, 0.05);
         return inst.out;
-      };
-      var ksBuf = function (a, midi, v, decay, dur) {
-        var key = midi + ':' + v + ':' + decay + ':' + dur;
-        if (inst.cache[key]) return inst.cache[key];
-        var sr = a.sampleRate, n = Math.floor(sr * dur), buf = a.createBuffer(1, n, sr), d = buf.getChannelData(0);
-        var N = Math.max(2, Math.round(sr / hz(midi))), line = new Float32Array(N), i, at = 0, nx;
-        for (i = 0; i < N; i++) line[i] = rand() * 2 - 1;
-        for (i = 0; i < n; i++) { nx = at + 1 === N ? 0 : at + 1; d[i] = line[at]; line[at] = decay * 0.5 * (line[at] + line[nx]); at = nx; }
-        return (inst.cache[key] = buf);
-      };
-      var curve = function (k) { var n = 2048, c = new Float32Array(n); for (var i = 0; i < n; i++) { var x = i * 2 / n - 1; c[i] = (1 + k) * x / (1 + k * Math.abs(x)); } return c; };
-      /* An amp: a little low cut, the distortion, the mids scooped, a cabinet's top end rolled off. */
-      var amp = function (a, out, pan, drive, level) {
-        var pre = a.createGain(), hp = a.createBiquadFilter(), sh = a.createWaveShaper(), mid = a.createBiquadFilter(), lp = a.createBiquadFilter(), post = a.createGain();
-        pre.gain.value = drive; hp.type = 'highpass'; hp.frequency.value = 110;
-        sh.curve = curve(60); sh.oversample = '4x';
-        mid.type = 'peaking'; mid.frequency.value = 700; mid.Q.value = 0.8; mid.gain.value = -6;
-        lp.type = 'lowpass'; lp.frequency.value = 4600; lp.Q.value = 0.9;
-        post.gain.value = level;
-        pre.connect(hp); hp.connect(sh); sh.connect(mid); mid.connect(lp); lp.connect(post);
-        if (a.createStereoPanner) { var p = a.createStereoPanner(); p.pan.value = pan; post.connect(p); p.connect(out); } else post.connect(out);
-        return pre;
-      };
-      var pluck = function (a, into, midi, t, len, muted, vol, v) {
-        var src = a.createBufferSource(), g = a.createGain(), f = a.createBiquadFilter();
-        src.buffer = ksBuf(a, midi, v || 0, muted ? 0.99 : 0.997, muted ? 0.4 : 2.5);
-        f.type = 'lowpass'; f.frequency.value = muted ? 650 : 7000;
-        g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + Math.max(0.02, len - 0.04)); g.gain.linearRampToValueAtTime(0.0001, t + len);
-        src.connect(f); f.connect(g); g.connect(into); src.start(t); src.stop(t + len + 0.05);
-      };
-      var power = function (a, into, root, t, len, muted, vol, v) {      // a power chord: root, fifth, octave
-        (muted ? [root, root + 7] : [root, root + 7, root + 12]).forEach(function (m, i) { pluck(a, into, m, t + i * 0.005, len, muted, vol, v); });
-      };
-      var hit = function (a, out, t, len, type, f, v, q) {
-        var s = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain();
-        s.buffer = noiseBuf; s.loop = true; fl.type = type; fl.frequency.value = f; if (q) fl.Q.value = q;
-        g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-        s.connect(fl); fl.connect(g); g.connect(out); s.start(t, rand() * 0.5, len + 0.02);
       };
       var osc = function (a, out, type, midi, t, len, vol, atk, rel, detune) {
         var o = a.createOscillator(), g = a.createGain();
@@ -2579,25 +2740,6 @@
         g.gain.setValueAtTime(vol, t + Math.max(atk || 0.01, len - (rel || 0.05))); g.gain.linearRampToValueAtTime(0.0001, t + len);
         o.connect(g); g.connect(out); o.start(t); o.stop(t + len + 0.05);
         return o;
-      };
-      var KIT = {
-        kick: function (a, out, t, v) {
-          var o = a.createOscillator(), g = a.createGain();
-          o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.07);
-          g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
-          o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.22);
-          hit(a, out, t, 0.012, 'highpass', 3500, v * 0.6);      // the beater's click
-        },
-        snare: function (a, out, t, v) {
-          var o = a.createOscillator(), g = a.createGain();
-          o.frequency.setValueAtTime(210, t); o.frequency.exponentialRampToValueAtTime(170, t + 0.1);
-          g.gain.setValueAtTime(v * 0.55, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
-          o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.14);
-          hit(a, out, t, 0.24, 'bandpass', 2300, v, 0.5);
-        },
-        hat: function (a, out, t, v) { hit(a, out, t, 0.05, 'highpass', 8000, v); },
-        ride: function (a, out, t, v) { hit(a, out, t, 0.3, 'bandpass', 6500, v, 1.5); },
-        crash: function (a, out, t, v) { hit(a, out, t, 1.8, 'highpass', 4200, v); }
       };
       /* The instruments, one short phrase each. */
       var INSTS = [
@@ -2655,82 +2797,11 @@
             var o = osc(a, out, 'sine', n[0], at, n[1], 0.1, 0.07, 0.08), o2 = osc(a, out, 'sine', n[0] + 12, at, n[1], 0.015, 0.07, 0.08);
             var lfo = a.createOscillator(), lg = a.createGain(); lfo.frequency.value = 5; lg.gain.setValueAtTime(0, at); lg.gain.linearRampToValueAtTime(14, at + Math.min(0.3, n[1]));
             lfo.connect(lg); lg.connect(o.detune); lg.connect(o2.detune); lfo.start(at); lfo.stop(at + n[1] + 0.05);
-            hit(a, out, at, n[1], 'bandpass', hz(n[0]) * 2, 0.02, 2);
+            noiseHit(a, out, at, n[1], 'bandpass', hz(n[0]) * 2, 0.02, 2);
             at += n[1];
           });
         }]
       ];
-      /* ---- the heavy metal demo: E minor, 160 beats a minute, eight bars ----
-         Bars 1-4: a gallop on a palm-muted low E with power chords answering;
-         bars 5-8: chords over a pedal E, double kick, and a lead guitar on
-         top. Two rhythm guitars, left and right, a bass under them. */
-      var BPM_M = 160, METAL = (function () {
-        var gal = [0, 2, 3, 4, 6, 7, 8, 10, 11], b = [];
-        var chug = function (list, steps) { steps.forEach(function (st) { list.push([st, 'm', 40, 1]); }); return list; };
-        b[0] = chug([], gal).concat([[12, 'c', 43, 2], [14, 'c', 45, 2]]);
-        b[1] = chug([], gal).concat([[12, 'c', 46, 2], [14, 'c', 45, 2]]);
-        b[2] = b[0];
-        b[3] = chug([[0, 'c', 40, 4], [4, 'c', 50, 2], [6, 'c', 40, 2]], [8, 9, 10, 11, 12, 13, 14, 15]);
-        b[4] = chug([[0, 'c', 40, 4], [8, 'c', 48, 4]], [4, 5, 6, 7, 12, 13, 14, 15]);
-        b[5] = chug([[0, 'c', 50, 4], [8, 'c', 45, 4]], [4, 5, 6, 7, 12, 13, 14, 15]);
-        b[6] = b[4];
-        b[7] = [[0, 'c', 50, 4], [4, 'c', 50, 4], [8, 'c', 47, 8]];
-        return b;
-      })();
-      var LEAD = {
-        4: [[0, 71, 4], [4, 74, 2], [6, 76, 2], [8, 79, 4], [12, 78, 2], [14, 76, 2]],
-        5: [[0, 74, 4], [4, 76, 2], [6, 78, 2], [8, 81, 6], [14, 79, 2]],
-        6: [[0, 79, 2], [2, 78, 2], [4, 76, 2], [6, 74, 2], [8, 76, 4], [12, 67, 4]],
-        7: [[0, 72, 4], [4, 74, 4], [8, 71, 8]]
-      };
-      var leadAmp = function (a, out) {
-        var pre = a.createGain(), sh = a.createWaveShaper(), lp = a.createBiquadFilter(), post = a.createGain(), dl = a.createDelay(1), fb = a.createGain(), wet = a.createGain();
-        pre.gain.value = 3; sh.curve = curve(30); sh.oversample = '4x'; lp.type = 'lowpass'; lp.frequency.value = 3800; post.gain.value = 0.07;
-        dl.delayTime.value = 60 / BPM_M * 0.75; fb.gain.value = 0.3; wet.gain.value = 0.3;
-        pre.connect(sh); sh.connect(lp); lp.connect(post); post.connect(out); post.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(out);
-        return pre;
-      };
-      var leadNote = function (a, into, midi, t, len) {
-        var g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain();
-        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.5, t + 0.012); g.gain.setValueAtTime(0.5, t + len - 0.03); g.gain.linearRampToValueAtTime(0.0001, t + len);
-        lfo.frequency.value = 5.8; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(len > 0.4 ? 24 : 6, t + Math.min(0.45, len));
-        lfo.connect(lg); lfo.start(t); lfo.stop(t + len + 0.05); g.connect(into);
-        [-7, 7].forEach(function (d) {
-          var o = a.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz(midi);
-          o.detune.setValueAtTime(d - 70, t); o.detune.linearRampToValueAtTime(d, t + 0.05);      // a little bend up into the note
-          lg.connect(o.detune); o.connect(g); o.start(t); o.stop(t + len + 0.05);
-        });
-      };
-      var metalStep = function (a, m, step, t, S) {
-        var bar = Math.floor(step / 16) % 8, s = step % 16, A = bar < 4, ev = METAL[bar].filter(function (e) { return e[0] === s; });
-        ev.forEach(function (e) {
-          var len = e[3] * S, muted = e[1] === 'm';
-          power(a, m.L, e[2], t, muted ? S * 0.9 : len + 0.02, muted, 1, 0); power(a, m.R, e[2], t + 0.009, muted ? S * 0.9 : len + 0.02, muted, 1, 1);
-          var b = a.createOscillator(), bf = a.createBiquadFilter(), bg = a.createGain(), bl = muted ? S * 0.9 : len;
-          b.type = 'sawtooth'; b.frequency.value = hz(e[2] - 12); bf.type = 'lowpass'; bf.frequency.value = 700;
-          bg.gain.setValueAtTime(0.11, t); bg.gain.setValueAtTime(0.11, t + bl - 0.02); bg.gain.linearRampToValueAtTime(0.0001, t + bl);
-          b.connect(bf); bf.connect(bg); bg.connect(m.out); b.start(t); b.stop(t + bl + 0.02);
-        });
-        if (A ? ev.length : true) KIT.kick(a, m.out, t, A ? 0.5 : 0.36);
-        if (s === 4 || s === 12 || (bar === 7 && s >= 12)) KIT.snare(a, m.out, t, bar === 7 && s >= 12 ? 0.22 + 0.04 * (s - 12) : 0.3);
-        if (s === 0 && (bar === 0 || !A)) KIT.crash(a, m.out, t, bar === 0 || bar === 4 ? 0.09 : 0.05);
-        else if (s % 2 === 0) { if (A) KIT.hat(a, m.out, t, 0.05); else KIT.ride(a, m.out, t, 0.035); }
-        (LEAD[bar] || []).forEach(function (n) { if (n[0] === s) leadNote(a, m.lead, n[1], t, n[2] * S); });
-      };
-      var stopMetal = function () {
-        var m = inst.metal; if (!m) return; inst.metal = null; clearInterval(m.timer);
-        m.out.gain.setTargetAtTime(0, ac.currentTime, 0.08);
-        setTimeout(function () { try { m.out.disconnect(); } catch (e) { /* no matter */ } }, 1200);
-      };
-      var startMetal = function () {
-        var a = ctx(); if (!a) return;
-        stopMetal(); music.hold = true; musicSync();      // the jazz steps aside
-        if (!save.musicVol) { save.musicVol = 2; persist(); mark('mvol', 2); }
-        var out = a.createGain(); out.gain.value = MUSIC_VOL[save.musicVol] * 0.5; out.connect(bus.lim);      // measured: about twice the jazz, which is quieter than it sounds
-        var m = inst.metal = { out: out, L: amp(a, out, -0.7, 6, 0.1), R: amp(a, out, 0.7, 6, 0.1), lead: leadAmp(a, out), step: 0, next: a.currentTime + 0.1, timer: 0 };
-        var S = 60 / BPM_M / 4;
-        m.timer = setInterval(function () { while (m.next < a.currentTime + 0.3) { metalStep(a, m, m.step, m.next, S); m.next += S; m.step++; } }, 50);
-      };
       var section = document.createElement('section');
       section.className = 'ou-scr ou-paper'; section.setAttribute('data-scr', 'lab'); section.hidden = true;
       stage.appendChild(section);
@@ -2739,8 +2810,8 @@
         var what = b.getAttribute('data-lab'), v = b.getAttribute('data-v');
         // A sound needs a tap to start, and a volume above Off: the test page
         // turns an Off up to Medium rather than play nothing.
-        if (what === 'play') { stopMetal(); music.hold = false; if (!save.musicVol) { save.musicVol = 2; persist(); mark('mvol', 2); } ctx(); setVolumes(); musicSync(); }
-        else if (what === 'stop') { stopMetal(); music.hold = true; musicSync(); }
+        if (what === 'play') { music.hold = false; if (!save.musicVol) { save.musicVol = 2; persist(); mark('mvol', 2); } ctx(); setVolumes(); musicSync(); }
+        else if (what === 'stop') { music.hold = true; musicSync(); }
         else if (what === 'mvol') { save.musicVol = +v; persist(); ctx(); setVolumes(); musicSync(); mark(what, v); }
         else if (what === 'svol') { save.sfxVol = +v; persist(); ctx(); setVolumes(); mark(what, v); sfx.done(); }
         else if (what === 'mood') { setMood(v); mark(what, v); }
@@ -2763,9 +2834,8 @@
           var io = instOut(), lv = { clean: 0.4, dist: 0.55, bass: 0.2, organ: 1, brass: 0.85, strings: 1.2, marimba: 0.75, bells: 0.8, flute: 0.6 }[v] || 1;
           if (io) { var ig = ac.createGain(); ig.gain.value = lv; ig.connect(io); setTimeout(function () { ig.disconnect(); }, 6000); INSTS.forEach(function (x) { if (x[0] === v) x[3](ac, ig, ac.currentTime + 0.05); }); }
         }
-        else if (what === 'metal') startMetal();
-        else if (what === 'metalstop') stopMetal();
-        else if (what === 'back') { stopMetal(); clearInterval(lab.sweep); music.force = null; music.testDark = false; music.hold = false; setMood('day'); show('title'); drawTitle(); musicSync(); }
+        else if (what === 'style') { save.musicStyle = v; persist(); music.wantStyle = v; mark(what, v); }
+        else if (what === 'back') { clearInterval(lab.sweep); music.force = null; music.testDark = false; music.hold = false; setMood('day'); show('title'); drawTitle(); musicSync(); }
       });
       stage.addEventListener('input', function (e) {
         if (e.target.id !== 'ou-lab-raw') return;
