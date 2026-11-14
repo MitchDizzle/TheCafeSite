@@ -1541,42 +1541,49 @@
   }
   function iconsFor(list) { list.forEach(function (p) { lineItems(p).forEach(function (it) { iconImg(it.icon); }); }); }
   var TILE = { normal: ['#F1F3F4', '#1F4552'], rare: ['#D9E6F6', '#1F4552'], epic: ['#E6D9F4', '#1F4552'], legendary: [null, '#7A5A0E'] };
+  /* One post-sized picture (owner 2026-11-13: it has to fit whole, 4:5 as a
+     feed shows it): the days, the money merged into as few lines as still
+     add up to what was kept, and the items on the line. Rows and tiles shrink
+     to fit; nothing runs off the bottom. */
   function weekPicture(p, withIcons) {
     var rows = [];
     p.t.forEach(function (tips, i) {
       var r = cutShort(p, i) ? null : rankOf(p.s[i]);
       rows.push({ day: D.days[i].short, words: r ? rankWords(p.s[i]) : stopWords(p), tips: money(tips), rar: r ? r.rarity : 'bad', caps: true });
     });
-    if (p.f !== '') rows.push({ day: 'Fri', words: 'Catering' + (p.w === 'win' ? ', on time' : p.w === 'late' ? ', late' : ', not finished'), tips: money(p.f), rar: p.w === 'win' ? '' : 'bad' });
-    if (p.e) rows.push({ day: '', words: 'The week finished', tips: '+' + money(p.e) });
-    if (p.b) rows.push({ day: '', words: 'Performance bonus', tips: '+' + money(p.b) });
-    if (p.x) rows.push({ day: '', words: 'Free items turned down', tips: '+' + money(p.x) });
-    if (p.sp) rows.push({ day: '', words: 'Spent on items', tips: '−' + money(p.sp) });
-    rows.push({ day: 'Kept', words: 'your score', tips: money(p.k), total: true });
-    var W = 1080, top = 330, RH = 118, x0 = 60, x1 = W - 60, tableH = rows.length * RH;
-    // The items on the line, a tile each, eight to a row, under the table.
-    var items = withIcons ? lineItems(p) : [], TS = 104, TG = 18, PER = 8, lineH = items.length ? 70 + Math.ceil(items.length / PER) * (TS + TG) : 0;
-    var H = top + 50 + tableH + lineH + 190;
+    // The catering, finishing, the performance bonus and free items turned down, as one line.
+    var extra = (p.f === '' ? 0 : p.f) + (p.e || 0) + (p.b || 0) + (p.x || 0);
+    if (p.f !== '') rows.push({ day: 'Fri', words: p.w === 'win' ? 'Catering + bonuses' : p.w === 'late' ? 'Catering, late' : 'Catering, not finished', tips: '+' + money(extra), rar: p.w === 'win' ? '' : 'bad' });
+    else if (extra) rows.push({ day: '', words: 'Bonuses', tips: '+' + money(extra) });
+    // What was spent goes into the Kept line.
+    rows.push({ day: 'Kept', words: p.sp ? 'after ' + money(p.sp) + ' on items' : 'your score', tips: money(p.k), total: true });
+
+    var W = 1080, H = 1350, x0 = 60, x1 = W - 60, top = 250;
+    var items = withIcons ? lineItems(p) : [], PER = 10, TG = 10;
+    var TS = Math.floor((x1 - x0 - (PER - 1) * TG) / PER), tileRows = Math.ceil(items.length / PER);
+    if (tileRows > 2) { PER = Math.ceil(items.length / 2); TS = Math.floor((x1 - x0 - (PER - 1) * TG) / PER); tileRows = 2; }
+    var lineH = items.length ? 52 + tileRows * (TS + TG) : 0, foot = 130;
+    var ty = top + 40, room = H - ty - (items.length ? 34 : 0) - lineH - foot - 10;
+    var RH = Math.min(118, Math.floor(room / rows.length)), k = RH / 118, tableH = rows.length * RH;
+
     var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     var c = cv.getContext('2d'), serif = '"Playfair Display", Georgia, serif', sans = 'Lato, "Helvetica Neue", Arial, sans-serif';
-    var spaced = function (txt, x, y, gap, align) {      // letter-spaced capitals, as the game's labels are
-      var w = 0, k; for (k = 0; k < txt.length; k++) w += c.measureText(txt[k]).width + gap;
-      var at = align === 'center' ? x - (w - gap) / 2 : align === 'right' ? x - (w - gap) : x;
-      c.textAlign = 'left'; for (k = 0; k < txt.length; k++) { c.fillText(txt[k], at, y); at += c.measureText(txt[k]).width + gap; }
+    var spaced = function (txt, x, y, gap) {      // letter-spaced capitals, as the game's labels are
+      c.textAlign = 'left'; for (var j = 0; j < txt.length; j++) { c.fillText(txt[j], x, y); x += c.measureText(txt[j]).width + gap; }
     };
     var round = function (x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
+    var px = function (n) { return Math.round(n * k) + 'px '; };
     c.fillStyle = INK.cream; c.fillRect(0, 0, W, H);
     // The band on top, as on the end screen.
     var g = c.createLinearGradient(0, 0, W, top); g.addColorStop(0, INK.tealDark); g.addColorStop(.55, INK.teal); g.addColorStop(1, '#3C7183');
-    c.fillStyle = g; c.fillRect(0, 0, W, top); c.fillStyle = INK.red; c.fillRect(0, top - 14, W, 14);
+    c.fillStyle = g; c.fillRect(0, 0, W, top); c.fillStyle = INK.red; c.fillRect(0, top - 12, W, 12);
     var head = weekHead(p), when = new Date(p.a).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-    c.textBaseline = 'alphabetic'; c.fillStyle = INK.cream;
-    c.font = 'italic 400 54px ' + serif; c.textAlign = 'left'; c.fillText(head[0], x0, 104);
-    c.font = '700 92px ' + serif; c.fillText(head[1], x0, 200);
-    c.fillStyle = INK.mint; c.font = '700 30px ' + sans; spaced(((D.levels[p.l] ? D.levels[p.l].name + ' week · ' : '') + when).toUpperCase(), x0, 262, 4);
+    c.textBaseline = 'alphabetic'; c.fillStyle = INK.cream; c.textAlign = 'left';
+    c.font = 'italic 400 46px ' + serif; c.fillText(head[0], x0, 82);
+    c.font = '700 80px ' + serif; c.fillText(head[1], x0, 162);
+    c.fillStyle = INK.mint; c.font = '700 28px ' + sans; spaced(((D.levels[p.l] ? D.levels[p.l].name + ' week · ' : '') + when).toUpperCase(), x0, 212, 4);
     // The table.
-    var ty = top + 50;
-    c.save(); round(x0, ty, x1 - x0, tableH, 30); c.clip();
+    c.save(); round(x0, ty, x1 - x0, tableH, 28); c.clip();
     c.fillStyle = '#fff'; c.fillRect(x0, ty, x1 - x0, tableH);
     rows.forEach(function (r, i) {
       var y = ty + i * RH, ink = ROWINK[r.rar];
@@ -1587,35 +1594,36 @@
         c.fillRect(x0, y, x1 - x0, RH); c.fillStyle = ink.bar; c.fillRect(x0, y, 16, RH);
       }
       if (i) { c.fillStyle = INK.line; c.fillRect(x0, y, x1 - x0, 3); }
-      var base = y + RH / 2 + 18;
-      c.fillStyle = ink || r.total ? INK.dark : INK.red; c.font = '700 56px ' + serif; c.textAlign = 'left'; c.fillText(r.day, x0 + 44, base);
-      if (r.caps) { c.fillStyle = ink ? ink.ink : INK.grey; c.font = '700 30px ' + sans; spaced(r.words.toUpperCase(), x0 + 230, base - 4, 4); }
-      else { c.fillStyle = INK.dark; c.font = '400 36px ' + sans; c.fillText(r.words, x0 + 230, base - 2); }
-      c.fillStyle = INK.dark; c.font = '900 ' + (r.total ? 60 : 50) + 'px ' + sans; c.textAlign = 'right'; c.fillText(r.tips, x1 - 36, base);
+      var base = y + RH / 2 + 18 * k;
+      c.fillStyle = ink || r.total ? INK.dark : INK.red; c.font = '700 ' + px(56) + serif; c.textAlign = 'left'; c.fillText(r.day, x0 + 44, base);
+      if (r.caps) { c.fillStyle = ink ? ink.ink : INK.grey; c.font = '700 ' + px(30) + sans; spaced(r.words.toUpperCase(), x0 + 230, base - 4 * k, 4 * k); }
+      else { c.fillStyle = INK.dark; c.font = '400 ' + px(36) + sans; c.textAlign = 'left'; c.fillText(r.words, x0 + 230, base - 2 * k); }
+      c.fillStyle = INK.dark; c.font = '900 ' + px(r.total ? 60 : 50) + sans; c.textAlign = 'right'; c.fillText(r.tips, x1 - 36, base);
     });
     c.restore();
-    c.strokeStyle = INK.tealDark; c.lineWidth = 6; round(x0, ty, x1 - x0, tableH, 30); c.stroke();
+    c.strokeStyle = INK.tealDark; c.lineWidth = 6; round(x0, ty, x1 - x0, tableH, 28); c.stroke();
+    // The items on the line, a tile each in its rarity colour.
     if (items.length) {
-      var ly = ty + tableH + 64;
-      c.fillStyle = INK.grey; c.font = '700 28px ' + sans; spaced('ON THE LINE', x0, ly, 5);
-      items.forEach(function (it, k) {
-        var col = k % PER, row = Math.floor(k / PER), tx = x0 + col * (TS + TG), tyy = ly + 26 + row * (TS + TG), tile = TILE[it.rarity] || TILE.normal;
-        round(tx, tyy, TS, TS, 20);
+      var ly = ty + tableH + 34 + 34;
+      c.fillStyle = INK.grey; c.font = '700 26px ' + sans; spaced('ON THE LINE', x0, ly, 5);
+      items.forEach(function (it, n) {
+        var col = n % PER, row = Math.floor(n / PER), tx = x0 + col * (TS + TG), tyy = ly + 18 + row * (TS + TG), tile = TILE[it.rarity] || TILE.normal;
+        round(tx, tyy, TS, TS, Math.round(TS / 5));
         if (tile[0]) c.fillStyle = tile[0]; else { var tg = c.createLinearGradient(tx, tyy, tx + TS, tyy + TS); tg.addColorStop(0, '#FFF3C4'); tg.addColorStop(1, '#F4C542'); c.fillStyle = tg; }
         c.fill(); c.strokeStyle = tile[1]; c.lineWidth = 4; c.stroke();
-        var img = iconImg(it.icon);
-        if (img && img.complete && img.naturalWidth) c.drawImage(img, tx + 10, tyy + 10, TS - 20, TS - 20);
-        var n = p.i[it.id];
-        if (n > 1) {
-          c.fillStyle = INK.tealDark; c.beginPath(); c.arc(tx + TS - 6, tyy + TS - 6, 21, 0, Math.PI * 2); c.fill();
-          c.fillStyle = INK.cream; c.font = '900 26px ' + sans; c.textAlign = 'center'; c.fillText(String(n), tx + TS - 6, tyy + TS + 3); c.textAlign = 'left';
+        var img = iconImg(it.icon), pad = Math.round(TS * 0.1);
+        if (img && img.complete && img.naturalWidth) c.drawImage(img, tx + pad, tyy + pad, TS - 2 * pad, TS - 2 * pad);
+        var many = p.i[it.id];
+        if (many > 1) {
+          var br = Math.round(TS * 0.2);
+          c.fillStyle = INK.tealDark; c.beginPath(); c.arc(tx + TS - 4, tyy + TS - 4, br, 0, Math.PI * 2); c.fill();
+          c.fillStyle = INK.cream; c.font = '900 ' + Math.round(br * 1.2) + 'px ' + sans; c.textAlign = 'center'; c.fillText(String(many), tx + TS - 4, tyy + TS - 4 + br * 0.42); c.textAlign = 'left';
         }
       });
     }
-    // Whose game it is (game/README.md: name the café, with the town).
-    var fy = ty + tableH + lineH;
-    c.textAlign = 'center'; c.fillStyle = INK.tealDark; c.font = '700 58px ' + serif; c.fillText('Order Up', W / 2, fy + 100);
-    c.fillStyle = INK.grey; c.font = '400 32px ' + sans; c.fillText('A little game on The Café’s website · Leavenworth, KS', W / 2, fy + 150);
+    // Whose game it is (game/README.md: name the café, with the town), at the foot.
+    c.textAlign = 'center'; c.fillStyle = INK.tealDark; c.font = '700 54px ' + serif; c.fillText('Order Up', W / 2, H - 76);
+    c.fillStyle = INK.grey; c.font = '400 30px ' + sans; c.fillText('A little game on The Café’s website · Leavenworth, KS', W / 2, H - 30);
     return cv;
   }
   /* A canvas as a PNG file, made on the spot (toBlob would wait). */
