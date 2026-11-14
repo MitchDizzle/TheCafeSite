@@ -570,13 +570,14 @@
   function level() { return D.levels[(G && G.level) || save.level] || D.levels.normal; }
 
   function newRun() {
-    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, bought: 0, bonus: 0, perf: 0, friClean: 0, sale: false, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false, trouble: null, troubleDay: -1, lastTrouble: null, troublePart: '', slips: [], fed: 0, newAch: [], ist: {} };
+    G = { level: save.level, run: rid(), began: Date.now(), played: 0, away: 0, day: 0, tips: 0, earned: 0, bought: 0, bonus: 0, perf: 0, friClean: 0, sale: false, perDay: [], cater: null, items: {}, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false, trouble: null, troubleDay: -1, lastTrouble: null, troublePart: '', slips: [], fed: 0, newAch: [], ist: {}, usedSp: [], seenSp: [], offersDay: -1 };
     report('start', {});
     showDawn();
   }
   /* A week left half way is kept each morning and picked up from that morning. */
   function keepRun() {
-    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, bought: G.bought, bonus: G.bonus, perDay: G.perDay.slice(0, G.day), items: G.items, trouble: G.trouble, troubleDay: G.troubleDay, troublePart: G.troublePart, slips: G.slips.slice(0, G.day), fed: G.fed, ist: G.ist };
+    save.run = { level: G.level, run: G.run, began: G.began, played: G.played, away: G.away, day: G.day, tips: G.tips, earned: G.earned, bought: G.bought, bonus: G.bonus, perDay: G.perDay.slice(0, G.day), items: G.items, trouble: G.trouble, troubleDay: G.troubleDay, troublePart: G.troublePart, slips: G.slips.slice(0, G.day), fed: G.fed, ist: G.ist,
+      usedSp: G.usedSp, seenSp: G.seenSp, offers: G.offers.map(function (x) { return x.id; }), offersDay: G.offersDay };
     persist();
   }
   function resumeRun() {
@@ -584,7 +585,11 @@
     for (var id in r.items) if (D.items.some(function (it) { return it.id === id; })) items[id] = r.items[id];
     G = { level: r.level, run: r.run || rid(), began: r.began || Date.now(), played: r.played || 0, away: r.away || 0, day: r.day, tips: r.tips || 0, earned: r.earned || 0, bought: r.bought || 0, bonus: r.bonus || 0, sale: false, perDay: (r.perDay || []).slice(), cater: null, items: items, reroll: D.reroll.first, offers: [], stage: '', pick: [], shop: [], sold: [], fryer: false,
       trouble: troubleOf(r.trouble) ? r.trouble : null, troubleDay: r.troubleDay == null ? -1 : r.troubleDay, lastTrouble: null,
-      troublePart: D.parts[r.troublePart] ? r.troublePart : '', slips: Array.isArray(r.slips) ? r.slips.slice() : [], fed: r.fed || 0, newAch: [], ist: (r.ist && typeof r.ist === 'object') ? r.ist : {} };
+      troublePart: D.parts[r.troublePart] ? r.troublePart : '', slips: Array.isArray(r.slips) ? r.slips.slice() : [], fed: r.fed || 0, newAch: [], ist: (r.ist && typeof r.ist === 'object') ? r.ist : {},
+      usedSp: Array.isArray(r.usedSp) ? r.usedSp.slice() : [], seenSp: Array.isArray(r.seenSp) ? r.seenSp.slice() : [], offersDay: r.offersDay == null ? -1 : r.offersDay };
+    // The morning's three, as they were when the week was left (a week picked up again can't deal itself new ones).
+    G.offers = (Array.isArray(r.offers) && G.offersDay === G.day ? r.offers : []).map(function (id) { return D.specials.filter(function (x) { return x.id === id; })[0]; }).filter(Boolean);
+    if (G.offers.length < 3) G.offersDay = -1;
     showDawn();
   }
 
@@ -1472,8 +1477,17 @@
   function showDawn() {
     var day = D.days[G.day], friday = G.day === D.days.length - 1;
     if (G.troubleDay !== G.day) { G.trouble = dealTrouble(); G.troubleDay = G.day; }
+    // Each special once a week (owner 2026-11-13): one served this week is never
+    // offered again, and the morning's three are ones not yet seen this week
+    // while there are any (15 specials, 15 cards a week). Dealt once a morning.
+    if (G.offersDay !== G.day || G.offers.length < 3) {
+      var left = D.specials.filter(function (x) { return G.usedSp.indexOf(x.id) === -1; });
+      var fresh = shuffle(left.filter(function (x) { return G.seenSp.indexOf(x.id) === -1; }));
+      G.offers = fresh.concat(shuffle(left.filter(function (x) { return fresh.indexOf(x) === -1; }))).slice(0, 3);
+      G.offers.forEach(function (x) { if (G.seenSp.indexOf(x.id) === -1) G.seenSp.push(x.id); });
+      G.offersDay = G.day;
+    }
     keepRun();
-    G.offers = shuffle(D.specials).slice(0, 3);
     paper('dawn',
       '<div class="ou-top ou-top--dawn ou-top--back"><button class="ou-topback" data-act="home">Back</button><span class="ou-kicker">Today’s special</span><h2 class="ou-h">' + day.name + ', 6am</h2><span class="ou-label">Pick the plate for lunch</span></div>' +
       '<div class="ou-body-pad">' + troubleCard() + G.offers.map(function (s, i) {
@@ -1595,11 +1609,13 @@
     return Math.max(5, Math.round(it.price * (100 - off) / 500) * 5);
   }
   function drawClose() {
-    var day = D.days[G.day], next = D.days[G.day + 1], body, foot = '';
+    var day = D.days[G.day], next = D.days[G.day + 1], body, foot = '', after = '';
     if (G.stage === 'pick') {
       body = (T.clean ? '<p class="ou-clean"><b>Flawless day: +' + money(T.clean) + '.</b> No walk-outs, nothing burnt.</p>' : '') +
-        (G.tonightAch.length ? '<span class="ou-label">New achievements</span>' + achList(G.tonightAch) : '') +
         '<span class="ou-label">Pick one, free</span>' + G.pick.map(function (it, i) { return itemCard(it, 'pick', i, {}); }).join('');
+      // Achievements earned today go under everything to do with tonight's
+      // pick (owner 2026-11-13: nobody should scroll past them to play on).
+      if (G.tonightAch.length) after = '<span class="ou-label">New achievements</span>' + achList(G.tonightAch);
       foot = '<div class="ou-foot"><button class="ou-btn ou-btn--quiet" data-act="skip">None tonight · ' + money(skipBonus()) + ' in tips instead</button></div>';
     } else {
       // Restock sits beside the shop's name, so the foot is one big button (owner 2026-11-13).
@@ -1622,7 +1638,7 @@
       '<div class="ou-top ou-top--wallet"><span class="ou-kicker">' + day.name + ' results</span><h2 class="ou-h">' + money(T.tips) + ' in tips</h2>' +
       '<span class="ou-label">' + plural(T.served, 'plate', 'plates') + ' · ' + plural(T.walk, 'walk-out', 'walk-outs') + '</span>' +
       '<div class="ou-wallet"><span class="ou-label">To spend</span><b>' + money(G.tips) + '</b></div></div>' +
-      '<div class="ou-body-pad">' + body + ownedRow() + '</div>' + foot);
+      '<div class="ou-body-pad">' + body + ownedRow() + after + '</div>' + foot);
   }
   /* Tips in the game are points (owner 2026-11-12): said on How to play and
      under every finished week, so nobody reads them as the café's money. */
@@ -1727,6 +1743,11 @@
     return p;
   }
   /* How the week ended: [kicker, heading], short enough for one line. */
+  /* How a week ended, in a few words for the picture's small line. */
+  function weekWords(p) {
+    return p.w === 'win' ? 'Catering on time' : p.w === 'late' ? 'Catering late' : p.w === 'quit' ? 'Closed early on ' + (D.days[p.d] || D.days[0]).short : 'Three coffees down on ' + (D.days[p.d] || D.days[0]).short;
+  }
+  var GAME_NAME = 'Order Up';      // the game's name wherever it's drawn rather than written in the page
   function weekHead(p) {
     var day = D.days[p.d] || D.days[0];
     return p.w === 'win' ? ['Week done', 'Catering out on time']
@@ -1779,7 +1800,23 @@
   function lineItems(p) {
     return D.items.filter(function (it) { return p.i && p.i[it.id]; });
   }
-  function iconsFor(list) { list.forEach(function (p) { lineItems(p).forEach(function (it) { iconImg(it.icon); }); }); }
+  function iconsFor(list) { markImg(); list.forEach(function (p) { lineItems(p).forEach(function (it) { iconImg(it.icon); }); }); }
+  /* The café's wordmark for the top of the picture (owner 2026-11-13: our
+     logo on every week that's shared), made from the one on the title
+     screen and drawn the same way: cream, the teal-dark outline, the coral
+     shadow (the shadow is the canvas's, in weekPicture). */
+  var MARK = null, MARK_AR = 132.5 / 36.7;
+  function markImg() {
+    if (MARK) return MARK;
+    var svg = stage.querySelector('.ou-wordmark svg'), g = svg && svg.querySelector('g'), path = g && g.querySelector('path');
+    if (!path) return null;
+    var vb = (svg.getAttribute('viewBox') || '0 0 132.5 36.7').split(/[ ,]+/).map(Number);
+    MARK_AR = vb[2] / vb[3];
+    MARK = new Image();
+    MARK.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb.join(' ') + '" width="1000" height="' + Math.round(1000 / MARK_AR) + '">' +
+      '<g transform="' + (g.getAttribute('transform') || '') + '" fill="#FAF7F2" stroke="#1F4552" stroke-width="1.5" stroke-linejoin="miter" stroke-miterlimit="10" paint-order="stroke"><path d="' + path.getAttribute('d') + '"/></g></svg>');
+    return MARK;
+  }
   var TILE = { normal: ['#F1F3F4', '#1F4552'], rare: ['#D9E6F6', '#1F4552'], epic: ['#E6D9F4', '#1F4552'], legendary: [null, '#7A5A0E'] };
   /* One post-sized picture (owner 2026-11-13: it has to fit whole, 4:5 as a
      feed shows it): the days, the money merged into as few lines as still
@@ -1798,11 +1835,11 @@
     // What was spent goes into the Kept line.
     rows.push({ day: 'Kept', words: p.sp ? 'after ' + money(p.sp) + ' on items' : 'your score', tips: money(p.k), total: true });
 
-    var W = 1080, H = 1350, x0 = 60, x1 = W - 60, top = 250;
+    var W = 1080, H = 1350, x0 = 60, x1 = W - 60, top = 300;
     var items = withIcons ? lineItems(p) : [], PER = 10, TG = 10;
     var TS = Math.floor((x1 - x0 - (PER - 1) * TG) / PER), tileRows = Math.ceil(items.length / PER);
     if (tileRows > 2) { PER = Math.ceil(items.length / 2); TS = Math.floor((x1 - x0 - (PER - 1) * TG) / PER); tileRows = 2; }
-    var lineH = items.length ? 52 + tileRows * (TS + TG) : 0, foot = 190;
+    var lineH = items.length ? 52 + tileRows * (TS + TG) : 0, foot = 140;
     var ty = top + 40, room = H - ty - (items.length ? 34 : 0) - lineH - foot - 10;
     var RH = Math.min(118, Math.floor(room / rows.length)), k = RH / 118, tableH = rows.length * RH;
 
@@ -1817,11 +1854,21 @@
     // The band on top, as on the end screen.
     var g = c.createLinearGradient(0, 0, W, top); g.addColorStop(0, INK.tealDark); g.addColorStop(.55, INK.teal); g.addColorStop(1, '#3C7183');
     c.fillStyle = g; c.fillRect(0, 0, W, top); c.fillStyle = INK.red; c.fillRect(0, top - 12, W, 12);
-    var head = weekHead(p), when = new Date(p.a).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-    c.textBaseline = 'alphabetic'; c.fillStyle = INK.cream; c.textAlign = 'left';
-    c.font = 'italic 400 46px ' + serif; c.fillText(head[0], x0, 82);
-    c.font = '700 80px ' + serif; c.fillText(head[1], x0, 162);
-    c.fillStyle = INK.mint; c.font = '700 28px ' + sans; spaced(((D.levels[p.l] ? D.levels[p.l].name + ' week · ' : '') + when).toUpperCase(), x0, 212, 4);
+    // The café's wordmark and the game's name, as on the title screen (owner
+    // 2026-11-13: so every shared week carries the logo); how the week went
+    // is in the small line under them, and in the rows.
+    var when = new Date(p.a).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    var mark = withIcons ? markImg() : null, mw = 380, mh = Math.round(mw / MARK_AR);
+    c.textBaseline = 'alphabetic'; c.fillStyle = INK.cream; c.textAlign = 'center';
+    if (mark && mark.complete && mark.naturalWidth) {
+      c.save(); c.shadowColor = '#EB5E64'; c.shadowOffsetX = 3; c.shadowOffsetY = 4; c.shadowBlur = 0;
+      c.drawImage(mark, (W - mw) / 2, 26, mw, mh); c.restore();
+    } else { c.font = 'italic 700 76px ' + serif; c.fillText('The Café', W / 2, 26 + mh - 22); }
+    c.font = '700 80px ' + serif; c.fillText(GAME_NAME, W / 2, 26 + mh + 78);
+    var sub = ((D.levels[p.l] ? D.levels[p.l].name + ' week · ' : '') + weekWords(p) + ' · ' + when).toUpperCase(), fs = 28, gap = 4, sw2;
+    var width = function () { c.font = '700 ' + fs + 'px ' + sans; var w = 0; for (var j = 0; j < sub.length; j++) w += c.measureText(sub[j]).width + gap; return w - gap; };
+    while ((sw2 = width()) > x1 - x0 && fs > 18) { fs--; gap = fs / 7; }
+    c.fillStyle = INK.mint; spaced(sub, (W - sw2) / 2, top - 30, gap);
     // The table.
     c.save(); round(x0, ty, x1 - x0, tableH, 28); c.clip();
     c.fillStyle = '#fff'; c.fillRect(x0, ty, x1 - x0, tableH);
@@ -1863,7 +1910,6 @@
     }
     // Whose game it is (game/README.md: name the café, with the town), at the foot.
     // and where to play it (owner 2026-11-13).
-    c.textAlign = 'center'; c.fillStyle = INK.tealDark; c.font = '700 54px ' + serif; c.fillText('Order Up', W / 2, H - 128);
     var lead = 'Play it at ', site = PLAY_AT; c.font = '400 36px ' + sans; var lw = c.measureText(lead).width; c.font = '900 36px ' + sans; var sw = c.measureText(site).width;
     c.textAlign = 'left'; c.fillStyle = INK.dark; c.font = '400 36px ' + sans; c.fillText(lead, (W - lw - sw) / 2, H - 76);
     c.fillStyle = INK.teal; c.font = '900 36px ' + sans; c.fillText(site, (W - lw - sw) / 2 + lw, H - 76);
@@ -1994,12 +2040,12 @@
       .concat(D.specials.map(function (s) { return { id: 'sp-' + s.id, name: s.name, photo: s.photo, sprite: 'special' }; }));
     var seen = list.filter(function (r) { return save.served[r.id]; }).length;
     paper('box',
-      '<div class="ou-top ou-top--back"><span class="ou-kicker">Recipe Box</span><h2 class="ou-h">' + seen + ' of ' + list.length + ' served</h2><span class="ou-label">Serve one 10 times to see the real plate</span>' +
+      '<div class="ou-top ou-top--back"><span class="ou-kicker">Recipe Box</span><h2 class="ou-h">' + seen + ' of ' + list.length + ' served</h2><span class="ou-label">Serve one 10 times to see our photo of it</span>' +
       '<button class="ou-topback" data-act="back">Back</button></div>' +
       '<div class="ou-body-pad"><div class="ou-grid">' + list.map(function (r) {
         var n = save.served[r.id] || 0, real = n >= 10 && r.photo;
         return '<div class="ou-rc' + (n ? '' : ' is-new') + '"><span class="ou-rp">' + (real ? '<img src="' + esc(r.photo) + '" alt="' + esc(r.name) + ' at The Café" loading="lazy">' : spr(r.sprite)) + '</span>' +
-          '<div><b>' + esc(r.name) + '</b><span>' + (n ? 'Served ' + n + (n < 10 && r.photo ? ' of 10' : '') : 'Not served yet') + '</span></div></div>';
+          '<div><b>' + esc(r.name) + '</b><span>' + (n ? 'Served ' + n + (!r.photo ? (n >= 10 ? ' · no photo yet' : '') : n < 10 ? ' · photo at 10' : '') : 'Not served yet') + '</span></div></div>';
       }).join('') + '</div></div><div class="ou-foot"><button class="ou-btn" data-act="back">Back</button></div>');
     openOverlay(from);
   }
@@ -2213,7 +2259,7 @@
       case 'box': showBox(screen === 'over' ? 'over' : 'title'); break;
       case 'back': closeOverlay(); break;
       case 'sound': save.sfxVol = (save.sfxVol + 1) % 4; persist(); setVolumes(); drawTitle(); sfx.done(); break;
-      case 'special': sfx.tap(); startDay(G.offers[i]); break;
+      case 'special': sfx.tap(); if (G.usedSp.indexOf(G.offers[i].id) === -1) G.usedSp.push(G.offers[i].id); startDay(G.offers[i]); break;
       case 'bin': if (live) tapBin(el.getAttribute('data-part')); break;
       case 'spot': if (live && performance.now() - grabbedAt > 500) spotGesture(i, e.detail === 0 ? 'key' : 'tap'); break;   // a touch or mouse was dealt with on pointerup
       case 'pi': if (live) tapPlateItem(i); break;
@@ -2379,7 +2425,7 @@
       findMatch: findMatch, aimTicket: aimTicket, usable: usable, binOpen: binOpen, level: level,
       gesture: function (i, how) { if (T) spotGesture(i, how || 'key'); },
       get music() { return { on: music.on, step: music.step, mood: music.mood, I: music.I, bpm: music.bpm, dark: music.dark, dip: music.dip ? music.dip.gain.value : 1, audio: ac ? ac.state : 'none' }; },
-      intensity: intensity, sfx: sfx, setMood: setMood
+      intensity: intensity, sfx: sfx, setMood: setMood, weekPicture: weekPicture, iconsFor: iconsFor, bus: function () { return bus; }
     };
     /* /play?debug&sound: the sound test page (owner 2026-11-13). Every sound
        effect with a button, and the music by hand: its volume, the tune
@@ -2443,6 +2489,10 @@
           '<div class="ou-lab-read" id="ou-lab-read" aria-live="off"></div>' +
           '<button class="ou-btn ou-btn--quiet" data-lab="lights" style="width:100%">Lights out (3.5 seconds)</button>' +
           '<p class="ou-fine">In the game, the shift sets the slider by itself: coffees lost, how near the next walk-out is, how full the rail is, and lunch. Friday it’s the catering clock.</p></div>' +
+          '<h3>Other instruments</h3><p class="ou-fine">Not in the game: what the same tricks can sound like, with no recordings. On the music volume.</p>' +
+          INSTS.map(function (x) { return '<div class="ou-lab-sfx"><span><b>' + esc(x[1]) + '</b><small>' + esc(x[2]) + '</small></span><button class="ou-btn ou-btn--quiet" data-lab="inst" data-v="' + x[0] + '">Play</button></div>'; }).join('') +
+          '<div class="ou-setbox"><span class="ou-label">Heavy metal demo</span><p class="ou-fine">Two distorted guitars, left and right, a bass, drums with a double kick, and a lead guitar in bars 5 to 8. E minor, 160 beats a minute, eight bars round and round. The jazz stops while it plays.</p>' +
+          '<div class="ou-row"><button class="ou-btn" data-lab="metal">Play</button><button class="ou-btn ou-btn--quiet" data-lab="metalstop">Stop</button></div></div>' +
           '<h3>Sound effects</h3>' +
           '<div class="ou-setbox"><span class="ou-label">Sound volume</span>' + seg('svol', vols, save.sfxVol) + '</div>' +
           LAB_SFX.map(function (x) {
@@ -2469,6 +2519,218 @@
           (music.dark ? '<br><b>Lights out: music cut</b>' : '');
         var r = stage.querySelector('#ou-lab-raw'); if (r && document.activeElement !== r) r.value = Math.round(lab.raw * 100);
       };
+      /* ---- other instruments, and a heavy metal demo (owner 2026-11-13) ----
+         Not in the game: what the same tools can be made to sound like.
+         Plucked strings are Karplus-Strong: a burst of noise going round a
+         short loop that loses a little each time (the loop's length is the
+         note). A distorted guitar is that pluck through a wave-shaper (the
+         amp) and a speaker cabinet's filters, two of them, left and right.
+         The rest are oscillators and filters. All on the music volume. */
+      var inst = { out: null, cache: {}, metal: null };
+      var instOut = function () {
+        var a = ctx(); if (!a) return null;
+        if (!save.musicVol) { save.musicVol = 2; persist(); mark('mvol', 2); }
+        if (!inst.out) { inst.out = a.createGain(); inst.out.connect(bus.lim); }
+        inst.out.gain.setTargetAtTime(MUSIC_VOL[save.musicVol] * 1.6, a.currentTime, 0.05);
+        return inst.out;
+      };
+      var ksBuf = function (a, midi, v, decay, dur) {
+        var key = midi + ':' + v + ':' + decay + ':' + dur;
+        if (inst.cache[key]) return inst.cache[key];
+        var sr = a.sampleRate, n = Math.floor(sr * dur), buf = a.createBuffer(1, n, sr), d = buf.getChannelData(0);
+        var N = Math.max(2, Math.round(sr / hz(midi))), line = new Float32Array(N), i, at = 0, nx;
+        for (i = 0; i < N; i++) line[i] = rand() * 2 - 1;
+        for (i = 0; i < n; i++) { nx = at + 1 === N ? 0 : at + 1; d[i] = line[at]; line[at] = decay * 0.5 * (line[at] + line[nx]); at = nx; }
+        return (inst.cache[key] = buf);
+      };
+      var curve = function (k) { var n = 2048, c = new Float32Array(n); for (var i = 0; i < n; i++) { var x = i * 2 / n - 1; c[i] = (1 + k) * x / (1 + k * Math.abs(x)); } return c; };
+      /* An amp: a little low cut, the distortion, the mids scooped, a cabinet's top end rolled off. */
+      var amp = function (a, out, pan, drive, level) {
+        var pre = a.createGain(), hp = a.createBiquadFilter(), sh = a.createWaveShaper(), mid = a.createBiquadFilter(), lp = a.createBiquadFilter(), post = a.createGain();
+        pre.gain.value = drive; hp.type = 'highpass'; hp.frequency.value = 110;
+        sh.curve = curve(60); sh.oversample = '4x';
+        mid.type = 'peaking'; mid.frequency.value = 700; mid.Q.value = 0.8; mid.gain.value = -6;
+        lp.type = 'lowpass'; lp.frequency.value = 4600; lp.Q.value = 0.9;
+        post.gain.value = level;
+        pre.connect(hp); hp.connect(sh); sh.connect(mid); mid.connect(lp); lp.connect(post);
+        if (a.createStereoPanner) { var p = a.createStereoPanner(); p.pan.value = pan; post.connect(p); p.connect(out); } else post.connect(out);
+        return pre;
+      };
+      var pluck = function (a, into, midi, t, len, muted, vol, v) {
+        var src = a.createBufferSource(), g = a.createGain(), f = a.createBiquadFilter();
+        src.buffer = ksBuf(a, midi, v || 0, muted ? 0.99 : 0.997, muted ? 0.4 : 2.5);
+        f.type = 'lowpass'; f.frequency.value = muted ? 650 : 7000;
+        g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + Math.max(0.02, len - 0.04)); g.gain.linearRampToValueAtTime(0.0001, t + len);
+        src.connect(f); f.connect(g); g.connect(into); src.start(t); src.stop(t + len + 0.05);
+      };
+      var power = function (a, into, root, t, len, muted, vol, v) {      // a power chord: root, fifth, octave
+        (muted ? [root, root + 7] : [root, root + 7, root + 12]).forEach(function (m, i) { pluck(a, into, m, t + i * 0.005, len, muted, vol, v); });
+      };
+      var hit = function (a, out, t, len, type, f, v, q) {
+        var s = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain();
+        s.buffer = noiseBuf; s.loop = true; fl.type = type; fl.frequency.value = f; if (q) fl.Q.value = q;
+        g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+        s.connect(fl); fl.connect(g); g.connect(out); s.start(t, rand() * 0.5, len + 0.02);
+      };
+      var osc = function (a, out, type, midi, t, len, vol, atk, rel, detune) {
+        var o = a.createOscillator(), g = a.createGain();
+        o.type = type; o.frequency.value = hz(midi); o.detune.value = detune || 0;
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + (atk || 0.01));
+        g.gain.setValueAtTime(vol, t + Math.max(atk || 0.01, len - (rel || 0.05))); g.gain.linearRampToValueAtTime(0.0001, t + len);
+        o.connect(g); g.connect(out); o.start(t); o.stop(t + len + 0.05);
+        return o;
+      };
+      var KIT = {
+        kick: function (a, out, t, v) {
+          var o = a.createOscillator(), g = a.createGain();
+          o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.07);
+          g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+          o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.22);
+          hit(a, out, t, 0.012, 'highpass', 3500, v * 0.6);      // the beater's click
+        },
+        snare: function (a, out, t, v) {
+          var o = a.createOscillator(), g = a.createGain();
+          o.frequency.setValueAtTime(210, t); o.frequency.exponentialRampToValueAtTime(170, t + 0.1);
+          g.gain.setValueAtTime(v * 0.55, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+          o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.14);
+          hit(a, out, t, 0.24, 'bandpass', 2300, v, 0.5);
+        },
+        hat: function (a, out, t, v) { hit(a, out, t, 0.05, 'highpass', 8000, v); },
+        ride: function (a, out, t, v) { hit(a, out, t, 0.3, 'bandpass', 6500, v, 1.5); },
+        crash: function (a, out, t, v) { hit(a, out, t, 1.8, 'highpass', 4200, v); }
+      };
+      /* The instruments, one short phrase each. */
+      var INSTS = [
+        ['clean', 'Clean guitar', 'A plucked string: noise round a short loop (Karplus-Strong).', function (a, out, t) {
+          [52, 59, 64, 67, 71, 67, 64, 59, 52].forEach(function (m, i) { var g = a.createGain(); g.gain.value = 0.32; g.connect(out); pluck(a, g, m, t + i * 0.17, 1.6, false, 1, i); });
+        }],
+        ['dist', 'Distorted guitar', 'The same pluck, through an amp and a cabinet, left and right.', function (a, out, t) {
+          var L = amp(a, out, -0.6, 6, 0.1), R = amp(a, out, 0.6, 6, 0.1), S = 0.1, i;
+          for (i = 0; i < 6; i++) { power(a, L, 40, t + i * S, S, true, 1, 0); power(a, R, 40, t + i * S + 0.008, S, true, 1, 1); }
+          power(a, L, 43, t + 0.6, 0.4, false, 1, 0); power(a, R, 43, t + 0.608, 0.4, false, 1, 1);
+          power(a, L, 45, t + 1.0, 1.2, false, 1, 0); power(a, R, 45, t + 1.008, 1.2, false, 1, 1);
+        }],
+        ['bass', 'Bass guitar', 'A low pluck with the top end taken off.', function (a, out, t) {
+          var f = a.createBiquadFilter(), g = a.createGain(); f.type = 'lowpass'; f.frequency.value = 900; g.gain.value = 0.9; f.connect(g); g.connect(out);
+          [40, 40, 47, 45, 43, 45, 47, 52].forEach(function (m, i) { pluck(a, f, m, t + i * 0.2, 0.5, false, 1, i); });
+        }],
+        ['organ', 'Organ', 'Pipes as sine waves added up, with a slow wobble like a rotating speaker.', function (a, out, t) {
+          var trem = a.createGain(), lfo = a.createOscillator(), depth = a.createGain();
+          trem.gain.value = 0.85; lfo.frequency.value = 6; depth.gain.value = 0.15; lfo.connect(depth); depth.connect(trem.gain); trem.connect(out); lfo.start(t); lfo.stop(t + 3);
+          [[48, 60, 64, 67], [53, 60, 65, 69], [55, 59, 62, 67]].forEach(function (ch, c) {
+            ch.forEach(function (m) { [[0.5, 0.5], [1, 1], [2, 0.7], [3, 0.4], [4, 0.3], [6, 0.15]].forEach(function (h) { osc(a, trem, 'sine', m + 12 * Math.log2(h[0]), t + c * 0.9, 0.88, 0.016 * h[1], 0.01, 0.06); }); });
+          });
+        }],
+        ['brass', 'Brass', 'Buzzy saw waves, the filter opening as the note is blown.', function (a, out, t) {
+          [[60, 0, 0.22], [64, 0.24, 0.22], [67, 0.48, 0.22], [72, 0.72, 1.1]].forEach(function (n) {
+            var f = a.createBiquadFilter(), at = t + n[1]; f.type = 'lowpass'; f.Q.value = 1;
+            f.frequency.setValueAtTime(350, at); f.frequency.linearRampToValueAtTime(3000, at + 0.07); f.frequency.linearRampToValueAtTime(1700, at + 0.25); f.connect(out);
+            osc(a, f, 'sawtooth', n[0], at, n[2], 0.07, 0.04, 0.08, -6); osc(a, f, 'sawtooth', n[0], at, n[2], 0.07, 0.04, 0.08, 6);
+          });
+        }],
+        ['strings', 'Strings', 'Three saw waves a note, a little out of tune with each other, swelling in slowly.', function (a, out, t) {
+          var f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2300; f.connect(out);
+          [52, 59, 64, 67, 71].forEach(function (m) { [-12, 0, 12].forEach(function (d) { osc(a, f, 'sawtooth', m, t, 3, 0.017, 0.8, 1, d); }); });
+        }],
+        ['marimba', 'Marimba', 'A sine with a quick, higher ring on top: wood struck.', function (a, out, t) {
+          [60, 62, 64, 67, 69, 72, 74, 76, 79].forEach(function (m, i) {
+            var at = t + i * 0.11, o = a.createOscillator(), g = a.createGain(); o.frequency.value = hz(m);
+            g.gain.setValueAtTime(0.16, at); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.6); o.connect(g); g.connect(out); o.start(at); o.stop(at + 0.65);
+            var o2 = a.createOscillator(), g2 = a.createGain(); o2.frequency.value = hz(m) * 4;
+            g2.gain.setValueAtTime(0.05, at); g2.gain.exponentialRampToValueAtTime(0.0001, at + 0.07); o2.connect(g2); g2.connect(out); o2.start(at); o2.stop(at + 0.1);
+          });
+        }],
+        ['bells', 'Bells', 'FM: one sine wobbling another at an odd ratio, which is what makes a bell a bell.', function (a, out, t) {
+          [72, 76, 79, 83, 84].forEach(function (m, i) {
+            var at = t + i * 0.32, f = hz(m), c = a.createOscillator(), mo = a.createOscillator(), mg = a.createGain(), g = a.createGain();
+            c.frequency.value = f; mo.frequency.value = f * 3.5;
+            mg.gain.setValueAtTime(f * 4, at); mg.gain.exponentialRampToValueAtTime(f * 0.2, at + 1.5);
+            g.gain.setValueAtTime(0.09, at); g.gain.exponentialRampToValueAtTime(0.0001, at + 2.5);
+            mo.connect(mg); mg.connect(c.frequency); c.connect(g); g.connect(out); c.start(at); mo.start(at); c.stop(at + 2.6); mo.stop(at + 2.6);
+          });
+        }],
+        ['flute', 'Flute', 'A soft sine with a breath of noise and a little vibrato.', function (a, out, t) {
+          var at = t;
+          [[72, 0.35], [74, 0.35], [76, 0.5], [79, 0.5], [76, 0.35], [74, 0.35], [72, 0.9]].forEach(function (n) {
+            var o = osc(a, out, 'sine', n[0], at, n[1], 0.1, 0.07, 0.08), o2 = osc(a, out, 'sine', n[0] + 12, at, n[1], 0.015, 0.07, 0.08);
+            var lfo = a.createOscillator(), lg = a.createGain(); lfo.frequency.value = 5; lg.gain.setValueAtTime(0, at); lg.gain.linearRampToValueAtTime(14, at + Math.min(0.3, n[1]));
+            lfo.connect(lg); lg.connect(o.detune); lg.connect(o2.detune); lfo.start(at); lfo.stop(at + n[1] + 0.05);
+            hit(a, out, at, n[1], 'bandpass', hz(n[0]) * 2, 0.02, 2);
+            at += n[1];
+          });
+        }]
+      ];
+      /* ---- the heavy metal demo: E minor, 160 beats a minute, eight bars ----
+         Bars 1-4: a gallop on a palm-muted low E with power chords answering;
+         bars 5-8: chords over a pedal E, double kick, and a lead guitar on
+         top. Two rhythm guitars, left and right, a bass under them. */
+      var BPM_M = 160, METAL = (function () {
+        var gal = [0, 2, 3, 4, 6, 7, 8, 10, 11], b = [];
+        var chug = function (list, steps) { steps.forEach(function (st) { list.push([st, 'm', 40, 1]); }); return list; };
+        b[0] = chug([], gal).concat([[12, 'c', 43, 2], [14, 'c', 45, 2]]);
+        b[1] = chug([], gal).concat([[12, 'c', 46, 2], [14, 'c', 45, 2]]);
+        b[2] = b[0];
+        b[3] = chug([[0, 'c', 40, 4], [4, 'c', 50, 2], [6, 'c', 40, 2]], [8, 9, 10, 11, 12, 13, 14, 15]);
+        b[4] = chug([[0, 'c', 40, 4], [8, 'c', 48, 4]], [4, 5, 6, 7, 12, 13, 14, 15]);
+        b[5] = chug([[0, 'c', 50, 4], [8, 'c', 45, 4]], [4, 5, 6, 7, 12, 13, 14, 15]);
+        b[6] = b[4];
+        b[7] = [[0, 'c', 50, 4], [4, 'c', 50, 4], [8, 'c', 47, 8]];
+        return b;
+      })();
+      var LEAD = {
+        4: [[0, 71, 4], [4, 74, 2], [6, 76, 2], [8, 79, 4], [12, 78, 2], [14, 76, 2]],
+        5: [[0, 74, 4], [4, 76, 2], [6, 78, 2], [8, 81, 6], [14, 79, 2]],
+        6: [[0, 79, 2], [2, 78, 2], [4, 76, 2], [6, 74, 2], [8, 76, 4], [12, 67, 4]],
+        7: [[0, 72, 4], [4, 74, 4], [8, 71, 8]]
+      };
+      var leadAmp = function (a, out) {
+        var pre = a.createGain(), sh = a.createWaveShaper(), lp = a.createBiquadFilter(), post = a.createGain(), dl = a.createDelay(1), fb = a.createGain(), wet = a.createGain();
+        pre.gain.value = 3; sh.curve = curve(30); sh.oversample = '4x'; lp.type = 'lowpass'; lp.frequency.value = 3800; post.gain.value = 0.07;
+        dl.delayTime.value = 60 / BPM_M * 0.75; fb.gain.value = 0.3; wet.gain.value = 0.3;
+        pre.connect(sh); sh.connect(lp); lp.connect(post); post.connect(out); post.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(out);
+        return pre;
+      };
+      var leadNote = function (a, into, midi, t, len) {
+        var g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain();
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.5, t + 0.012); g.gain.setValueAtTime(0.5, t + len - 0.03); g.gain.linearRampToValueAtTime(0.0001, t + len);
+        lfo.frequency.value = 5.8; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(len > 0.4 ? 24 : 6, t + Math.min(0.45, len));
+        lfo.connect(lg); lfo.start(t); lfo.stop(t + len + 0.05); g.connect(into);
+        [-7, 7].forEach(function (d) {
+          var o = a.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz(midi);
+          o.detune.setValueAtTime(d - 70, t); o.detune.linearRampToValueAtTime(d, t + 0.05);      // a little bend up into the note
+          lg.connect(o.detune); o.connect(g); o.start(t); o.stop(t + len + 0.05);
+        });
+      };
+      var metalStep = function (a, m, step, t, S) {
+        var bar = Math.floor(step / 16) % 8, s = step % 16, A = bar < 4, ev = METAL[bar].filter(function (e) { return e[0] === s; });
+        ev.forEach(function (e) {
+          var len = e[3] * S, muted = e[1] === 'm';
+          power(a, m.L, e[2], t, muted ? S * 0.9 : len + 0.02, muted, 1, 0); power(a, m.R, e[2], t + 0.009, muted ? S * 0.9 : len + 0.02, muted, 1, 1);
+          var b = a.createOscillator(), bf = a.createBiquadFilter(), bg = a.createGain(), bl = muted ? S * 0.9 : len;
+          b.type = 'sawtooth'; b.frequency.value = hz(e[2] - 12); bf.type = 'lowpass'; bf.frequency.value = 700;
+          bg.gain.setValueAtTime(0.11, t); bg.gain.setValueAtTime(0.11, t + bl - 0.02); bg.gain.linearRampToValueAtTime(0.0001, t + bl);
+          b.connect(bf); bf.connect(bg); bg.connect(m.out); b.start(t); b.stop(t + bl + 0.02);
+        });
+        if (A ? ev.length : true) KIT.kick(a, m.out, t, A ? 0.5 : 0.36);
+        if (s === 4 || s === 12 || (bar === 7 && s >= 12)) KIT.snare(a, m.out, t, bar === 7 && s >= 12 ? 0.22 + 0.04 * (s - 12) : 0.3);
+        if (s === 0 && (bar === 0 || !A)) KIT.crash(a, m.out, t, bar === 0 || bar === 4 ? 0.09 : 0.05);
+        else if (s % 2 === 0) { if (A) KIT.hat(a, m.out, t, 0.05); else KIT.ride(a, m.out, t, 0.035); }
+        (LEAD[bar] || []).forEach(function (n) { if (n[0] === s) leadNote(a, m.lead, n[1], t, n[2] * S); });
+      };
+      var stopMetal = function () {
+        var m = inst.metal; if (!m) return; inst.metal = null; clearInterval(m.timer);
+        m.out.gain.setTargetAtTime(0, ac.currentTime, 0.08);
+        setTimeout(function () { try { m.out.disconnect(); } catch (e) { /* no matter */ } }, 1200);
+      };
+      var startMetal = function () {
+        var a = ctx(); if (!a) return;
+        stopMetal(); music.hold = true; musicSync();      // the jazz steps aside
+        if (!save.musicVol) { save.musicVol = 2; persist(); mark('mvol', 2); }
+        var out = a.createGain(); out.gain.value = MUSIC_VOL[save.musicVol] * 0.5; out.connect(bus.lim);      // measured: about twice the jazz, which is quieter than it sounds
+        var m = inst.metal = { out: out, L: amp(a, out, -0.7, 6, 0.1), R: amp(a, out, 0.7, 6, 0.1), lead: leadAmp(a, out), step: 0, next: a.currentTime + 0.1, timer: 0 };
+        var S = 60 / BPM_M / 4;
+        m.timer = setInterval(function () { while (m.next < a.currentTime + 0.3) { metalStep(a, m, m.step, m.next, S); m.next += S; m.step++; } }, 50);
+      };
       var section = document.createElement('section');
       section.className = 'ou-scr ou-paper'; section.setAttribute('data-scr', 'lab'); section.hidden = true;
       stage.appendChild(section);
@@ -2477,8 +2739,8 @@
         var what = b.getAttribute('data-lab'), v = b.getAttribute('data-v');
         // A sound needs a tap to start, and a volume above Off: the test page
         // turns an Off up to Medium rather than play nothing.
-        if (what === 'play') { music.hold = false; if (!save.musicVol) { save.musicVol = 2; persist(); mark('mvol', 2); } ctx(); setVolumes(); musicSync(); }
-        else if (what === 'stop') { music.hold = true; musicSync(); }
+        if (what === 'play') { stopMetal(); music.hold = false; if (!save.musicVol) { save.musicVol = 2; persist(); mark('mvol', 2); } ctx(); setVolumes(); musicSync(); }
+        else if (what === 'stop') { stopMetal(); music.hold = true; musicSync(); }
         else if (what === 'mvol') { save.musicVol = +v; persist(); ctx(); setVolumes(); musicSync(); mark(what, v); }
         else if (what === 'svol') { save.sfxVol = +v; persist(); ctx(); setVolumes(); mark(what, v); sfx.done(); }
         else if (what === 'mood') { setMood(v); mark(what, v); }
@@ -2496,7 +2758,14 @@
           lab.dark = setTimeout(function () { music.testDark = false; sfx.light(); }, 3500);
         }
         else if (what === 'fx') { if (!save.sfxVol) { save.sfxVol = 2; persist(); mark('svol', 2); } ctx(); setVolumes(); if (sfx[v]) sfx[v](b.getAttribute('data-arg') || undefined); }
-        else if (what === 'back') { clearInterval(lab.sweep); music.force = null; music.testDark = false; music.hold = false; setMood('day'); show('title'); drawTitle(); musicSync(); }
+        else if (what === 'inst') {
+          // Each one's level, measured so they come out about as loud as the jazz.
+          var io = instOut(), lv = { clean: 0.4, dist: 0.55, bass: 0.2, organ: 1, brass: 0.85, strings: 1.2, marimba: 0.75, bells: 0.8, flute: 0.6 }[v] || 1;
+          if (io) { var ig = ac.createGain(); ig.gain.value = lv; ig.connect(io); setTimeout(function () { ig.disconnect(); }, 6000); INSTS.forEach(function (x) { if (x[0] === v) x[3](ac, ig, ac.currentTime + 0.05); }); }
+        }
+        else if (what === 'metal') startMetal();
+        else if (what === 'metalstop') stopMetal();
+        else if (what === 'back') { stopMetal(); clearInterval(lab.sweep); music.force = null; music.testDark = false; music.hold = false; setMood('day'); show('title'); drawTitle(); musicSync(); }
       });
       stage.addEventListener('input', function (e) {
         if (e.target.id !== 'ou-lab-raw') return;
@@ -2505,6 +2774,8 @@
       setInterval(labRead, 250);
       drawLab();
     }
+    // /play?debug&box: straight to the Recipe Box (to check its look).
+    if (/[?&]box\b/.test(location.search)) { $('#ou-told').hidden = true; showBox('title'); }
     /* /play?debug&cards: one card of each rarity, a sale price and the owned
        row, to judge the look of the rarities without playing to the shop. */
     if (/[?&]cards\b/.test(location.search)) {

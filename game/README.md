@@ -49,13 +49,13 @@ starting at 11am with a drink included, no fryer, closed weekends.
 |---|---|---|
 | **Level** | Easy, Regular or Rush, picked on the title screen and kept for the week (§4). | |
 | **Run** | One week, Monday – Friday. No weekends: the café is closed. A week left half way is kept each morning and can be picked up from that morning ("Continue: Wednesday"). | The hours |
-| **Dawn** | Before each shift, pick the day's special from three. One side is a quicker plate; two sides tip more. | `specials.json`, the weekly posts |
+| **Dawn** | Before each shift, pick the day's special from three. One side is a quicker plate; two sides tip more. **Each special once a week** (owner 2026-11-13): one served this week is never offered again, and each morning's three are ones not yet seen that week (15 specials, 15 cards a week). The three are dealt once a morning and kept with a week left half way, so leaving and coming back doesn't deal new ones. | `specials.json`, the weekly posts |
 | **Day** | One shift, 6am – 2pm, about 100 seconds. A clock on the HUD runs the real hours. | The hours |
 | **Breakfast** (6am – 11am) | Eggs, bacon, toast, potatoes, biscuit and gravy, burritos | `menu.json` breakfast |
 | **Lunch** (11am – 2pm) | Burgers, wraps, salads, soup, sides, the special. The bins turn over at 11am, once the last breakfast ticket is out, and **the clock waits at 11:00 until then** (owner 2026-11-12), so finishing breakfast never costs lunch tickets. | "Starting at 11am" |
 | **The pickle spear** | At lunch, any plate can take one: $1 more. Never required. | Nearly every plate in the photos |
 | **Lives** | Three **coffee cups**. A ticket that runs out of time is a walk-out and spills one. They are poured again each morning. | |
-| **After close** | "Tuesday results": the day's tips, plates and walk-outs, and what there is to spend. Pick one item of three, free. Then the shop: three more for tips, and a small Restock button beside "The shop" (a refresh arrow, $5, then $10, $15…) for a new three (owner 2026-11-13: moved up out of the foot, and cheaper). | |
+| **After close** | "Tuesday results": the day's tips, plates and walk-outs, and what there is to spend. Pick one item of three, free. Then the shop: three more for tips, and a small Restock button beside "The shop" (a refresh arrow, $5, then $10, $15…) for a new three (owner 2026-11-13: moved up out of the foot, and cheaper). Achievements earned that day are listed last, under the pick (owner 2026-11-13: nothing to scroll past to play on). | |
 | **Flipping** | Eggs, bacon, burgers and chicken stop cooking half way until they're turned (§4). | The flat-top |
 | **Family** | From Wednesday, family may stop by at lunch (§4). Never announced. | |
 | **Friday** | Ends on a **catering order**: five platters, one after another, on one clock. | The catering photos |
@@ -81,7 +81,8 @@ from Off to Low, Medium, High and round again.
 
 **Between runs** (kept on the phone only, §13): the **Recipe Box**, a card
 for every ticket and special by its real name, which turns into the café's
-own photo once it has been served 10 times; the best week; weeks finished.
+own photo once it has been served 10 times ("Served 9 · photo at 10"; one
+with no photo yet says so from 10 on); the best week; weeks finished.
 
 **Achievements and unlocks** (owner 2026-11-12). Ten achievements, each
 earned once and kept on the phone (localStorage, with the save: no
@@ -720,6 +721,13 @@ volume, the tune (the day, week won, week lost), the level, a slider for
 how close the shift is to going wrong, **Build up** (calm to busiest over
 20 seconds, to hear each layer come in), **Calm down**, and **Lights
 out**. A readout says the intensity, the tempo and which layers are in.
+**Other instruments** (owner 2026-11-13, not in the game): a phrase each
+on a clean and a distorted guitar (Karplus-Strong plucks, the distorted
+one through a wave-shaper and cabinet filters, left and right), bass,
+organ, brass, strings, marimba, bells (FM) and flute, and a **heavy metal
+demo**: eight bars in E minor at 160, a gallop riff, power chords, double
+kick, and a lead in bars 5 to 8. Levels were measured so each comes out
+about as loud as the jazz.
 It's in the `?debug` block, so a build cuts it out. On a phone: the PC's
 address on the same Wi-Fi, port 8080 (`http://<the PC's address>:8080/play?debug&sound`).
 
@@ -853,14 +861,17 @@ lost, late or ended) is kept on the phone, the last 12, newest first, in
 title's **Past weeks** lists them: how it ended, the level and date, what
 it kept, a coloured tile a day, the week code (tap to show) and **Share
 week**. The end of a week has the same Share button beside its code. Share
-makes a **picture** of the week (`weekPicture()`: the end screen's table on
+makes a **picture** of the week (`weekPicture()`: **the café's wordmark and
+the game's name on top**, as on the title screen, with the level, how it
+ended and the date in a small line under them (owner 2026-11-13: so every
+shared week carries the logo); then the end screen's table on
 one post-sized PNG, 1080 × 1350 (4:5, so a feed never crops it; owner
 2026-11-13), drawn on a canvas in the game's colours and type: the days,
 then the money merged into as few lines as still add up ("Catering +
 bonuses" holds the catering, finishing, the performance bonus and free
 items turned down; Kept says what was spent, "after $445 on items"), the
 items **On the line** as tiles in their rarity colours with how many, and
-at the foot "Order Up", **where to play it** ("Play it at
+at the foot **where to play it** ("Play it at
 lvcafetogo.com/play", `site.json` → `game.playAt`; owner 2026-11-13, even
 while the game is unlisted; change it to play.lvcafetogo.com once that
 subdomain opens the game: `src/.htaccess` already sends it to /play, so the
