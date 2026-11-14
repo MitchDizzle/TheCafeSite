@@ -325,9 +325,10 @@
     bad: function () { tone(170, 0.16, 'square', 0.035); },
     spill: function () { tone(320, 0.45, 'sawtooth', 0.045, 80); },
     buy: function () { tone(660, 0.09, 'triangle', 0.06); tone(990, 0.16, 'triangle', 0.06, 0, 0.08); },
-    win: function () { [660, 830, 990, 1320].forEach(function (f, i) { tone(f, 0.22, 'triangle', 0.06, 0, i * 0.12); }); },
+    win: function () { musicDip(0.7); [660, 830, 990, 1320].forEach(function (f, i) { tone(f, 0.22, 'triangle', 0.06, 0, i * 0.12); }); },
     // The week is lost: down a minor chord, slowly, the last note held.
     lose: function () {
+      musicDip(2.3);
       [880, 659, 523, 440].forEach(function (f, i) { tone(f, i === 3 ? 1.4 : 0.34, 'triangle', 0.055, 0, i * 0.26); });
       tone(220, 1.6, 'sine', 0.05, 0, 0.78); tone(330, 1.5, 'sine', 0.025, 0, 0.8);
     },
@@ -358,17 +359,19 @@
     // The day is done (owner 2026-11-12: a little achievement tune): up the
     // chord and a held top note.
     close: function () {
+      musicDip(1);
       [523, 659, 784].forEach(function (f, i) { tone(f, 0.14, 'triangle', 0.06, 0, i * 0.11); });
       tone(1047, 0.6, 'triangle', 0.065, 0, 0.33); tone(659, 0.6, 'sine', 0.03, 0, 0.33); tone(784, 0.6, 'sine', 0.03, 0, 0.33);
     },
     // A flawless day: a longer run, two octaves up, and a sparkle on top.
     flawless: function () {
+      musicDip(1.4);
       [523, 659, 784, 1047, 1319, 1568].forEach(function (f, i) { tone(f, 0.16, 'triangle', 0.055, 0, i * 0.08); });
       [1047, 1319, 1568, 2093].forEach(function (f) { tone(f, 1, 'sine', 0.026, 0, 0.5); });
       tone(2637, 0.3, 'sine', 0.025, 0, 0.8); tone(3136, 0.4, 'sine', 0.02, 0, 0.92);
     },
     // An achievement: three quick notes, the last one held.
-    achieve: function () { tone(988, 0.09, 'square', 0.028); tone(1319, 0.09, 'square', 0.028, 0, 0.1); tone(1976, 0.4, 'triangle', 0.055, 0, 0.2); },
+    achieve: function () { musicDip(0.65); tone(988, 0.09, 'square', 0.028); tone(1319, 0.09, 'square', 0.028, 0, 0.1); tone(1976, 0.4, 'triangle', 0.055, 0, 0.2); },
     lucky: function () { tone(1568, 0.08, 'triangle', 0.05); tone(2093, 0.18, 'triangle', 0.05, 0, 0.07); }
   };
   function buzz(ms) { if (save.sfxVol && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { /* no matter */ } } }
@@ -416,11 +419,11 @@
   /* notes → the radio's low-pass → a duck for the lights → the volume → the limiter */
   function musicOut(a) {
     if (music.out) return;
-    var out = a.createGain(), lp = a.createBiquadFilter(), duck = a.createGain(), vol = a.createGain();
+    var out = a.createGain(), lp = a.createBiquadFilter(), duck = a.createGain(), dip = a.createGain(), vol = a.createGain();
     lp.type = 'lowpass'; lp.frequency.value = MOODS.day.lp; lp.Q.value = 0.4;
     vol.gain.value = MUSIC_VOL[save.musicVol];
-    out.connect(lp); lp.connect(duck); duck.connect(vol); vol.connect(bus.lim);
-    music.out = out; music.lp = lp; music.duck = duck; music.vol = vol;
+    out.connect(lp); lp.connect(duck); duck.connect(dip); dip.connect(vol); vol.connect(bus.lim);
+    music.out = out; music.lp = lp; music.duck = duck; music.dip = dip; music.vol = vol;
   }
   function note(a, when, midi, dur, vol, type) {
     var o = a.createOscillator(), g = a.createGain();
@@ -506,6 +509,16 @@
     return Math.max(0, Math.min(1, d)) * cap;
   }
   function setMood(m) { music.want = m; }
+  /* Room for a tune (owner 2026-11-13): the music dips quickly under it,
+     holds low while it plays, and fades back in. `len` is the tune's length
+     in seconds. Only when the tune is heard: with sound off, no dip. */
+  function musicDip(len) {
+    var g = music.dip, a = ac; if (!g || !a || !music.on || !save.sfxVol) return;
+    var now = a.currentTime;
+    g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(g.gain.value, now);
+    g.gain.linearRampToValueAtTime(0.15, now + 0.08); g.gain.setValueAtTime(0.15, now + len);
+    g.gain.linearRampToValueAtTime(1, now + len + 1.8);
+  }
   function musicTick() {
     var a = ac; if (!a || !music.on) return;
     var now = a.currentTime, dt = Math.min(0.5, now - (music.last || now)); music.last = now;
@@ -2365,7 +2378,7 @@
       give: function (id) { own({ id: id }); dirtyAll(); },
       findMatch: findMatch, aimTicket: aimTicket, usable: usable, binOpen: binOpen, level: level,
       gesture: function (i, how) { if (T) spotGesture(i, how || 'key'); },
-      get music() { return { on: music.on, step: music.step, mood: music.mood, I: music.I, bpm: music.bpm, dark: music.dark, audio: ac ? ac.state : 'none' }; },
+      get music() { return { on: music.on, step: music.step, mood: music.mood, I: music.I, bpm: music.bpm, dark: music.dark, dip: music.dip ? music.dip.gain.value : 1, audio: ac ? ac.state : 'none' }; },
       intensity: intensity, sfx: sfx, setMood: setMood
     };
     /* /play?debug&sound: the sound test page (owner 2026-11-13). Every sound
@@ -2394,11 +2407,11 @@
         ['dark', 'Lights out', 'Power Flicker: the kitchen goes dark, and the music with it. New.'],
         ['light', 'Lights back', 'Three and a half seconds later. New.'],
         ['buy', 'Buy', 'An item picked or bought; a cookie eaten.'],
-        ['close', 'Day closes', 'The tune at 2pm.'],
+        ['close', 'Day closes', 'The tune at 2pm. Every tune dips the music while it plays (play the music first to hear it).'],
         ['flawless', 'Flawless day', 'Instead of that, for a day with no slips.'],
         ['achieve', 'Achievement', 'Three notes, the last one held.'],
-        ['win', 'Week won', 'The catering went out on time. The music turns to the week-won tune.'],
-        ['lose', 'Week lost', 'Three coffees down, or the catering late. The music turns to the week-lost tune. New.']
+        ['win', 'Week won', 'The catering went out on time. The music dips under it, then fades back in as the week-won tune.'],
+        ['lose', 'Week lost', 'Three coffees down, or the catering late. The music dips under it, then fades back in as the week-lost tune. New.']
       ];
       var lab = { level: save.level, raw: 0, sweep: 0, dark: 0 };
       var seg = function (what, list, on) {

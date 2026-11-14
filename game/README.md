@@ -674,6 +674,11 @@ calm after it comes back gently. While paused it holds where it was.
   next half bar, from their first bar, so it shifts rather than cuts. A
   week ended from pause leaves the day's tune. The title and each morning
   bring the day's tune back.
+- **Room for a tune** (owner 2026-11-13): whenever a tune plays (a day
+  closing, a flawless day, an achievement, the week won or lost), the music
+  dips quickly to a whisper, stays there while the tune plays, then fades
+  back in over about two seconds (`musicDip()`). The week-won and week-lost
+  tunes come back in under it. With sound off there's no tune, so no dip.
 - Nobody has heard it on a phone speaker yet. The notes, tempos and
   volumes are at the top of the music block in `play.js` (`MOODS`,
   `MUSIC_VOL`); the layers and where they come in are `musicStep()`.
