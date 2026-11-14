@@ -103,10 +103,10 @@
 <g fill="#F4EFE4" opacity=".9"><rect x="243" y="144" width="26" height="1.600"/><rect x="245" y="148" width="22" height="1.600"/></g>
 <rect x="242" y="152.200" width="28" height="1.600" fill="#8ED9D4" opacity=".9"/><rect x="247" y="156.200" width="18" height="1.600" fill="#F4EFE4" opacity=".7"/>
 <rect x="279.500" y="129.500" width="39" height="31" fill="#EDE6D8"/>
-{#- The flag as it hangs in the window: 13 stripes and 50 stars (rows of six and five), too small to see one by one but all there (owner 2026-11-13: the drawing had 8 stars; a real flag, drawn small, is the respectful way). -#}
+{#- The flag as it hangs in the window: 13 stripes, and 13 stars in rows of three and two, big enough to read at this size (owner 2026-11-13: the first drawing had 8; 50 were too small to see). -#}
 <g fill="#A65342">{% for i in range(0, 13, 2) %}<rect x="279.500" y="{{ (129.5 + i * 31 / 13) | round(2) }}" width="39" height="{{ (31 / 13) | round(3) }}"/>{% endfor %}</g>
 <rect x="279.500" y="129.500" width="17" height="{{ (7 * 31 / 13) | round(2) }}" fill="#2B4664"/>
-<g fill="#EDE6D8">{% for r in range(1, 10) %}{% for k in range(1, 12) %}{% if (r + k) % 2 == 0 %}<circle cx="{{ (279.5 + 17 * k / 12) | round(2) }}" cy="{{ (129.5 + (7 * 31 / 13) * r / 10) | round(2) }}" r=".45"/>{% endif %}{% endfor %}{% endfor %}</g>
+<g fill="#EDE6D8">{% for r in range(1, 6) %}{% for k in range(1, 6) %}{% if (r + k) % 2 == 0 %}<circle cx="{{ (279.5 + 17 * k / 6) | round(2) }}" cy="{{ (129.5 + (7 * 31 / 13) * r / 6) | round(2) }}" r=".95"/>{% endif %}{% endfor %}{% endfor %}</g>
 <rect x="231" y="163" width="92" height="2.200" fill="#C9B9A6"/>
 
 {#- the walk, the railing along it, the kerb -#}
