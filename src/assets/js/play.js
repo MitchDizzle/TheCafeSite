@@ -1477,11 +1477,15 @@
      it ended, d its last day, t tips and s slips each day, f the catering's
      tips ('' if it never came), b the performance bonus, e what finishing
      paid, x the free items turned down, sp what was spent: with them the
-     picture adds up to what was kept. */
+     picture adds up to what was kept. i the items on the line. */
   var PAST_MAX = 12;
+  /* What was on the line, { id: how many }, for the picture (owner 2026-11-13). */
+  function lineOf() {
+    var out = {}; D.items.forEach(function (it) { if (G.items[it.id]) out[it.id] = G.items[it.id]; }); return out;
+  }
   function keepWeek(kept, why, spent) {
     var p = { c: weekCode(G.run), l: G.level, a: Date.now(), k: kept, w: why, d: G.day,
-      t: G.perDay.slice(0, G.day + 1).map(function (x) { return x || 0; }), s: G.slips.slice(0, G.day + 1), f: G.cater == null ? '' : G.cater, b: G.perf || 0, e: G.finish || 0, x: G.bonus || 0, sp: spent || 0 };
+      t: G.perDay.slice(0, G.day + 1).map(function (x) { return x || 0; }), s: G.slips.slice(0, G.day + 1), f: G.cater == null ? '' : G.cater, b: G.perf || 0, e: G.finish || 0, x: G.bonus || 0, sp: spent || 0, i: lineOf() };
     save.past = [p].concat(save.past.filter(function (x) { return x.c !== p.c; })).slice(0, PAST_MAX);
     return p;
   }
@@ -1518,7 +1522,26 @@
     epic: { bg: '#E6D9F4', bar: '#6E3FA6', ink: '#6E3FA6' }, legendary: { bg: null, bar: '#B8860B', ink: '#6B4E0A' },
     bad: { bg: '#F8DEDA', bar: '#A02F26', ink: '#A02F26' }
   };
-  function weekPicture(p) {
+  /* The game's drawings as images a canvas can draw (owner 2026-11-13: the
+     items on the picture). An image takes a moment to load and the Share
+     sheet can't wait for it, so the end screen and Past weeks load them
+     as they open (iconsFor); one not ready yet is left off. */
+  var ICONS = {};
+  function iconImg(name) {
+    if (ICONS[name]) return ICONS[name];
+    var sym = document.getElementById('s-' + name); if (!sym) return null;
+    // A drawing on its own can't see the page's CSS: each var(--x, fallback) becomes its fallback.
+    var body = sym.innerHTML.replace(/var\(--[a-z0-9-]+,\s*([^)]+)\)/g, '$1');
+    var img = new Image();
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + (sym.getAttribute('viewBox') || '0 0 64 64') + '" width="160" height="160">' + body + '</svg>');
+    return (ICONS[name] = img);
+  }
+  function lineItems(p) {
+    return D.items.filter(function (it) { return p.i && p.i[it.id]; });
+  }
+  function iconsFor(list) { list.forEach(function (p) { lineItems(p).forEach(function (it) { iconImg(it.icon); }); }); }
+  var TILE = { normal: ['#F1F3F4', '#1F4552'], rare: ['#D9E6F6', '#1F4552'], epic: ['#E6D9F4', '#1F4552'], legendary: [null, '#7A5A0E'] };
+  function weekPicture(p, withIcons) {
     var rows = [];
     p.t.forEach(function (tips, i) {
       var r = cutShort(p, i) ? null : rankOf(p.s[i]);
@@ -1530,7 +1553,10 @@
     if (p.x) rows.push({ day: '', words: 'Free items turned down', tips: '+' + money(p.x) });
     if (p.sp) rows.push({ day: '', words: 'Spent on items', tips: '−' + money(p.sp) });
     rows.push({ day: 'Kept', words: 'your score', tips: money(p.k), total: true });
-    var W = 1080, top = 330, RH = 118, x0 = 60, x1 = W - 60, tableH = rows.length * RH, H = top + 50 + tableH + 190;
+    var W = 1080, top = 330, RH = 118, x0 = 60, x1 = W - 60, tableH = rows.length * RH;
+    // The items on the line, a tile each, eight to a row, under the table.
+    var items = withIcons ? lineItems(p) : [], TS = 104, TG = 18, PER = 8, lineH = items.length ? 70 + Math.ceil(items.length / PER) * (TS + TG) : 0;
+    var H = top + 50 + tableH + lineH + 190;
     var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     var c = cv.getContext('2d'), serif = '"Playfair Display", Georgia, serif', sans = 'Lato, "Helvetica Neue", Arial, sans-serif';
     var spaced = function (txt, x, y, gap, align) {      // letter-spaced capitals, as the game's labels are
@@ -1569,9 +1595,27 @@
     });
     c.restore();
     c.strokeStyle = INK.tealDark; c.lineWidth = 6; round(x0, ty, x1 - x0, tableH, 30); c.stroke();
+    if (items.length) {
+      var ly = ty + tableH + 64;
+      c.fillStyle = INK.grey; c.font = '700 28px ' + sans; spaced('ON THE LINE', x0, ly, 5);
+      items.forEach(function (it, k) {
+        var col = k % PER, row = Math.floor(k / PER), tx = x0 + col * (TS + TG), tyy = ly + 26 + row * (TS + TG), tile = TILE[it.rarity] || TILE.normal;
+        round(tx, tyy, TS, TS, 20);
+        if (tile[0]) c.fillStyle = tile[0]; else { var tg = c.createLinearGradient(tx, tyy, tx + TS, tyy + TS); tg.addColorStop(0, '#FFF3C4'); tg.addColorStop(1, '#F4C542'); c.fillStyle = tg; }
+        c.fill(); c.strokeStyle = tile[1]; c.lineWidth = 4; c.stroke();
+        var img = iconImg(it.icon);
+        if (img && img.complete && img.naturalWidth) c.drawImage(img, tx + 10, tyy + 10, TS - 20, TS - 20);
+        var n = p.i[it.id];
+        if (n > 1) {
+          c.fillStyle = INK.tealDark; c.beginPath(); c.arc(tx + TS - 6, tyy + TS - 6, 21, 0, Math.PI * 2); c.fill();
+          c.fillStyle = INK.cream; c.font = '900 26px ' + sans; c.textAlign = 'center'; c.fillText(String(n), tx + TS - 6, tyy + TS + 3); c.textAlign = 'left';
+        }
+      });
+    }
     // Whose game it is (game/README.md: name the café, with the town).
-    c.textAlign = 'center'; c.fillStyle = INK.tealDark; c.font = '700 58px ' + serif; c.fillText('Order Up', W / 2, ty + tableH + 100);
-    c.fillStyle = INK.grey; c.font = '400 32px ' + sans; c.fillText('A little game on The Café’s website · Leavenworth, KS', W / 2, ty + tableH + 150);
+    var fy = ty + tableH + lineH;
+    c.textAlign = 'center'; c.fillStyle = INK.tealDark; c.font = '700 58px ' + serif; c.fillText('Order Up', W / 2, fy + 100);
+    c.fillStyle = INK.grey; c.font = '400 32px ' + sans; c.fillText('A little game on The Café’s website · Leavenworth, KS', W / 2, fy + 150);
     return cv;
   }
   /* A canvas as a PNG file, made on the spot (toBlob would wait). */
@@ -1586,7 +1630,9 @@
      is saved and the text copied. */
   function shareWeek(p) {
     var text = weekText(p), file = null, name = 'order-up-week-' + new Date(p.a).toISOString().slice(0, 10) + '.png';
-    try { file = pngFile(weekPicture(p), name); } catch (e) { file = null; }
+    // With the item drawings; if a browser won't let a picture with them be
+    // read back (it calls the canvas tainted), the same picture without.
+    try { file = pngFile(weekPicture(p, true), name); } catch (e) { try { file = pngFile(weekPicture(p, false), name); } catch (e2) { file = null; } }
     var copy = function (said) { try { navigator.clipboard.writeText(text).then(function () { toast(said || 'Copied: paste it anywhere'); }, function () { if (said) toast(said); }); } catch (e) { if (said) toast(said); } };
     var keep = function () {
       if (!file) { copy(); return; }
@@ -1603,6 +1649,7 @@
   function shareButton(i) { return '<button class="ou-btn ou-btn--quiet ou-share" data-act="share" data-i="' + i + '">Share week</button>'; }
   function showPast(from) {
     var list = save.past;
+    iconsFor(list);
     paper('past',
       '<div class="ou-top ou-top--back"><span class="ou-kicker">Past weeks</span><h2 class="ou-h">' + (list.length > 1 ? 'Your last ' + list.length + ' weeks' : list.length ? 'Your last week' : 'None yet') + '</h2>' +
       '<button class="ou-topback" data-act="back">Back</button></div>' +
@@ -1672,6 +1719,7 @@
     if (G.bonus) rows += '<div><b></b><span>Free items turned down</span><strong>+' + money(G.bonus) + '</strong></div>';
     rows += '<div><b></b><span>Spent on items</span><strong>' + (spent ? '−' + money(spent) : '$0') + '</strong></div>';
     rows += '<div class="is-total"><b>Kept</b><span>your score</span><strong>' + money(kept) + '</strong></div>';
+    iconsFor([past]);
     paper('over',
       '<div class="ou-top' + (win ? ' ou-top--fri' : '') + '"><span class="ou-kicker">' + head[0] + '</span><h2 class="ou-h">' + head[1] + '</h2>' +
       '<span class="ou-label">' + (best ? 'A new best ' + lvName + ' week' : 'Best ' + lvName + ' week: ' + money(save.keeps[G.level] || 0) + ' kept') + '</span></div>' +

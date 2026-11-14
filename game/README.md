@@ -767,8 +767,13 @@ title's **Past weeks** lists them: how it ended, the level and date, what
 it kept, a coloured tile a day, the week code (tap to show) and **Share
 week**. The end of a week has the same Share button beside its code. Share
 makes a **picture** of the week (`weekPicture()`: the end screen's table on
-a 1080-wide PNG, drawn on a canvas in the game's colours and type, "Order
-Up" and "A little game on The Café's website · Leavenworth, KS" under it)
+a 1080-wide PNG, drawn on a canvas in the game's colours and type, every
+line that adds up to what was kept, then the items **On the line** as
+tiles in their rarity colours with how many (owner 2026-11-13), and "Order
+Up" and "A little game on The Café's website · Leavenworth, KS" under it).
+The item drawings are the sprite sheet's, turned into images as the end
+screen or Past weeks opens (one not loaded by the tap is left off; a
+browser that won't let the picture be read with them gets it without))
 and hands it to the phone's Share sheet with a few lines of text: a
 coloured square and the tips for each day, the catering, what was kept,
 and the same line, with the `/play` link only once `game.listed` is true.
