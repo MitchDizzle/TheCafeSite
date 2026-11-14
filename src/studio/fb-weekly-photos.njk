@@ -1,0 +1,60 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Weekly Specials Photos Post (1080 × 1350)"
+canvasW: "1080px"
+canvasH: "1350px"
+pageCss: "/assets/css/studio/fb-weekly-photos.css"
+
+tags: studio
+studioPinned: true
+studioWeekly: true
+studioData: ["specials.json", "photos.json"]
+studioTitle: "Weekly specials photos — Facebook post"
+studioCategory: "Social"
+studioSize: "1080 × 1350 px · portrait feed post"
+studioNote: "The second picture of the weekly specials post (Mitch 2026-11-14): what the week's plates look like. Each day of the newest week in specials.json gets the newest photo in photos.json with the same name; a day with no photo is left out, up to four. Post it after fb-weekly-specials, in the same post, with that post's caption."
+studioW: 1080
+studioH: 1350
+studioOrder: 23
+---
+{#- Up to four of the week's plates, a photo each, the day and the plate's
+    name on a cream strip under it (red on cream, never on teal). The
+    photos are past days' plates, so the sides in them may not be this
+    week's: the words say the plate only, and the first picture of the
+    post says the sides. -#}
+{%- set week = specials.days | latestWeek %}
+{%- set first = week[0].date | dayDate("monthDay") %}
+{%- set last = week[week.length - 1].date | dayDate("monthDay") %}
+{%- if first.split(" ")[0] == last.split(" ")[0] %}
+{%- set range = first + " – " + last.split(" ")[1] %}
+{%- else %}
+{%- set range = first + " – " + last %}
+{%- endif %}
+<div class="canvas wp">
+
+    <header class="wp-head">
+        <div class="wordmark wordmark--light wordmark--hero wp-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-display-italic wp-kicker">Lunch Specials</p>
+        <p class="p-label wp-range">{{ range }} &middot; {{ site.address.locality }}, {{ site.address.region }}</p>
+    </header>
+
+    <div class="wp-grid wp-grid--{{ tiles.length }}">
+        {%- for t in tiles %}
+        <figure class="wp-tile">
+            <img class="wp-photo" src="{{ t.file }}" alt="{{ t.alt }}">
+            <figcaption class="wp-label">
+                <span class="p-label wp-day">{{ t.date | dayDate("weekday") }}</span>
+                <span class="p-display wp-name">{{ t.special }}</span>
+            </figcaption>
+        </figure>
+        {%- endfor %}
+    </div>
+
+    <footer class="wp-foot">
+        <p class="p-display wp-foot-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
+        <p class="p-body wp-foot-line">Lunch from 11am &middot; {{ site.address.street }}, {{ site.address.locality }}, {{ site.address.region }}</p>
+    </footer>
+
+</div>
