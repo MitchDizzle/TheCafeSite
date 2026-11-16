@@ -1,0 +1,133 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Catering menu (to email)"
+canvasW: "8.5in"
+canvasH: "11in"
+pageSize: "8.5in 11in"
+pageCss: "/assets/css/studio/catering-sheet.css"
+
+tags: studio
+studioPinned: true
+studioData: ["catering.json", "site.json"]
+studioTitle: "Catering menu — to email (letter, 2 pages)"
+studioCategory: "Menus"
+studioSize: "8.5 × 11 in portrait · 2 pages · no fold"
+studioNote: "The catering guide as a plain two-page menu to attach to an email (Mitch 2026-11-16: the tri-fold PDF reads like a folded brochure on a screen). Same packages, numbers and prices as the tri-fold, from catering.json. The phone, emails and website are links in the PDF. Prints fine at 100% on letter, one or both sides."
+studioW: 816
+studioH: 2150
+studioOrder: 21
+---
+
+{#- ===========================================================
+    Catering menu to email — letter portrait, two pages, no fold
+
+    The same guide as catering-trifold-bw (same data, same numbers via
+    `cateringGuide`), laid out as a document to read on a screen: a
+    letterhead, then each page's sections flowing down two columns.
+
+    Each page is a fixed artboard and CLIPS: after adding packages,
+    re-proof the PNG and move a section to the other page if one overruns.
+    =========================================================== #}
+
+{%- set g = catering | cateringGuide %}
+{%- set telHref = "tel:" + site.phoneHref %}
+
+{%- macro pkg(p) %}
+<div class="cs-pkg">
+    <p class="cs-pkg-head">
+        <span class="cs-num">{{ p.n }}</span>
+        <span class="cs-name">{{ p.name }}{% if p.sides and not p.with %} <span class="cs-sides-n">{{ p.sides }} sides &amp; dessert</span>{% endif %}</span>
+        <span class="cs-dots" aria-hidden="true"></span>
+        <span class="cs-price">{% if p.priceLabel %}{{ p.priceLabel }}{% else %}{{ p.price | money }}{% endif %}</span>
+    </p>
+    {%- if p.with %}
+    <p class="cs-with">
+        {{- p.with | join(" · ") }}
+        {%- if p.sides %} · <strong>{{ p.sides }} sides</strong> &amp; dessert{% endif -%}
+    </p>
+    {%- endif %}
+</div>
+{%- endmacro %}
+
+{%- macro section(s, cls) %}
+<section class="cs-section {{ cls }}">
+    <h2 class="p-display cs-section-name">{{ s.name }}<span class="cs-from">from {{ s.from | money }}</span></h2>
+    {%- if s.note %}<p class="cs-section-note">{{ s.note }}</p>{% endif %}
+    {%- for p in s.packages %}{{ pkg(p) }}{% endfor %}
+</section>
+{%- endmacro %}
+
+{%- macro sides(list) %}
+<section class="cs-section cs-sides">
+    <h3 class="cs-sides-name">{{ list.name }}</h3>
+    <ul class="cs-sides-list">
+        {%- for item in list.items %}<li>{{ item }}</li>{% endfor %}
+    </ul>
+</section>
+{%- endmacro %}
+
+{%- macro foot(page) %}
+<footer class="cs-foot">
+    <span>To order, call <a href="{{ telHref }}"><strong>{{ site.phone }}</strong></a> with the package number and how many guests. Prices are per person.</span>
+    <span class="cs-page">{{ page }} of 2</span>
+</footer>
+{%- endmacro %}
+
+<div class="cs-stack">
+
+    {# ── Page 1 ─────────────────────────────────────────── #}
+    <div class="canvas cs-page-sheet">
+        <header class="cs-head">
+            <div class="wordmark wordmark--light cs-wordmark">
+                {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+            </div>
+            <div class="cs-head-title">
+                <h1 class="p-display cs-title">Catering Menu</h1>
+                <p class="p-display-italic cs-sub">The Café Catering <span class="cs-amp">&amp;</span> {{ catering.brand }}</p>
+            </div>
+        </header>
+
+        <div class="cs-contact">
+            <a href="{{ telHref }}" class="cs-contact-phone">{{ site.phone }}</a>
+            <a href="mailto:{{ catering.email }}">{{ catering.email }}</a>
+            <a href="mailto:{{ site.email }}">{{ site.email }}</a>
+            <a href="https://{{ site.social.website }}/catering">{{ site.social.website }}/catering</a>
+            <span>{{ site.address.street }}, {{ site.address.locality }}, {{ site.address.region }}</span>
+        </div>
+
+        <p class="cs-intro">Breakfasts, lunches, buffets and parties, from the kitchen that has cooked for Leavenworth since 2005. Every package is numbered, so an order can be as simple as &ldquo;the number 12 for 60 people.&rdquo;</p>
+
+        <div class="cs-body">
+            {{ section(g.byId.breakfast) }}
+            {{ section(g.byId.lunches) }}
+            {{ section(g.byId.cocktail, "cs-col-break") }}
+            <section class="cs-how">
+                <h2 class="p-display cs-section-name">How it works</h2>
+                <ul>
+                    {%- for line in catering.howItWorks %}<li>{{ line }}</li>{% endfor %}
+                </ul>
+            </section>
+        </div>
+
+        {{ foot(1) }}
+    </div>
+
+    {# ── Page 2 ─────────────────────────────────────────── #}
+    <div class="canvas cs-page-sheet">
+        <header class="cs-runhead">
+            <span class="p-display">The Café &middot; Catering Menu</span>
+            <span><a href="{{ telHref }}">{{ site.phone }}</a> &middot; <a href="mailto:{{ catering.email }}">{{ catering.email }}</a></span>
+        </header>
+
+        <div class="cs-body">
+            {{ section(g.byId.dropoff) }}
+            {{ section(g.byId.buffets) }}
+            {{ sides(catering.sides.buffet) }}
+            {{ section(g.byId.bbq) }}
+            {{ sides(catering.sides.bbq) }}
+        </div>
+
+        {{ foot(2) }}
+    </div>
+
+</div>

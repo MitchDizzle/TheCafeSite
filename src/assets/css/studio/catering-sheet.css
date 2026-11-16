@@ -1,0 +1,296 @@
+/* ============================================================
+   Catering menu to email — 8.5 × 11 in portrait, two pages
+   Piece: src/studio/catering-sheet.njk, data: _data/catering.json
+
+   A document, not a brochure: a letterhead, then each page's sections
+   flowing down two columns (CSS columns, filled top to bottom). Colour is
+   kept to the teal of the headings and number discs, so a client who
+   prints it in black & white loses nothing.
+
+   Pages are fixed and CLIP: re-proof after a change. Every length is in
+   absolute inches. This is a fixed artboard.
+   ============================================================ */
+
+.cs-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4in;
+}
+
+.cs-page-sheet {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5in 0.6in 0.4in;
+    color: var(--text-dark);
+}
+
+.cs-page-sheet a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* ── Letterhead (page 1) ──────────────────────────────────── */
+
+.cs-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.3in;
+}
+
+.cs-wordmark {
+    --mark-w: 2.1in;
+}
+
+.cs-head-title {
+    text-align: right;
+}
+
+.cs-title {
+    font-size: 0.46in;
+    color: var(--teal-dark);
+}
+
+.cs-sub {
+    font-size: 0.18in;
+    margin-top: 0.05in;
+}
+
+.cs-amp { font-style: normal; }
+
+.cs-contact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.03in 0.18in;
+    margin-top: 0.2in;
+    padding: 0.07in 0;
+    border-top: 2px solid var(--teal-dark);
+    border-bottom: 1px solid var(--teal-dark);
+    font-size: 0.115in;
+}
+
+.cs-contact-phone {
+    font-weight: 900;
+    font-size: 0.14in;
+}
+
+.cs-intro {
+    font-size: 0.13in;
+    line-height: 1.45;
+    margin-top: 0.14in;
+}
+
+/* ── Running head (page 2) ────────────────────────────────── */
+
+.cs-runhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 0.06in;
+    border-bottom: 2px solid var(--teal-dark);
+    font-size: 0.115in;
+}
+
+.cs-runhead .p-display {
+    font-size: 0.19in;
+    color: var(--teal-dark);
+}
+
+/* ── Body: two columns, filled down then across ───────────── */
+
+.cs-body {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    margin-top: 0.18in;
+    columns: 2;
+    column-gap: 0.4in;
+    column-fill: auto;
+}
+
+.cs-section + .cs-section,
+.cs-section + .cs-how {
+    margin-top: 0.17in;
+}
+
+.cs-sides { margin-top: 0.1in !important; }
+
+/* Start a section at the top of the right column (page 1's Cocktail Buffets). */
+.cs-col-break { break-before: column; margin-top: 0 !important; }
+
+.cs-section-name {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.22in;
+    color: var(--teal-dark);
+    border-bottom: 1.5px solid var(--teal-dark);
+    padding: 0 0.02in 0.03in 0;
+    break-after: avoid;
+}
+
+.cs-from {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.1in;
+    font-weight: 400;
+    font-style: italic;
+    color: #4a5a62;
+}
+
+.cs-section-note {
+    font-size: 0.112in;
+    font-style: italic;
+    line-height: 1.35;
+    color: #3d4b52;
+    margin-top: 0.04in;
+    break-after: avoid;
+}
+
+.cs-pkg {
+    margin-top: 0.055in;
+    break-inside: avoid;
+}
+
+.cs-pkg-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.06in;
+    font-size: 0.14in;
+    line-height: 1.2;
+}
+
+.cs-num {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    min-width: 0.19in;
+    height: 0.19in;
+    padding: 0 0.03in;
+    border-radius: 0.095in;
+    background: var(--teal-dark);
+    color: #fff;
+    font-weight: 900;
+    font-size: 0.1in;
+    line-height: 0.19in;
+    text-align: center;
+    margin-top: 0.005in;
+}
+
+.cs-name {
+    font-weight: 700;
+}
+
+/* A buffet's "3 sides & dessert", on the name's line to save a row each. */
+.cs-sides-n {
+    font-weight: 400;
+    font-size: 0.112in;
+    color: #3d4b52;
+    white-space: nowrap;
+}
+
+/* Dot leader from the name to the price. */
+.cs-dots {
+    flex: 1;
+    min-width: 0.15in;
+    border-bottom: 1px dotted #9aa6ab;
+    transform: translateY(-0.04in);
+}
+
+.cs-price {
+    flex: 0 0 auto;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.cs-with {
+    font-size: 0.115in;
+    line-height: 1.32;
+    color: #3d4b52;
+    margin: 0.01in 0 0 0.25in;
+}
+
+.cs-with strong { color: var(--text-dark); }
+
+/* ── Sides ────────────────────────────────────────────────── */
+
+.cs-sides {
+    break-inside: avoid;
+    background: var(--cream-alt);
+    padding: 0.07in 0.1in 0.08in;
+}
+
+.cs-sides-name {
+    font-size: 0.1in;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal-dark);
+}
+
+.cs-sides-list {
+    list-style: none;
+    margin-top: 0.03in;
+    columns: 2;
+    column-gap: 0.15in;
+    font-size: 0.11in;
+    line-height: 1.32;
+}
+
+.cs-sides-list li { break-inside: avoid; }
+
+/* ── How it works ─────────────────────────────────────────── */
+
+.cs-how {
+    break-inside: avoid;
+}
+
+.cs-how ul {
+    list-style: none;
+    margin-top: 0.06in;
+}
+
+.cs-how li {
+    font-size: 0.118in;
+    line-height: 1.4;
+    padding-left: 0.13in;
+    position: relative;
+}
+
+.cs-how li + li { margin-top: 0.04in; }
+
+.cs-how li::before {
+    content: "";
+    position: absolute;
+    left: 0.01in;
+    top: 0.06in;
+    width: 0.045in;
+    height: 0.045in;
+    border-radius: 50%;
+    background: var(--teal-dark);
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+
+.cs-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.3in;
+    margin-top: 0.12in;
+    padding-top: 0.07in;
+    border-top: 1px solid #b9c3c7;
+    font-size: 0.105in;
+    color: #3d4b52;
+}
+
+.cs-page {
+    flex: 0 0 auto;
+    font-style: italic;
+}
+
+@media print {
+    .cs-stack { gap: 0; }
+    .cs-page-sheet:not(:last-child) { break-after: page; }
+}

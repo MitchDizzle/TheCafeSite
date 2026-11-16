@@ -1,5 +1,6 @@
 // The catering guide's packages, numbered and keyed by section, for the
-// printed tri-fold (studio/catering-trifold-bw.njk).
+// printed tri-fold (studio/catering-trifold-bw.njk) and the emailed sheet
+// (studio/catering-sheet.njk), so both carry the same numbers.
 //
 // `catering | cateringGuide` returns { byId, sections } where every package
 // carries `n`, its number on the guide (1, 2, 3… straight down

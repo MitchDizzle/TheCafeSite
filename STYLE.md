@@ -187,6 +187,8 @@ The audience skews older, so these are floors, not targets.
 | Survey card | 11 × 8.5 in, two 5.5 × 8.5 cards | One ink |
 | Tri-fold menu | Letter, black & white | Also the PDF behind "Print this menu" on /menu |
 | Counter menu | 11 × 17 in, both sides, colour | Bigger type |
+| Catering tri-fold | 11 × 8.5 in landscape, both sides, black & white | Printed and handed out |
+| Catering menu to email (`catering-sheet`) | Letter portrait, 2 pages | The PDF to attach to an email; teal headings only, prints fine in black & white |
 | In-store TV board (`/menu-board`) | 1920 × 1080 | Sizes in rem only |
 
 Every one of these is built in `/studio/`. Copy the nearest existing piece
