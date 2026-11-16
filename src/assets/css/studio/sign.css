@@ -1,6 +1,7 @@
 /* ============================================================
    Counter signs, 8.5 × 11 in portrait, for letter stand-up sign holders.
-   Pieces: sign-drinks(-bw).njk, sign-specials(-bw).njk, sign-todays-sides-bw.njk,
+   Pieces: sign-drinks(-bw).njk, sign-specials(-bw).njk, sign-specials-half-bw.njk,
+   sign-todays-sides-bw.njk,
    sign-desserts-bw.njk, sign-desserts-open-fridge-bw.njk, sign-dessert-bars-bw.njk,
    sign-macho-nachos-bw.njk, sign-day-letter.njk
    (and the door signs, in their own section below)
@@ -1531,4 +1532,94 @@
 .sw-row--closed .sw-closed {
     grid-column: 2 / -1;
     font-style: italic;
+}
+
+/* ── This week's specials, two to a page (sign-specials-half-bw.njk) ──
+   The specials sign at half size, twice on a letter page, cut in half to
+   hand out (Mitch 2026-11-16). Each copy is 8.5 x 5.5 landscape: the logo
+   and the heading share the top line, the rest is the sign at about 0.6x,
+   so the plates are ~15pt and their sides ~9.5pt. Clips: re-proof after a
+   long week. */
+
+.sign-halves {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.sign.sign--half {
+    height: 5.5in;
+    flex: 0 0 5.5in;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto 1fr auto;
+    padding: 0.3in 0.5in 0.32in;
+}
+
+.sign--half > * { grid-column: 1 / -1; }
+
+.sign--half > .sign-title-ink,
+.sign--half > .sign-heading {
+    grid-row: 1;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 0.08in;
+    border-bottom: 0.025in solid #000;
+    margin: 0;
+}
+
+.sign--half > .sign-title-ink { grid-column: 1; }
+
+.sign--half > .sign-heading {
+    grid-column: 2;
+    text-align: right;
+    padding-left: 0.3in;
+}
+
+.sign--half .sign-title-ink .wordmark { --mark-w: 1.9in; margin: 0; }
+.sign--half .sign-heading-title { font-size: 0.36in; }
+.sign--half .sign-heading-sub { font-size: 0.12in; margin-top: 0.04in; }
+
+.sign--half .sw-grid {
+    --day-w: 0.8in;
+    --soup-w: 1.55in;
+    --col-gap: 0.12in;
+    margin-top: 0.1in;
+}
+
+.sign--half .sw-grid::after { width: 0.02in; }
+.sign--half .sw-cols { padding-bottom: 0.04in; }
+.sign--half .sw-col-label { font-size: 0.1in; }
+.sign--half .sw-col-price { font-size: 0.14in; margin-top: 0; }
+.sign--half .sw-days { border-top-width: 0.02in; }
+.sign--half .sw-row { padding: 0.035in 0; border-bottom-width: 0.01in; }
+.sign--half .sw-day { font-size: 0.23in; }
+.sign--half .sw-date { font-size: 0.1in; margin-top: 0.02in; white-space: nowrap; }
+.sign--half .sw-special { font-size: 0.2in; }
+.sign--half .sw-day-price { font-size: 0.15in; }
+.sign--half .sw-sides { font-size: 0.13in; margin-top: 0.01in; }
+.sign--half .sw-soup-name { font-size: 0.16in; }
+
+.sign--half .sign-spacer { min-height: 0.08in; }
+
+.sign--half .sw-choice {
+    border-width: 0.018in;
+    border-radius: 0.07in;
+    padding: 0.05in 0.14in 0.07in;
+}
+
+.sign--half .sw-choice-title { font-size: 0.17in; }
+.sign--half .sw-choice-note { font-size: 0.11in; margin-top: 0.01in; }
+.sign--half .sw-choices { font-size: 0.12in; gap: 0.02in 0.2in; margin-top: 0.03in; }
+.sign--half .sw-choices li::before { margin-right: 0.05in; }
+
+/* The cut: a dashed guide across the middle of the sheet, no height of
+   its own so each copy keeps exactly 5.5in. */
+.sign-cut {
+    height: 0;
+    border-top: 0.01in dashed #888;
+    flex: 0 0 0;
 }

@@ -1,0 +1,26 @@
+---
+layout: layouts/piece.njk
+title: "The Café — This week's specials, two to a page (black & white)"
+canvasW: "8.5in"
+canvasH: "11in"
+pageSize: "8.5in 11in"
+pageCss: "/assets/css/studio/sign.css"
+bw: true
+half: true
+tags: studio
+studioPinned: true
+studioWeekly: true
+studioData: ["specials.json"]
+studioTitle: "Specials handout — two to a page, black & white"
+studioCategory: "Signs"
+studioSize: "8.5 × 11 in portrait · two 8.5 × 5.5 copies, cut in half"
+studioNote: "The week's specials to hand to a customer (Mitch 2026-11-16): the black & white specials sign at half size, twice on one letter page. Print at 100%, cut on the dashed line. Same data as the sign."
+studioW: 816
+studioH: 1056
+studioOrder: 34
+---
+<div class="canvas sign-halves">
+    {% include "partials/studio/sign-specials.njk" %}
+    <div class="sign-cut" aria-hidden="true"></div>
+    {% include "partials/studio/sign-specials.njk" %}
+</div>
