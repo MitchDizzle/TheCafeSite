@@ -74,7 +74,7 @@
     var lines = ['Order Up, ' + (D.levels[p.l] ? D.levels[p.l].name + ' week' : 'a week') + ': ' + weekHead(p)[1].toLowerCase()];
     p.t.forEach(function (tips, i) { var r = cutShort(p, i) ? null : rankOf(p.s[i]); lines.push((r ? SQUARE[r.rarity] : SQUARE.bad) + ' ' + D.days[i].short + ' ' + money(tips) + (r ? ' · ' + rankWords(p.s[i]) : ' · ' + stopWords(p).toLowerCase())); });
     if (p.f !== '') lines.push('Catering ' + money(p.f));
-    if (p.e) lines.push('The week finished +' + money(p.e));
+    if (p.e) lines.push('Week completion bonus +' + money(p.e));
     if (p.b) lines.push('Performance bonus +' + money(p.b));
     if (p.x) lines.push('Free items turned down +' + money(p.x));
     if (p.sp) lines.push('Spent on items −' + money(p.sp));

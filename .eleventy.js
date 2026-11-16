@@ -255,8 +255,14 @@ module.exports = function (eleventyConfig) {
     // as the results script's KEY. Without it the game still runs; its results
     // just can't be checked.
     const key = process.env.OU_KEY || "";
+    if (process.env.GITHUB_ACTIONS === "true" && (!key || process.env.OU_PLAIN)) {
+      throw new Error("[play] deployment requires OU_KEY and an obfuscated production build");
+    }
+    if (key && !/^[A-Za-z0-9_-]+$/.test(key)) {
+      throw new Error("[play] OU_KEY must contain only letters, numbers, underscores and hyphens");
+    }
     if (!key) console.warn("[play] OU_KEY is not set: results from this build will not be signed with the real key");
-    built = built.replace("__OU_SIGN_KEY__", key.replace(/[^A-Za-z0-9_-]/g, "") || "unset");
+    built = built.replace("__OU_SIGN_KEY__", key || "unset");
     // Minified and obfuscated for the live site; `npm start` serves the
     // readable source. Set OU_PLAIN=1 to build without it (to debug a build).
     if (!process.env.OU_PLAIN) {
