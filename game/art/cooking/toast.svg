@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <path class="food2" d="M13 24c-3-10 6-15 19-15s22 5 19 15v26a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5z" fill="#A86B30" stroke="#1F4552" stroke-width="2.5" stroke-linejoin="round"/>
+  <path class="food" d="M18 25c-2-7 4-10 14-10s16 3 14 10v23a2 2 0 0 1-2 2H20a2 2 0 0 1-2-2z" fill="#DDA65E"/>
+  <path class="marks" d="M23 30h18M23 38h18" stroke="#A86B30" stroke-width="2.5" stroke-linecap="round" opacity=".55"/>
+</svg>

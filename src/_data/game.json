@@ -1,7 +1,7 @@
 {
-  "_note": "Order Up, the phone game at /play (src/play.njk, assets/js/play.js). Everything a non-programmer might want to change is here: the foods, the tickets, the specials, the items and their odds, the family's small talk, and the numbers that set how hard a day is. The rules these follow are in game/README.md. play.11tydata.js checks every `menu` name against menu.json when the site builds and warns if one has gone, so the game can't serve something the café stopped selling.",
+  "_note": "Order Up, the phone game at /play (src/play.njk, the code in game/js). Everything a non-programmer might want to change is here: the foods, the tickets, the specials, the items and their odds, the family's small talk, and the numbers that set how hard a day is. The rules these follow are in game/README.md. play.11tydata.js checks every `menu` name against menu.json when the site builds and warns if one has gone, so the game can't serve something the café stopped selling.",
 
-  "_note_parts": "Every food a plate can hold. `cook` (seconds on the flat-top) makes it a food that cooks: it goes on the griddle first and must be pulled when done. No `cook` and it goes straight on the plate. `sprite` is the drawing in partials/game/sprites.njk (s-<sprite>). `raw` and `raw2` are the colours it shows before it's done. `flip` makes it a food that must be turned half way through (on the levels that have flipping, see `levels`): it stops cooking at the half until it is flipped, and burns if it is left.",
+  "_note_parts": "Every food a plate can hold. `cook` (seconds on the flat-top) makes it a food that cooks: it goes on the griddle first and must be pulled when done. No `cook` and it goes straight on the plate. `sprite` is the drawing: game/art/…/<sprite>.svg (s-<sprite> on the page). `raw` and `raw2` are the colours it shows before it's done. `flip` makes it a food that must be turned half way through (on the levels that have flipping, see `levels`): it stops cooking at the half until it is flipped, and burns if it is left.",
   "parts": {
     "egg":      { "name": "Egg",       "sprite": "egg",      "cook": 3.5, "flip": true, "raw": "#F4F1E4", "raw2": "#F9D36B" },
     "bacon":    { "name": "Bacon",     "sprite": "bacon",    "cook": 4.5, "flip": true, "raw": "#E08F82", "raw2": "#FBE3D2" },
@@ -161,7 +161,7 @@
     { "max": 999, "rarity": "normal" }
   ],
 
-  "_note_achievements": "Achievements (owner 2026-11-12): earned once, kept on the phone (localStorage, like the save), listed at the end of the week they were earned and on the Achievements screen; Settings can reset them. `unlocks` names an item that is never dealt until this one is earned. What earns each `id` is in play.js (award). Keep `text` saying exactly what it takes. Each wears the drawing of the item it `unlocks` (owner 2026-11-13); one that unlocks nothing names its own `icon` (a sprite in partials/game/sprites.njk).",
+  "_note_achievements": "Achievements (owner 2026-11-12): earned once, kept on the phone (localStorage, like the save), listed at the end of the week they were earned and on the Achievements screen; Settings can reset them. `unlocks` names an item that is never dealt until this one is earned. What earns each `id` is in play.js (award). Keep `text` saying exactly what it takes. Each wears the drawing of the item it `unlocks` (owner 2026-11-13); one that unlocks nothing names its own `icon` (a drawing in game/art).",
   "achievements": [
     { "id": "firstweek", "name": "Week One",      "text": "Finish a week, on any level",                         "unlocks": "penny" },
     { "id": "regular",   "name": "Regular",       "text": "Finish a week on Regular",                            "unlocks": "fbpost" },

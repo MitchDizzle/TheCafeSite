@@ -27,3 +27,10 @@ kitchen/specials-plan*.json
 kitchen/stats-history*.json*
 kitchen/photos/
 kitchen/photos-mock/
+
+# Order Up's finished files, put together from game/js, game/css and game/art
+# by game/build.js before every build (edit the parts, never these)
+src/assets/js/play.js
+src/assets/css/play.css
+src/_includes/partials/game/sprites.njk
+src/_includes/partials/game/storefront.njk

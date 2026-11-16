@@ -16,6 +16,16 @@ module.exports = function (eleventyConfig) {
 
   eleventyConfig.addPassthroughCopy("src/assets");
 
+  // Order Up is kept in parts in game/ (the code in game/js, the look in
+  // game/css, the drawings in game/art) and put together here, before every
+  // build, into the files /play uses (play.js, play.css and the sprite and
+  // storefront partials; gitignored). Under `npm start` a change to a part
+  // rebuilds it. game/build.js says what it does.
+  const game = require("./game/build.js");
+  game.build();
+  eleventyConfig.on("eleventy.before", () => { game.build(); });
+  for (const dir of Object.values(game.SRC)) eleventyConfig.addWatchTarget(`./${dir}`);
+
   // Dotfiles and root-level statics need explicit mappings — Eleventy will
   // not pick .htaccess up from a directory glob, and .svg/.txt/.xml are not
   // template formats so they are otherwise ignored entirely.

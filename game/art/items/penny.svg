@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<!-- The Lucky Penny (an item): a copper penny, a shine on it. -->
+  <circle cx="32" cy="34" r="22" fill="#C8783E" stroke="#1F4552" stroke-width="2.5"/>
+  <circle cx="32" cy="34" r="16" fill="none" stroke="#A55E2C" stroke-width="2.5"/>
+  <path d="M37.5 29.5a7 7 0 1 0 0 9M33 24v20" stroke="#7E4420" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  <path d="M18 26c2-5 6-8 11-9" stroke="#E9A774" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M50 6l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#F4C542" stroke="#1F4552" stroke-width="1.6" stroke-linejoin="round"/>
+</svg>

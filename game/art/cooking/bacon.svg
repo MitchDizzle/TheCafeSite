@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <path class="food" d="M6 27c8-7 14 3 22-2s15-6 22-1c4 3 7 2 8 1v13c-1 1-4 2-8-1-7-5-14-4-22 1s-14-5-22 2z" fill="#B95A41"/>
+  <path class="food2" d="M7 33c7-5 13 3 21-1s15-5 22-1c3 2 6 2 8 1v3c-2 1-5 1-8-1-7-4-14-3-22 1s-14-4-21 1z" fill="#F2C1A0"/>
+  <path d="M6 27c8-7 14 3 22-2s15-6 22-1c4 3 7 2 8 1v13c-1 1-4 2-8-1-7-5-14-4-22 1s-14-5-22 2z" fill="none" stroke="#1F4552" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>

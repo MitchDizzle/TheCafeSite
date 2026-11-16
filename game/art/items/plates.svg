@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<!-- The Second Plate (an item): two plates, one behind the other. -->
+  <circle cx="39" cy="26" r="19" fill="#FFFFFF" stroke="#1F4552" stroke-width="2.5"/>
+  <circle cx="39" cy="26" r="12" fill="none" stroke="#C5CFD3" stroke-width="2.5"/>
+  <circle cx="25" cy="39" r="20" fill="#FFFFFF" stroke="#1F4552" stroke-width="2.5"/>
+  <circle cx="25" cy="39" r="13" fill="none" stroke="#C5CFD3" stroke-width="2.5"/>
+  <path d="M14 33c2-4 5-6 9-7" stroke="#E6ECEE" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

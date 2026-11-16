@@ -11,15 +11,24 @@ on:
     # put [skip ci] in the commit message (GitHub's own flag; the newest
     # commit of the push decides). specials.json is in src/, so it always
     # deploys: the kitchen PC reads the specials from the live site.
-    paths-ignore:
-      - 'kitchen/**'
-      - '.claude/**'
-      - '*.md'
-      - 'archive/**'
-      - 'personal/**'
-      - 'social/**'
-      - 'square/**'
-      - 'game/**'
+    # Order Up's parts in game/ (js, css, art and the build that joins them)
+    # are the game's source since 2026-11-15, so they deploy; the rest of
+    # game/ (its guide, the bot, the style sheet) doesn't. Later lines win.
+    paths:
+      - '**'
+      - '!kitchen/**'
+      - '!.claude/**'
+      - '!*.md'
+      - '!archive/**'
+      - '!personal/**'
+      - '!social/**'
+      - '!square/**'
+      - '!game/**'
+      - 'game/js/**'
+      - 'game/css/**'
+      - 'game/art/**'
+      - 'game/build.js'
+      - '!game/**/*.md'
   # Started by name too: by "Specials from the kitchen board" after it
   # commits the board's specials (its own push can't start this), or by hand.
   workflow_dispatch:
