@@ -1,25 +1,19 @@
 {
   "_note": "Made by scripts/desserts.js (npm run desserts, and the start of npm run build) from Square's desserts, as the kitchen board's Manage -> Desserts has them. Don't edit it: change the desserts there, then run it again and commit this file. `out` is a kind Square counts at 0. Read by studio/sign-desserts-bw.njk and sign-dessert-bars-bw.njk.",
-  "updated": "2026-11-09",
+  "updated": "2026-11-16",
   "items": [
     {
       "name": "Cheesecake",
-      "price": 3.5,
+      "price": null,
       "kinds": [
         {
-          "name": "Plain Cheesecake",
-          "out": true
+          "name": "Cheesecake"
+        },
+        {
+          "name": "Pumpkin Cheesecake"
         }
       ],
-      "lists": [
-        {
-          "name": "Cheesecake Sauce",
-          "options": [
-            "Caramel",
-            "Chocolate"
-          ]
-        }
-      ]
+      "lists": []
     },
     {
       "name": "Dessert Bar",
@@ -81,11 +75,22 @@
       "lists": []
     },
     {
+      "name": "Carrot Cake",
+      "price": 3,
+      "kinds": [
+        {
+          "name": "Carrot Cake"
+        }
+      ],
+      "lists": []
+    },
+    {
       "name": "Cinnamon Roll",
       "price": 2.5,
       "kinds": [
         {
-          "name": "Cinnamon Roll"
+          "name": "Cinnamon Roll",
+          "out": true
         }
       ],
       "lists": []
@@ -145,7 +150,8 @@
       "price": 2.5,
       "kinds": [
         {
-          "name": "Pecan Sticky Bun"
+          "name": "Pecan Sticky Bun",
+          "out": true
         }
       ],
       "lists": []
