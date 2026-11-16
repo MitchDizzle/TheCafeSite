@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<!-- A mug knocked on its side, coffee running out into a puddle. Solid, not
+     an outline (owner 2026-11-10: the first one read as nothing). -->
+  <path d="M30 52c5-5 12-2 18-3s11 1 10 5-9 6-19 6-13-4-9-8z" fill="#9A6238" stroke="#1F4552" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M42 41c5 2 7 6 7 11" stroke="#1F4552" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <path d="M42 41c5 2 7 6 7 11" stroke="#9A6238" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <g transform="rotate(8 26 32)">
+    <path d="M16 20v-3a8 8 0 0 1 16 0v3" fill="none" stroke="#1F4552" stroke-width="4"/>
+    <path d="M19 20h21v25H19a11 11 0 0 1-11-11v-3a11 11 0 0 1 11-11z" fill="#FAF7F2" stroke="#1F4552" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="40" cy="32.500" rx="4.200" ry="12.500" fill="#9A6238" stroke="#1F4552" stroke-width="3"/>
+  </g>
+</svg>

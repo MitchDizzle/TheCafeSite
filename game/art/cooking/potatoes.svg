@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <g transform="translate(24 23) rotate(-22)">
+    <ellipse class="food" rx="17" ry="10" fill="#E2B25E" stroke="#1F4552" stroke-width="2.5"/>
+    <path class="marks" d="M-12 1c3 7 17 8 24 0-7 4-17 4-24 0z" fill="#A86B30"/>
+    <path d="M-9-3c4-3 9-3 14-2" fill="none" stroke="#FFF4D8" stroke-width="2" stroke-linecap="round" opacity=".65"/>
+    <path class="marks" d="m-2 0 2-1m5 2 2-1" stroke="#A86B30" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(43 31) rotate(24)">
+    <ellipse class="food" rx="15" ry="10" fill="#E2B25E" stroke="#1F4552" stroke-width="2.5"/>
+    <path class="marks" d="M-12 1c3 7 17 8 24 0-7 4-17 4-24 0z" fill="#A86B30"/>
+    <path d="M-9-3c4-3 9-3 14-2" fill="none" stroke="#FFF4D8" stroke-width="2" stroke-linecap="round" opacity=".65"/>
+    <path class="marks" d="m-2 0 2-1m5 2 2-1" stroke="#A86B30" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(21 39) rotate(18)">
+    <ellipse class="food" rx="16" ry="10" fill="#E2B25E" stroke="#1F4552" stroke-width="2.5"/>
+    <path class="marks" d="M-12 1c3 7 17 8 24 0-7 4-17 4-24 0z" fill="#A86B30"/>
+    <path d="M-9-3c4-3 9-3 14-2" fill="none" stroke="#FFF4D8" stroke-width="2" stroke-linecap="round" opacity=".65"/>
+    <path class="marks" d="m-2 0 2-1m5 2 2-1" stroke="#A86B30" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(39 46) rotate(-24)">
+    <ellipse class="food" rx="16" ry="9" fill="#E2B25E" stroke="#1F4552" stroke-width="2.5"/>
+    <path class="marks" d="M-12 1c3 7 17 8 24 0-7 4-17 4-24 0z" fill="#A86B30"/>
+    <path d="M-9-3c4-3 9-3 14-2" fill="none" stroke="#FFF4D8" stroke-width="2" stroke-linecap="round" opacity=".65"/>
+    <path class="marks" d="m-2 0 2-1m5 2 2-1" stroke="#A86B30" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+</svg>

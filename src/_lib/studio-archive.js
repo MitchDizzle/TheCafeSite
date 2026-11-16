@@ -30,6 +30,7 @@ const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const matter = require("gray-matter");
+const game = require("../../game/build.js");
 
 const ARCHIVE_DAYS = 14;
 
@@ -45,10 +46,14 @@ function git(root, args) {
 const relative = (root, file) => path.relative(root, file).split(path.sep).join("/");
 
 // The partials a template includes, and the ones those include, as files.
+// A partial made by game/build.js (Order Up's drawings) counts as the files
+// it is made from, which are the ones in git.
 function partialsOf(root, file, seen = new Set()) {
   const text = fs.readFileSync(file, "utf8");
   for (const m of text.matchAll(/\{%-?\s*(?:include|from|import)\s+["']([^"']+)["']/g)) {
     const partial = path.join(root, "src", "_includes", m[1]);
+    const made = game.sourcesOf(relative(root, partial));
+    if (made) { for (const f of made) seen.add(path.join(root, f)); continue; }
     if (seen.has(partial) || !fs.existsSync(partial)) continue;
     seen.add(partial);
     partialsOf(root, partial, seen);
@@ -76,7 +81,7 @@ function localDay(date) {
 
 module.exports = function studioArchive(root, now = new Date()) {
   const buildAll = process.env.STUDIO_ALL === "1";
-  const status = git(root, ["status", "--porcelain", "--untracked-files=all", "--", "src"]);
+  const status = git(root, ["status", "--porcelain", "--untracked-files=all", "--", "src", "game"]);
   const haveGit = status !== null;
   const dirty = new Set(
     (status || "").split("\n").filter(Boolean)
@@ -94,8 +99,8 @@ module.exports = function studioArchive(root, now = new Date()) {
   // that, a folder reshuffle would make every piece look new.
   const lastCommit = new Map();
   if (haveGit) {
-    const skip = new Set((git(root, ["log", "--format=%H", "--grep=^Studio-Dates: unchanged$", "--", "src", "archive"]) || "").split("\n").filter(Boolean));
-    const log = git(root, ["log", "-M", "--format=%x00%H %cI", "--name-status", "--", "src", "archive"]) || "";
+    const skip = new Set((git(root, ["log", "--format=%H", "--grep=^Studio-Dates: unchanged$", "--", "src", "archive", "game"]) || "").split("\n").filter(Boolean));
+    const log = git(root, ["log", "-M", "--format=%x00%H %cI", "--name-status", "--", "src", "archive", "game"]) || "";
     const movedTo = new Map(); // an old path -> the path it has now
     const current = (f) => { while (movedTo.has(f)) f = movedTo.get(f); return f; };
     for (const entry of log.split("\0").filter(Boolean)) {

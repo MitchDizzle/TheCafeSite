@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<!-- Family at the counter: words, never a face. -->
+  <path d="M10 14h44a4 4 0 0 1 4 4v22a4 4 0 0 1-4 4H30L18 55V44h-8a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="#FAF7F2" stroke="#1F4552" stroke-width="2.5" stroke-linejoin="round"/>
+  <circle cx="21" cy="29" r="3" fill="#1F4552"/><circle cx="32" cy="29" r="3" fill="#1F4552"/><circle cx="43" cy="29" r="3" fill="#1F4552"/>
+</svg>

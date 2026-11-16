@@ -1,0 +1,55 @@
+/* ============================================================
+   Order Up — the game at /play (src/play.njk, the code in game/js)
+
+   This is one of the parts game/build.js joins, in file-name order, into
+   src/assets/css/play.css. Edit the parts, never that file.
+
+   The look is written down in game/README.md and drawn in
+   game/style-sheet.html: flat shapes, the house outline (teal dark, never
+   black), one flat shadow down and to the right, red only for "tap me" and
+   "late", never red on teal.
+
+   The whole game is one 360px-wide stage that play.js scales to the phone
+   (transform: scale), so every length here is a plain px on that stage and
+   nothing needs a media query. Heights flex: the griddle and the table take
+   the room a taller phone gives.
+
+   House tokens come from tokens.css. The game palette is here, on .ou, and
+   stays here (STYLE.md: a piece's own colours never go in tokens.css).
+   ============================================================ */
+
+.ou-body { background: #1C2226; overflow: hidden; overscroll-behavior: none; }
+
+.ou {
+    --sky-pink: #F4A9B8; --sky-peach: #F8BE8A; --sky-gold: #F7D88C; --sky-lavender: #9C8BC4; --sky-noon: #BFE2EC;
+    --brick: #8C5B4A; --brick-dark: #5F3D32; --window-light: #FFE7A8;
+    --steel-light: #E6ECEE; --steel: #C5CFD3; --steel-dark: #8E9AA0;
+    --flattop: #3A4247; --flattop-heat: #F08A3C; --floor: #1C2226;
+    --gold: #F4C542; --gold-dark: #E5AE25; --paper: #FFFDF6;
+    /* Rarity, the way most games colour it (owner 2026-11-12): gray, blue,
+       purple, gold. Always with the word and its diamonds too. */
+    --r-normal: #B9C2C6; --r-normal-bg: #F1F3F4;
+    --r-rare: #2E6DB4; --r-rare-bg: #EEF4FB; --r-rare-own: #D9E6F6;
+    --r-epic: #6E3FA6; --r-epic-bg: #F5EFFB; --r-epic-own: #E6D9F4;
+    --house-gradient: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    --shadow: rgba(31, 69, 82, .25);
+
+    position: fixed; inset: 0;
+    background: var(--floor);
+    font-family: Lato, system-ui, sans-serif; font-weight: 700; line-height: 1.25;
+    color: var(--text-dark);
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+.ou-stage {
+    position: absolute; left: 0; top: 0; width: 360px; height: 640px;
+    transform-origin: 0 0; overflow: hidden; background: var(--floor);
+}
+.ou-scr { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.ou-scr[hidden] { display: none; }
+.ou [hidden] { display: none !important; }
+.ou button { font: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; touch-action: manipulation; }
+.ou button:focus-visible, .ou a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.ou-sprites { position: absolute; width: 0; height: 0; }
+

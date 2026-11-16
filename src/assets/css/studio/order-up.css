@@ -2,7 +2,7 @@
    Order Up's two advertising pieces: the share picture Facebook shows for
    a link to /play (share-order-up, 1200 x 630) and the feed post
    (fb-order-up, 1080 x 1350). Both are the café's front at sunrise
-   (partials/game/storefront.njk), so they look like the game's own title
+   (game/art/scene/storefront.svg), so they look like the game's own title
    screen: the post with a teal band carrying the words, the share picture
    with a teal fade and the pass along the bottom.
    ============================================================ */

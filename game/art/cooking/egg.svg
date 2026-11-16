@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <path class="food" d="M12 33c-3-9 5-17 14-16 5-7 18-5 21 3 8 3 8 15 1 19-3 9-17 11-23 6-8 0-15-4-13-12z" fill="#FFF8EA" stroke="#1F4552" stroke-width="2.5" stroke-linejoin="round"/>
+  <circle class="food2" cx="31" cy="31" r="9.5" fill="#F7B22B" stroke="#1F4552" stroke-width="2.5"/>
+  <circle cx="28" cy="28" r="2.6" fill="#FFE29A" opacity=".9"/>
+</svg>

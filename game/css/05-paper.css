@@ -1,0 +1,257 @@
+/* ---------- paper screens: dawn, after close, week over, recipe box, how ---------- */
+/* The band on top and the foot stay put; only the middle scrolls. */
+.ou-paper { background: var(--cream); overflow: hidden; }
+.ou-top { flex: none; background: var(--house-gradient); color: var(--cream); padding: 14px 16px 12px; border-bottom: 4px solid var(--accent); position: relative; }
+.ou-top .ou-label { color: var(--mint); display: block; margin-top: 4px; }
+.ou-top--wallet { padding-right: 104px; }
+.ou-top--dawn { background: linear-gradient(180deg, #9C8BC4, #F4A9B8 55%, #F8BE8A); color: var(--text-dark); border-bottom-color: var(--teal-dark); }
+.ou-top--dawn .ou-label { color: var(--text-dark); }
+.ou-top--fri { background: linear-gradient(180deg, #6E5E9E, #E88FA0 55%, #F59E5E); }
+/* max-content rows: a card keeps its height and the middle scrolls, instead of every card being squeezed to fit. */
+.ou-body-pad { padding: 12px 12px 16px; display: grid; grid-auto-rows: max-content; gap: 9px; align-content: start; flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* Continue and New week side by side; the check before a week is thrown away. */
+.ou-gorow { display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; }
+.ou-gorow:has(#ou-fresh:not([hidden])) { grid-template-columns: 1.7fr 1fr; }
+.ou .ou-gorow .ou-btn { letter-spacing: .06em; padding-left: 6px; padding-right: 6px; white-space: nowrap; }
+.ou-gorow:has(#ou-fresh:not([hidden])) .ou-btn { font-size: 15px !important; }
+.ou .ou-btn--ghost { background: transparent !important; color: var(--cream) !important; border: 2px solid var(--mint) !important; box-shadow: none; }
+.ou .ou-btn--ghost:active { background: var(--teal-dark) !important; transform: translateY(2px); }
+.ou-confirm { width: 100%; background: var(--teal-dark); border: 2px solid var(--mint); border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+.ou-title .ou-confirm p { margin: 0; font: 700 16px/1.3 Lato, sans-serif; color: var(--cream); }
+/* The first-open notice: over the title, until it's answered. */
+.ou-told { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 8; background: var(--cream); border: 2px solid var(--teal-dark); border-radius: 14px; padding: 14px; display: grid; gap: 8px; text-align: left; box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
+.ou-title .ou-told p { margin: 0; color: var(--text-dark); font: 400 15px/1.35 Lato, sans-serif; }
+.ou-title .ou-told p b { font: 700 18px/1.2 "Playfair Display", Georgia, serif; }
+.ou-told .ou-btn--ghost { color: var(--text-dark) !important; border-color: var(--teal-dark) !important; }
+.ou-told .ou-link { color: var(--accent) !important; justify-self: start; padding: 4px 0 !important; }
+/* The in-app browser warning: the same card, top of the stack. */
+.ou-inapp { z-index: 9; }
+.ou-inapp .ou-btn { text-align: center; text-decoration: none; }
+.ou-title .ou-inapp p.ou-inapp-how { padding: 8px 10px; background: #fff; border: 2px dashed var(--teal-dark); border-radius: 10px; font-size: 14px; }
+.ou-title .ou-inapp p.ou-inapp-fine { font-size: 13px; color: #4A5A62; }
+.ou-pausenote { margin: -4px 0 4px; color: #4A5A62; }
+
+/* Settings: a switch a row, then who made it. */
+.ou-set { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin: 0 0 8px; padding: 11px 12px !important; background: #fff !important; border: 2px solid var(--teal-dark) !important; border-radius: 12px; text-align: left; color: var(--text-dark) !important; }
+.ou-set b { display: block; font: 700 17px/1.2 "Playfair Display", Georgia, serif; }
+.ou-set small { display: block; font: 400 13px/1.3 Lato, sans-serif; color: #4A5A62; margin-top: 2px; }
+.ou-set i { flex: none; font: 900 13px/1 Lato, sans-serif; font-style: normal; letter-spacing: .1em; text-transform: uppercase; padding: 7px 10px; border-radius: 999px; background: var(--steel-light); border: 2px solid var(--steel-dark); }
+.ou-set[aria-pressed="true"] i { background: var(--mint); border-color: var(--teal-dark); }
+/* A volume: Off, Low, Medium, High in one row (owner 2026-11-13). */
+.ou-set.ou-set--vol { display: block; }
+.ou-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin-top: 8px; }
+.ou .ou-seg button { min-height: 40px; min-width: 0; padding: 4px 2px; border-radius: 9px; border: 2px solid var(--steel-dark); background: var(--steel-light); color: var(--text-dark); font: 700 12px/1.1 Lato, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+.ou .ou-seg button[aria-pressed="true"] { background: var(--mint); border-color: var(--teal-dark); }
+.ou-reset { width: 100%; margin-top: 4px; }
+/* Settings boxes: home screen, save code. */
+.ou-setbox { margin: 12px 0; padding: 10px 12px; background: #fff; border: 2px solid var(--teal-dark); border-radius: 12px; }
+.ou-setbox .ou-fine { margin: 4px 0 8px; }
+.ou-setbox .ou-btn { width: 100%; }
+.ou-code { display: block; width: 100%; box-sizing: border-box; margin: 8px 0 0; padding: 8px; font: 400 12px/1.35 ui-monospace, Menlo, Consolas, monospace; color: var(--text-dark); background: var(--cream); border: 2px solid var(--steel-dark); border-radius: 8px; resize: none; word-break: break-all; }
+.ou-code-load { margin-top: 8px; }
+.ou-code-msg { margin: 6px 0 0; font: 700 13px/1.3 Lato, sans-serif; color: var(--teal-dark); }
+.ou-code-msg:empty { display: none; }
+.ou-bests { list-style: none; margin: 0 0 8px; padding: 0; font: 400 14px/1.5 Lato, sans-serif; }
+.ou-bests span { color: #4A5A62; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+/* A finished week's code, to look it up in the results. */
+.ou-weekcode { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; width: 100%; margin: 10px 0; padding: 8px 12px !important; background: #fff !important; color: var(--text-dark) !important; border: 2px dashed var(--teal-dark) !important; border-radius: 12px; text-align: left; }
+.ou-weekcode b { font: 700 15px/1 Lato, sans-serif; color: var(--teal); }
+.ou-weekcode.is-shown b { font: 700 18px/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; color: var(--text-dark); }
+.ou-bests .ou-weekcode { display: inline-flex; width: auto; margin: 2px 0 2px 8px; padding: 3px 8px !important; }
+.ou-bests .ou-weekcode .ou-label { display: none; }
+.ou-bests .ou-weekcode b { font-size: 12px; }
+.ou-weekcode small { flex-basis: 100%; font: 400 12px/1.3 Lato, sans-serif; color: #4A5A62; }
+/* Achievements: a row each, earned ones in mint. */
+.ou-achs { display: grid; gap: 6px; margin: 4px 0 10px; }
+.ou-ach { display: flex; gap: 10px; align-items: center; padding: 8px 10px; background: #fff; border: 2px dashed var(--steel-dark); border-radius: 12px; font: 400 14px/1.3 Lato, sans-serif; text-align: left; color: #4A5A62; }
+/* Its icon is the item it opens up, on that item's rarity (owner
+   2026-11-13); grey until earned, then a gleam runs across it now and then. */
+.ou-ach-i { position: relative; flex: none; width: 42px; height: 42px; padding: 3px; border-radius: 10px; border: 2px solid var(--steel-dark); background: var(--r-normal-bg); overflow: hidden; opacity: .45; filter: grayscale(1); }
+.ou-ach-i .ou-i { width: 100%; height: 100%; display: block; }
+.ou-ach.is-got .ou-ach-i { opacity: 1; filter: none; border-color: var(--teal-dark); }
+.ou-ach.is-got .ou-ach-i.is-rare { background: var(--r-rare-own); border-color: var(--r-rare); }
+.ou-ach.is-got .ou-ach-i.is-epic { background: var(--r-epic-own); border-color: var(--r-epic); }
+.ou-ach.is-got .ou-ach-i.is-gold { background: linear-gradient(135deg, #FFF3C4, #F4C542); border-color: #7A5A0E; }
+.ou-ach.is-got .ou-ach-i { box-shadow: 0 0 0 2px rgba(255, 210, 80, .55), 0 0 10px 1px rgba(255, 210, 80, .6); }
+.ou-ach.is-got .ou-ach-i::after { content: ""; position: absolute; inset: -2px; pointer-events: none; background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .95) 48%, rgba(255, 246, 200, .7) 54%, transparent 68%); transform: translateX(-120%); animation: ou-gleam 3.4s ease-in-out infinite; }
+.ou-ach.is-got:nth-child(3n+2) .ou-ach-i::after { animation-delay: 1.1s; }
+.ou-ach.is-got:nth-child(3n) .ou-ach-i::after { animation-delay: 2.2s; }
+.ou-ach b { display: block; font: 700 16px/1.2 "Playfair Display", Georgia, serif; color: var(--text-dark); }
+.ou-ach small { display: block; font: 700 11px/1.2 Lato, sans-serif; letter-spacing: .1em; text-transform: uppercase; margin-top: 3px; color: var(--teal); }
+.ou-ach.is-got { border: 2px solid var(--teal-dark); background: #E3F6F2; color: var(--text-dark); }
+/* Power Flicker: the kitchen goes dark and the tickets can't be read; the flat-top glows on. */
+.ou-stage.is-dark .ou-rail, .ou-stage.is-dark .ou-pass, .ou-stage.is-dark .ou-table, .ou-stage.is-dark .ou-bins { filter: brightness(.3); transition: filter .15s; }
+.ou-stage.is-dark .ou-griddle { filter: brightness(.55); }
+.ou-stage.is-dark .ou-ticket .ou-tname, .ou-stage.is-dark .ou-ticket .ou-parts { visibility: hidden; }
+.ou-credits { margin-top: 16px; font: 400 15px/1.4 Lato, sans-serif; }
+.ou-credits p { margin: 6px 0 10px; }
+.ou-credit b { display: block; font: 700 24px/1.2 "Playfair Display", Georgia, serif; }
+.ou-version { display: block; font: 400 11px/1.2 Lato, sans-serif; color: var(--mint); opacity: .75; }
+
+/* Send in your score (the week-over screen, only when results go somewhere). */
+.ou-sendin { display: grid; gap: 8px; background: #fff; border: 2px solid var(--teal-dark); border-radius: 12px; padding: 12px; box-shadow: 3px 3px 0 var(--shadow); position: relative; }
+.ou-sendin .ou-label { color: var(--teal); }
+.ou-field { display: grid; gap: 3px; font: 700 14px/1.25 Lato, sans-serif; }
+/* 18px: under 16 on the screen and an iPhone zooms the whole page on focus. */
+.ou-field input { font: 400 18px/1.2 Lato, sans-serif; color: var(--text-dark); padding: 10px 10px; border: 2px solid var(--teal-dark); border-radius: 10px; background: var(--cream); width: 100%; min-width: 0; -webkit-user-select: text; user-select: text; }
+.ou-field input:focus { outline: 3px solid var(--accent); outline-offset: 1px; }
+.ou-field--web { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.ou-fine { margin: 0; font: 400 12.5px/1.35 Lato, sans-serif; color: #4A5A62; }
+.ou-fine a { color: var(--accent); text-decoration: underline; }
+.ou-sent { background: #fff; border: 2px solid var(--teal-dark); border-radius: 12px; padding: 12px; font-weight: 700; }
+
+/* "The game didn't start": over everything, only if play.js never came up. */
+.ou-oops { position: fixed; left: 16px; right: 16px; bottom: 16px; max-width: 420px; margin: 0 auto; z-index: 20; background: var(--cream); border: 2px solid var(--teal-dark); border-radius: 14px; padding: 14px; display: grid; gap: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
+.ou-oops p { margin: 0; font: 400 16px/1.35 Lato, sans-serif; color: var(--text-dark); }
+
+.ou-foot { flex: none; padding: 10px 12px 12px; background: var(--cream); border-top: 2px solid var(--steel); box-shadow: 0 -8px 12px -8px rgba(31, 69, 82, .3); display: grid; gap: 8px; position: relative; z-index: 1; }
+.ou-top--back { padding-right: 96px; }
+.ou .ou-topback { position: absolute; right: 12px; top: 12px; min-width: 72px; min-height: 44px; padding: 0 14px; border-radius: 10px; border: 2px solid var(--mint); color: var(--cream); font: 700 14px/1 Lato, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.ou .ou-topback:active { background: var(--teal-dark); }
+/* On the pink morning band the button is dark on light, like the band's own words. */
+.ou .ou-top--dawn .ou-topback { color: var(--text-dark); border-color: var(--teal-dark); background: rgba(250, 247, 242, .55); }
+.ou-body-pad > .ou-label { color: var(--teal); margin-top: 2px; }
+.ou-note { font: 400 14px/1.35 Lato, sans-serif; margin: 0; }
+
+.ou-card { position: relative; background: #fff !important; border: 2px solid var(--teal-dark) !important; border-radius: 12px; text-align: left; box-shadow: 3px 3px 0 var(--shadow); display: grid !important; grid-template-columns: 46px 1fr auto; gap: 4px 10px; align-items: center; padding: 22px 10px 9px !important; width: 100%; overflow: hidden; }
+.ou-card:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
+.ou-card .ou-ci { width: 46px; height: 46px; }
+.ou-card b { font: 700 17px/1.12 "Playfair Display", Georgia, serif; display: block; }
+.ou-card .ou-ct { font: 400 14px/1.25 Lato, sans-serif; display: block; }
+.ou-card .ou-own { font: 700 11px/1 Lato, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); display: block; margin-top: 3px; }
+.ou-rar { position: absolute; left: 0; right: 0; top: 0; height: 17px; display: flex; align-items: center; gap: 5px; padding: 0 9px; font: 700 10px/1 Lato, sans-serif; letter-spacing: .16em; text-transform: uppercase; border-bottom: 2px solid var(--teal-dark); background: var(--steel-light); color: var(--text-dark); }
+.ou-rar i { width: 6px; height: 6px; background: currentColor; transform: rotate(45deg); display: block; }
+.ou-card.is-normal .ou-rar { background: var(--r-normal); }
+.ou-card.is-rare .ou-rar { background: var(--r-rare); color: #fff; }
+.ou-card.is-rare { background: var(--r-rare-bg) !important; box-shadow: 3px 3px 0 var(--r-rare); }
+/* Legendary: a dark band with gold diamonds. Still no red. */
+.ou-card.is-epic .ou-rar { background: var(--r-epic); color: #fff; }
+.ou-card.is-epic { border-color: var(--teal-dark) !important; box-shadow: 3px 3px 0 var(--r-epic); background: var(--r-epic-bg) !important; }
+/* Legendary: gold all over, shining, with rays turning behind its picture
+   (owner 2026-11-12). The one card allowed gradients on it. Still: the word
+   and four diamonds, the house outline, and the price button red. */
+.ou-card.is-legendary { background: linear-gradient(135deg, #FFF3C4 0%, #FFE07A 38%, #F4C542 62%, #FFE9A0 100%) !important; border-color: #7A5A0E !important;
+    box-shadow: 3px 3px 0 #9C7414, 0 0 18px 3px rgba(255, 210, 80, .75); animation: ou-glow 2.4s ease-in-out infinite; }
+.ou-card.is-legendary .ou-rar { background: linear-gradient(90deg, #E5AE25, #FFE58A 50%, #E5AE25); color: var(--text-dark); border-bottom-color: #7A5A0E; z-index: 2; }
+.ou-card.is-legendary > * { position: relative; z-index: 1; }
+.ou-card.is-legendary > .ou-rar { position: absolute; }
+.ou-card.is-legendary::before { content: ""; position: absolute; left: 33px; top: 42px; width: 260px; height: 260px; margin: -130px 0 0 -130px; z-index: 0; pointer-events: none;
+    background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, .85) 0deg 7deg, rgba(255, 255, 255, 0) 7deg 22deg);
+    -webkit-mask: radial-gradient(circle, #000 12%, transparent 68%); mask: radial-gradient(circle, #000 12%, transparent 68%);
+    animation: ou-rays 9s linear infinite; }
+.ou-card.is-legendary::after { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .75) 50%, transparent 65%); transform: translateX(-100%); animation: ou-shine 3s ease-in-out infinite; }
+.ou-card.is-legendary .ou-ci { filter: drop-shadow(0 0 6px rgba(255, 255, 255, .9)) drop-shadow(2px 2px 0 rgba(122, 90, 14, .4)); }
+.ou-card.is-epic .ou-rar::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .7) 50%, transparent 70%); transform: translateX(-100%); animation: ou-shine 2.6s ease-in-out infinite; }
+.ou-price { min-width: 58px; min-height: 44px; display: grid; place-items: center; border-radius: 10px; background: var(--accent); color: #fff; border: 2px solid var(--teal-dark); font: 700 16px/1 Lato, sans-serif; padding: 0 8px; }
+.ou-card.is-poor .ou-price, .ou-card.is-sold .ou-price { background: var(--steel); color: #5A6970; }
+.ou-card.is-sold { opacity: .6; }
+.ou-card.is-off { opacity: .55; }
+.ou-card.is-nope { animation: ou-shake .3s ease-in-out 1; }
+.ou-price.is-sale { display: flex; flex-direction: column; justify-content: center; gap: 2px; line-height: 1; }
+.ou-price s { font: 700 11px/1 Lato, sans-serif; opacity: .8; }
+/* An item's number (owner 2026-11-12): highlighted, and it grows with each one owned. */
+.ou-card b.ou-num, .ou-own-info b.ou-num, b.ou-num { display: inline; font-family: Lato, sans-serif; font-size: 1em; font-weight: 900; line-height: inherit; background: var(--mint); color: var(--text-dark); border-radius: 4px; padding: 0 3px; white-space: nowrap; }
+.ou-clean { margin: 0 0 10px; padding: 8px 10px; border: 2px solid var(--teal-dark); border-radius: 10px; background: #E3F6F2; font: 400 14px/1.3 Lato, sans-serif; }
+/* Trouble today, on the morning screen: ink and steel, never red. */
+.ou-trouble { display: flex; gap: 10px; align-items: center; margin: 0 0 10px; padding: 9px 11px; background: var(--steel-light); border: 2px dashed var(--text-dark); border-radius: 12px; font: 400 14px/1.3 Lato, sans-serif; text-align: left; }
+.ou-trouble > .ou-i { width: 40px; height: 40px; flex: none; filter: grayscale(.6); }
+.ou-trouble b { display: block; font: 700 17px/1.2 "Playfair Display", Georgia, serif; }
+.ou-sale { margin: 0 0 8px; padding: 8px 10px; border: 2px dashed var(--teal-dark); border-radius: 10px; background: #FFF6D6; font: 400 14px/1.3 Lato, sans-serif; }
+.ou-pausecard .ou-row .ou-btn { letter-spacing: .08em; padding: 14px 6px; }
+/* Sound and Music in pause: the word small, the volume under it. A tap steps Off, Low, Medium, High. */
+.ou-pausecard .ou-row [data-act="sound"], .ou-pausecard .ou-row [data-act="music"] { padding: 8px 6px; line-height: 1.15; }
+.ou-pausecard .ou-row [data-act="sound"] span, .ou-pausecard .ou-row [data-act="music"] span { display: block; font-size: 11px; letter-spacing: .14em; color: #4A5A62; margin-bottom: 3px; }
+.ou-card--special { grid-template-columns: 52px 1fr auto; padding-top: 10px !important; }
+.ou-card--special .ou-ci { width: 52px; height: 52px; border-radius: 10px; overflow: hidden; border: 2px solid var(--teal-dark); background: var(--steel-light); }
+.ou-card--special img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ou-chip { display: inline-block; font: 700 12px/1 Lato, sans-serif; background: var(--steel-light); border: 1.5px solid var(--teal-dark); border-radius: 999px; padding: 4px 8px; margin: 3px 3px 0 0; }
+.ou-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ou-istats { display: grid; gap: 6px; margin: 6px 0 12px; }
+/* The week's items: icon, name and days, then what it did. */
+.ou-istats > div { display: grid; grid-template-columns: 34px 1fr; column-gap: 8px; align-items: center; padding: 6px 8px; background: var(--r-normal-bg); border: 2px solid var(--teal-dark); border-radius: 10px; }
+.ou-istats > div.is-rare { background: var(--r-rare-own); } .ou-istats > div.is-epic { background: var(--r-epic-own); }
+.ou-istats svg { grid-row: span 3; width: 34px; height: 34px; }
+.ou-istats b { font: 900 15px/1.2 Lato, sans-serif; }
+.ou-istats span { font: 700 12px/1.3 Lato, sans-serif; color: #4A5A62; }
+.ou-istats strong { font: 900 14px/1.3 Lato, sans-serif; color: var(--teal-dark); }
+.ou-own-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.ou-own-row button { width: 40px; height: 40px; position: relative; background: var(--r-normal-bg) !important; border: 2px solid var(--teal-dark) !important; border-radius: 9px; padding: 3px !important; display: block; }
+.ou-own-row button.is-rare { background: var(--r-rare-own) !important; } .ou-own-row button.is-epic { background: var(--r-epic-own) !important; }
+.ou-own-row button.is-legendary { background: linear-gradient(135deg, #FFF3C4, #F4C542) !important; border-color: #7A5A0E !important; }
+.ou-own-row button.is-picked { outline: 3px solid var(--teal); outline-offset: 1px; }
+.ou-own-info { margin: 6px 0 0; padding: 7px 10px; background: #fff; border: 2px solid var(--teal-dark); border-radius: 10px; font: 400 14px/1.3 Lato, sans-serif; text-align: left; }
+.ou-own-info b { font: 700 15px/1.2 "Playfair Display", Georgia, serif; }
+.ou-own-info span { font: 700 10px/1 Lato, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #4A5A62; }
+.ou-pause-own:empty { display: none; }
+.ou-pause-own .ou-own-row { justify-content: center; }
+.ou-own-row button em { position: absolute; right: -4px; bottom: -4px; font: 900 10px/1 Lato, sans-serif; font-style: normal; background: var(--teal-dark); color: var(--cream); border-radius: 999px; padding: 2px 4px; }
+.ou-shophead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+/* Restock: small, beside the shop's name, a refresh arrow and its price. */
+.ou-restock { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px !important; background: #fff !important; color: var(--text-dark) !important;
+    border: 2px solid var(--teal-dark) !important; border-radius: 999px; font: 900 14px/1 Lato, sans-serif; box-shadow: 0 3px 0 var(--steel-dark); }
+.ou-restock svg { width: 16px; height: 16px; }
+.ou-restock:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--steel-dark); }
+.ou-restock[disabled] { opacity: .45; box-shadow: none; }
+.ou-wallet { position: absolute; right: 14px; top: 14px; text-align: right; line-height: 1.05; }
+.ou-wallet b { font: 900 22px/1 Lato, sans-serif; display: block; }
+
+.ou-week { display: grid; gap: 0; background: #fff; border: 2px solid var(--teal-dark); border-radius: 12px; overflow: hidden; }
+.ou-week div { display: grid; grid-template-columns: 62px 1fr auto; align-items: baseline; gap: 8px; padding: 8px 12px; border-top: 1.5px solid var(--steel); font: 400 15px/1.2 Lato, sans-serif; }
+.ou-week div:first-child { border-top: 0; }
+.ou-week div b { font: 700 19px/1.1 "Playfair Display", Georgia, serif; color: var(--accent); }
+.ou-week div strong { font: 900 17px/1 Lato, sans-serif; font-variant-numeric: tabular-nums; }
+.ou-week div.is-total { background: var(--cream-alt); } .ou-week div.is-total b { color: var(--text-dark); }
+/* A day's rank is its whole row, in the rarity colours (owner 2026-11-13:
+   not a tag in the row, which pushed it onto two lines). The words stay, so
+   it never rests on colour alone. */
+.ou-week div[class^="is-"]:not(.is-total) span { font: 700 12px/1.2 Lato, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.ou-week div[class^="is-"]:not(.is-total) b { color: var(--text-dark); }
+.ou-week div.is-normal { background: var(--r-normal-bg); box-shadow: inset 6px 0 0 var(--r-normal); }
+.ou-week div.is-normal span { color: #4A5A62; }
+.ou-week div.is-rare { background: var(--r-rare-own); box-shadow: inset 6px 0 0 var(--r-rare); }
+.ou-week div.is-rare span { color: var(--r-rare); }
+.ou-week div.is-epic { background: var(--r-epic-own); box-shadow: inset 6px 0 0 var(--r-epic); }
+.ou-week div.is-epic span { color: var(--r-epic); }
+/* The day a week was lost or ended on, and catering that wasn't on time:
+   a soft red (owner 2026-11-13: red for bad, like a late ticket). */
+.ou-week div.is-bad { background: #F8DEDA; box-shadow: inset 6px 0 0 var(--accent-dark); }
+.ou-week div.is-bad span { color: var(--accent-dark); }
+.ou-week div.is-legendary { position: relative; overflow: hidden; background: linear-gradient(100deg, #FFE9A0 0%, #FFE07A 35%, #F4C542 70%, #FFE58A 100%); box-shadow: inset 6px 0 0 #B8860B; }
+.ou-week div.is-legendary span { color: #6B4E0A; }
+.ou-week div.is-legendary::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .75) 50%, transparent 65%); transform: translateX(-100%); animation: ou-shine 3.2s ease-in-out infinite; }
+/* The week code and Share side by side. */
+.ou-row--code { grid-template-columns: 1fr 1fr; align-items: stretch; margin: 10px 0; }
+.ou-row--code .ou-weekcode { margin: 0; }
+.ou-row--code .ou-share { margin: 0; }
+/* Past weeks: one card a week. */
+.ou-past { margin: 0 0 16px; }
+.ou-past-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin: 0 2px 6px; }
+.ou-past-head b { display: block; font: 700 18px/1.15 "Playfair Display", Georgia, serif; }
+.ou-past-head small { display: block; font: 700 11px/1.3 Lato, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #4A5A62; }
+.ou-past-head strong { font: 900 20px/1 Lato, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ou-past .ou-row--code { margin: 8px 0 0; }
+.ou-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.ou-strip span { padding: 6px 2px 5px; border-radius: 8px; border: 2px solid var(--steel-dark); background: var(--r-normal-bg); text-align: center; font: 900 14px/1.1 Lato, sans-serif; font-variant-numeric: tabular-nums; }
+.ou-strip b { display: block; font: 700 10px/1.2 Lato, sans-serif; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2px; }
+.ou-strip .is-rare { background: var(--r-rare-own); border-color: var(--r-rare); }
+.ou-strip .is-epic { background: var(--r-epic-own); border-color: var(--r-epic); }
+.ou-strip .is-legendary { background: linear-gradient(135deg, #FFF3C4, #F4C542); border-color: #B8860B; }
+.ou-strip .is-cater { background: #fff; border-color: var(--teal-dark); }
+.ou-strip .is-bad { background: #F8DEDA; border-color: var(--accent-dark); color: var(--accent-dark); }
+
+.ou-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ou-rc { background: #fff; border: 2px solid var(--teal-dark); border-radius: 12px; overflow: hidden; display: grid; grid-template-rows: 78px auto; box-shadow: 3px 3px 0 var(--shadow); }
+.ou-rc .ou-rp { background: var(--steel-light); display: grid; place-items: center; border-bottom: 2px solid var(--teal-dark); overflow: hidden; border-radius: 10px 10px 0 0; }
+.ou-rc .ou-rp img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ou-rc .ou-rp .ou-i { width: 52px; height: 52px; }
+.ou-rc.is-new .ou-rp .ou-i { opacity: .25; filter: grayscale(1); }
+.ou-rc div { padding: 6px 8px 8px; }
+.ou-rc b { font: 700 15px/1.12 "Playfair Display", Georgia, serif; display: block; }
+.ou-rc span { font: 400 13px/1.25 Lato, sans-serif; display: block; margin-top: 2px; }
+
+.ou-how-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ou-how-list li { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: center; background: #fff; border: 2px solid var(--teal-dark); border-radius: 12px; padding: 8px 10px; font: 400 15px/1.3 Lato, sans-serif; }
+.ou-how-list li .ou-i { width: 44px; height: 44px; }
+.ou-how-list b { font-weight: 700; }
+

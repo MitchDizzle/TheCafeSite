@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <ellipse class="food" cx="32" cy="33" rx="22" ry="18" fill="#7A4A32" stroke="#1F4552" stroke-width="2.5"/>
+  <g class="marks">
+    <path d="M15 36c3 8 14 12 24 8 5-2 9-6 10-10" fill="none" stroke="#A36D46" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="m18 30 2 1m11-8 2 1m9 13 2-1m-16 5 2 1" stroke="#C08A5B" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M19 27l22 13M24 21l19 11M17 35l15 9" stroke="#4E2E1F" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <path d="M20 25c3-5 9-7 14-7" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".28"/>
+</svg>

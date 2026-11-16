@@ -11,9 +11,10 @@ start`, then `http://localhost:8080/play`.
 | What | Where |
 |---|---|
 | The page (title screen, the kitchen's fixed parts) | `src/play.njk` |
-| The logic | `src/assets/js/play.js` |
-| The look | `src/assets/css/play.css` |
-| The drawings (one SVG sprite sheet) | `src/_includes/partials/game/sprites.njk` |
+| The logic, in parts by subject (`01-setup.js` lists them) | `game/js/` |
+| The look | `game/css/` |
+| The drawings, one SVG file each, and the storefront scene (how to draw one: `game/art/README.md`) | `game/art/` |
+| What puts those together, before every build | `game/build.js` (§13, "The parts and the build") |
 | **Everything tunable**: foods, tickets, specials, items, odds, prices, how hard each day is, the family's lines | `src/_data/game.json` |
 | The check that the game still matches the menu | `src/play.11tydata.js` |
 | This guide, in colour | `game/style-sheet.html` (made by `node game/make-style-sheet.js` from `style-sheet.src.html`; it uses the game's own sprite sheet) |
@@ -452,7 +453,7 @@ moves from sunrise to noon as the shift goes on.
    sunset-warm for Friday's catering.
 9. **Our own drawings before emoji.** Emoji are allowed in the game (owner
    2026-11-10) but a custom SVG is better, and so far nothing uses one. A
-   new thing gets a new `<symbol>` in the sprite sheet.
+   new thing gets a new drawing in `game/art/` (`game/art/README.md`).
 
 ### Food on the flat-top
 
@@ -808,6 +809,33 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
 
 ## 13. How it's built
 
+### The parts and the build (owner 2026-11-15)
+
+The game is kept in parts, so a change opens only the part it is about and
+the drawings can be redrawn one at a time:
+
+- `game/js/` the code, one subject a file (`01-setup.js` lists them). They
+  are one script cut into pieces, not modules: joined in file-name order
+  they make one function, so any part can call any other. A new part gets
+  a number that puts it where it belongs.
+- `game/css/` the look, the same way.
+- `game/art/` every drawing, a plain SVG file each, in folders by kind
+  (cooking, plate, finished, lives, items, kitchen) and the storefront in
+  `scene/`. `game/art/README.md` says how to draw one.
+
+`game/build.js` puts them together into the files the site uses:
+`src/assets/js/play.js`, `src/assets/css/play.css` and the partials
+`game/sprites.njk` and `game/storefront.njk`. **Those four are made, not
+written:** gitignored, rewritten before every build, and under `npm start`
+whenever a part changes (`.eleventy.js`). Nothing to run by hand. A push
+to `main` that changes a part deploys (`deploy.yml`); the rest of `game/`
+doesn't. On the live site the joined `play.js` is still cut, keyed and
+obfuscated as below.
+
+The first split (2026-11-15) changed nothing in the game: the joined
+files came out the same as the ones they replaced, byte for byte for the
+code and the look, and drawing for drawing for the art.
+
 ### Updating without breaking anyone's save (owner 2026-11-13)
 
 Everything a player has (best weeks, weeks played, the Recipe Box, a week
@@ -930,7 +958,7 @@ short.
   teal band. A `noindex` page carries no share tags, so the picture only
   goes out once the game is listed.
 - **The storefront** on the title screen is
-  `partials/game/storefront.njk`, drawn from the café's own photos: the
+  `game/art/scene/storefront.svg`, drawn from the café's own photos: the
   mottled brick and its cap, the two pairs of windows (the saying and the
   sunrise; the sign with the real wordmark, and the flag), the door with a
   notice in it, the light, the 417 plaque, the railing, the walk, the wet
