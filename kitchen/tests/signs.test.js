@@ -44,22 +44,43 @@ test("signs: a pick of two sides, choice of side, and a plate with none", async 
   delete plan.days[today];
 });
 
-test("signs: the fridge follows Square until a dessert is ticked or unticked", async () => {
+test("signs: the fridge follows Square, with ticks for today only", async () => {
   const items = [
     { name: "Cookies", price: 2, kinds: [{ name: "Triple Chocolate Chip (2)", count: 4 }], lists: [] },
-    { name: "Cheesecake", price: 3.5, kinds: [{ name: "Plain", count: 6 }], lists: [{ name: "Sauce", options: [{ name: "Caramel" }, { name: "Chocolate" }] }] },
+    { name: "Cinnamon Roll", price: 2.5, kinds: [{ name: "Regular", count: 3 }], lists: [] },
+    { name: "Cheesecake", price: 3.5, kinds: [{ name: "Plain", count: 0 }, { name: "Pumpkin", count: 6 }], lists: [{ name: "Sauce", options: [{ name: "Caramel" }, { name: "Chocolate" }] }] },
     { name: "Bread Pudding", price: 4, kinds: [{ name: "Regular", count: 0 }, { name: "Raisin", count: 2 }], lists: [] },
   ];
   let rows = signs.fridgeRows(items);
-  assert.deepEqual(rows.map((r) => [r.name, r.on]), [["Bread Pudding", false], ["Raisin Bread Pudding", true], ["Plain Cheesecake", false], ["Triple Chocolate Cookies (2)", true]],
-    "dearest first; Square's 0 and the skipped Cheesecake are off; the cookie has its sign name");
-  assert.equal(rows[3].treat, true);
+  assert.deepEqual(rows.map((r) => [r.name, r.on]), [["Bread Pudding", false], ["Raisin Bread Pudding", true], ["Plain Cheesecake", false], ["Pumpkin Cheesecake", true], ["Cinnamon Roll", false], ["Triple Chocolate Cookies (2)", true]],
+    "dearest first; Square's 0 and the skipped Cinnamon Roll are off; the cookie has its sign name");
+  assert.equal(rows[5].treat, true);
   signs.saveFridge(["Bread Pudding", "Plain Cheesecake"], rows);
   const kept = signs.fridgeSettings();
-  assert.deepEqual([kept.show, kept.hide], [["Bread Pudding", "Plain Cheesecake"], ["Raisin Bread Pudding", "Triple Chocolate Chip (2)"]]);
+  assert.deepEqual([kept.show, kept.hide], [["Bread Pudding", "Plain Cheesecake"], ["Raisin Bread Pudding", "Pumpkin Cheesecake", "Triple Chocolate Chip (2)"]]);
   rows = signs.fridgeRows(items);
   assert.deepEqual(rows.filter((r) => r.on).map((r) => r.key), ["Bread Pudding", "Plain Cheesecake"]);
-  assert.match(signs.fridgePage(rows), /Sauce: Caramel or Chocolate/);
-  signs.saveFridge(["Raisin Bread Pudding", "Triple Chocolate Chip (2)"], rows);
+  const page = signs.fridgePage(rows);
+  assert.match(page, /Sauce: Caramel or Chocolate/);
+  assert.match(page, /dc-caution--small[\s\S]*Not self serve[\s\S]*Please do not open/, "the small caution panel at the foot");
+  const tomorrow = signs.fridgeSettings("2999-01-01");
+  assert.deepEqual([tomorrow.show, tomorrow.hide], [[], []], "the next day the ticks are gone and Square decides");
+  assert.deepEqual(signs.fridgeRows(items, tomorrow).filter((r) => r.on).map((r) => r.key), ["Raisin Bread Pudding", "Pumpkin Cheesecake", "Triple Chocolate Chip (2)"]);
+  signs.saveFridge(["Raisin Bread Pudding", "Pumpkin Cheesecake", "Triple Chocolate Chip (2)"], rows);
   assert.deepEqual([signs.fridgeSettings().show, signs.fridgeSettings().hide], [[], []], "ticks that agree with Square keep nothing");
+});
+
+test("signs: a fridge file from before day-only ticks follows Square and the new defaults", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const { DATA } = require("../lib/config");
+  const file = path.join(DATA, "signs-mock.json");
+  fs.writeFileSync(file, JSON.stringify({ skipItems: ["Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"], treats: ["Cookies", "Dessert Bar"], show: ["Lemon Layered Dessert"], hide: ["Carrot Cake"] }));
+  const o = signs.fridgeSettings();
+  assert.deepEqual([o.show, o.hide], [[], []], "old ticks with no day are dropped");
+  assert.deepEqual(o.skipItems, ["Cinnamon Roll", "Pecan Sticky Bun"], "the old default skip list means the new default");
+  assert.equal(o.caution, "Not self serve");
+  fs.writeFileSync(file, JSON.stringify({ caution: "" }));
+  assert.doesNotMatch(signs.fridgePage([{ name: "Carrot Cake", price: 3, lists: [], on: true, treat: false }]), /dc-caution/, "caution \"\" drops the panel");
+  fs.rmSync(file, { force: true });
 });

@@ -38,7 +38,7 @@
       `<button type="button" data-date="${d}"${d === r.date ? ' class="on"' : ""}>${d === r.today ? "Today" : esc(short(d))}</button>`).join("")}</div>` : "";
     const which = PAGES.map(([page, name]) => `<label class="check"><input type="checkbox" data-page="${page}"${prefs[page] && r.has[page] ? " checked" : ""}${r.has[page] ? "" : " disabled"}><span>${name}</span></label>`).join("");
     const fridge = r.fridge.length ? `<details class="m-how sg-fridge" id="sg-fridge"><summary>What's in the dessert fridge (${r.fridge.filter((f) => f.on).length} on the sign)</summary>
-        <p class="m-note">Tick what's in the fridge. Square's count decides until you tick or untick one; that one then stays as you left it.</p>
+        <p class="m-note">Tick what's in the fridge. Square's count decides; a tick or untick here is for today only, and tomorrow the sign follows Square again. To change it for good, set the count in Desserts.</p>
         <div class="sg-fridge-rows">${r.fridge.map((f) => `<label class="check"><input type="checkbox" data-key="${esc(f.key)}"${f.on ? " checked" : ""}><span>${esc(f.name)}${f.price == null ? "" : ` <small>$${f.price.toFixed(2)}</small>`}${f.out ? " <small>· Square says 0</small>" : ""}</span></label>`).join("")}</div>
       </details>` : "";
     screen({ title: "Signs", back: true,

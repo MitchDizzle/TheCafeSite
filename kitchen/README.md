@@ -508,12 +508,12 @@ If the PC was off at 2:10, or Google didn't answer, it goes as soon as it can: t
 
 - **Special sides** (black & white): the plate's sides in boxes ("comes with both", or "one side, pick from" for a side written with "or"), then the sides to swap in: the day's extra sides marked "today only", the Deli Salads, a cup of the soup. A choice-of-side day lists the sides to pick from; a plate that is one of two shows the two and its breads. A plate with no sides has no sides sign.
 - **Special & soup**: the plate with its sides and "Includes a drink", and the soup with its Cup / Bowl prices and its note. Coloured type, light on ink; tick **Special & soup in black & white** for black ink only.
-- **Dessert fridge** (black & white): what's in the fridge with its price, dearest first, the cookies and bars under Treats.
+- **Dessert fridge** (black & white): what's in the fridge with its price, dearest first, the cookies and bars under Treats, and a small "Not self serve" panel at the foot (the fridge is at the front counter).
 
 Nothing is typed there, so the signs can't disagree with the till: the plate, sides and soup are the day's in **Specials** (fix a wrong one there), and the desserts, their prices and the soup's prices are Square's (**Desserts**). **Today** is picked; the next two planned days can be printed ahead.
 
 - **Untick a page** to leave it out of the print. The device remembers.
-- **What's in the dessert fridge** lists every dessert kind with a tick. Square's count decides (0 is off), and Cheesecake, Cinnamon Roll and Pecan Sticky Bun start off (not kept in that fridge). Tick or untick one and it stays that way until changed back, on every device; a tick that agrees with Square is forgotten, so that dessert follows Square again. Kept in `datasigns.json`, which can also hold `skipItems`, `treats` and `names` (a shorter name for the sign, by the kind's name in Square) to change the defaults in `lib/signs.js`.
+- **What's in the dessert fridge** lists every dessert kind with a tick. Square's count decides (0 is off), and Cinnamon Roll and Pecan Sticky Bun start off. A tick or untick is for **today only**, on every device; the next morning the sign follows Square again (2026-11-16: ticks kept for good outlived the desserts). To change what the sign shows for good, set the count in **Desserts**. Kept in `data\signs.json`, which can also hold `skipItems`, `treats`, `names` (a shorter name for the sign, by the kind's name in Square) and `caution` / `cautionSub` (the warning panel's words, `""` for none) to change the defaults in `lib/signs.js`.
 - A page with too much on it (a long plate, a full fridge) shrinks to fit its sheet.
 
 The pages use the website's own sign styles (`src/assets/css/studio/sign.css`, which an update brings with it), so they match the /studio/ pieces they replace day to day: `sign-todays-sides-bw`, `sign-day-letter` (without its desserts) and `sign-desserts-bw`.

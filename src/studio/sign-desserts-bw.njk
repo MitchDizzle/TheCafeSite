@@ -13,6 +13,8 @@ inKinds: []
 addDesserts:
   - name: "Pumpkin Cheesecake"
     priceOf: "Banana Pudding"
+caution: "Not self serve"
+cautionSub: "Please do not open. Ask at the counter."
 signNames:
   "M&M Brown Butter Chocolate Chip (2)": "M&M Cookies (2)"
   "Triple Chocolate Chip (2)": "Triple Chocolate Cookies (2)"
@@ -94,4 +96,21 @@ studioOrder: 32
         {%- endfor %}
         {%- endif %}
     </ul>
+
+    {#- `caution` (Mitch 2026-11-16: the fridge is at the front counter):
+        the open fridge sign's warning, small, at the foot. Drop the two
+        lines from the front matter for a self-serve fridge. #}
+    {%- if caution %}
+    <section class="dc-caution dc-caution--small">
+        <div class="dc-caution-inner">
+            {%- set triangle %}<svg class="dc-icon" viewBox="0 0 100 88" aria-hidden="true"><path d="M50 5 L95 83 H5 Z" fill="#fff" stroke="#000" stroke-width="8" stroke-linejoin="round"/><rect x="45" y="30" width="10" height="30" rx="4" fill="#000"/><circle cx="50" cy="71" r="6" fill="#000"/></svg>{%- endset %}
+            {{ triangle | safe }}
+            <div class="dc-words">
+                <p class="p-display dc-title">{{ caution }}</p>
+                {%- if cautionSub %}<p class="dc-sub">{{ cautionSub }}</p>{% endif %}
+            </div>
+            {{ triangle | safe }}
+        </div>
+    </section>
+    {%- endif %}
 </div>

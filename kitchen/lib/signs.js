@@ -34,32 +34,55 @@ const money = (n) => `$${Number(n).toFixed(2)}`;
 // ---- The dessert fridge's rows ----
 
 const SIGNS_FILE = path.join(DATA, MOCK ? "signs-mock.json" : "signs.json");
-// skipItems: whole desserts left off unless ticked (kept in another fridge,
-//   or gone before a taped-up sign comes down: client 2026-10-29, 11-04).
+// skipItems: whole desserts left off unless ticked (gone before a taped-up
+//   sign comes down: client 2026-10-29, 11-04). Cheesecake was here too
+//   until 2026-11-16, when the pumpkin one went in the fridge.
 // treats: desserts listed under Treats at the bottom (client 2026-11-06).
 // names: a shorter name for the sign, by the kind's name in Square.
+// caution / cautionSub: the warning panel at the foot (Mitch 2026-11-16:
+//   the fridge is at the front counter, not self serve). "" for none.
 // show / hide: the kinds ticked on though Square counts 0, and ticked off
-//   though Square has some. A tick that agrees with Square is in neither.
+//   though Square has some, on `day`. A tick that agrees with Square is in
+//   neither, and they last only the day they were made (Mitch 2026-11-16:
+//   ticks kept for good outlived the desserts, so a dessert set to 0 in
+//   Desserts stayed on the sign and a new one never came on). Each morning
+//   the sign follows Square again.
+const OLD_SKIP = ["Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"];
 const FRIDGE_DEFAULTS = {
-  skipItems: ["Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"],
+  skipItems: ["Cinnamon Roll", "Pecan Sticky Bun"],
   treats: ["Cookies", "Dessert Bar"],
   names: {
     "M&M Brown Butter Chocolate Chip (2)": "M&M Cookies (2)",
     "Triple Chocolate Chip (2)": "Triple Chocolate Cookies (2)",
   },
+  caution: "Not self serve",
+  cautionSub: "Please do not open. Ask at the counter.",
   show: [],
   hide: [],
 };
-function fridgeSettings() {
+// A file saved before 2026-11-16 wrote the defaults out as if chosen; those
+// mean "the default", so a default changed here still reaches that PC.
+function keptChoices() {
   let kept = {};
   try { kept = JSON.parse(fs.readFileSync(SIGNS_FILE, "utf8")); } catch {}
+  if (Array.isArray(kept.skipItems) && kept.skipItems.join("|") === OLD_SKIP.join("|")) delete kept.skipItems;
+  if (JSON.stringify(kept.treats) === JSON.stringify(FRIDGE_DEFAULTS.treats)) delete kept.treats;
+  if (JSON.stringify(kept.names) === JSON.stringify(FRIDGE_DEFAULTS.names)) delete kept.names;
+  return kept;
+}
+function fridgeSettings(today = localDate()) {
+  const kept = keptChoices();
   const list = (v, d) => (Array.isArray(v) ? v.map(String) : d);
+  const text = (v, d) => (typeof v === "string" ? v : d);
+  const fresh = kept.day === today;
   return {
     skipItems: list(kept.skipItems, FRIDGE_DEFAULTS.skipItems),
     treats: list(kept.treats, FRIDGE_DEFAULTS.treats),
     names: kept.names && typeof kept.names === "object" ? kept.names : FRIDGE_DEFAULTS.names,
-    show: list(kept.show, []),
-    hide: list(kept.hide, []),
+    caution: text(kept.caution, FRIDGE_DEFAULTS.caution),
+    cautionSub: text(kept.cautionSub, FRIDGE_DEFAULTS.cautionSub),
+    show: fresh ? list(kept.show, []) : [],
+    hide: fresh ? list(kept.hide, []) : [],
   };
 }
 
@@ -103,11 +126,12 @@ function fridgeRows(items, o = fridgeSettings()) {
 }
 
 // on: the kinds ticked, by key; rows: fridgeRows() as it was shown. Only a
-// tick that differs from the usual is kept, so tomorrow follows Square again
-// for everything else.
-function saveFridge(on, rows) {
+// tick that differs from the usual is kept, and only for today. The other
+// keys are written back only as the file chose them (keptChoices).
+function saveFridge(on, rows, today = localDate()) {
   const ticked = new Set((Array.isArray(on) ? on : []).map(String));
-  const o = fridgeSettings();
+  const o = keptChoices();
+  o.day = today;
   o.show = rows.filter((r) => ticked.has(r.key) && !r.usual).map((r) => r.key);
   o.hide = rows.filter((r) => !ticked.has(r.key) && r.usual).map((r) => r.key);
   fs.mkdirSync(DATA, { recursive: true });
@@ -209,8 +233,13 @@ function dayPage(d, { includesDrink = false } = {}) {
   </div></div>`;
 }
 
-// The dessert fridge: sign-desserts-bw.njk.
-function fridgePage(rows) {
+// The warning triangle, as layouts/quick-sign.njk draws it.
+const TRIANGLE = '<svg class="dc-icon" viewBox="0 0 100 88" aria-hidden="true"><path d="M50 5 L95 83 H5 Z" fill="#fff" stroke="#000" stroke-width="8" stroke-linejoin="round"/><rect x="45" y="30" width="10" height="30" rx="4" fill="#000"/><circle cx="50" cy="71" r="6" fill="#000"/></svg>';
+
+// The dessert fridge: sign-desserts-bw.njk, with its small caution panel.
+function fridgePage(rows, o = fridgeSettings()) {
+  const caution = o.caution ? `<section class="dc-caution dc-caution--small"><div class="dc-caution-inner">${TRIANGLE}<div class="dc-words">
+      <p class="p-display dc-title">${esc(o.caution)}</p>${o.cautionSub ? `<p class="dc-sub">${esc(o.cautionSub)}</p>` : ""}</div>${TRIANGLE}</div></section>` : "";
   const row = (r) => `<li class="sign-row${r.name.length > 24 ? " fd-row--long" : ""}">
       <div class="sign-row-head"><span class="sign-row-name">${esc(r.name)}</span><span class="sign-row-fill" aria-hidden="true"></span><span class="sign-row-price">${r.price == null ? "" : money(r.price)}</span></div>
       ${r.lists.map((l) => `<p class="sign-row-sub">${esc(l.name)}: ${l.options.map(esc).join(" or ")}</p>`).join("")}</li>`;
@@ -222,6 +251,7 @@ function fridgePage(rows) {
       ${on.filter((r) => !r.treat).map(row).join("")}
       ${treats.length ? `<li class="fd-group"><h3 class="p-display fd-group-title">Treats</h3></li>${treats.map(row).join("")}` : ""}
     </ul>
+    ${caution}
   </div></div>`;
 }
 
