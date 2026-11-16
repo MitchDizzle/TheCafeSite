@@ -2,4 +2,5 @@
   <rect x="16" y="8" width="32" height="9" rx="3" fill="#2C5E70" stroke="#1F4552" stroke-width="2.5"/>
   <path d="M14 20c0-2 2-3 4-3h28c2 0 4 1 4 3v30a6 6 0 0 1-6 6H20a6 6 0 0 1-6-6z" fill="#D6E6C4" stroke="#1F4552" stroke-width="2.5"/>
   <rect x="21" y="23" width="7" height="28" rx="3.5" fill="#6F8C3A"/><rect x="30" y="25" width="7" height="26" rx="3.5" fill="#7E9B45"/><rect x="39" y="22" width="5" height="29" rx="2.500" fill="#6F8C3A"/>
+  <path d="M21 12h22" stroke="#8ED9D4" stroke-width="1.5" stroke-linecap="round"/><path d="M18 26v18" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="m24 29 1 2m-1 7 1 2m9-8-1 2m0 8 1 2m7-15 1 2m-1 7 1 2" stroke="#A3BB5E" stroke-width="1.5" stroke-linecap="round"/>
 </svg>

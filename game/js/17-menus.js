@@ -3,7 +3,7 @@
       .concat(D.specials.map(function (s) { return { id: 'sp-' + s.id, name: s.name, photo: s.photo, sprite: 'special' }; }));
     var seen = list.filter(function (r) { return save.served[r.id]; }).length;
     paper('box',
-      '<div class="ou-top ou-top--back"><span class="ou-kicker">Recipe Box</span><h2 class="ou-h">' + seen + ' of ' + list.length + ' served</h2><span class="ou-label">Serve one 10 times to see our photo of it</span>' +
+      '<div class="ou-top ou-top--back"><span class="ou-kicker">Recipe Box</span><h2 class="ou-h">' + seen + ' of ' + list.length + ' served</h2><span class="ou-label">Serve a dish 10 times to unlock its photo</span>' +
       '<button class="ou-topback" data-act="back">Back</button></div>' +
       '<div class="ou-body-pad"><div class="ou-grid">' + list.map(function (r) {
         var n = save.served[r.id] || 0, real = n >= 10 && r.photo;
@@ -48,14 +48,14 @@
       '<button class="ou-topback" data-act="back">Back</button></div>' +
       '<div class="ou-body-pad">' +
       vol('sfx', 'Sound', save.sfxVol, 'The sizzle, the bell, the tickets.') +
-      vol('music', 'Music', save.musicVol, 'Made as it plays, never the same twice. It picks up when the kitchen does.') +
+      vol('music', 'Music', save.musicVol, 'The music picks up as the kitchen gets busier.') +
       // Which music (owner 2026-11-13): the jazz, or retro electronic.
       '<div class="ou-set ou-set--vol" role="group" aria-label="Music style"><span><b>Music style</b></span><span class="ou-seg">' +
         Object.keys(STYLES).map(function (id) { return '<button data-act="style" data-v="' + id + '" aria-pressed="' + (id === save.musicStyle) + '">' + STYLES[id].name + '</button>'; }).join('') + '</span></div>' +
       (STATS.url ? row('stats', 'Send how my weeks go', !save.noStats, 'No name: the level, the days and the tips, so The Café can see if it’s too hard.') : '') +
       '<div class="ou-setbox"><span class="ou-label">On your home screen</span>' + installHtml() + '</div>' +
       '<div class="ou-setbox"><span class="ou-label">Save code</span>' +
-      '<p class="ou-fine">Your achievements, best weeks and Recipe Box as one line of text. Keep it somewhere, and load it on another phone, another browser, or after the phone forgets.</p>' +
+      '<p class="ou-fine">Copy this code to back up your achievements, best weeks and Recipe Box. Load it in another browser or on another phone.</p>' +
       bestList() +
       '<div class="ou-row"><button class="ou-btn ou-btn--quiet" data-act="savecopy">Copy code</button><button class="ou-btn ou-btn--quiet" data-act="saveopen">Load code</button></div>' +
       '<textarea class="ou-code" id="ou-code" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Save code" hidden></textarea>' +
@@ -63,9 +63,9 @@
       '<p class="ou-code-msg" id="ou-code-msg" role="status"></p></div>' +
       '<button class="ou-btn ou-btn--quiet ou-reset" data-act="achreset">' + (resetArmed ? 'Tap again to reset every achievement' : 'Reset achievements') + '</button>' +
       '<div class="ou-credits"><span class="ou-label">About</span>' +
-      '<p>A little game from <b>The Café</b> in Leavenworth, Kansas. The tickets are the real menu, the specials were real specials, and the photos in the Recipe Box are the real plates.</p>' +
+      '<p>Work a week at <b>The Café</b> in Leavenworth, Kansas. The dishes and specials come from our menu. Unlock our food photos in the Recipe Box.</p>' +
       '<p class="ou-credit"><span class="ou-label">Made by</span><b>' + esc(CREDIT) + '</b></p>' +
-      '<p class="ou-fine">Every drawing, sound and note of music is made in the game itself. ' + esc(TIPS_NOTE) + '</p>' +
+      '<p class="ou-fine">Original artwork, with sound and music played by your browser. ' + esc(TIPS_NOTE) + '</p>' +
       '<div class="ou-row"><a class="ou-btn ou-btn--quiet" href="/menu">Menu</a><a class="ou-btn ou-btn--quiet" href="/privacy">Privacy</a></div></div>' +
       '</div><div class="ou-foot"><button class="ou-btn" data-act="back">Back</button></div>');
   }
@@ -140,7 +140,7 @@
     var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
     var ios = /iPhone|iPad|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
     var keep = ' Copy your save code first: on an iPhone the home-screen game keeps its own progress.';
-    if (standalone) return '<p class="ou-fine">You’re playing from your home screen. Nice.</p>';
+    if (standalone) return '<p class="ou-fine">You’re playing from your home screen.</p>';
     if (inApp) return '<p class="ou-fine">' + esc(inApp === 'an app' ? 'This app’s' : inApp + '’s') + ' own browser can’t do it. Open the ⋯ menu, choose <b>Open in browser</b>, then come back to Settings.' + keep + '</p>';
     if (installEvt) return '<button class="ou-btn" data-act="install">Add to Home Screen</button>';
     if (ios) return '<p class="ou-fine">In Safari, tap the <b>Share</b> button, then <b>Add to Home Screen</b>.' + keep + '</p>';

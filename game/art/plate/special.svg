@@ -1,8 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-<!-- The day's special: a slice of something good with gravy over it.
+<!-- The day's special: meatloaf with gravy, based on the cafe photo.
      Stands for every special; the ticket says which one. -->
   <path d="M9 44c0-4 3-6 6-6h34c3 0 6 2 6 6s-3 7-6 7H15c-3 0-6-3-6-7z" fill="#FFFFFF" stroke="#1F4552" stroke-width="2.5"/>
   <path d="M15 40V25c0-4 3-6 7-6h20c4 0 7 2 7 6v15z" fill="#8A5437" stroke="#1F4552" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M15 27c0-5 3-8 7-8h20c4 0 7 3 7 8-2 4-5 0-7 4-3-4-6 3-9-1-3 4-6-2-9 1-3-3-6 1-9-4z" fill="#D9793F" stroke="#1F4552" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M15 27c0-5 3-8 7-8h20c4 0 7 3 7 8-2 4-5 0-7 4-3-4-6 3-9-1-3 4-6-2-9 1-3-3-6 1-9-4z" fill="#B77C3C" stroke="#1F4552" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M22 23h16" stroke="#DDA65E" stroke-width="2" stroke-linecap="round"/>
+  <path d="m20 35 3 1m5-2 2 2m8-2 3 1m3 3 2-1m-21 3 3-1" stroke="#BD8960" stroke-width="2" stroke-linecap="round"/>
+  <path d="M18 45h28" stroke="#D8E3E5" stroke-width="2" stroke-linecap="round"/>
   <path class="ou-steam" d="M26 13c-3-3 3-5 0-8M38 13c-3-3 3-5 0-8" stroke="#8E9AA0" stroke-width="2.5" stroke-linecap="round" fill="none"/>
 </svg>

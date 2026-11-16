@@ -6,4 +6,5 @@
   <path d="M32 36v6h-5" fill="none" stroke="#1F4552" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
   <circle cx="32" cy="33" r="3.500" fill="#22323A"/>
   <rect x="34" y="22" width="9" height="6" rx="2" fill="#8ED9D4" stroke="#1F4552" stroke-width="1.800"/>
+  <path d="M36 11h5M39 31v11" stroke="#E6ECEE" stroke-width="2" stroke-linecap="round"/><path d="M38 34h3m-3 4h3" stroke="#8E9AA0" stroke-width="1.5"/><path d="M12 20v10m40-10v10" stroke="#1F4552" stroke-width="3" stroke-linecap="round"/>
 </svg>

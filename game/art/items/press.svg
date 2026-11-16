@@ -3,4 +3,5 @@
   <path d="M18 36V26M46 36V26" stroke="#1F4552" stroke-width="5" stroke-linecap="round"/>
   <rect x="12" y="15" width="40" height="12" rx="6" fill="#B98552" stroke="#1F4552" stroke-width="2.5"/>
   <path d="M16 41h32" stroke="#E6ECEE" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M18 20h26" stroke="#DDA65E" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="21" r="1.5" fill="#1F4552"/><circle cx="46" cy="21" r="1.5" fill="#1F4552"/><path d="M15 46h34" stroke="#65767D" stroke-width="1.5" stroke-linecap="round"/>
 </svg>

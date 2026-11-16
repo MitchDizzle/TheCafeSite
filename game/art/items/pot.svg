@@ -3,4 +3,5 @@
   <path d="M16 16h28l3 32a6 6 0 0 1-6 6H19a6 6 0 0 1-6-6z" fill="#E9F3F5" stroke="#1F4552" stroke-width="2.5" stroke-linejoin="round"/>
   <path d="M14.500 32h31l1.500 16a6 6 0 0 1-6 6H19a6 6 0 0 1-6-6z" fill="#6B4430"/>
   <rect x="14" y="9" width="32" height="8" rx="3" fill="#2C5E70" stroke="#1F4552" stroke-width="2.5"/>
+  <path d="M20 23l-1 21" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity=".75"/><path d="M37 23h4m-5 5h5m-5 8h5m-5 7h5" stroke="#8E9AA0" stroke-width="1.5" stroke-linecap="round"/><path d="M20 12h18" stroke="#8ED9D4" stroke-width="1.5" stroke-linecap="round"/>
 </svg>

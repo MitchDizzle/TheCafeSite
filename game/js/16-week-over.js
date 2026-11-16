@@ -9,8 +9,8 @@
         return '<div class="ou-past"><div class="ou-past-head"><span><b>' + esc(head[1]) + '</b><small>' + esc((D.levels[p.l] ? D.levels[p.l].name + ' · ' : '') + when) + '</small></span><strong>' + money(p.k) + '</strong></div>' +
           dayStrip(p) +
           '<div class="ou-row ou-row--code">' + codeButton(p.c, '') + shareButton(i) + '</div></div>';
-      }).join('') : '<p class="ou-note">Finish a week and it turns up here with its week code, so the code can be found again later.</p>') +
-      '<p class="ou-fine">The last ' + PAST_MAX + ' weeks, kept on this phone. The save code in Settings carries them too.</p></div>' +
+      }).join('') : '<p class="ou-note">Your finished weeks and their codes will appear here.</p>') +
+      '<p class="ou-fine">The last ' + PAST_MAX + ' weeks, kept on this phone. They’re also included in your save code in Settings.</p></div>' +
       '<div class="ou-foot"><button class="ou-btn" data-act="back">Back</button></div>');
     openOverlay(from);
   }
@@ -66,7 +66,7 @@
       '<button class="ou-btn ou-btn--quiet" type="submit">Send it in</button></form>';
     // A heading that fits one line (owner 2026-11-13: a shorter band on top).
     var head = weekHead(past), rows = dayRows(past);
-    if (G.finish) rows += '<div><b></b><span>The week finished</span><strong>+' + money(G.finish) + '</strong></div>';
+    if (G.finish) rows += '<div><b></b><span>Week completion bonus</span><strong>+' + money(G.finish) + '</strong></div>';
     if (G.perf) rows += '<div><b></b><span>Performance bonus</span><strong>+' + money(G.perf) + '</strong></div>';
     rows += '<div><b>Week</b><span>Tips earned</span><strong>' + money(G.earned) + '</strong></div>';
     if (G.bonus) rows += '<div><b></b><span>Free items turned down</span><strong>+' + money(G.bonus) + '</strong></div>';
@@ -78,7 +78,7 @@
       '<span class="ou-label">' + (best ? 'A new best ' + lvName + ' week' : 'Best ' + lvName + ' week: ' + money(save.keeps[G.level] || 0) + ' kept') + '</span></div>' +
       '<div class="ou-body-pad"><div class="ou-week">' + rows + '</div>' +
       '<div class="ou-row ou-row--code">' + codeButton(G.run, '') + shareButton(0) + '</div>' +
-      '<p class="ou-fine">The Café can look this week up by its code. Keep it to yourself: it’s hidden until you tap, and a screenshot or a share never shows it. Past weeks, on the title screen, keeps it for later.</p>' +
+      '<p class="ou-fine">Keep your week code private. The Café can use it to find your result. Find it again under Past weeks; shared results leave it out.</p>' +
       '<p class="ou-fine">A day’s colour is its slips (walk-outs and burnt food): gold for none, purple for one, blue for two or three. Red is where the week went wrong.</p>' +
       (G.newAch.length ? '<span class="ou-label">Achievements this week</span>' + achList(G.newAch) : '') +
       itemRows + sendIn +

@@ -72,14 +72,14 @@
     }
     keepRun('dawn');
     paper('dawn',
-      '<div class="ou-top ou-top--dawn ou-top--back"><button class="ou-topback" data-act="home">Back</button><span class="ou-kicker">Today’s special</span><h2 class="ou-h">' + day.name + ', 6am</h2><span class="ou-label">Pick the plate for lunch</span></div>' +
+      '<div class="ou-top ou-top--dawn ou-top--back"><button class="ou-topback" data-act="home">Back</button><span class="ou-kicker">Today’s special</span><h2 class="ou-h">' + day.name + ', 6am</h2><span class="ou-label">Choose today’s lunch special</span></div>' +
       '<div class="ou-body-pad">' + troubleCard() + G.offers.map(function (s, i) {
         return '<button class="ou-card ou-card--special" data-act="special" data-i="' + i + '">' +
           '<span class="ou-ci">' + (s.photo ? '<img src="' + esc(s.photo) + '" alt="" loading="lazy">' : spr('special')) + '</span>' +
           '<span><b>' + esc(s.name) + '</b><span class="ou-ct">' + esc(s.sides.join(', ')) + '</span>' +
-          '<span class="ou-chip">' + (s.sides.length > 1 ? 'Two sides · tips more' : 'One side · quicker') + '</span></span><span></span></button>';
+          '<span class="ou-chip">' + (s.sides.length > 1 ? 'Two sides · higher tips' : 'One side · quicker') + '</span></span><span></span></button>';
       }).join('') +
-      '<p class="ou-note">It goes on at 11am. ' + (friday ? 'Friday ends with a catering order: five platters on one clock.' : 'Three walk-outs in a day and the week is over.') + '</p>' +
+      '<p class="ou-note">Lunch starts at 11am. ' + (friday ? 'Friday ends with a catering order: five platters on one clock.' : 'Three walk-outs in a day and the week is over.') + '</p>' +
       ownedRow() + '</div>');
   }
 

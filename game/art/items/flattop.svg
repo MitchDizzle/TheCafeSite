@@ -3,4 +3,7 @@
   <rect x="12" y="23" width="18" height="10" rx="3" fill="#F08A3C" opacity=".4"/><rect x="34" y="23" width="18" height="10" rx="3" fill="#F08A3C" opacity=".4"/>
   <rect x="12" y="36" width="18" height="8" rx="3" fill="#F08A3C" opacity=".22"/><rect x="34" y="36" width="18" height="8" rx="3" fill="#F08A3C" opacity=".22"/>
   <rect x="10" y="48" width="44" height="6" rx="2" fill="#8E9AA0" stroke="#1F4552" stroke-width="2"/>
+  <path d="M11 21h42M9 24v19m46-19v19" stroke="#8E9AA0" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="m16 27 8-2m14 14 9-2" stroke="#C5CFD3" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+  <circle cx="24" cy="51" r="1.5" fill="#1F4552"/><circle cx="40" cy="51" r="1.5" fill="#1F4552"/>
 </svg>

@@ -3,4 +3,6 @@
   <rect x="8" y="42" width="48" height="9" rx="4.5" fill="#DDA65E" stroke="#1F4552" stroke-width="2.5"/>
   <path d="M15 33c3-6 9-9 14-9" stroke="#F0C68A" stroke-width="3" stroke-linecap="round" fill="none"/>
   <ellipse cx="29" cy="30" rx="1.6" ry="1" fill="#FFF8EA"/><ellipse cx="37" cy="26" rx="1.6" ry="1" fill="#FFF8EA"/><ellipse cx="44" cy="32" rx="1.6" ry="1" fill="#FFF8EA"/>
+  <path d="M13 46h38" stroke="#F0C68A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 37h40" stroke="#B77C3C" stroke-width="1.5" stroke-linecap="round"/>
 </svg>
