@@ -5,7 +5,7 @@
     { "label": "Menu & Specials", "href": "/menu" },
     { "label": "Catering", "href": "/catering" },
     { "label": "Gallery",  "href": "/gallery" },
-    { "label": "Reserve",  "href": "/reserve" },
+    { "label": "Reserve",  "href": "/reserve", "needsReservations": true },
     { "label": "Contact",  "href": "/contact", "cta": true }
   ],
 
@@ -14,7 +14,7 @@
     { "label": "Menu & Specials", "href": "/menu" },
     { "label": "Catering", "href": "/catering" },
     { "label": "Gallery",  "href": "/gallery" },
-    { "label": "Reserve a table", "href": "/reserve" },
+    { "label": "Reserve a table", "href": "/reserve", "needsReservations": true },
     { "label": "Contact",  "href": "/contact" },
     { "label": "Our feedback", "href": "/feedback", "needsFeedback": true },
     { "label": "Play Order Up", "href": "/play", "needsGame": true },

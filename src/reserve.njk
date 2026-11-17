@@ -17,6 +17,13 @@ pageCss: "/assets/css/reserve.css"
         <section class="section" aria-labelledby="reserve-heading">
             <div class="container">
                 <h1 id="reserve-heading">Reserve a table</h1>
+                {%- if not site.reservations.listed %}
+                <p class="reserve-call">
+                    We aren&rsquo;t taking table reservations right now. Come on in any time we&rsquo;re open,
+                    {{ site.opening.hoursDays }}, {{ site.opening.opens.time }}&nbsp;{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}&nbsp;{{ site.opening.closes.meridiem }}.
+                    Questions? Call us at <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a>.
+                </p>
+                {%- else %}
                 <p style="margin-top: 0.75rem; max-width: 55ch;">
                     Coming in with the family, the office or the whole team? Let us know when, and we&rsquo;ll have a table ready.
                 </p>
@@ -101,6 +108,7 @@ pageCss: "/assets/css/reserve.css"
                 <p class="reserve-call">
                     To reserve a table, call us at <a href="tel:{{ site.phoneHref }}">{{ site.phone }}</a>.
                 </p>
+                {%- endif %}
                 {%- endif %}
             </div>
         </section>

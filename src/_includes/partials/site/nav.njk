@@ -14,8 +14,11 @@
 
         <ul class="nav__links" id="nav-links" role="list">
             {%- for item in nav.primary %}
+            {#- /reserve is linked only while site.json's reservations.listed says so #}
+            {%- if not item.needsReservations or site.reservations.listed %}
             {%- set isCurrent = (item.href == page.filePathStem) %}
             <li><a href="{{ item.href }}"{% if item.cta %} class="btn btn-primary{% if isCurrent %} active{% endif %}"{% elif isCurrent %} class="active"{% endif %}{% if isCurrent %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+            {%- endif %}
             {%- endfor %}
         </ul>
     </div>

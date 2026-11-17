@@ -238,7 +238,7 @@
         },
         {
           "name": "Buffalo Chicken Salad",
-          "description": "Greens, buffalo chicken, bacon, tomato, egg, olives, cheddar cheese & dressing"
+          "description": "Greens, buffalo chicken, tomato, egg, cheddar cheese & dressing"
         },
         {
           "name": "Chef Salad",
@@ -272,8 +272,8 @@
       "name": "Soup of the Day",
       "serving": "Starting at 11am",
       "items": [
-        { "name": "Cup", "price": 5.00 },
-        { "name": "Bowl", "price": 7.00 }
+        { "name": "Cup", "price": 3.00 },
+        { "name": "Bowl", "price": 5.00 }
       ]
     },
     {

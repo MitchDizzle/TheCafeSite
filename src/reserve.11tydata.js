@@ -15,4 +15,12 @@ for (let t = minutes(reservations.firstSeating); t <= minutes(reservations.lastS
   slots.push({ value: `${pad(h)}:${pad(m)}`, label: `${h % 12 || 12}:${pad(m)} ${h < 12 ? "am" : "pm"}` });
 }
 
-module.exports = { slots };
+// While site.json's reservations.listed is false the page is still built (so
+// an old upload of the form is replaced) but says we aren't taking them, and
+// stays out of search.
+module.exports = {
+  slots,
+  eleventyComputed: {
+    noindex: (data) => !data.site.reservations.listed,
+  },
+};
