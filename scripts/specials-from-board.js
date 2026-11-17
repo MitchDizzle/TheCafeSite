@@ -71,7 +71,7 @@ function dayRanges(src) {
 // A day as the file writes one: two-space JSON, indented under "days".
 const dayText = (day) => JSON.stringify(day, null, 2).replace(/\n/g, "\n    ");
 
-const ORDER = ["date", "soup", "special", "sides", "anySide", "price"];
+const ORDER = ["date", "soup", "special", "sides", "anySide", "defaultSide", "price"];
 function merged(have, b) {
   const day = { ...(have || {}) };
   const special = clean(b.special);
@@ -81,9 +81,11 @@ function merged(have, b) {
   day.date = b.date;
   if (soup) day.soup = soup; else delete day.soup;
   if (special) day.special = special; else delete day.special;
-  if (b.anySide === true) { day.anySide = true; delete day.sides; }
-  else {
-    delete day.anySide;
+  if (b.anySide === true) {
+    day.anySide = true; delete day.sides;
+    if (clean(b.defaultSide)) day.defaultSide = clean(b.defaultSide); else delete day.defaultSide;
+  } else {
+    delete day.anySide; delete day.defaultSide;
     const sides = (Array.isArray(b.sides) ? b.sides : []).map(clean).filter(Boolean);
     if (sides.length) day.sides = sides; else delete day.sides;
   }

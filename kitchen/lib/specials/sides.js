@@ -8,8 +8,11 @@
 //   - a side written "Tossed Salad or Cooked Broccoli": both, nothing
 //     picked, then the swap sides, so the customer or the counter picks
 //     one (client 2026-10-29: no Chef's Choice; it was pre-picked first).
-//   - choice of side (anySide): one list, Chef's Choice pre-picked, then the
-//     swap sides.
+//   - choice of side (anySide): one list, the swap sides, with the day's
+//     defaultSide picked already ("Tossed Salad", typed in Specials), or
+//     nothing picked when there's none, so the customer or the counter picks
+//     (Mitch 2026-11-17: Chef's Choice is gone; typed as the default side,
+//     it comes back as an option, picked).
 // On a plate with two or three sides, each list also offers the plate's other
 // sides, right after its own, so a customer can double up on one (client
 // 2026-11-12: it only worked on a day whose extraSides named them, and the
@@ -34,7 +37,6 @@ const { square } = require("../square");
 const { catalog, loadCatalog, readObject, modifierListsByName, upsertObject } = require("../catalog");
 const { plan, savePlan, RETRY_MINUTES, listsFor, modsFor, modOption, extrasOn, counterOnlyFor } = require("./plan");
 
-const CHEFS_CHOICE = "Chef's Choice";
 // The item's own word for its options in a list (Square's 2025-05-21, which
 // the catalog calls use): the one picked already (on_by_default before), and
 // any sold at the counter only that day (`hidden`, lower case: the website's
@@ -53,7 +55,7 @@ const counterOnlyOn = (date) => new Set(counterOnlyFor(date).map((w) => w.toLowe
 
 function sideSlots(day) {
   if (!day) return [];
-  if (day.anySide) return [{ pick: CHEFS_CHOICE, also: [] }];
+  if (day.anySide) return [{ pick: cleanText(day.defaultSide) || null, also: [] }];
   return (day.sides || []).map((s) => {
     const parts = String(s).split(/\s+or\s+/i).map(cleanText).filter(Boolean);
     return parts.length > 1 ? { pick: null, also: parts } : { pick: cleanText(s), also: [] };

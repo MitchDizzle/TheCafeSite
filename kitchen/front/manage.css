@@ -160,6 +160,7 @@
 .d-sides .check input { width: 1.2rem; height: 1.2rem; }
 .d-sides input[type="text"] { font: inherit; font-size: 1.05rem; color: var(--text); padding: 0.4rem 0.6rem; border: 2px solid var(--line); border-radius: 0.4rem; }
 .d-sides input[type="text"]:disabled { background: #F1ECE3; color: var(--muted); }
+.d-default { display: grid; gap: 0.2rem; margin: 0 0 0.35rem 1.7rem; font-size: 0.92rem; color: var(--muted); }
 .d-extras, .d-presets, .d-mods { margin-top: 0.5rem; }
 .d-sides legend small { font-weight: 400; margin-left: 0.3rem; }
 .d-sides .m-note { margin: 0; }

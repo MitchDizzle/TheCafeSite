@@ -26,8 +26,9 @@ test("the side lists: two sides with 'or' are both, nothing picked (no Chef's Ch
   ]);
 });
 
-test("the side lists: choice of side is one list, Chef's Choice", () => {
-  assert.deepEqual(sideSlots(day("Meatloaf", { anySide: true, sides: ["ignored"] })), [{ pick: "Chef's Choice", also: [] }]);
+test("the side lists: choice of side is one list, its default picked, or nothing (no Chef's Choice)", () => {
+  assert.deepEqual(sideSlots(day("Meatloaf", { anySide: true, sides: ["ignored"] })), [{ pick: null, also: [] }]);
+  assert.deepEqual(sideSlots(day("Lasagna", { anySide: true, defaultSide: "Tossed Salad" })), [{ pick: "Tossed Salad", also: [] }]);
 });
 
 test("the side lists: nothing planned, or no sides, is none", () => {
@@ -113,6 +114,11 @@ test("Lunch Special's description: three sides read as a list", () => {
 test("Lunch Special's description: choice of side asks for a pick", () => {
   assert.equal(dayDescription("Lunch Special", day("Meatloaf", { anySide: true })),
     "Meatloaf with choice of side. Pick your side below. Served from 11am.");
+});
+
+test("Lunch Special's description: choice of side with a default has it picked", () => {
+  assert.equal(dayDescription("Lunch Special", day("Lasagna", { anySide: true, defaultSide: "Tossed Salad" })),
+    "Lasagna with choice of side. Swap a side below if you like. Served from 11am.");
 });
 
 test("Lunch Special's description: no sides, nothing to swap", () => {

@@ -43,7 +43,7 @@ function dayDescription(name, day, hidden, note, soupNote) {
     if (plan.includesDrink) words.push("Includes a fountain drink or iced tea.");
     if (name === cfg.sideItem && sideSlots(day).length) {
       // An "or" side has nothing picked, so it asks like choice of side.
-      words.push(day.anySide || sideSlots(day).some((slot) => !slot.pick) ? "Pick your side below." : "Swap a side below if you like.");
+      words.push(sideSlots(day).some((slot) => !slot.pick) ? "Pick your side below." : "Swap a side below if you like.");
     }
   } else {
     words.push(`${what}.`);

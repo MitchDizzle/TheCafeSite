@@ -46,10 +46,15 @@ studioOrder: 34
 {%- set versions = (d | versionsOf) if d else [] %}
 {%- set breads = (d | breadsOf) if d else [] %}
 {%- set ownBread = (d | plateRest) if (d and versions.length) else "" %}
-<div class="canvas sign sign--bw ts{% if both %} ts--both{% endif %}{% if versions.length %} ts--versions{% endif %}">
+{#- A choice of side with a default (Mitch 2026-11-17: Tossed Salad, set on
+    the kitchen board): boxed like a set side, the rest to swap it for. #}
+{%- set def = d.defaultSide if (d and d.anySide and d.defaultSide) else "" %}
+{%- set picks = [def] if def else ((d.sides if both else (d.sides[0] or "").split(" or ")) if (d and d.sides) else []) %}
+<div class="canvas sign sign--bw ts{% if both %} ts--both{% endif %}{% if versions.length %} ts--versions{% endif %}{% if d and d.anySide %} ts--any{% endif %}">
     <div class="sign-heading">
         <h2 class="p-display sign-heading-title">Today&rsquo;s Special{% if not versions.length %} Sides{% endif %}</h2>
     </div>
+    <div class="ts-fill"></div>
 
     {%- if d and versions.length %}
     <p class="ts-one">Pick <strong>one</strong>:</p>
@@ -67,18 +72,20 @@ studioOrder: 34
     {%- elif ownBread %}
     <p class="ts-more">On a {{ ownBread | lower }}</p>
     {%- endif %}
-    {%- elif d and d.anySide %}
+    {%- elif d and d.anySide and not def %}
     <p class="p-display ts-plate">{{ d.special }}</p>
     {%- elif d %}
     <p class="p-display ts-plate">{{ d.special }}</p>
     {%- if both %}
     <p class="ts-one">comes with <strong>both</strong> sides:</p>
-    {%- else %}
+    {%- elif picks.length > 1 %}
     <p class="ts-one">comes with <strong>one</strong> side. Pick from:</p>
+    {%- else %}
+    <p class="ts-one">comes with</p>
     {%- endif %}
 
     <div class="ts-picks">
-        {%- for s in (d.sides if both else (d.sides[0] or "").split(" or ")) %}
+        {%- for s in picks %}
         {%- if not loop.first %}
         <p class="ts-or">{{ "and" if both else "or" }}</p>
         {%- endif %}
@@ -94,7 +101,7 @@ studioOrder: 34
     <div class="sign-spacer"></div>
     {%- if deli %}
     <section class="sw-choice ts-regular">
-        <p class="p-display sw-choice-title">{% if d and d.anySide %}Comes with one side. Pick from:{% elif both %}Or swap a side for any of these{% else %}Or any of our regular sides{% endif %}</p>
+        <p class="p-display sw-choice-title">{% if def %}Or swap it for any of these{% elif d and d.anySide %}Comes with one side. Pick from:{% elif both %}Or swap a side for any of these{% else %}Or any of our regular sides{% endif %}</p>
         <ul class="sw-choices">
             {#- A day's extraSides that aren't the plate's own (those are
                 above, in the boxes): sides not normally carried, first, as
@@ -105,7 +112,9 @@ studioOrder: 34
             {%- endif %}
             {%- endfor %}
             {%- for c in deli.choices %}
+            {%- if c != def and not (d and d.sides and c in d.sides) %}
             <li>{{ c }}</li>
+            {%- endif %}
             {%- endfor %}
             {%- if specials.soupSide %}
             <li>Cup of the day&rsquo;s soup</li>
@@ -113,4 +122,5 @@ studioOrder: 34
         </ul>
     </section>
     {%- endif %}
+    <div class="ts-fill"></div>
 </div>

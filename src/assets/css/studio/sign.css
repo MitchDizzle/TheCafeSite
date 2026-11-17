@@ -387,6 +387,38 @@
     margin-top: 0.1in;
 }
 
+/* The plate and the boxes sit together in the middle of the sheet, under
+   the heading (Mitch 2026-11-17: the plate at the top and the swap box at
+   the foot left a page of white between them). A full sheet has no room to
+   share, so it reads as before. */
+
+.ts .sign-spacer {
+    flex: 0 1 0.4in;
+}
+
+.ts-fill {
+    flex: 1 1 0;
+}
+
+/* A choice of side has the least on it: a size up all round. */
+
+.ts--any .ts-plate {
+    font-size: 0.78in;
+}
+
+.ts--any .ts-one {
+    font-size: 0.42in;
+}
+
+.ts--any .ts-pick {
+    font-size: 0.66in;
+}
+
+.ts--any .ts-regular .sw-choices {
+    font-size: 0.42in;
+    gap: 0.08in;
+}
+
 /* The two lines under the boxes take the room the double-up day needs. */
 
 .ts--both .ts-pick {

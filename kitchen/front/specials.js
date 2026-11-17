@@ -35,7 +35,7 @@
     const summary = (plan) => plan ? r.items.map((it) => {
       const text = plan.items[it.key] && plan.items[it.key].today;
       if (!text || !isPlate(it.key)) return text;
-      if (plan.anySide) return `${text} with choice of side`;
+      if (plan.anySide) return `${text} with choice of side${plan.defaultSide ? ` (${plan.defaultSide})` : ""}`;
       return plan.sides && plan.sides.length ? `${text} with ${plan.sides.join(", ")}` : text;
     }).filter(Boolean).join(" · ") : "";
     const status = (d) => {
@@ -44,11 +44,17 @@
       if (d.applied && d.applied.error) return `<p class="d-status bad">Not in Square yet: ${esc(d.applied.error)}. The board tries again every few minutes.</p>`;
       return d.plan ? `<p class="d-status">Going into Square now.</p>` : "";
     };
+    // Choice of side has a default (Mitch 2026-11-17): picked in Square
+    // unless the customer picks, and boxed on the sides sign. Empty, nothing
+    // is picked (no Chef's Choice any more; type it here to have it back).
     const sidesHtml = (plan, date) => {
       const any = !!(plan && plan.anySide);
       return `<fieldset class="d-sides">
         <legend>Comes with</legend>
         <label class="check"><input type="radio" name="sides-${date}" value="any"${any ? " checked" : ""}><span>Choice of side</span></label>
+        <label class="d-default">Picked unless they choose
+          <input type="text" data-field="default" list="swap-sides" value="${esc((plan && plan.defaultSide) || "")}" maxlength="60" autocomplete="off"
+            placeholder="e.g. Tossed Salad (empty: they pick)"${any ? "" : " disabled"}></label>
         <label class="check"><input type="radio" name="sides-${date}" value="set"${any ? "" : " checked"}><span>These sides (commas between)</span></label>
         <input type="text" data-field="sides" aria-label="The sides" value="${esc(((plan && plan.sides) || []).join(", "))}" maxlength="160" autocomplete="off"
           placeholder="e.g. Mashed potatoes & gravy, green beans"${any ? " disabled" : ""}>
@@ -218,11 +224,12 @@
         <p class="m-note">Type the main dish, its sides and the soup for each day, then Save. Each morning the kitchen PC puts that day's specials into Square by itself; saving today puts it in now.</p>
         <p class="m-note">Days saved here go to the website by themselves (the /menu box and the weekly post) after 2pm and at the end of the day. Days the website lists fill in here on their own, so specials put on the website another way show up here too.</p>
         <p class="m-note">More, under each day, has the rest: extra sides, modifiers, the photo, its words and prices. It says what's in use there.</p>
-        <p class="m-note">Comes with sets Side 1 and Side 2 on Lunch Special too: each side is picked for the counter already and can be swapped for a deli salad. Choice of side picks Chef's Choice. Two sides with "or" between ("tossed salad or cooked broccoli") pick nothing, so the counter or the customer picks one.</p>
+        <p class="m-note">Comes with sets Side 1 and Side 2 on Lunch Special too: each side is picked for the counter already and can be swapped for a deli salad. Choice of side picks the side typed under it ("Tossed Salad"), and the sides sign boxes it; left empty, nothing is picked and the customer picks. Two sides with "or" between ("tossed salad or cooked broccoli") pick nothing, so the counter or the customer picks one.</p>
         </details>
         ${site}
         ${r.missing.length ? `<p class="m-error">Not found in Square under these names: ${esc(r.missing.join(", "))}.</p>` : ""}
-        <form id="m-plan">${r.days.map(dayHtml).join("")}</form>`,
+        <form id="m-plan">${r.days.map(dayHtml).join("")}</form>
+        <datalist id="swap-sides">${(r.swapSides || []).map((s) => `<option value="${esc(s)}">`).join("")}</datalist>`,
       buttons: [{ label: "Save", submit: "m-plan", kind: "primary" }] });
     const form = document.getElementById("m-plan");
     // What each day held when opened, so only the days changed are sent: a
@@ -240,7 +247,8 @@
       const any = !!(day.querySelector('input[type="radio"][value="any"]:checked'));
       const sidesBox = day.querySelector('[data-field="sides"]');
       const sides = any || !sidesBox ? [] : sidesBox.value.split(",").map((x) => x.trim()).filter(Boolean);
-      return { items, sides, anySide: any };
+      const defBox = day.querySelector('[data-field="default"]');
+      return { items, sides, anySide: any, ...(any && defBox && defBox.value.trim() ? { defaultSide: defBox.value.trim() } : {}) };
     };
     const readWords = (day) => (day.querySelector('[data-field="desc"]').value || "").trim();
     const readLists = (day) => [...day.querySelectorAll(".d-chip[data-list]")].map((el) => el.dataset.list);
@@ -308,6 +316,7 @@
       if (e.target.type !== "radio") return;
       const day = e.target.closest(".m-day");
       day.querySelector('[data-field="sides"]').disabled = e.target.value === "any";
+      day.querySelector('[data-field="default"]').disabled = e.target.value !== "any";
       mark(day);
     });
     form.addEventListener("click", (e) => {
@@ -321,7 +330,7 @@
       const day = e.target.closest(".m-day");
       for (const input of day.querySelectorAll('input[type="text"], textarea')) input.value = "";
       const set = day.querySelector('input[type="radio"][value="set"]');
-      if (set) { set.checked = true; day.querySelector('[data-field="sides"]').disabled = false; }
+      if (set) { set.checked = true; day.querySelector('[data-field="sides"]').disabled = false; day.querySelector('[data-field="default"]').disabled = true; }
       for (const box of day.querySelectorAll(".d-photo")) {
         box.dataset.pick = "";
         box.querySelector(".d-photo-now").textContent = photoNow("", "");

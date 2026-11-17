@@ -32,7 +32,8 @@ const RETRY_MINUTES = 5; // after Square refuses the morning's write
 const PLAN_DAYS = 14; // how far ahead Specials reaches
 
 // days:    { "YYYY-MM-DD": { from: "site" | "front", savedAt? (a front day: when it was saved), items: { "<dailyItems name>": { today, prices: { "<size>" | "": "10.50" } } },
-//            sides?: [...], anySide?: true } }  (anySide: the plate comes with a choice of side)
+//            sides?: [...], anySide?: true, defaultSide?: "Tossed Salad" } }  (anySide: the plate comes with a choice of side;
+//            defaultSide: the one picked in Square unless the customer picks, Mitch 2026-11-17)
 // notes:   { "YYYY-MM-DD": { description } }, the words Photo post puts under the photo. Kept
 //            apart from `days`, so writing them doesn't make a website day the front's.
 // applied: { "YYYY-MM-DD": { sig, at } after a good write, { sig, failedAt, error } after a bad one }
@@ -197,10 +198,12 @@ async function pullSite() {
         if (!have) continue;
         const sides = Array.isArray(d.sides) ? d.sides.map(cleanText).filter(Boolean) : [];
         const anySide = d.anySide === true;
-        if (JSON.stringify(have.sides || []) === JSON.stringify(sides) && !!have.anySide === anySide) continue;
-        plan.days[d.date] = { ...have, sides, ...(anySide ? { anySide: true } : {}) };
+        const defaultSide = anySide ? cleanText(d.defaultSide) : "";
+        if (JSON.stringify(have.sides || []) === JSON.stringify(sides) && !!have.anySide === anySide && (have.defaultSide || "") === defaultSide) continue;
+        plan.days[d.date] = { ...have, sides, ...(anySide ? { anySide: true } : {}), ...(defaultSide ? { defaultSide } : {}) };
         if (!anySide) delete plan.days[d.date].anySide;
-        console.log(`Today's sides changed on the website: ${anySide ? "choice of side" : sides.join(", ") || "none"}.`);
+        if (!defaultSide) delete plan.days[d.date].defaultSide;
+        console.log(`Today's sides changed on the website: ${anySide ? `choice of side${defaultSide ? `, ${defaultSide} unless they pick` : ""}` : sides.join(", ") || "none"}.`);
         changed.push(d.date);
         continue;
       }
@@ -219,9 +222,10 @@ async function pullSite() {
       // them. anySide: the plate comes with the customer's choice of side.
       const sides = Array.isArray(d.sides) ? d.sides.map(cleanText).filter(Boolean) : [];
       const anySide = d.anySide === true;
+      const defaultSide = anySide ? cleanText(d.defaultSide) : "";
       if (have && JSON.stringify(have.items) === JSON.stringify(items) && JSON.stringify(have.sides || []) === JSON.stringify(sides)
-        && !!have.anySide === anySide) continue;
-      plan.days[d.date] = { from: "site", items, sides, ...(anySide ? { anySide: true } : {}) };
+        && !!have.anySide === anySide && (have.defaultSide || "") === defaultSide) continue;
+      plan.days[d.date] = { from: "site", items, sides, ...(anySide ? { anySide: true } : {}), ...(defaultSide ? { defaultSide } : {}) };
       changed.push(d.date);
     }
     // The sides any side can be swapped for (menu.json's Deli Salads).
@@ -355,6 +359,8 @@ async function planView(squareLists = []) {
       applied: plan.applied[date] || null })),
     // Square's modifier lists that can go on the plate (Preset Modifiers), but not the board's own (the sides, Specials Modifiers).
     squareLists,
+    // The sides a choice of side offers, for the default side's suggestions.
+    swapSides: plan.swapSides,
     site: { url: cfg.specialsUrl, ...plan.site },
   };
 }
@@ -365,7 +371,7 @@ const checkDate = (date, today) => {
   }
 };
 
-// changes: { "YYYY-MM-DD": { items: { "<dailyItems name>": { today, prices: { "<size>": "10.50" } } }, sides, anySide } }
+// changes: { "YYYY-MM-DD": { items: { "<dailyItems name>": { today, prices: { "<size>": "10.50" } } }, sides, anySide, defaultSide } }
 // notes:   { "YYYY-MM-DD": { description } }
 // photos:  { "YYYY-MM-DD": { "<dailyItems name>": "<photo id>" | "none" | "" } } ("" = the usual)
 // lists:   { "YYYY-MM-DD": ["Add", "Toppings"] }, Square's lists on Lunch Special that day
@@ -396,10 +402,13 @@ function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}, 
     // What comes with the plate: a choice of side, or these sides. Not sent
     // to Square (the ticket says the plate); Photo post words the special
     // with it.
+    // defaultSide: on a choice of side, the one picked unless the customer
+    // picks ("Tossed Salad"); none, and nothing is picked.
     const anySide = !!(change && change.anySide === true);
     const sides = anySide ? [] : (Array.isArray(change && change.sides) ? change.sides : []).map(cleanText).filter(Boolean).slice(0, 6);
+    const defaultSide = anySide ? cleanText(change.defaultSide).slice(0, 60) : "";
     next[date] = Object.keys(items).length || sides.length || anySide
-      ? { from: "front", savedAt: new Date().toISOString(), items, ...(sides.length ? { sides } : {}), ...(anySide ? { anySide: true } : {}) } : null;
+      ? { from: "front", savedAt: new Date().toISOString(), items, ...(sides.length ? { sides } : {}), ...(anySide ? { anySide: true } : {}), ...(defaultSide ? { defaultSide } : {}) } : null;
   }
   // The words Photo post puts under the photo. They don't touch the day
   // itself, so a day from the website stays the website's.
@@ -504,7 +513,7 @@ function siteExport() {
       }
     }
     if (!out.special && !out.soup) continue;
-    if (day.anySide) out.anySide = true;
+    if (day.anySide) { out.anySide = true; if (day.defaultSide) out.defaultSide = day.defaultSide; }
     else if ((day.sides || []).length) out.sides = day.sides;
     // A day saved before the sync existed: stamped now, once.
     if (!day.savedAt) { day.savedAt = new Date().toISOString(); stamped = true; }

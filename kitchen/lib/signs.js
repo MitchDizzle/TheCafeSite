@@ -162,7 +162,7 @@ function signDay(date, daily = [], today = localDate()) {
         .filter((v) => v.size && v.price);
     }
   }
-  if (day && day.anySide) d.anySide = true;
+  if (day && day.anySide) { d.anySide = true; if (day.defaultSide) d.defaultSide = cleanText(day.defaultSide); }
   else if (day && Array.isArray(day.sides) && day.sides.length) d.sides = day.sides.map(cleanText).filter(Boolean);
   d.extraSides = extrasOn(date);
   d.modifiers = modsFor(date, day).words;
@@ -172,9 +172,16 @@ function signDay(date, daily = [], today = localDate()) {
 
 // ---- The pages ----
 
-// Today's special sides: sign-todays-sides-bw.njk.
+// Today's special sides: sign-todays-sides-bw.njk. A choice of side with a
+// default (Mitch 2026-11-17: Tossed Salad) boxes the default like a set
+// side, and the swap box lists the rest. What's on it sits in the middle of
+// the sheet under the heading, not split to top and bottom (Mitch
+// 2026-11-17: too much white space), and a choice of side, with little on
+// it, is set a size up (.ts--any).
 function sidesPage(d, { swapSides = [], soupSide = false } = {}) {
   const both = !!(d.sides && d.sides.length > 1);
+  const def = d.anySide ? cleanText(d.defaultSide) : "";
+  const plain = d.anySide && !def;
   const versions = caption.versionsOf(d);
   const breads = caption.breadsOf(d);
   const ownBread = versions.length ? caption.plateRest(d) : "";
@@ -185,27 +192,30 @@ function sidesPage(d, { swapSides = [], soupSide = false } = {}) {
       ${breads.length
         ? `<p class="ts-more">${ownBread ? `On a ${esc(ownBread.toLowerCase())}, or any bread:` : "On any bread:"}</p><p class="ts-breads">${breads.map(esc).join(" · ")}</p>`
         : ownBread ? `<p class="ts-more">On a ${esc(ownBread.toLowerCase())}</p>` : ""}`;
-  } else if (d.anySide || !d.sides) {
+  } else if (plain || (!d.sides && !def)) {
     top = `<p class="p-display ts-plate">${esc(d.special)}</p>`;
   } else {
-    const picks = both ? d.sides : d.sides[0].split(/\s+or\s+/i);
+    const picks = def ? [def] : both ? d.sides : d.sides[0].split(/\s+or\s+/i);
+    const intro = both ? "comes with <strong>both</strong> sides:" : picks.length > 1 ? "comes with <strong>one</strong> side. Pick from:" : "comes with";
     top = `<p class="p-display ts-plate">${esc(d.special)}</p>
-      <p class="ts-one">comes with <strong>${both ? "both" : "one"}</strong> ${both ? "sides:" : "side. Pick from:"}</p>
+      <p class="ts-one">${intro}</p>
       <div class="ts-picks">${picks.map((s, i) => `${i ? `<p class="ts-or">${both ? "and" : "or"}</p>` : ""}<p class="p-display ts-pick${s.length > 22 ? " ts-pick--long" : ""}">${esc(s)}</p>`).join("")}</div>
       ${both ? '<p class="ts-more">Like one better? Double up on it.</p><p class="ts-more">Each side is also sold separately.</p>' : ""}`;
   }
-  const own = new Set((d.sides || []).map((s) => s.toLowerCase()));
+  const own = new Set([...(d.sides || []), def].filter(Boolean).map((s) => s.toLowerCase()));
   const swaps = [
     ...(d.extraSides || []).filter((c) => !own.has(c.toLowerCase())).map((c) => `<li>${esc(c)} <small class="ts-today">today only</small></li>`),
-    ...swapSides.map((c) => `<li>${esc(c)}</li>`),
+    ...swapSides.filter((c) => !own.has(c.toLowerCase())).map((c) => `<li>${esc(c)}</li>`),
     ...(soupSide && d.soup ? ["<li>Cup of the day&rsquo;s soup</li>"] : []),
   ];
-  const title = d.anySide ? "Comes with one side. Pick from:" : both ? "Or swap a side for any of these" : "Or any of our regular sides";
-  return `<div class="canvas sign sign--bw ts${both ? " ts--both" : ""}${versions.length ? " ts--versions" : ""}" data-page="sides"><div class="fit">
+  const title = plain ? "Comes with one side. Pick from:" : def ? "Or swap it for any of these" : both ? "Or swap a side for any of these" : "Or any of our regular sides";
+  return `<div class="canvas sign sign--bw ts${both ? " ts--both" : ""}${versions.length ? " ts--versions" : ""}${d.anySide ? " ts--any" : ""}" data-page="sides"><div class="fit">
     <div class="sign-heading"><h2 class="p-display sign-heading-title">Today&rsquo;s Special${versions.length ? "" : " Sides"}</h2></div>
+    <div class="ts-fill"></div>
     ${top}
     <div class="sign-spacer"></div>
     ${swaps.length ? `<section class="sw-choice ts-regular"><p class="p-display sw-choice-title">${title}</p><ul class="sw-choices">${swaps.join("")}</ul></section>` : ""}
+    <div class="ts-fill"></div>
   </div></div>`;
 }
 

@@ -42,6 +42,15 @@ test("the export: choice of side, a typed price, nothing past or from the websit
   assert.equal(out.find((x) => x.date === ahead(5)), undefined, "a website day isn't sent back");
 });
 
+test("the export: choice of side with its default side", () => {
+  const d = ahead(4);
+  savePlanDays({ [d]: { items: { "Lunch Special": { today: "Lasagna", prices: {} } }, anySide: true, defaultSide: " Tossed  Salad ", sides: [] } });
+  assert.equal(plan.days[d].defaultSide, "Tossed Salad");
+  assert.deepEqual(siteExport().days.find((x) => x.date === d), { date: d, special: "Lasagna", anySide: true, defaultSide: "Tossed Salad", savedAt: plan.days[d].savedAt });
+  savePlanDays({ [d]: { items: { "Lunch Special": { today: "Lasagna", prices: {} } }, anySide: false, defaultSide: "Tossed Salad", sides: ["Corn"] } });
+  assert.equal(plan.days[d].defaultSide, undefined, "only with a choice of side");
+});
+
 test("once the website has that save, the day is the website's again and later fixes come through", async () => {
   const d = ahead(3);
   savePlanDays({ [d]: day("Meatloaf", "Potato Cheese") });

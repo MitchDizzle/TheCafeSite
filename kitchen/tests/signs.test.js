@@ -37,6 +37,12 @@ test("signs: a pick of two sides, choice of side, and a plate with none", async 
   r = await signs.buildSigns(today);
   assert.match(r.html, /Comes with one side\. Pick from:/);
   assert.match(r.html, /Choice of side/);
+  plan.days[today] = day("Lasagna", "Chili", { anySide: true, defaultSide: "Tossed Salad" });
+  r = await signs.buildSigns(today);
+  assert.match(r.html, /<p class="ts-one">comes with<\/p>/);
+  assert.match(r.html, /ts-pick">Tossed Salad<\/p>/);
+  assert.match(r.html, /Or swap it for any of these/);
+  assert.doesNotMatch(r.html, /<li>Tossed Salad<\/li>/, "the default isn't in the swap list too");
   plan.days[today] = day("Macho Nachos", "Chili");
   r = await signs.buildSigns(today);
   assert.equal(r.has.sides, false);
