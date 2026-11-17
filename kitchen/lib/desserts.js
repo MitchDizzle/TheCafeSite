@@ -79,6 +79,9 @@ async function dessertItems() {
     const counts = await readCounts(variations.filter(tracked).map((v) => v.id));
     const kinds = variations.map((v) => ({ id: v.id, name: v.item_variation_data.name, count: tracked(v) ? counts.get(v.id) : null }));
     const price = variations.map((v) => (v.item_variation_data.price_money || {}).amount).find((a) => a != null);
+    // What the iPad gets wrong about it, for the screen to say.
+    const noPrice = variations.some(unpriced);
+    const noAsk = !!item.item_data.skip_modifier_screen && needsScreen(item);
     const lists = [];
     for (const info of item.item_data.modifier_list_info || []) {
       if (info.enabled === false) continue;
@@ -92,7 +95,7 @@ async function dessertItems() {
           .map((m) => ({ id: m.id, name: m.modifier_data.name, off: !!m.modifier_data.hidden_online })),
       });
     }
-    out.push({ id, name: item.item_data.name, photo, price: price == null ? null : price / 100, kinds, lists, pos: onPos(item, tabs) });
+    out.push({ id, name: item.item_data.name, photo, price: price == null ? null : price / 100, kinds, lists, pos: onPos(item, tabs), noPrice, noAsk });
   }
   return out;
 }
@@ -106,6 +109,25 @@ async function dessertListIds() {
   return ids;
 }
 
+// Square's "skip the item details screen": right for a dessert of one kind
+// with no options, wrong for more, where the iPad then rings the first kind
+// without asking (Mitch 2026-11-17: Cookies and Pies, made by New dessert,
+// which turns it on, and given kinds after). Each Save turns it off where
+// it's wrong; it's never turned on here except by New dessert.
+const needsScreen = (item) => (item.item_data.variations || []).length > 1
+  || (item.item_data.modifier_list_info || []).some((i) => i.enabled !== false);
+// A kind with no price: the iPad asks for an amount (Pies, Cheesecake).
+const unpriced = (v) => v.item_variation_data.pricing_type === "VARIABLE_PRICING" || !(v.item_variation_data.price_money || {}).amount;
+
+// A price from the page ("3.50", "$3"): cents, or null (left as it is).
+function priceOf(raw) {
+  const text = String(raw ?? "").replace(/[$\s]/g, "");
+  if (!text) return null;
+  const cents = Math.round(Number(text) * 100);
+  if (!/^\d{1,2}(\.\d{1,2})?$/.test(text) || cents < 1) throw plain(`"${raw}" isn't a price. Use numbers like 3.50.`);
+  return cents;
+}
+
 // A count from the page: a whole number 0-999, or null (not counted).
 function countOf(raw) {
   if (raw === null || raw === undefined || raw === "") return null;
@@ -114,7 +136,8 @@ function countOf(raw) {
   return n;
 }
 
-// kinds: [{ item, counts: [{ id, count }], remove: [id], add: [{ name, count }] }]
+// kinds: [{ item, counts: [{ id, count }], remove: [id], add: [{ name, count }], price }]
+// price: "3.50" sets every kind to it (and the new ones); blank leaves them.
 // Only what was changed on the page comes in, so a count Square has
 // lowered since the page opened (a sale) is never put back up.
 async function saveKinds(changes) {
@@ -128,6 +151,7 @@ async function saveKinds(changes) {
     const remove = (ch.remove || []).map(String).filter(has);
     const counts = (ch.counts || []).map((c) => ({ id: String(c.id), count: countOf(c.count) })).filter((c) => !remove.includes(c.id));
     const adds = (ch.add || []).map((a) => ({ name: cleanName(a.name), count: countOf(a.count) })).filter((a) => a.name);
+    const cents = priceOf(ch.price);
     for (const c of counts) if (!has(c.id)) throw plain(`${name} changed in Square; open Desserts again.`);
     if ((item.item_data.variations || []).length - remove.length + adds.length < 1) throw plain(`${name} needs at least one kind: add the new one before removing the last.`);
     const said = [];
@@ -163,6 +187,22 @@ async function saveKinds(changes) {
           ...(md.price_money ? { price_money: md.price_money } : {}), track_inventory: a.count !== null },
       });
       changed = true;
+    }
+    if (cents !== null) {
+      let priced = false;
+      for (const v of vars) {
+        const vd = v.item_variation_data;
+        if (vd.pricing_type === "FIXED_PRICING" && (vd.price_money || {}).amount === cents) continue;
+        vd.pricing_type = "FIXED_PRICING";
+        vd.price_money = { amount: cents, currency: "USD" };
+        priced = true;
+      }
+      if (priced) { changed = true; said.push(`$${(cents / 100).toFixed(2)} each`); }
+    }
+    if (item.item_data.skip_modifier_screen && needsScreen(item)) {
+      item.item_data.skip_modifier_screen = false;
+      changed = true;
+      said.push("the iPad asks which kind again");
     }
     if (changed) item = await upsertObject(item);
     // Then the counts, now that every kind has its real id.

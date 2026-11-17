@@ -264,6 +264,11 @@
 .m-dessert > * { min-width: 0; }
 .m-dessert h3 small { font-weight: 400; color: var(--muted); margin-left: 0.3rem; }
 .m-dessert .m-pos { margin: -0.3rem 0 0.6rem; font-weight: 700; }
+.m-dessert .m-price { display: flex; align-items: center; gap: 0.4rem; margin: -0.3rem 0 0.5rem; font-size: 0.95rem; color: var(--muted); }
+.m-dessert .m-price .m-money { font-size: 1rem; }
+.m-dessert .m-price input { width: 4.2rem; padding: 0.25rem 0.4rem; color: var(--text); }
+.m-warn { margin: 0 0 0.5rem; padding: 0.35rem 0.6rem; border-radius: 0.35rem; background: #FDF0D5; color: #6B4A00; font-size: 0.92rem; }
+.m-dessert.off-pos .m-price, .m-dessert.off-pos .m-warn { display: none; }
 .m-dessert .m-pos input { width: 1.2rem; height: 1.2rem; }
 /* Off the POS: dimmed and folded to its name, photo and tick. */
 .m-dessert.off-pos { opacity: 0.7; }

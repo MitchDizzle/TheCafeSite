@@ -19,13 +19,19 @@
     busy("Desserts", "Reading from Square…");
     const r = await postJson("/api/front-desserts", { pin: Front.pin });
     if (!r.ok) return result("Desserts", r);
-    const money = (n) => (n == null ? "" : ` <small>$${n.toFixed(2)}</small>`);
     const left = (c) => (c === null ? "" : String(c));
     const countBox = (name, value) => `<input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" value="${esc(value)}" placeholder="–" aria-label="${esc(name)}: how many left">`;
     // A dessert of one kind has Square's "Regular": shown as the dessert.
     const kindHtml = (k, it) => `<div class="m-kind${k.count === 0 ? " out" : ""}" data-kind="${esc(k.id)}" data-was="${left(k.count)}">
         <span class="m-kind-name">${esc(k.name === "Regular" ? it.name : k.name)}</span>${countBox(k.name, left(k.count))}<button type="button" data-remove>Remove</button>
       </div>`;
+    // The price of every kind (Mitch 2026-11-17: Pies had none, so the iPad
+    // asked for an amount). With a kind unpriced, the price shown counts as
+    // changed, so Save puts it on that kind too.
+    const priceBox = (it) => {
+      const now = it.price == null ? "" : it.price.toFixed(2);
+      return `<label class="m-price">Price <span class="m-money">$<input type="text" inputmode="decimal" maxlength="5" data-price value="${now}" data-was="${it.noPrice ? "" : now}" placeholder="3.00" aria-label="${esc(it.name)}: price"></span> <small>each kind</small></label>`;
+    };
     const optHtml = (o) => `<label class="check${o.off ? " off" : ""}"><input type="checkbox" data-opt="${esc(o.id)}"${o.off ? "" : " checked"}><span>${esc(o.name)}</span></label>`;
     const itemHtml = (it) => it.missing
       ? `<section class="m-card"><h3>${esc(it.name)}</h3><p class="m-error">Not found in Square under this name.</p></section>`
@@ -36,7 +42,10 @@
           <span class="m-photo-msg" hidden></span>
         </div>
         <div>
-          <h3>${esc(it.name)}${money(it.price)}</h3>
+          <h3>${esc(it.name)}</h3>
+          ${priceBox(it)}
+          ${it.noPrice ? `<p class="m-warn">${it.price == null ? "No price in Square, so the iPad asks for an amount. Type the price and Save." : "A kind has no price in Square, so the iPad asks for an amount for it. Save puts this price on every kind."}</p>` : ""}
+          ${it.noAsk ? `<p class="m-warn">The iPad doesn't ask which kind (it rings the first). Save fixes it.</p>` : ""}
           ${it.pos === null ? "" : `<label class="check m-pos"><input type="checkbox" data-pos="${esc(it.id)}" data-was="${it.pos ? 1 : 0}"${it.pos ? " checked" : ""}><span>On the POS</span></label>`}
           <div class="m-kinds" data-kinds="${esc(it.id)}">
             <p class="m-kind-head"><span>Kind</span><span>Left</span></p>
@@ -55,7 +64,7 @@
         and shows a kind sold out online at 0. Leave it blank not to count one.
         <b>Remove</b> a kind once it's gone for good; <b>Add</b> a new one at the same price, or make a <b>new dessert</b> at the bottom for another price.
         Unticked options are hidden from online ordering. A new photo goes to Square straight away.
-        Untick <b>On the POS</b> to take a dessert off the iPad's Desserts tab without deleting it: its count, photo and kinds stay, and one tick puts it back.</p>
+        Untick <b>On the POS</b> to take a dessert off the iPad's Desserts tab without deleting it: its count, photo and kinds stay, and one tick puts it back. <b>Price</b> goes on every kind of that dessert.</p>
         <form id="m-desserts" novalidate>${r.items.filter((it) => it.pos !== false).map(itemHtml).join("")}
           ${r.items.some((it) => it.pos === false) ? `<h3 class="m-off-head">Off the POS <small>tick On the POS to put one back, at the end of the Desserts tab</small></h3>
           ${r.items.filter((it) => it.pos === false).map(itemHtml).join("")}` : ""}</form>
@@ -137,6 +146,9 @@
       const count = (row) => row.querySelector("input").value.trim();
       const bad = [...form.querySelectorAll(".m-kind:not(.gone)")].find((row) => !/^\d{0,3}$/.test(count(row)));
       if (bad) { bad.querySelector("input").focus(); return alert("Left is a number, or blank."); }
+      const badPrice = [...form.querySelectorAll("[data-price]")].find((x) => !/^\$?(\d{1,2}(\.\d{1,2})?)?$/.test(x.value.trim()));
+      if (badPrice) { badPrice.focus(); return alert("Price is like 3.50."); }
+      const priceIn = (box) => box.closest(".m-dessert").querySelector("[data-price]");
       const kinds = [...form.querySelectorAll("[data-kinds]")].map((box) => ({
         item: box.dataset.kinds,
         counts: [...box.querySelectorAll(".m-kind[data-kind]:not(.gone)")]
@@ -144,6 +156,7 @@
           .map((row) => ({ id: row.dataset.kind, count: count(row) })),
         remove: [...box.querySelectorAll(".m-kind.gone")].map((row) => row.dataset.kind),
         add: [...box.querySelectorAll(".m-kind[data-new]")].map((row) => ({ name: row.dataset.new, count: count(row) })),
+        ...(priceIn(box).value.trim() !== priceIn(box).dataset.was ? { price: priceIn(box).value.trim() } : {}),
       }));
       const lists = [...form.querySelectorAll("[data-list]")].map((l) => ({
         id: l.dataset.list,

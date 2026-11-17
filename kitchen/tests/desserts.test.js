@@ -102,3 +102,26 @@ test("desserts: one off the POS is left off the fridge sign", () => {
   ], { skipItems: [], treats: [], names: {}, show: [], hide: [] });
   assert.deepEqual(rows.map((r) => r.name), ["Magic Bar"]);
 });
+
+test("desserts: a dessert given a second kind gets the iPad asking which again", async () => {
+  const { newDessert } = require("../lib/desserts");
+  const { readObject } = require("../lib/catalog");
+  await newDessert({ name: "Cobbler", price: "3.50" });
+  let cob = await item("Cobbler");
+  assert.equal((await readObject(cob.id)).item_data.skip_modifier_screen, true, "one kind: straight in");
+  assert.equal(cob.noAsk, false);
+  // A kind added in Square (as with Cookies and Pies): Square still skips the screen.
+  const { mockItems } = require("../lib/mock");
+  const o = mockItems.get(cob.id);
+  o.item_data.variations.push({ type: "ITEM_VARIATION", id: "VAR-Cob-Peach", item_variation_data: { item_id: cob.id, name: "Peach", ordinal: 1, pricing_type: "VARIABLE_PRICING" } });
+  cob = await item("Cobbler");
+  assert.deepEqual([cob.noAsk, cob.noPrice], [true, true]);
+  const done = await saveDesserts({ kinds: [{ item: cob.id, counts: [], price: "$3.75" }] });
+  assert.match(done.join(), /Cobbler \(\$3\.75 each; the iPad asks which kind again\)/);
+  const now = await readObject(cob.id);
+  assert.equal(now.item_data.skip_modifier_screen, false);
+  assert.deepEqual(now.item_data.variations.map((v) => [v.item_variation_data.pricing_type, v.item_variation_data.price_money.amount]), [["FIXED_PRICING", 375], ["FIXED_PRICING", 375]]);
+  cob = await item("Cobbler");
+  assert.deepEqual([cob.noAsk, cob.noPrice, cob.price], [false, false, 3.75]);
+  await assert.rejects(saveDesserts({ kinds: [{ item: cob.id, price: "abc" }] }), /isn't a price/);
+});
