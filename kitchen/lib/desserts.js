@@ -12,6 +12,14 @@
 //   - replace the item's photo (what online ordering shows).
 //   - make a new dessert at its own price, in the dessert category, set up
 //     like the dessert already there that's on the most sales channels.
+//   - take a dessert off the POS screens or put it back (Mitch 2026-11-17:
+//     the Desserts tab got cluttered with every dessert ever made). The
+//     screens are the Restaurants POS's menu tabs named like
+//     cfg.dessertCategory (Lunch -> Desserts, Breakfast -> Desserts): off,
+//     the item leaves those tabs only. It stays in Square with its kinds,
+//     count, photo and online ordering, so a dessert made again (or one
+//     counted wrong) is one tick away. Back on, it goes at the end of each
+//     tab. A dessert off the POS is left off the fridge sign too.
 // Each save reads the item and list fresh and writes them back with
 // Square's version, like Specials.
 const { MOCK, cfg } = require("./config");
@@ -31,6 +39,14 @@ function dessertNames() {
   return names;
 }
 const dessertIds = () => dessertNames().map((n) => catalog.itemIds.get(n.trim().toLowerCase())).filter(Boolean);
+// The POS screens' dessert tabs: their ids.
+const posTabIds = () => catalog.menuCategories
+  .filter((c) => c.name.trim().toLowerCase() === String(cfg.dessertCategory || "").trim().toLowerCase()).map((c) => c.id);
+// On the POS: in any of those tabs. null when there are none to be in.
+function onPos(item, tabs = posTabIds()) {
+  if (!tabs.length) return null;
+  return (item.item_data.categories || []).some((c) => tabs.includes(c.id));
+}
 
 // Counted in stock: Square's own flag, or the location's override of it.
 function tracked(v) {
@@ -46,6 +62,7 @@ function setTracked(v, on) {
 
 async function dessertItems() {
   await loadCatalog();
+  const tabs = posTabIds();
   const out = [];
   for (const name of dessertNames()) {
     const id = catalog.itemIds.get(name.trim().toLowerCase());
@@ -75,7 +92,7 @@ async function dessertItems() {
           .map((m) => ({ id: m.id, name: m.modifier_data.name, off: !!m.modifier_data.hidden_online })),
       });
     }
-    out.push({ id, name: item.item_data.name, photo, price: price == null ? null : price / 100, kinds, lists });
+    out.push({ id, name: item.item_data.name, photo, price: price == null ? null : price / 100, kinds, lists, pos: onPos(item, tabs) });
   }
   return out;
 }
@@ -195,9 +212,48 @@ async function saveLists(changes) {
   return done;
 }
 
-async function saveDesserts({ kinds, lists } = {}) {
+// Where the end of each POS tab is: (tab id) => { ordinal } just after the
+// last dessert in it (Square's own step between two), or {} for an empty
+// tab. Not counting `except`, the dessert being put there.
+async function tabEnds(tabs, except = null) {
+  const last = new Map();
+  for (const id of dessertIds()) {
+    if (id === except) continue;
+    for (const c of (await readObject(id)).item_data.categories || []) {
+      if (tabs.includes(c.id) && c.ordinal != null && !(c.ordinal <= last.get(c.id))) last.set(c.id, c.ordinal);
+    }
+  }
+  return (t) => (last.has(t) ? { ordinal: last.get(t) + 2 ** 24 } : {});
+}
+
+// pos: [{ item, on }], only the desserts whose tick changed.
+async function savePos(changes) {
+  const tabs = posTabIds();
+  if (!(changes || []).length) return [];
+  if (!tabs.length) throw plain(`There's no ${cfg.dessertCategory} tab on the POS screens in Square.`);
+  const allowed = new Set(dessertIds());
+  const done = [];
+  for (const ch of changes) {
+    if (!allowed.has(ch.item)) throw plain("That isn't a dessert item.");
+    const item = await readObject(ch.item);
+    const on = !!ch.on;
+    if (onPos(item, tabs) === on) continue;
+    const cats = (item.item_data.categories ||= []);
+    if (on) {
+      const end = await tabEnds(tabs, item.id);
+      for (const t of tabs) cats.push({ id: t, ...end(t) });
+    } else {
+      item.item_data.categories = cats.filter((c) => !tabs.includes(c.id));
+    }
+    await upsertObject(item);
+    done.push(`${item.item_data.name} (${on ? "back on the POS" : "off the POS"})`);
+  }
+  return done;
+}
+
+async function saveDesserts({ kinds, lists, pos } = {}) {
   await loadCatalog();
-  const done = [...(await saveKinds(kinds)), ...(await saveLists(lists))];
+  const done = [...(await saveKinds(kinds)), ...(await saveLists(lists)), ...(await savePos(pos))];
   if (done.length) console.log(`Desserts changed from the front page (${new Date().toLocaleTimeString()}): ${done.join(", ")}.`);
   return done;
 }
@@ -224,12 +280,16 @@ async function newDessert({ name, price, count } = {}) {
   const md = model.item_data;
   const where = { present_at_all_locations: model.present_at_all_locations, present_at_location_ids: model.present_at_location_ids };
   const keep = (o, keys) => Object.fromEntries(keys.filter((k) => o[k] !== undefined).map((k) => [k, o[k]]));
+  // On every POS dessert tab, whether the model is or not, at the end of
+  // each (they went anywhere before, Mitch 2026-11-17).
+  const tabs = posTabIds();
+  const end = await tabEnds(tabs);
   const item = await upsertObject({
     type: "ITEM", id: "#dessert", ...where,
     item_data: {
       ...keep(md, ["product_type", "is_taxable", "tax_ids", "channels", "ecom_visibility", "use_location_fulfillment_methods"]),
       name: clean,
-      categories: (md.categories || []).map((c) => ({ id: c.id })),
+      categories: [...(md.categories || []).filter((c) => !tabs.includes(c.id)).map((c) => ({ id: c.id })), ...tabs.map((t) => ({ id: t, ...end(t) }))],
       ...(md.reporting_category ? { reporting_category: { id: md.reporting_category.id } } : {}),
       skip_modifier_screen: true,
       variations: [{

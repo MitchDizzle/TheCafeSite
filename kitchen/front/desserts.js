@@ -11,7 +11,10 @@
   // online at 0; blank stops counting it. Unticking an option hides it from
   // online ordering (Square's own "hidden online"); it comes back with one
   // tick. Only what was changed is sent, so a sale made while this screen
-  // was open is never counted back in.
+  // was open is never counted back in. On the POS takes a dessert off the
+  // POS screens' Desserts tabs, or puts it back at the end (Mitch
+  // 2026-11-17): it stays in Square, counted, online and one tick away; the
+  // ones off are listed last, folded, so the screen stays short too.
   async function openDesserts() {
     busy("Desserts", "Reading from Square…");
     const r = await postJson("/api/front-desserts", { pin: Front.pin });
@@ -26,7 +29,7 @@
     const optHtml = (o) => `<label class="check${o.off ? " off" : ""}"><input type="checkbox" data-opt="${esc(o.id)}"${o.off ? "" : " checked"}><span>${esc(o.name)}</span></label>`;
     const itemHtml = (it) => it.missing
       ? `<section class="m-card"><h3>${esc(it.name)}</h3><p class="m-error">Not found in Square under this name.</p></section>`
-      : `<section class="m-card m-dessert" data-item="${esc(it.id)}">
+      : `<section class="m-card m-dessert${it.pos === false ? " off-pos" : ""}" data-item="${esc(it.id)}">
         <div class="m-photo">
           ${it.photo ? `<img src="${esc(it.photo)}" alt="${esc(it.name)}">` : `<div class="m-nophoto">No photo</div>`}
           <label>${it.photo ? "Change photo" : "Add photo"}<input type="file" accept="image/*" data-photo="${esc(it.id)}"></label>
@@ -34,6 +37,7 @@
         </div>
         <div>
           <h3>${esc(it.name)}${money(it.price)}</h3>
+          ${it.pos === null ? "" : `<label class="check m-pos"><input type="checkbox" data-pos="${esc(it.id)}" data-was="${it.pos ? 1 : 0}"${it.pos ? " checked" : ""}><span>On the POS</span></label>`}
           <div class="m-kinds" data-kinds="${esc(it.id)}">
             <p class="m-kind-head"><span>Kind</span><span>Left</span></p>
             ${it.kinds.map((k) => kindHtml(k, it)).join("")}
@@ -50,8 +54,11 @@
       body: `<p class="m-note"><b>Left</b> is how many are in the case. Square counts it down as they sell, at the till and online,
         and shows a kind sold out online at 0. Leave it blank not to count one.
         <b>Remove</b> a kind once it's gone for good; <b>Add</b> a new one at the same price, or make a <b>new dessert</b> at the bottom for another price.
-        Unticked options are hidden from online ordering. A new photo goes to Square straight away.</p>
-        <form id="m-desserts" novalidate>${r.items.map(itemHtml).join("")}</form>
+        Unticked options are hidden from online ordering. A new photo goes to Square straight away.
+        Untick <b>On the POS</b> to take a dessert off the iPad's Desserts tab without deleting it: its count, photo and kinds stay, and one tick puts it back.</p>
+        <form id="m-desserts" novalidate>${r.items.filter((it) => it.pos !== false).map(itemHtml).join("")}
+          ${r.items.some((it) => it.pos === false) ? `<h3 class="m-off-head">Off the POS <small>tick On the POS to put one back, at the end of the Desserts tab</small></h3>
+          ${r.items.filter((it) => it.pos === false).map(itemHtml).join("")}` : ""}</form>
         <section class="m-card m-new-dessert">
           <h3>New dessert</h3>
           <p class="m-note">At its own price, in Desserts in Square, on the same iPad screens and online. It goes in straight away.</p>
@@ -76,6 +83,8 @@
       openDesserts();
     });
     form.addEventListener("change", (e) => {
+      const pos = e.target.closest("[data-pos]");
+      if (pos) pos.closest(".m-dessert").classList.toggle("off-pos", !pos.checked);
       const opt = e.target.closest("[data-opt]");
       if (opt) opt.closest(".check").classList.toggle("off", !opt.checked);
       const file = e.target.closest("[data-photo]");
@@ -141,8 +150,10 @@
         options: [...l.querySelectorAll("[data-opt]")].map((x) => ({ id: x.dataset.opt, off: !x.checked })),
         add: [...l.querySelectorAll("[data-new]:checked")].map((x) => x.dataset.new),
       }));
+      const pos = [...form.querySelectorAll("[data-pos]")].filter((x) => (x.checked ? "1" : "0") !== x.dataset.was)
+        .map((x) => ({ item: x.dataset.pos, on: x.checked }));
       busy("Desserts", "Saving to Square…");
-      result("Desserts", await postJson("/api/front-desserts-save", { pin: Front.pin, kinds, lists }));
+      result("Desserts", await postJson("/api/front-desserts-save", { pin: Front.pin, kinds, lists, pos }));
     });
   }
 

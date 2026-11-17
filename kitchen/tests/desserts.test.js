@@ -66,7 +66,39 @@ test("desserts: a new dessert at its own price, set up like the one on the most 
   const { mockItems } = require("../lib/mock");
   const made = [...mockItems.values()].find((o) => o.item_data && o.item_data.name === "Pecan Pie");
   assert.deepEqual(made.item_data.channels, ["CH-POS", "CH-Online"]);
-  assert.deepEqual(made.item_data.categories, [{ id: "CAT-Desserts" }]);
+  assert.deepEqual(made.item_data.categories, [{ id: "CAT-Desserts" }, { id: "MENU-Lunch-Desserts", ordinal: 16777216 * 2 }, { id: "MENU-Breakfast-Desserts", ordinal: 16777216 * 2 }],
+    "on the POS's Desserts tabs, after the last one there");
   await assert.rejects(newDessert({ name: "Pecan Pie", price: "4" }), /already an item/);
   await assert.rejects(newDessert({ name: "Brownie", price: "" }), /price/);
+});
+
+test("desserts: On the POS takes one off the POS's Desserts tabs and puts it back at the end", async () => {
+  const { readObject } = require("../lib/catalog");
+  const tabs = ["MENU-Lunch-Desserts", "MENU-Breakfast-Desserts"];
+  const inTabs = async (id) => ((await readObject(id)).item_data.categories || []).filter((c) => tabs.includes(c.id));
+  assert.equal((await item("Cheesecake")).pos, true);
+  assert.equal((await item("Cream Puffs")).pos, false, "in Desserts, not on a POS tab");
+  const cake = await item("Cheesecake");
+  let done = await saveDesserts({ pos: [{ item: cake.id, on: false }] });
+  assert.match(done.join(), /Cheesecake \(off the POS\)/);
+  assert.deepEqual(await inTabs(cake.id), []);
+  assert.ok(((await readObject(cake.id)).item_data.categories || []).some((c) => c.id === "CAT-Desserts"), "still a dessert");
+  assert.equal((await item("Cheesecake")).kinds.length > 0, true, "its kinds and counts stay");
+  done = await saveDesserts({ pos: [{ item: cake.id, on: true }] });
+  assert.match(done.join(), /Cheesecake \(back on the POS\)/);
+  const back = await inTabs(cake.id);
+  assert.deepEqual(back.map((c) => c.id), tabs);
+  const others = [];
+  for (const it of await dessertItems()) if (it.id !== cake.id) others.push(...(await inTabs(it.id)));
+  assert.ok(back.every((c) => others.filter((o) => o.id === c.id).every((o) => o.ordinal < c.ordinal)), "the last one in each tab");
+  assert.deepEqual(await saveDesserts({ pos: [{ item: cake.id, on: true }] }), [], "already on: nothing to do");
+});
+
+test("desserts: one off the POS is left off the fridge sign", () => {
+  const { fridgeRows } = require("../lib/signs");
+  const rows = fridgeRows([
+    { name: "Cream Puffs", price: 3, pos: false, kinds: [{ name: "Regular", count: 4 }], lists: [] },
+    { name: "Dessert Bar", price: 1.5, pos: true, kinds: [{ name: "Magic Bar", count: null }], lists: [] },
+  ], { skipItems: [], treats: [], names: {}, show: [], hide: [] });
+  assert.deepEqual(rows.map((r) => r.name), ["Magic Bar"]);
 });

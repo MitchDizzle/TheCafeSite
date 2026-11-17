@@ -254,7 +254,7 @@ async function handle(req, res) {
         return send(res, 200, { ok: true, message: `${name} is in Square, under Desserts. Online ordering shows it within a minute or so.` });
       }
       await loadCatalog();
-      const saved = await saveDesserts({ kinds: body.kinds, lists: body.lists });
+      const saved = await saveDesserts({ kinds: body.kinds, lists: body.lists, pos: body.pos });
       return send(res, 200, { ok: true, message: saved.length
         ? `Saved in Square: ${saved.join(", ")}. Online ordering updates within a minute or so.`
         : "Nothing changed." });

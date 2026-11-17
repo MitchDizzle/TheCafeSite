@@ -13,7 +13,7 @@ const { mockItems, mockCatalog, nextMockId } = require("./mock");
 // today can be picked without a restart.
 const CATALOG_MINUTES = 10;
 // The same object for as long as the program runs: loadCatalog fills it in.
-const catalog = { byVariation: new Map(), byName: new Map(), firstVariation: new Map(), itemIds: new Map(), categories: [], menuItems: [], loadedAt: null, error: null };
+const catalog = { byVariation: new Map(), byName: new Map(), firstVariation: new Map(), itemIds: new Map(), categories: [], menuItems: [], menuCategories: [], loadedAt: null, error: null };
 
 function buildCatalog(objects) {
   // Ordinary categories only. The Restaurants POS also keeps MENU categories
@@ -64,7 +64,11 @@ function buildCatalog(objects) {
     .map(([name, items]) => ({ name, items: [...items].sort((a, b) => a.localeCompare(b)) }))
     .sort((a, b) => (a.name === "(No category)") - (b.name === "(No category)") || a.name.localeCompare(b.name));
   menuItems.sort((a, b) => (a.category || "~").localeCompare(b.category || "~") || a.name.localeCompare(b.name));
-  return { byVariation, byName, firstVariation, itemIds, categories, menuItems };
+  // The POS screens' tabs ({ id, name }), for Desserts' "On the POS".
+  const menuCategories = objects
+    .filter((o) => o.type === "CATEGORY" && !o.is_deleted && (o.category_data || {}).category_type === "MENU_CATEGORY")
+    .map((o) => ({ id: o.id, name: (o.category_data || {}).name || "" }));
+  return { byVariation, byName, firstVariation, itemIds, categories, menuItems, menuCategories };
 }
 
 async function loadCatalog() {

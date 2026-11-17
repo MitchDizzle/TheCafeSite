@@ -38,7 +38,7 @@ async function main() {
   process.env.KITCHEN_DEV = "1";
   const { dessertItems } = require("../kitchen/lib/desserts");
   const items = (await dessertItems())
-    .filter((i) => !i.missing)
+    .filter((i) => !i.missing && i.pos !== false) // off the POS: not being sold
     .map((i) => ({
       name: i.name,
       price: i.price,

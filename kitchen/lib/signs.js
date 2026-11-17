@@ -101,7 +101,8 @@ function label(item, kind) {
 function fridgeRows(items, o = fridgeSettings()) {
   const has = (list, w) => list.some((x) => x.trim().toLowerCase() === w.trim().toLowerCase());
   const rows = [];
-  const sorted = (items || []).filter((i) => !i.missing).map((i, n) => ({ i, n }))
+  // A dessert taken off the POS isn't being sold: not on the sign either.
+  const sorted = (items || []).filter((i) => !i.missing && i.pos !== false).map((i, n) => ({ i, n }))
     .sort((a, b) => (b.i.price || 0) - (a.i.price || 0) || a.n - b.n).map((x) => x.i);
   for (const item of sorted) {
     for (const k of item.kinds || []) {

@@ -299,6 +299,10 @@ function mockCatalog() {
   }
   out.push({ type: "CATEGORY", id: "CAT-Specials", category_data: { name: "Lunch Specials" } });
   out.push({ type: "CATEGORY", id: "CAT-Desserts", category_data: { name: "Desserts" } });
+  // The POS screens' Desserts tabs, under Lunch and Breakfast, as in Square.
+  out.push({ type: "CATEGORY", id: "MENU-Lunch-Desserts", category_data: { name: "Desserts", category_type: "MENU_CATEGORY" } });
+  out.push({ type: "CATEGORY", id: "MENU-Breakfast-Desserts", category_data: { name: "Desserts", category_type: "MENU_CATEGORY" } });
+  const onPos = (n) => [{ id: "CAT-Desserts" }, { id: "MENU-Lunch-Desserts", ordinal: n }, { id: "MENU-Breakfast-Desserts", ordinal: n }];
   // Desserts as they are in Square since 2026-10-21: each kind is a
   // variation, counted in stock (mockStock) or not, and the cheesecake's
   // sauce is a list of its own.
@@ -309,10 +313,10 @@ function mockCatalog() {
   };
   const sauce = (id, name, ordinal) => ({ type: "MODIFIER", id, modifier_data: { name, ordinal, modifier_list_id: "LIST-Sauce" } });
   daily.push(
-    { type: "ITEM", id: "ITEM-Cheesecake", version: 1, item_data: { name: "Cheesecake", categories: [{ id: "CAT-Desserts" }], channels: ["CH-POS"],
+    { type: "ITEM", id: "ITEM-Cheesecake", version: 1, item_data: { name: "Cheesecake", categories: onPos(0), channels: ["CH-POS"],
       variations: [kind("VAR-CC-Plain", "Plain", 0, 350), kind("VAR-CC-Pumpkin", "Pumpkin", 1, 350)],
       modifier_list_info: [{ modifier_list_id: "LIST-Sauce", enabled: true, min_selected_modifiers: 0, max_selected_modifiers: 1 }] } },
-    { type: "ITEM", id: "ITEM-Dessert Bar", version: 1, item_data: { name: "Dessert Bar", categories: [{ id: "CAT-Desserts" }], channels: ["CH-POS", "CH-Online"],
+    { type: "ITEM", id: "ITEM-Dessert Bar", version: 1, item_data: { name: "Dessert Bar", categories: onPos(16777216), channels: ["CH-POS", "CH-Online"],
       variations: [kind("VAR-DB-Magic", "Magic Bar", 0, 150), kind("VAR-DB-MM", "M&M Chocolate Rice Crispy Treat", 1, 150)] } },
     { type: "ITEM", id: "ITEM-Cream Puffs", version: 1, item_data: { name: "Cream Puffs", categories: [{ id: "CAT-Desserts" }], channels: ["CH-POS", "CH-Online"],
       variations: [v("VAR-CP", "Regular", 300)] } },
