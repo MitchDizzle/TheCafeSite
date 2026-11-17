@@ -143,11 +143,12 @@ function saveFridge(on, rows, today = localDate()) {
 
 // The day as the signs read it, shaped like a day of the website's
 // specials.json so the website's own words work on it (specials-caption.js).
-// daily: dailyItems()'s, for the soup's Cup / Bowl prices and, for today
+// daily: dailyItems()'s, for the soup's Cup / Bowl prices, the plate's price
+// when the plan has none (Square's, on its one size) and, for today
 // with nothing planned, the names Square has now.
 function signDay(date, daily = [], today = localDate()) {
   const day = plan.days[date] || null;
-  const d = { date, special: "", soup: "", soupSizes: [] };
+  const d = { date, special: "", soup: "", soupSizes: [], price: "" };
   const items = daily.length ? daily : cfg.dailyItems.map((n) => ({ key: n, variations: [] }));
   for (const it of items) {
     if (it.missing) continue;
@@ -157,6 +158,10 @@ function signDay(date, daily = [], today = localDate()) {
     const name = cleanText(planned && planned.today) || (date === today ? cleanText(it.today) : "");
     if (!name || d[field]) continue;
     d[field] = name;
+    if (field === "special") {
+      const vars = (it.variations || []).filter((v) => v.price);
+      d.price = ((planned && planned.prices) || {})[""] || (vars.length === 1 ? vars[0].price : "");
+    }
     if (field === "soup") {
       d.soupSizes = (it.variations || [])
         .map((v) => ({ size: v.size, price: ((planned && planned.prices) || {})[v.size] || v.price }))
@@ -178,7 +183,8 @@ function signDay(date, daily = [], today = localDate()) {
 // side, and the swap box lists the rest. What's on it sits in the middle of
 // the sheet under the heading, not split to top and bottom (Mitch
 // 2026-11-17: too much white space), and a choice of side, with little on
-// it, is set a size up (.ts--any).
+// it, is set a size up (.ts--any). The plate's price goes under its name
+// (Mitch 2026-11-17: $10 on the sign).
 function sidesPage(d, { swapSides = [], soupSide = false } = {}) {
   const both = !!(d.sides && d.sides.length > 1);
   const def = d.anySide ? cleanText(d.defaultSide) : "";
@@ -186,19 +192,21 @@ function sidesPage(d, { swapSides = [], soupSide = false } = {}) {
   const versions = caption.versionsOf(d);
   const breads = caption.breadsOf(d);
   const ownBread = versions.length ? caption.plateRest(d) : "";
+  const price = d.price ? `<p class="ts-price">${money(d.price)}</p>` : "";
   let top;
   if (versions.length) {
     top = `<p class="ts-one">Pick <strong>one</strong>:</p>
       <div class="ts-picks">${versions.map((v, i) => `${i ? '<p class="ts-or">or</p>' : ""}<p class="p-display ts-pick">${esc(v)}</p>`).join("")}</div>
       ${breads.length
         ? `<p class="ts-more">${ownBread ? `On a ${esc(ownBread.toLowerCase())}, or any bread:` : "On any bread:"}</p><p class="ts-breads">${breads.map(esc).join(" · ")}</p>`
-        : ownBread ? `<p class="ts-more">On a ${esc(ownBread.toLowerCase())}</p>` : ""}`;
+        : ownBread ? `<p class="ts-more">On a ${esc(ownBread.toLowerCase())}</p>` : ""}
+      ${price}`;
   } else if (plain || (!d.sides && !def)) {
-    top = `<p class="p-display ts-plate">${esc(d.special)}</p>`;
+    top = `<p class="p-display ts-plate">${esc(d.special)}</p>${price}`;
   } else {
     const picks = def ? [def] : both ? d.sides : d.sides[0].split(/\s+or\s+/i);
     const intro = both ? "comes with <strong>both</strong> sides:" : picks.length > 1 ? "comes with <strong>one</strong> side. Pick from:" : "comes with";
-    top = `<p class="p-display ts-plate">${esc(d.special)}</p>
+    top = `<p class="p-display ts-plate">${esc(d.special)}</p>${price}
       <p class="ts-one">${intro}</p>
       <div class="ts-picks">${picks.map((s, i) => `${i ? `<p class="ts-or">${both ? "and" : "or"}</p>` : ""}<p class="p-display ts-pick${s.length > 22 ? " ts-pick--long" : ""}">${esc(s)}</p>`).join("")}</div>
       ${both ? '<p class="ts-more">Like one better? Double up on it.</p><p class="ts-more">Each side is also sold separately.</p>' : ""}`;
@@ -221,7 +229,8 @@ function sidesPage(d, { swapSides = [], soupSide = false } = {}) {
 }
 
 // Today's special & soup: sign-day-letter.njk's one page, without the
-// desserts (client 2026-11-11: the fridge sign has them).
+// desserts (client 2026-11-11: the fridge sign has them). The plate's price
+// under its sides, as the soup's Cup / Bowl are under it (Mitch 2026-11-17).
 function dayPage(d, { includesDrink = false } = {}) {
   const sides = caption.specialSides(d, true);
   const sizes = d.soupSizes.map((s) => `${esc(s.size)} ${money(s.price)}`).join(" &middot; ");
@@ -233,6 +242,7 @@ function dayPage(d, { includesDrink = false } = {}) {
     ${d.special ? `<section class="dl1-block">
       <p class="p-display dl1-name${d.special.length > 24 ? " dl1-name--long" : ""} ink-teal">${esc(d.special)}</p>
       ${sides ? `<p class="dl1-detail">${esc(sides)}</p>` : ""}
+      ${d.price ? `<p class="dl1-detail">${money(d.price)}</p>` : ""}
       ${includesDrink ? '<p class="dl-drink dl1-drink ink-accent">Includes a drink</p>' : ""}
     </section>` : ""}
     ${d.soup ? `<section class="dl1-block${d.special ? " dl1-block--rule" : ""}">

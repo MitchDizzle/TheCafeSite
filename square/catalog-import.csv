@@ -86,7 +86,7 @@ Token,Item Name,Customer-facing Name,Variation Name,SKU,Description,Categories,R
 ,Iced Tea / Fountain Drink,Iced Tea / Fountain Drink,Tropicana Lemonade,,"Sweet or unsweet tea, or a Pepsi fountain drink.",Drinks,Drinks,,Prepared food and beverage,,,,2.00,,N,Y,N,N,N,,,,,,
 ,Coffee,Coffee,Regular,,Regular or decaf.,Drinks,Drinks,,Prepared food and beverage,,,,1.00,,N,Y,N,N,N,,,,,,
 ,Coffee,Coffee,Decaf,,Regular or decaf.,Drinks,Drinks,,Prepared food and beverage,,,,1.00,,N,Y,N,N,N,,,,,,
-,Bottle Water,Bottle Water,Regular,,,Drinks,Drinks,,Prepared food and beverage,,,,1.50,,N,Y,N,N,Y,,,,,,
+,Bottle Water,Bottle Water,Regular,,12 fl oz.,Drinks,Drinks,,Prepared food and beverage,,,,1.00,,N,Y,N,N,Y,,,,,,
 ,Bottle Juice,Bottle Juice,Regular,,,Drinks,Drinks,,Prepared food and beverage,,,,3.00,,N,Y,N,N,Y,,,,,,
 ,Cheesecake,Cheesecake,Regular,,Plain or Pumpkin; caramel or chocolate sauce on plain.,Desserts,Desserts,,Prepared food and beverage,,,,3.50,,N,Y,N,N,Y,,,,,,
 ,Dessert Bar,Dessert Bar,Regular,,Magic Bar or M&M Chocolate Rice Crispy Treat.,Desserts,Desserts,,Prepared food and beverage,,,,1.50,,N,Y,N,N,Y,,,,,,

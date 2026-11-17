@@ -24,6 +24,10 @@ test("signs: three pages from the day's plan and Square's desserts", async () =>
   assert.doesNotMatch(r.html, /<li>Corn <small/, "the plate's own side isn't a today-only extra");
   assert.match(r.html, /Cup \$5\.00 &middot; Bowl \$7\.00/);
   assert.match(r.html, /Includes a drink/);
+  plan.days[today].items["Lunch Special"].prices = { "": "10.00" };
+  const priced = await signs.buildSigns(today);
+  assert.equal((priced.html.match(/\$10\.00/g) || []).length, 2, "the plate's price on the sides sign and the special & soup sign");
+  assert.match(priced.html, /class="ts-price">\$10\.00/);
   assert.equal((r.html.match(/data-page="/g) || []).length - 3, 3, "three pages (and the three rules that hide one)");
 });
 

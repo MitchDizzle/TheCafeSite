@@ -334,6 +334,19 @@
     margin-top: 0.34in;
 }
 
+/* The plate's price under its name (Mitch 2026-11-17), on the board's
+   Manage -> Signs. */
+.ts-price {
+    font-size: 0.42in;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 0.06in;
+}
+
+.ts--any .ts-price {
+    font-size: 0.5in;
+}
+
 .ts-one {
     font-size: 0.34in;
     font-style: italic;

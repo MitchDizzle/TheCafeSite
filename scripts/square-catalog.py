@@ -215,7 +215,7 @@ for i in cats["drinks"]["items"]:
         # what online ordering shows anyway.
         one("Bottle Juice", D, i["price"])
     else:
-        one(i["name"], D, i["price"])
+        one(i["name"], D, i["price"], (i["description"] + ".") if i.get("description") else "")
 
 # ── Desserts (sold all day) ────────────────────────────────
 for i in cats["desserts"]["items"]:
