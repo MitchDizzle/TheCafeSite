@@ -44,6 +44,17 @@ function specialSides(d, bare) {
   return bare ? words.charAt(0).toUpperCase() + words.slice(1) : `with ${words}`;
 }
 
+// A closed day as words: "Closed for Thanksgiving", or just "Closed".
+// `closed` is the reason ("Thanksgiving"; a day in specials.json, typed on
+// the kitchen board, or site.json's closedDays) or `true` for none given
+// (Mitch 2026-11-18). A reason typed as "Closed for Thanksgiving" isn't
+// doubled.
+function closedText(d) {
+  if (!d || !d.closed) return "";
+  const why = d.closed === true ? "" : String(d.closed).replace(/^\s*closed\s*(for\s+)?/i, "").trim();
+  return why ? `Closed for ${why}` : "Closed";
+}
+
 // One line per day, read as a list (no full stops): the plate, then that
 // day's soup after a dot, "Monday: French Dip with chips · Soup: Chicken
 // Noodle". The soup is a separate item, so it is never run into the plate
@@ -53,11 +64,13 @@ function specialSides(d, bare) {
 function dayLines(week) {
   return week.map((d) => {
     const day = words(d.date, { weekday: "long" });
-    if (d.closed) return `${day}: Closed for ${d.closed}`;
+    // A day's `message` ("Happy Thanksgiving!", Mitch 2026-11-18) after it.
+    const message = d.message ? String(d.message).trim() : "";
+    if (d.closed) return `${day}: ${[closedText(d), message].filter(Boolean).join(" · ")}`;
     const sides = specialSides(d);
     const plate = d.special ? `${d.special}${sides ? ` ${sides}` : ""}` : "";
     const soup = d.soup ? `Soup: ${d.soup}` : "";
-    return `${day}: ${[plate, soup].filter(Boolean).join(" · ")}`;
+    return `${day}: ${[plate, soup, message].filter(Boolean).join(" · ")}`;
   });
 }
 
@@ -91,7 +104,8 @@ function latestWeek(days) {
 // their place, so the weekly post and its caption say "Wednesday: Closed for
 // Veterans Day" rather than skipping the day (2026-11-11). A closed day is
 // { date, closed: "Veterans Day" }; only Monday to Friday of that week, and
-// never a day that has a special of its own.
+// never a day that has a special of its own (or is closed in specials.json
+// itself: a day marked closed on the kitchen board, Mitch 2026-11-18).
 function withClosed(week, closedDays) {
   if (!week || !week.length) return [];
   const have = new Set(week.map((d) => d.date));
@@ -148,4 +162,4 @@ function plateRest(d) {
   return String((d && d.special) || "").split(/\s+/).filter((w) => w && !wordsOf(w).every((x) => used.has(x))).join(" ");
 }
 
-module.exports = { weekRange, dayLines, specialSides, latestWeek, workWeek, withClosed, distinctBy, isVersion, versionsOf, breadsOf, plateRest };
+module.exports = { closedText, weekRange, dayLines, specialSides, latestWeek, workWeek, withClosed, distinctBy, isVersion, versionsOf, breadsOf, plateRest };

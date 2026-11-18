@@ -19,7 +19,10 @@ function applyToday() {
 
 async function applyTodayOnce() {
   const today = localDate();
-  const day = plan.days[today];
+  // A closed day (Mitch 2026-11-18) is put into Square as a day with nothing
+  // planned: the plain names, no sides, words or photos of a plate.
+  const planned = plan.days[today];
+  const day = planned && planned.closed ? null : planned;
   const result = await applySpecials(today, day);
   const sides = await applySides(today, day);
   const words = await applyDescriptions(today, day);

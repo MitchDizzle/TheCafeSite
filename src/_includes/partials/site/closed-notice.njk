@@ -2,10 +2,21 @@
     is closed (site.closedDays). Pages are uploaded once, so each day ships
     hidden and the script picks on Central time, like the specials box: an old
     closure is hidden, never shown. -#}
-{%- if site.closedDays and site.closedDays.length %}
-{%- for c in site.closedDays %}
+{#- Also a day marked closed in specials.json (on the kitchen board, Mitch
+    2026-11-18) that site.closedDays doesn't already have. -#}
+{%- set siteClosed = site.closedDays or [] %}
+{%- set boardClosed = [] %}
+{%- set siteDates = [] %}{% for c in siteClosed %}{% set _ = siteDates.push(c.date) %}{% endfor %}
+{%- for d in (specials.days or []) %}{% if d.closed and not (d.date in siteDates) %}{% set _ = boardClosed.push(d) %}{% endif %}{% endfor %}
+{%- if siteClosed.length or boardClosed.length %}
+{%- for c in siteClosed %}
     <div class="construction-banner" role="note" data-closed-day="{{ c.date }}" hidden>
         Closed for {{ c.name }}, <span style="white-space:nowrap">{{ c.date | dayDate("long") }}</span>
+    </div>
+{%- endfor %}
+{%- for d in boardClosed %}
+    <div class="construction-banner" role="note" data-closed-day="{{ d.date }}" hidden>
+        {{ d | closedText }}, <span style="white-space:nowrap">{{ d.date | dayDate("long") }}</span>
     </div>
 {%- endfor %}
     <script>

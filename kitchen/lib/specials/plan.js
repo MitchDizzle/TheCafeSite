@@ -34,6 +34,9 @@ const PLAN_DAYS = 14; // how far ahead Specials reaches
 // days:    { "YYYY-MM-DD": { from: "site" | "front", savedAt? (a front day: when it was saved), items: { "<dailyItems name>": { today, prices: { "<size>" | "": "10.50" } } },
 //            sides?: [...], anySide?: true, defaultSide?: "Tossed Salad" } }  (anySide: the plate comes with a choice of side;
 //            defaultSide: the one picked in Square unless the customer picks, Mitch 2026-11-17)
+//            closed?: true | "Thanksgiving" (the cafe is closed that day, with the reason if
+//            given: no plate or soup, nothing put into Square), message?: "Happy Thanksgiving!"
+//            (a line for that day on the website, the weekly post and the signs). Mitch 2026-11-18.
 // notes:   { "YYYY-MM-DD": { description } }, the words Photo post puts under the photo. Kept
 //            apart from `days`, so writing them doesn't make a website day the front's.
 // applied: { "YYYY-MM-DD": { sig, at } after a good write, { sig, failedAt, error } after a bad one }
@@ -150,6 +153,15 @@ function counterOnlyFor(date) {
 // isn't one.
 const sitePrice = (n) => (typeof n === "number" && n > 0 && n < 1000 ? n.toFixed(2) : "");
 
+// A day's closed and message as the plan keeps them, from the website's day
+// or the front's: closed is true or the reason ("Thanksgiving"), or null.
+const closedOf = (raw) => {
+  if (!raw) return null;
+  const why = raw === true ? "" : cleanText(String(raw)).replace(/^closed\s*(for\s+)?/i, "").slice(0, 60);
+  return why || true;
+};
+const messageOf = (raw) => cleanText(raw).slice(0, 120);
+
 // Which of the website's fields goes into which daily item, by the item's
 // name: "Soup of the Day" takes the soup, "Lunch Special" the plate. One that
 // matches none of them is left for the front to fill.
@@ -207,6 +219,8 @@ async function pullSite() {
         changed.push(d.date);
         continue;
       }
+      const closed = closedOf(d.closed);
+      const message = messageOf(d.message);
       const items = {};
       // The plate's price: the day's own, or the website's price for every
       // special (client 2026-10-12: $10 unless a day says otherwise). Only a
@@ -215,17 +229,19 @@ async function pullSite() {
       for (const name of cfg.dailyItems) {
         const field = siteFieldFor(name);
         const text = field ? cleanText(d[field]) : "";
-        if (text) items[name] = { today: text, prices: field === "special" && price ? { "": price } : {} };
+        if (text && !closed) items[name] = { today: text, prices: field === "special" && price ? { "": price } : {} };
       }
-      if (!Object.keys(items).length) continue;
+      if (!Object.keys(items).length && !closed && !message) continue;
       // The sides go nowhere in Square; Photo post words the special with
       // them. anySide: the plate comes with the customer's choice of side.
       const sides = Array.isArray(d.sides) ? d.sides.map(cleanText).filter(Boolean) : [];
       const anySide = d.anySide === true;
       const defaultSide = anySide ? cleanText(d.defaultSide) : "";
       if (have && JSON.stringify(have.items) === JSON.stringify(items) && JSON.stringify(have.sides || []) === JSON.stringify(sides)
-        && !!have.anySide === anySide && (have.defaultSide || "") === defaultSide) continue;
-      plan.days[d.date] = { from: "site", items, sides, ...(anySide ? { anySide: true } : {}), ...(defaultSide ? { defaultSide } : {}) };
+        && !!have.anySide === anySide && (have.defaultSide || "") === defaultSide
+        && (have.closed || null) === closed && (have.message || "") === message) continue;
+      plan.days[d.date] = { from: "site", items, sides: closed ? [] : sides, ...(anySide && !closed ? { anySide: true } : {}), ...(defaultSide && !closed ? { defaultSide } : {}),
+        ...(closed ? { closed } : {}), ...(message ? { message } : {}) };
       changed.push(d.date);
     }
     // The sides any side can be swapped for (menu.json's Deli Salads).
@@ -311,6 +327,8 @@ async function pullSite() {
       plan.soupSide = json.soupSide;
       console.log(`A cup of the day's soup ${json.soupSide ? "can" : "can no longer"} be picked as a side, says the website.`);
     }
+    // The usual price of a special, for the week's handout on Signs.
+    if (typeof json.price === "number" && json.price > 0) plan.price = json.price;
     if (typeof json.includesDrink === "boolean" && json.includesDrink !== plan.includesDrink) {
       plan.includesDrink = json.includesDrink;
       console.log(`Lunch specials ${json.includesDrink ? "include" : "no longer include"} a drink, says the website.`);
@@ -371,7 +389,8 @@ const checkDate = (date, today) => {
   }
 };
 
-// changes: { "YYYY-MM-DD": { items: { "<dailyItems name>": { today, prices: { "<size>": "10.50" } } }, sides, anySide, defaultSide } }
+// changes: { "YYYY-MM-DD": { items: { "<dailyItems name>": { today, prices: { "<size>": "10.50" } } }, sides, anySide, defaultSide,
+//            closed (true when the cafe is closed that day), closedFor ("Thanksgiving"), message } }
 // notes:   { "YYYY-MM-DD": { description } }
 // photos:  { "YYYY-MM-DD": { "<dailyItems name>": "<photo id>" | "none" | "" } } ("" = the usual)
 // lists:   { "YYYY-MM-DD": ["Add", "Toppings"] }, Square's lists on Lunch Special that day
@@ -407,8 +426,16 @@ function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}, 
     const anySide = !!(change && change.anySide === true);
     const sides = anySide ? [] : (Array.isArray(change && change.sides) ? change.sides : []).map(cleanText).filter(Boolean).slice(0, 6);
     const defaultSide = anySide ? cleanText(change.defaultSide).slice(0, 60) : "";
-    next[date] = Object.keys(items).length || sides.length || anySide
-      ? { from: "front", savedAt: new Date().toISOString(), items, ...(sides.length ? { sides } : {}), ...(anySide ? { anySide: true } : {}), ...(defaultSide ? { defaultSide } : {}) } : null;
+    // Closed that day (Mitch 2026-11-18): the plate and soup go, and nothing
+    // goes into Square; the reason and the message are optional.
+    const closed = change && change.closed === true ? closedOf(cleanText(change.closedFor) || true) : null;
+    const message = messageOf(change && change.message);
+    if (closed) {
+      next[date] = { from: "front", savedAt: new Date().toISOString(), items: {}, closed, ...(message ? { message } : {}) };
+      continue;
+    }
+    next[date] = Object.keys(items).length || sides.length || anySide || message
+      ? { from: "front", savedAt: new Date().toISOString(), items, ...(sides.length ? { sides } : {}), ...(anySide ? { anySide: true } : {}), ...(defaultSide ? { defaultSide } : {}), ...(message ? { message } : {}) } : null;
   }
   // The words Photo post puts under the photo. They don't touch the day
   // itself, so a day from the website stays the website's.
@@ -497,7 +524,8 @@ function savePlanDays(changes, notes, photos, photoIds = new Set(), lists = {}, 
 // The days set here that the website doesn't have yet, as the website's
 // specials.json writes a day, for the GitHub backup (offsite.js puts it there
 // as site-specials.json; the site's Action reads it). Today and later only; a
-// day with neither a plate nor a soup isn't one. `price` only when typed here.
+// day with neither a plate nor a soup isn't one, unless it's closed or has a
+// message. `price` only when typed here.
 function siteExport() {
   const today = localDate();
   const days = [];
@@ -512,8 +540,11 @@ function siteExport() {
         if (field === "special" && it.prices && it.prices[""]) out.price = Number(it.prices[""]);
       }
     }
-    if (!out.special && !out.soup) continue;
-    if (day.anySide) { out.anySide = true; if (day.defaultSide) out.defaultSide = day.defaultSide; }
+    if (day.closed) { delete out.special; delete out.soup; delete out.price; out.closed = day.closed; }
+    if (day.message) out.message = day.message;
+    if (!out.special && !out.soup && !out.closed && !out.message) continue;
+    if (day.closed) { /* no sides on a closed day */ }
+    else if (day.anySide) { out.anySide = true; if (day.defaultSide) out.defaultSide = day.defaultSide; }
     else if ((day.sides || []).length) out.sides = day.sides;
     // A day saved before the sync existed: stamped now, once.
     if (!day.savedAt) { day.savedAt = new Date().toISOString(); stamped = true; }

@@ -98,6 +98,8 @@ module.exports = function (eleventyConfig) {
   // "with your choice of side" / "with A and B": see specialSides there.
   // The week with site.json's closed days put in their place (weekly post).
   eleventyConfig.addFilter("withClosed", require("./src/_lib/specials-caption.js").withClosed);
+  // "Closed for Thanksgiving" (or "Closed") for a closed day.
+  eleventyConfig.addFilter("closedText", require("./src/_lib/specials-caption.js").closedText);
   eleventyConfig.addFilter("specialSides", require("./src/_lib/specials-caption.js").specialSides);
   // The week with repeated plates (or soups) dropped, for the day-free board signs.
   eleventyConfig.addFilter("distinctBy", require("./src/_lib/specials-caption.js").distinctBy);

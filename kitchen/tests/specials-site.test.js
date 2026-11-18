@@ -82,3 +82,29 @@ test("saved here again after the website took it: ours until the website has the
   assert.equal(plan.days[d].from, "front");
   assert.equal(plan.days[d].items["Lunch Special"].today, "Brisket");
 });
+
+test("a closed day with its reason and a message goes to the website without a plate (Mitch 2026-11-18)", async () => {
+  const d = ahead(4);
+  savePlanDays({ [d]: day("Turkey", "Chili", { closed: true, closedFor: "Thanksgiving", message: "Happy Thanksgiving!" }) });
+  assert.deepEqual(plan.days[d].items, {}, "a closed day keeps no dishes");
+  assert.equal(plan.days[d].closed, "Thanksgiving");
+  const out = siteExport().days.find((x) => x.date === d);
+  assert.equal(out.closed, "Thanksgiving");
+  assert.equal(out.message, "Happy Thanksgiving!");
+  assert.equal(out.special, undefined);
+  // Closed without a reason, and a message on an open day.
+  const e = ahead(5);
+  savePlanDays({ [e]: day("", "", { closed: true }) });
+  assert.equal(plan.days[e].closed, true);
+  const f = ahead(6);
+  savePlanDays({ [f]: day("Meatloaf", "", { message: "Last day before the break" }) });
+  assert.equal(plan.days[f].message, "Last day before the break");
+  assert.equal(plan.days[f].items["Lunch Special"].today, "Meatloaf");
+  // And from the website: a closed day comes in with no dishes.
+  const g = ahead(7);
+  site = { days: [{ date: g, closed: "Black Friday", message: "See you Monday" }] };
+  await pullSite();
+  assert.equal(plan.days[g].closed, "Black Friday");
+  assert.equal(plan.days[g].message, "See you Monday");
+  assert.deepEqual(plan.days[g].items, {});
+});

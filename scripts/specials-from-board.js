@@ -22,6 +22,9 @@
 //     `modifiers` while the plate is the same dish (they're about that dish,
 //     so a new plate drops them), and `soupNote` while the soup is the same.
 //   - A blank price on the board keeps the day's price as it is.
+//   - A day closed on the board (`closed`: true or the reason, Mitch
+//     2026-11-18) loses its plate, soup, sides and price; its `message`
+//     ("Happy Thanksgiving!") is written, or taken off when the board has none.
 //   - Only the days it changes are rewritten; the rest of the file keeps its
 //     own layout, so a commit shows just those days.
 const fs = require("fs");
@@ -71,7 +74,7 @@ function dayRanges(src) {
 // A day as the file writes one: two-space JSON, indented under "days".
 const dayText = (day) => JSON.stringify(day, null, 2).replace(/\n/g, "\n    ");
 
-const ORDER = ["date", "soup", "special", "sides", "anySide", "defaultSide", "price"];
+const ORDER = ["date", "closed", "soup", "special", "sides", "anySide", "defaultSide", "price", "message"];
 function merged(have, b) {
   const day = { ...(have || {}) };
   const special = clean(b.special);
@@ -92,6 +95,11 @@ function merged(have, b) {
   if (typeof b.price === "number" && b.price > 0) {
     if (b.price === site.price) delete day.price; else day.price = b.price;
   }
+  if (b.closed) {
+    day.closed = b.closed === true ? true : clean(b.closed) || true;
+    for (const k of ["soup", "special", "sides", "anySide", "defaultSide", "price", "note", "soupNote", "leaveOff", "modifiers", "extraSides", "counterOnly"]) delete day[k];
+  } else delete day.closed;
+  if (clean(b.message)) day.message = clean(b.message); else delete day.message;
   day.boardSavedAt = b.savedAt;
   // date, soup, special, sides first, as the file has them; the rest as they were.
   const out = {};
@@ -104,7 +112,7 @@ function merged(have, b) {
 const wanted = [];
 for (const b of Array.isArray(board.days) ? board.days : []) {
   if (!b || !/^\d{4}-\d{2}-\d{2}$/.test(b.date) || b.date < today) continue;
-  if (!b.savedAt || !(clean(b.special) || clean(b.soup))) continue;
+  if (!b.savedAt || !(clean(b.special) || clean(b.soup) || b.closed || clean(b.message))) continue;
   const have = (site.days || []).find((d) => d.date === b.date);
   if (have && have.boardSavedAt && have.boardSavedAt >= b.savedAt) continue;
   wanted.push(merged(have, b));

@@ -110,7 +110,10 @@ studioOrder: 22
             <div class="wk-row wk-row--closed">
                 <p class="p-display wk-dayname">{{ d.date | dayDate("short") }}</p>
                 <div class="wk-special-cell">
-                    <p class="p-display wk-special">Closed for {{ d.closed }}</p>
+                    <p class="p-display wk-special">{{ d | closedText }}</p>
+                    {%- if d.message %}
+                    <p class="p-body wk-sides wk-message">{{ d.message }}</p>
+                    {%- endif %}
                 </div>
             </div>
             {%- else %}
@@ -121,6 +124,9 @@ studioOrder: 22
                     <p class="p-display wk-special">{{ d.special }}{% if d.price and d.price != specials.price %} <span class="wk-day-price">{{ d.price | money | replace(".00", "") }}</span>{% endif %}</p>
                     {%- if sides %}
                     <p class="p-body wk-sides">{{ sides }}</p>
+                    {%- endif %}
+                    {%- if d.message %}
+                    <p class="p-body wk-sides wk-message">{{ d.message }}</p>
                     {%- endif %}
                 </div>
                 {%- if d.soup %}

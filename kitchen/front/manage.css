@@ -404,3 +404,8 @@
 .sg-fridge-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.1rem 1rem; margin: 0.5rem 0; }
 .sg-fridge .check { margin: 0; padding: 0.3rem 0; font-size: 1.05rem; align-items: center; }
 .sg-fridge .check small { color: var(--muted); }
+
+/* A closed day (Mitch 2026-11-18): its dishes greyed out, as they aren't saved. */
+.d-closed { display: grid; gap: 0.4rem; }
+.d-closed .check { margin: 0; }
+.m-day.closed .d-item, .m-day.closed .d-more { opacity: 0.4; pointer-events: none; }

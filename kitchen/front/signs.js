@@ -10,12 +10,13 @@
 (() => {
   const { esc, postJson, screen, busy, result } = Front;
   const short = (date) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  const PAGES = [["sides", "Special sides"], ["day", "Special & soup"], ["fridge", "Dessert fridge"]];
+  const PAGES = [["sides", "Special sides"], ["day", "Special & soup"], ["fridge", "Dessert fridge"], ["week", "Week's specials, two to a page"]];
 
   // Which pages to print and black & white for the colour one, remembered
   // on this device.
   const KEY = "signs-print";
-  let prefs = { sides: true, day: true, fridge: true, bw: false };
+  // week: the week's specials handout (Mitch 2026-11-18), for "this" or "next" week.
+  let prefs = { sides: true, day: true, fridge: true, week: false, whichWeek: "next", bw: false };
   try { prefs = { ...prefs, ...JSON.parse(localStorage.getItem(KEY) || "{}") }; } catch {}
   const keep = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch {} };
 
@@ -46,8 +47,17 @@
       body: `${dayPick}
         <p class="m-note">Which signs to make?</p>
         <div class="sg-which" id="sg-which">${which}
-          <label class="check"><input type="checkbox" id="sg-bw"${prefs.bw ? " checked" : ""}><span>Special &amp; soup in black &amp; white</span></label></div>`,
+          <label class="check"><input type="checkbox" id="sg-bw"${prefs.bw ? " checked" : ""}><span>Special &amp; soup in black &amp; white</span></label></div>
+        <div class="r-quick" id="sg-week"${prefs.week ? "" : " hidden"}><span class="m-note">Week's specials for:</span>
+          ${[["this", "This week"], ["next", "Next week"]].map(([v, n]) => `<button type="button" data-week="${v}"${prefs.whichWeek === v ? ' class="on"' : ""}>${n}</button>`).join("")}</div>`,
       buttons: [{ label: "Make signs", act: "sg-make", kind: "primary" }] });
+    document.getElementById("sg-week").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-week]");
+      if (!b) return;
+      prefs.whichWeek = b.dataset.week;
+      keep();
+      for (const x of e.currentTarget.querySelectorAll("[data-week]")) x.classList.toggle("on", x === b);
+    });
     document.getElementById("sg-days")?.addEventListener("click", (e) => {
       const b = e.target.closest("[data-date]");
       if (b) { days.date = b.dataset.date; pick(); }
@@ -56,6 +66,7 @@
       if (e.target.dataset.page) prefs[e.target.dataset.page] = e.target.checked;
       else prefs.bw = e.target.checked;
       keep();
+      document.getElementById("sg-week").hidden = !prefs.week;
     });
   }
 
@@ -63,7 +74,7 @@
     const pages = PAGES.map(([p]) => p).filter((p) => prefs[p]);
     if (!pages.length) return result("Signs", { ok: false, message: "Tick at least one sign to make." });
     busy("Signs", "Making the signs…");
-    const r = await postJson("/api/front-signs", { pin: Front.pin, date: days.date, pages });
+    const r = await postJson("/api/front-signs", { pin: Front.pin, date: days.date, pages, week: prefs.whichWeek });
     if (!r.ok) return result("Signs", r);
     draw(r);
   }
@@ -101,7 +112,7 @@
       // The ticks as they stand; the kitchen PC keeps them and remakes the page.
       const on = [...box.querySelectorAll("[data-key]:checked")].map((i) => i.dataset.key);
       for (const i of box.querySelectorAll("input")) i.disabled = true;
-      const next = await postJson("/api/front-signs", { pin: Front.pin, date: r.date, fridge: on, pages: r.made });
+      const next = await postJson("/api/front-signs", { pin: Front.pin, date: r.date, fridge: on, pages: r.made, week: r.week });
       if (!document.getElementById("sg-which")) return; // closed meanwhile
       if (!next.ok) return result("Signs", next);
       draw(next);

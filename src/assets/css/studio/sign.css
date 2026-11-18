@@ -1691,3 +1691,8 @@
     border-top: 0.01in dashed #888;
     flex: 0 0 0;
 }
+
+/* A day's message under its row ("Happy Thanksgiving!", Mitch 2026-11-18). */
+.sw-message {
+    font-style: italic;
+}

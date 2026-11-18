@@ -65,7 +65,12 @@
         {%- if d.closed %}
         <li class="sw-row sw-row--closed">
             <p class="p-display sw-day ink-accent">{{ d.date | dayDate("short") }}<span class="p-body sw-date">{{ d.date | dayDate("monthDay") }}</span></p>
-            <p class="p-display sw-special sw-closed ink-accent">Closed for {{ d.closed }}</p>
+            <div>
+                <p class="p-display sw-special sw-closed ink-accent">{{ d | closedText }}</p>
+                {%- if d.message %}
+                <p class="sw-sides sw-message">{{ d.message }}</p>
+                {%- endif %}
+            </div>
         </li>
         {%- else %}
         {%- set sides = d | specialSides(true) %}
@@ -75,6 +80,9 @@
                 <p class="p-display sw-special ink-teal">{{ d.special }}{% if d.price and d.price != specials.price %} <span class="sw-day-price ink-accent">{{ d.price | money | replace(".00", "") }}</span>{% endif %}</p>
                 {%- if sides %}
                 <p class="sw-sides">{{ sides }}</p>
+                {%- endif %}
+                {%- if d.message %}
+                <p class="sw-sides sw-message">{{ d.message }}</p>
                 {%- endif %}
             </div>
             <div class="sw-soup">

@@ -168,6 +168,8 @@ function signDay(date, daily = [], today = localDate()) {
         .filter((v) => v.size && v.price);
     }
   }
+  if (day && day.closed) d.closed = day.closed;
+  if (day && day.message) d.message = day.message;
   if (day && day.anySide) { d.anySide = true; if (day.defaultSide) d.defaultSide = cleanText(day.defaultSide); }
   else if (day && Array.isArray(day.sides) && day.sides.length) d.sides = day.sides.map(cleanText).filter(Boolean);
   d.extraSides = extrasOn(date);
@@ -254,6 +256,85 @@ function dayPage(d, { includesDrink = false } = {}) {
   </div></div>`;
 }
 
+// ---- The week's specials, two to a page (sign-specials-half-bw.njk) ----
+
+// The logo, black, as the website's black & white signs have it (the
+// inlineSvg shortcode in .eleventy.js, simply).
+function wordmark() {
+  try {
+    const svg = fs.readFileSync(path.join(DIR, "..", "src", "assets", "thecafe.svg"), "utf8")
+      .replace(/<\?xml[\s\S]*?\?>/gi, "").replace(/<!DOCTYPE[\s\S]*?>/gi, "").replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/\sstyle="[^"]*"/gi, "").trim();
+    return svg.replace(/<svg\b/, '<svg role="img" aria-label="The Café"');
+  } catch { return '<p class="p-display">The Café</p>'; }
+}
+
+// Monday to Sunday of a YYYY-MM-DD date's week.
+function weekOf(date) {
+  const d = new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return Array.from({ length: 7 }, (_, i) => new Date(d.getTime() + i * 864e5).toISOString().slice(0, 10));
+}
+const dayWords = (date, opts) => new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", { timeZone: "UTC", ...opts });
+
+// The week's days as the website's specials.json has them (signDay's shape):
+// the days with something planned, closed or a message.
+function weekDays(monday, daily) {
+  return weekOf(monday).map((date) => {
+    const d = signDay(date, daily, "");
+    const it = (plan.days[date] && plan.days[date].items) || {};
+    const plate = Object.entries(it).find(([name]) => siteFieldFor(name) === "special");
+    const price = plate && plate[1].prices && plate[1].prices[""];
+    if (price) d.price = Number(price);
+    return d;
+  }).filter((d) => d.special || d.soup || d.closed || d.message);
+}
+
+// The handout: the black & white specials sign at half size, twice on a
+// letter page to cut in half (Mitch 2026-11-18: next week's, from Signs).
+// The same markup as partials/studio/sign-specials.njk with half: true.
+function weekPage(days, { price, includesDrink, soupSide, swapSides = [], soupSizes = [] } = {}) {
+  if (!days.length) return "";
+  const first = dayWords(days[0].date, { month: "long", day: "numeric" });
+  const last = dayWords(days[days.length - 1].date, { month: "long", day: "numeric" });
+  const range = first.split(" ")[0] === last.split(" ")[0] ? `${first} – ${last.split(" ")[1]}` : `${first} – ${last}`;
+  const dollars = (n) => money(n).replace(".00", "");
+  const dayCell = (d) => `<p class="p-display sw-day ink-accent">${esc(dayWords(d.date, { weekday: "short" }))}<span class="p-body sw-date">${esc(dayWords(d.date, { month: "short", day: "numeric" }))}</span></p>`;
+  const message = (d) => (d.message ? `<p class="sw-sides sw-message">${esc(d.message)}</p>` : "");
+  const rows = days.map((d) => {
+    if (d.closed) {
+      const why = d.closed === true ? "Closed" : `Closed for ${d.closed}`;
+      return `<li class="sw-row sw-row--closed">${dayCell(d)}<div><p class="p-display sw-special sw-closed ink-accent">${esc(why)}</p>${message(d)}</div></li>`;
+    }
+    const sides = caption.specialSides(d, true);
+    return `<li class="sw-row">${dayCell(d)}
+      <div><p class="p-display sw-special ink-teal">${esc(d.special || "")}${d.price && d.price !== price ? ` <span class="sw-day-price ink-accent">${dollars(d.price)}</span>` : ""}</p>
+        ${sides ? `<p class="sw-sides">${esc(sides)}</p>` : ""}${message(d)}</div>
+      <div class="sw-soup"><p class="sw-soup-name ink-teal">${d.soup ? esc(d.soup) : "&mdash;"}</p></div></li>`;
+  }).join("");
+  const priceLine = price ? `${dollars(price)}${includesDrink ? ", drink included" : ""}` : includesDrink ? "Drink included" : "";
+  const choices = [...swapSides.map(esc), ...(soupSide ? ["Cup of the day&rsquo;s soup"] : [])];
+  const half = `<div class="sign sign--bw sign--half">
+    <header class="sign-title-ink"><div class="wordmark wordmark--ink">${wordmark()}</div></header>
+    <div class="sign-heading">
+      <h2 class="p-display sign-heading-title ink-teal">This Week&rsquo;s Specials</h2>
+      <p class="p-label sign-heading-sub ink-accent">${esc(range)} &middot; from 11am</p>
+    </div>
+    <div class="sw-grid">
+      <div class="sw-cols"><span></span>
+        <div><p class="p-label sw-col-label ink-teal">Lunch Special</p>${priceLine ? `<p class="sw-col-price ink-accent">${priceLine}</p>` : ""}</div>
+        <div class="sw-col--soup"><p class="p-label sw-col-label ink-teal">Soup</p>${soupSizes.length ? `<p class="sw-col-price ink-teal">${soupSizes.map((s) => `${esc(s.size)} ${dollars(s.price)}`).join(" &middot; ")}</p>` : ""}</div>
+      </div>
+      <ul class="sw-days">${rows}</ul>
+    </div>
+    <div class="sign-spacer"></div>
+    ${choices.length ? `<section class="sw-choice"><p class="p-display sw-choice-title ink-teal">Sides</p>
+      <p class="sw-choice-note">${days.some((d) => d.anySide) ? "Pick one with &ldquo;choice of side,&rdquo; or swap one in for a side on any special" : "Swap one in for the sides on any special"}</p>
+      <ul class="sw-choices">${choices.map((c) => `<li>${c}</li>`).join("")}</ul></section>` : ""}
+  </div>`;
+  return `<div class="canvas sign-halves" data-page="week">${half}<div class="sign-cut" aria-hidden="true"></div>${half}</div>`;
+}
+
 // The warning triangle, as layouts/quick-sign.njk draws it.
 const TRIANGLE = '<svg class="dc-icon" viewBox="0 0 100 88" aria-hidden="true"><path d="M50 5 L95 83 H5 Z" fill="#fff" stroke="#000" stroke-width="8" stroke-linejoin="round"/><rect x="45" y="30" width="10" height="30" rx="4" fill="#000"/><circle cx="50" cy="71" r="6" fill="#000"/></svg>';
 
@@ -306,7 +387,7 @@ html, body { margin: 0; }
 /* Everything on a sheet, so a sheet with too much on it can shrink as one
    (the script below). It stands in for .sign's own column. */
 .fit { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-html.no-sides [data-page="sides"], html.no-day [data-page="day"], html.no-fridge [data-page="fridge"] { display: none; }
+html.no-sides [data-page="sides"], html.no-day [data-page="day"], html.no-fridge [data-page="fridge"], html.no-week [data-page="week"] { display: none; }
 /* Black & white for the colour sheet: .sign--bw's inks. */
 html.bw .dl { --teal: #000; --teal-dark: #000; --accent: #000; --accent-dark: #000; --text-dark: #000; color: #000; }
 /* The plate and the soup with the page to themselves: a size up. */
@@ -365,13 +446,16 @@ ${pages.join("\n")}
 // ("sides", "day", "fridge"; all three when not given): only what those need
 // is read from Square, so an empty list just answers which days there are
 // (Mitch 2026-11-18: pick the signs before waiting for them).
+// "week" is the week's specials, two to a page, for the week `week` says:
+// "this" or "next" (Mitch 2026-11-18); it isn't made unless asked for.
 const ALL_PAGES = ["sides", "day", "fridge"];
-async function buildSigns(date, fridgeOn, want = ALL_PAGES) {
+const PAGE_NAMES = [...ALL_PAGES, "week"];
+async function buildSigns(date, fridgeOn, want = ALL_PAGES, week = "next") {
   const today = localDate();
   const notes = [];
-  const wants = new Set((Array.isArray(want) ? want : ALL_PAGES).filter((p) => ALL_PAGES.includes(p)));
+  const wants = new Set((Array.isArray(want) ? want : ALL_PAGES).filter((p) => PAGE_NAMES.includes(p)));
   let daily = [];
-  if (wants.has("sides") || wants.has("day")) {
+  if (wants.has("sides") || wants.has("day") || wants.has("week")) {
     try { daily = await require("./specials/daily").dailyItems(); } catch (err) {
       notes.push(`Square couldn't be read (${err.message}), so the special and soup have no prices.`);
     }
@@ -388,24 +472,37 @@ async function buildSigns(date, fridgeOn, want = ALL_PAGES) {
   }
   const d = signDay(date, daily, today);
   const pages = [];
-  const has = { sides: false, day: false, fridge: false };
+  const has = { sides: false, day: false, fridge: false, week: false };
   const when = date === today ? "today" : "that day";
-  if ((wants.has("sides") || wants.has("day")) && !d.special && !d.soup) notes.push(`No special or soup is set for ${when}. Set it in Specials, then open Signs again.`);
+  if ((wants.has("sides") || wants.has("day")) && d.closed) {
+    notes.push(`${d.closed === true ? "Closed" : `Closed for ${d.closed}`} ${when}, so there's no special or soup sign.`);
+    d.special = ""; d.soup = "";
+  } else if ((wants.has("sides") || wants.has("day")) && !d.special && !d.soup) notes.push(`No special or soup is set for ${when}. Set it in Specials, then open Signs again.`);
   if (wants.has("sides")) {
     if (d.special && (d.sides || d.anySide)) { pages.push(sidesPage(d, { swapSides: plan.swapSides, soupSide: plan.soupSide })); has.sides = true; }
     else if (d.special) notes.push(`${d.special} has no sides in Specials, so there's no sides sign.`);
   }
   if (wants.has("day") && (d.special || d.soup)) { pages.push(dayPage(d, { includesDrink: plan.includesDrink })); has.day = true; }
+  if (wants.has("week")) {
+    const monday = weekOf(today)[0];
+    const start = week === "this" ? monday : new Date(Date.parse(`${monday}T12:00:00Z`) + 7 * 864e5).toISOString().slice(0, 10);
+    const days = weekDays(start, daily);
+    const soupItem = daily.find((it) => !it.missing && siteFieldFor(it.key) === "soup");
+    const soupSizes = soupItem ? (soupItem.variations || []).filter((v) => v.size && v.price).map((v) => ({ size: v.size, price: v.price })) : [];
+    const page = weekPage(days, { price: plan.price, includesDrink: plan.includesDrink, soupSide: plan.soupSide, swapSides: plan.swapSides, soupSizes });
+    if (page) { pages.push(page); has.week = true; }
+    else notes.push(`Nothing is set for ${week === "this" ? "this" : "next"} week yet. Set it in Specials, then make the signs again.`);
+  }
   if (rows && rows.some((r) => r.on)) { pages.push(fridgePage(rows)); has.fridge = true; }
   else if (rows) notes.push("No dessert is ticked, so there's no fridge sign.");
   // The days to pick from: today and the next two with something planned.
   const days = [today, ...Object.keys(plan.days).filter((x) => x > today).sort().slice(0, 2)];
   return {
-    date, today, days, has, notes, made: [...wants],
+    date, today, days, has, notes, made: [...wants], week,
     special: d.special, soup: d.soup,
     fridge: (rows || []).map(({ key, name, price, out, on, treat }) => ({ key, name, price, out, on, treat })),
     html: pages.length ? renderHtml(pages) : "",
   };
 }
 
-module.exports = { buildSigns, signDay, sidesPage, dayPage, fridgePage, fridgeRows, saveFridge, fridgeSettings, renderHtml, label };
+module.exports = { buildSigns, signDay, sidesPage, dayPage, weekPage, fridgePage, fridgeRows, saveFridge, fridgeSettings, renderHtml, label };

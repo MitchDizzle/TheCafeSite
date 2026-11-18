@@ -44,6 +44,19 @@
     {%- for d in specials.days %}
     <div class="ts-today" data-special-today="{{ d.date }}" hidden>
         <h2 class="ts-heading" id="today-special-heading-{{ d.date }}">Today &middot; {{ d.date | dayDate("long") }}</h2>
+        {#- A day's message ("Happy Thanksgiving!") and a closed day, both
+            set on the kitchen board (Mitch 2026-11-18). -#}
+        {%- if d.message %}
+        <p class="ts-ahead-note">{{ d.message }}</p>
+        {%- endif %}
+        {%- if d.closed %}
+        <div class="ts-cards">
+            <div class="ts-card">
+                <p class="ts-name">{{ d | closedText }}</p>
+                <p class="ts-detail">No lunch special or soup today.</p>
+            </div>
+        </div>
+        {%- else %}
         <div class="ts-cards">
             <div class="ts-card">
                 <p class="ts-label">Lunch special <span class="ts-when">from 11am</span></p>
@@ -73,6 +86,7 @@
             </div>
             {%- endif %}
         </div>
+        {%- endif %}
     </div>
     {%- endfor %}
 
@@ -98,8 +112,12 @@
                 {%- for d in specials.days %}
                 <tr data-special-upcoming="{{ d.date }}" hidden>
                     <th scope="row">{{ d.date | dayDate("weekday") }}</th>
-                    <td data-label="Lunch special">{{ d.special }}{% if d | specialSides %}<span class="ts-table-sides"> {{ d | specialSides }}</span>{% endif %}</td>
+                    {%- if d.closed %}
+                    <td data-label="Lunch special" colspan="2">{{ d | closedText }}{% if d.message %}<span class="ts-table-sides"> &middot; {{ d.message }}</span>{% endif %}</td>
+                    {%- else %}
+                    <td data-label="Lunch special">{{ d.special }}{% if d | specialSides %}<span class="ts-table-sides"> {{ d | specialSides }}</span>{% endif %}{% if d.message %}<span class="ts-table-sides"> &middot; {{ d.message }}</span>{% endif %}</td>
                     <td data-label="Soup">{{ d.soup }}</td>
+                    {%- endif %}
                 </tr>
                 {%- endfor %}
             </tbody>
@@ -120,8 +138,12 @@
                 {%- for d in specials.days %}
                 <tr data-special-next="{{ d.date }}" hidden>
                     <th scope="row">{{ d.date | dayDate("long") }}</th>
-                    <td data-label="Lunch special">{{ d.special }}{% if d | specialSides %}<span class="ts-table-sides"> {{ d | specialSides }}</span>{% endif %}</td>
+                    {%- if d.closed %}
+                    <td data-label="Lunch special" colspan="2">{{ d | closedText }}{% if d.message %}<span class="ts-table-sides"> &middot; {{ d.message }}</span>{% endif %}</td>
+                    {%- else %}
+                    <td data-label="Lunch special">{{ d.special }}{% if d | specialSides %}<span class="ts-table-sides"> {{ d | specialSides }}</span>{% endif %}{% if d.message %}<span class="ts-table-sides"> &middot; {{ d.message }}</span>{% endif %}</td>
                     <td data-label="Soup">{{ d.soup }}</td>
+                    {%- endif %}
                 </tr>
                 {%- endfor %}
             </tbody>

@@ -32,12 +32,27 @@
     const photoWords = (plan) => plan && plan.anySide ? "With choice of side"
       : plan && plan.sides && plan.sides.length ? `Served with ${listWords(plan.sides.map((x) => x.toLowerCase()))}` : "";
     // One line for the folded row: "Meatloaf with mashed potatoes · Baked Potato Soup".
-    const summary = (plan) => plan ? r.items.map((it) => {
+    const closedWords = (plan) => (plan.closed === true ? "Closed" : `Closed for ${plan.closed}`);
+    const summary = (plan) => plan && plan.closed ? [closedWords(plan), plan.message].filter(Boolean).join(" · ") : plan ? r.items.map((it) => {
       const text = plan.items[it.key] && plan.items[it.key].today;
       if (!text || !isPlate(it.key)) return text;
       if (plan.anySide) return `${text} with choice of side${plan.defaultSide ? ` (${plan.defaultSide})` : ""}`;
       return plan.sides && plan.sides.length ? `${text} with ${plan.sides.join(", ")}` : text;
-    }).filter(Boolean).join(" · ") : "";
+    }).concat(plan.message || []).filter(Boolean).join(" · ") : "";
+    // Closed that day, why, and a message for the day (Mitch 2026-11-18:
+    // Thanksgiving and Black Friday). A closed day has no plate or soup, and
+    // nothing goes into Square; the message shows on the website, the weekly
+    // post and the signs, closed or not.
+    const closedHtml = (plan) => {
+      const closed = !!(plan && plan.closed);
+      return `<fieldset class="d-sides d-closed">
+        <label class="check"><input type="checkbox" data-field="closed"${closed ? " checked" : ""}><span>Closed this day</span></label>
+        <input type="text" data-field="closedFor" aria-label="Closed for" value="${esc(closed && plan.closed !== true ? plan.closed : "")}" maxlength="60" autocomplete="off"
+          placeholder="Why, if you like: e.g. Thanksgiving"${closed ? "" : " disabled"}>
+        <label class="m-field">Message for the day <small>optional</small>
+          <input type="text" data-field="message" value="${esc((plan && plan.message) || "")}" maxlength="120" autocomplete="off" placeholder="e.g. Happy Thanksgiving!"></label>
+      </fieldset>`;
+    };
     const status = (d) => {
       if (d.date !== r.today) return "";
       if (d.applied && d.applied.at && d.applied.sig !== "clear") return `<p class="d-status good">✓ In Square since ${fmtTime(d.applied.at)}</p>`;
@@ -175,13 +190,14 @@
       const label = (it) => (isPlate(it.key) ? "Main dish" : /soup/i.test(it.key) ? "Soup of the day" : it.name);
       const plate = shown.find((it) => isPlate(it.key));
       const used = moreInUse(d);
-      return `<details class="m-day${isToday ? " today" : ""}" data-date="${d.date}"${isToday ? " open" : ""}>
+      return `<details class="m-day${isToday ? " today" : ""}${plan && plan.closed ? " closed" : ""}" data-date="${d.date}"${isToday ? " open" : ""}>
         <summary>
           <span class="d-date">${isToday ? '<span class="d-tag now">Today</span> ' : ""}${esc(words(d.date, { weekday: "short", month: "short", day: "numeric" }))}${tag}</span>
           <span class="d-what${what ? "" : " none"}">${esc(what || "Nothing planned")}</span>
         </summary>
         <div class="d-body">
           ${status(d)}
+          ${closedHtml(plan)}
           ${ordered.map((it) => {
             // Today: what Square has now, when it has a name in it.
             const name = isToday && r.live && r.live[it.key] ? r.live[it.key] : planned(it).today || "";
@@ -223,6 +239,7 @@
       body: `<details class="m-how"><summary>How this works</summary>
         <p class="m-note">Type the main dish, its sides and the soup for each day, then Save. Each morning the kitchen PC puts that day's specials into Square by itself; saving today puts it in now.</p>
         <p class="m-note">Days saved here go to the website by themselves (the /menu box and the weekly post) after 2pm and at the end of the day. Days the website lists fill in here on their own, so specials put on the website another way show up here too.</p>
+        <p class="m-note">Closed this day (a holiday) takes the day's dishes off and leaves Square alone that day; the reason, if typed, reads "Closed for Thanksgiving" on the website, the weekly post and the signs. A message for the day ("Happy Thanksgiving!") shows there too, closed or not.</p>
         <p class="m-note">More, under each day, has the rest: extra sides, modifiers, the photo, its words and prices. It says what's in use there.</p>
         <p class="m-note">Comes with sets Side 1 and Side 2 on Lunch Special too: each side is picked for the counter already and can be swapped for a deli salad. Choice of side picks the side typed under it ("Tossed Salad"), and the sides sign boxes it; left empty, nothing is picked and the customer picks. Two sides with "or" between ("tossed salad or cooked broccoli") pick nothing, so the counter or the customer picks one.</p>
         </details>
@@ -248,7 +265,11 @@
       const sidesBox = day.querySelector('[data-field="sides"]');
       const sides = any || !sidesBox ? [] : sidesBox.value.split(",").map((x) => x.trim()).filter(Boolean);
       const defBox = day.querySelector('[data-field="default"]');
-      return { items, sides, anySide: any, ...(any && defBox && defBox.value.trim() ? { defaultSide: defBox.value.trim() } : {}) };
+      const closed = !!day.querySelector('[data-field="closed"]:checked');
+      const why = closed ? day.querySelector('[data-field="closedFor"]').value.trim() : "";
+      const message = day.querySelector('[data-field="message"]').value.trim();
+      return { items, sides, anySide: any, ...(any && defBox && defBox.value.trim() ? { defaultSide: defBox.value.trim() } : {}),
+        ...(closed ? { closed: true, ...(why ? { closedFor: why } : {}) } : {}), ...(message ? { message } : {}) };
     };
     const readWords = (day) => (day.querySelector('[data-field="desc"]').value || "").trim();
     const readLists = (day) => [...day.querySelectorAll(".d-chip[data-list]")].map((el) => el.dataset.list);
@@ -313,6 +334,14 @@
         return mark(day);
       }
       if (e.target.matches('[data-field="counter"]')) return mark(e.target.closest(".m-day"));
+      // Closed: the reason box on, and the day's dishes greyed out (they
+      // aren't saved on a closed day).
+      if (e.target.matches('[data-field="closed"]')) {
+        const day = e.target.closest(".m-day");
+        day.querySelector('[data-field="closedFor"]').disabled = !e.target.checked;
+        day.classList.toggle("closed", e.target.checked);
+        return mark(day);
+      }
       if (e.target.type !== "radio") return;
       const day = e.target.closest(".m-day");
       day.querySelector('[data-field="sides"]').disabled = e.target.value === "any";
@@ -329,6 +358,8 @@
       if (!e.target.closest("[data-clear]")) return;
       const day = e.target.closest(".m-day");
       for (const input of day.querySelectorAll('input[type="text"], textarea')) input.value = "";
+      const shut = day.querySelector('[data-field="closed"]');
+      if (shut) { shut.checked = false; day.querySelector('[data-field="closedFor"]').disabled = true; day.classList.remove("closed"); }
       const set = day.querySelector('input[type="radio"][value="set"]');
       if (set) { set.checked = true; day.querySelector('[data-field="sides"]').disabled = false; day.querySelector('[data-field="default"]').disabled = true; }
       for (const box of day.querySelectorAll(".d-photo")) {

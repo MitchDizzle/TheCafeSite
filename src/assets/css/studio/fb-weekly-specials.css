@@ -268,3 +268,8 @@
     font-style: italic;
     color: var(--accent);
 }
+
+/* A day's message under its row ("Happy Thanksgiving!", Mitch 2026-11-18). */
+.wk-message {
+    font-style: italic;
+}
