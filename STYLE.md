@@ -163,7 +163,7 @@ The audience skews older, so these are floors, not targets.
 
 - **Filigree divider:** `partials/studio/filigree.njk`. It takes the colour
   of the text around it.
-- **QR codes:** `src/assets/qr-*.svg` (order, website, Facebook, survey, review).
+- **QR codes:** `src/assets/qr-*.svg` (order, website, menu, Facebook, survey, review).
   They are always **black on white with the white border left on**, because
   scanners need that border. They point at our own short links
   (lvcafetogo.com/order), so a printed code survives a change of ordering

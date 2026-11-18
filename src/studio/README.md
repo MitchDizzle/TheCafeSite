@@ -235,6 +235,9 @@ npx qrcode -o src/assets/qr-facebook.svg -t svg -e H -w 0 "https://www.facebook.
 
 Then strip the background `<rect>` and swap `#000000` for `currentColor`.
 
+`qr-menu.svg` (the specials signs and handout, 2026-11-18) encodes
+`https://lvcafetogo.com/menu`.
+
 `qr-order.svg` (the door sign) encodes `https://lvcafetogo.com/order`, which is
 `src/order.njk`: a redirect to `site.ordering.url`. Printed codes point at our
 own address so that changing the ordering page never strands a sign on the

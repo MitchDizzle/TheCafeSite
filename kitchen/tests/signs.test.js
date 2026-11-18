@@ -123,7 +123,8 @@ test("signs: a closed day makes no special signs, and the week's handout shows i
   assert.match(r.html, /Closed for Thanksgiving/);
   assert.match(r.html, /Happy Thanksgiving!/);
   assert.match(r.html, /Back after the holiday/);
-  assert.equal((r.html.match(/This Week&rsquo;s Specials/g) || []).length, 2, "two copies on the page");
+  assert.equal((r.html.match(/This week&rsquo;s specials/g) || []).length, 2, "two copies on the page");
+  assert.equal((r.html.match(/class="sw-qr"/g) || []).length, 2, "the menu's QR code on each");
   delete plan.days[mon]; delete plan.days[thu];
 });
 

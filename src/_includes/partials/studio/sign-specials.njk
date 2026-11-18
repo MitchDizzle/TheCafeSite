@@ -34,9 +34,11 @@
 <div class="{% if not half %}canvas {% endif %}sign{% if bw %} sign--bw{% endif %}{% if half %} sign--half{% endif %}">
     {% include "partials/studio/sign-mast.njk" %}
 
+    {#- The dates are the headline (Mitch 2026-11-18: which week it is, at a
+        glance); it said "This Week's Specials" over them until then. -#}
     <div class="sign-heading">
-        <h2 class="p-display sign-heading-title ink-teal">This Week&rsquo;s Specials</h2>
-        <p class="p-label sign-heading-sub ink-accent">{{ range }} &middot; from 11am</p>
+        <h2 class="p-display sign-heading-title ink-teal">{{ range }}</h2>
+        <p class="p-label sign-heading-sub ink-accent">This week&rsquo;s specials &middot; from 11am</p>
     </div>
 
     <div class="sw-grid">
@@ -95,6 +97,9 @@
     </div>
 
     <div class="sign-spacer"></div>
+    {#- The sides box, and a QR code to the menu in the bottom right (Mitch
+        2026-11-18), assets/qr-menu.svg: lvcafetogo.com/menu. -#}
+    <div class="sw-foot">
     {%- if deli %}
     <section class="sw-choice">
         <p class="p-display sw-choice-title ink-teal">Sides</p>
@@ -110,4 +115,9 @@
         </ul>
     </section>
     {%- endif %}
+    <div class="sw-qr">
+        <div class="qr" aria-hidden="true">{% inlineSvg "/assets/qr-menu.svg", "", "" %}</div>
+        <p class="p-label sw-qr-label ink-teal">Full menu</p>
+    </div>
+    </div>
 </div>

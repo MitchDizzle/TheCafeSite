@@ -269,6 +269,11 @@ function wordmark() {
   } catch { return '<p class="p-display">The Café</p>'; }
 }
 
+// The QR code to the menu (assets/qr-menu.svg: lvcafetogo.com/menu).
+function menuQr() {
+  try { return fs.readFileSync(path.join(DIR, "..", "src", "assets", "qr-menu.svg"), "utf8").trim(); } catch { return ""; }
+}
+
 // Monday to Sunday of a YYYY-MM-DD date's week.
 function weekOf(date) {
   const d = new Date(`${date}T12:00:00Z`);
@@ -323,12 +328,13 @@ function weekPage(days, { price, includesDrink, soupSide, swapSides = [], soupSi
       <div class="sw-soup"><p class="sw-soup-name ink-teal">${d.soup ? esc(d.soup) : "&mdash;"}</p></div></li>`;
   }).join("");
   const priceLine = price ? `${dollars(price)}${includesDrink ? ", drink included" : ""}` : includesDrink ? "Drink included" : "";
+  const qr = menuQr();
   const choices = [...swapSides.map(esc), ...(soupSide ? ["Cup of the day&rsquo;s soup"] : [])];
   const half = `<div class="sign sign--bw sign--half">
     <header class="sign-title-ink"><div class="wordmark wordmark--ink">${wordmark()}</div></header>
     <div class="sign-heading">
-      <h2 class="p-display sign-heading-title ink-teal">This Week&rsquo;s Specials</h2>
-      <p class="p-label sign-heading-sub ink-accent">${esc(range)} &middot; from 11am</p>
+      <h2 class="p-display sign-heading-title ink-teal">${esc(range)}</h2>
+      <p class="p-label sign-heading-sub ink-accent">This week&rsquo;s specials &middot; from 11am</p>
     </div>
     <div class="sw-grid">
       <div class="sw-cols"><span></span>
@@ -338,9 +344,12 @@ function weekPage(days, { price, includesDrink, soupSide, swapSides = [], soupSi
       <ul class="sw-days">${rows}</ul>
     </div>
     <div class="sign-spacer"></div>
+    <div class="sw-foot">
     ${choices.length ? `<section class="sw-choice"><p class="p-display sw-choice-title ink-teal">Sides</p>
       <p class="sw-choice-note">${days.some((d) => d.anySide) ? "Pick one with &ldquo;choice of side,&rdquo; or swap one in for a side on any special" : "Swap one in for the sides on any special"}</p>
       <ul class="sw-choices">${choices.map((c) => `<li>${c}</li>`).join("")}</ul></section>` : ""}
+    ${qr ? `<div class="sw-qr"><div class="qr" aria-hidden="true">${qr}</div><p class="p-label sw-qr-label ink-teal">Full menu</p></div>` : ""}
+    </div>
   </div>`;
   return `<div class="canvas sign-halves" data-page="week">${half}<div class="sign-cut" aria-hidden="true"></div>${half}</div>`;
 }

@@ -1696,3 +1696,35 @@
 .sw-message {
     font-style: italic;
 }
+
+/* The specials sign's foot: the sides box, and the QR code to the menu in
+   the bottom right (Mitch 2026-11-18). */
+.sw-foot {
+    display: flex;
+    align-items: center;
+    gap: 0.25in;
+}
+
+.sw-foot .sw-choice {
+    flex: 1;
+    min-width: 0;
+}
+
+.sw-qr {
+    flex: 0 0 1.25in;
+    text-align: center;
+}
+
+.sw-qr .qr {
+    padding: 0.06in;
+}
+
+.sw-qr-label {
+    font-size: 0.13in;
+    margin-top: 0.04in;
+}
+
+.sign--half .sw-foot { gap: 0.15in; }
+.sign--half .sw-qr { flex-basis: 0.85in; }
+.sign--half .sw-qr .qr { padding: 0.04in; }
+.sign--half .sw-qr-label { font-size: 0.09in; margin-top: 0.02in; }
