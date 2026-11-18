@@ -405,7 +405,10 @@
 .sg-fridge .check { margin: 0; padding: 0.3rem 0; font-size: 1.05rem; align-items: center; }
 .sg-fridge .check small { color: var(--muted); }
 
-/* A closed day (Mitch 2026-11-18): its dishes greyed out, as they aren't saved. */
-.d-closed { display: grid; gap: 0.4rem; }
+/* A closed day (Mitch 2026-11-18): its dishes and More hidden, as they
+   aren't saved, so the day takes little room. */
+.d-closed { margin: 0 0 0.5rem; }
 .d-closed .check { margin: 0; }
-.m-day.closed .d-item, .m-day.closed .d-more { opacity: 0.4; pointer-events: none; }
+.d-closed-more { display: grid; gap: 0.4rem; margin-top: 0.4rem; }
+.d-closed-more[hidden] { display: none; }
+.m-day.closed .d-item, .m-day.closed .d-more { display: none; }

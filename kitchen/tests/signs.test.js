@@ -126,3 +126,14 @@ test("signs: a closed day makes no special signs, and the week's handout shows i
   assert.equal((r.html.match(/This Week&rsquo;s Specials/g) || []).length, 2, "two copies on the page");
   delete plan.days[mon]; delete plan.days[thu];
 });
+
+test("signs: the week's handout shows a day's price only when it isn't the usual, even before the usual is known", () => {
+  const days = [
+    { date: "2026-11-23", special: "Meatloaf", soup: "", price: 10, soupSizes: [] },
+    { date: "2026-11-24", special: "Ribs", soup: "", price: 12, soupSizes: [] },
+    { date: "2026-11-25", special: "Tacos", soup: "", price: 10, soupSizes: [] },
+  ];
+  const html = signs.weekPage(days, {});
+  assert.equal((html.match(/sw-day-price/g) || []).length, 2, "only Ribs, on both copies");
+  assert.match(html, /sw-day-price ink-accent">\$12/);
+});

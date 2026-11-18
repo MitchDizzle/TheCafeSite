@@ -295,6 +295,16 @@ function weekDays(monday, daily) {
 // The same markup as partials/studio/sign-specials.njk with half: true.
 function weekPage(days, { price, includesDrink, soupSide, swapSides = [], soupSizes = [] } = {}) {
   if (!days.length) return "";
+  // The usual price, at the head of the column; a day's own shows beside
+  // it only when it's different (Mitch 2026-11-18: $10 was on every day,
+  // as a board not yet told the website's usual price had none to compare).
+  // Not known yet: the price most days have.
+  if (!price) {
+    const counts = {};
+    for (const d of days) if (d.price) counts[d.price] = (counts[d.price] || 0) + 1;
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    if (top) price = Number(top[0]);
+  }
   const first = dayWords(days[0].date, { month: "long", day: "numeric" });
   const last = dayWords(days[days.length - 1].date, { month: "long", day: "numeric" });
   const range = first.split(" ")[0] === last.split(" ")[0] ? `${first} – ${last.split(" ")[1]}` : `${first} – ${last}`;

@@ -43,15 +43,22 @@
     // Thanksgiving and Black Friday). A closed day has no plate or soup, and
     // nothing goes into Square; the message shows on the website, the weekly
     // post and the signs, closed or not.
+    // Just the tick until it's ticked (Mitch 2026-11-18: less on the
+    // screen); then the reason and the message open under it. On an open
+    // day the message sits under More instead: the same box, moved.
+    const messageHtml = (plan) => `<label class="m-field d-message">Message for the day <small>optional</small>
+          <input type="text" data-field="message" value="${esc((plan && plan.message) || "")}" maxlength="120" autocomplete="off" placeholder="e.g. Happy Thanksgiving!"></label>`;
     const closedHtml = (plan) => {
       const closed = !!(plan && plan.closed);
-      return `<fieldset class="d-sides d-closed">
+      return `<div class="d-closed">
         <label class="check"><input type="checkbox" data-field="closed"${closed ? " checked" : ""}><span>Closed this day</span></label>
-        <input type="text" data-field="closedFor" aria-label="Closed for" value="${esc(closed && plan.closed !== true ? plan.closed : "")}" maxlength="60" autocomplete="off"
-          placeholder="Why, if you like: e.g. Thanksgiving"${closed ? "" : " disabled"}>
-        <label class="m-field">Message for the day <small>optional</small>
-          <input type="text" data-field="message" value="${esc((plan && plan.message) || "")}" maxlength="120" autocomplete="off" placeholder="e.g. Happy Thanksgiving!"></label>
-      </fieldset>`;
+        <div class="d-closed-more"${closed ? "" : " hidden"}>
+          <label class="m-field">Closed for <small>optional</small>
+            <input type="text" data-field="closedFor" value="${esc(closed && plan.closed !== true ? plan.closed : "")}" maxlength="60" autocomplete="off"
+              placeholder="e.g. Thanksgiving"></label>
+          ${closed ? messageHtml(plan) : ""}
+        </div>
+      </div>`;
     };
     const status = (d) => {
       if (d.date !== r.today) return "";
@@ -174,6 +181,7 @@
       if (((d.mods && d.mods.words) || []).length) used.push("specials modifiers");
       if (Object.values(d.photoPick || {}).some(Boolean)) used.push("photo");
       if (d.note && d.note.description) used.push("photo words");
+      if (plan && plan.message && !plan.closed) used.push("message");
       // A website day always carries the website's price; only one typed here counts.
       if (plan && plan.from === "front" && Object.values(plan.items || {}).some((it) => Object.values(it.prices || {}).some(Boolean))) used.push("price");
       return used;
@@ -209,8 +217,9 @@
             </div>`;
           }).join("")}
           <details class="d-more"${used.length ? " data-used" : ""}>
-            <summary>More <small>${used.length ? esc(`in use: ${used.join(", ")}`) : "extra sides, modifiers, photo, prices"}</small></summary>
+            <summary>More <small>${used.length ? esc(`in use: ${used.join(", ")}`) : "message, extra sides, modifiers, photo, prices"}</small></summary>
             <div class="d-more-body">
+              <div class="d-message-home">${plan && plan.closed ? "" : messageHtml(plan)}</div>
               ${plate ? extrasHtml(d) + presetsHtml(d) + modsHtml(d) : ""}
               ${photos.length ? ordered.map((it) => photoHtml(d, it, label(it))).join("") : ""}
               <label class="m-field">Words under the photo, for Photo post
@@ -338,7 +347,11 @@
       // aren't saved on a closed day).
       if (e.target.matches('[data-field="closed"]')) {
         const day = e.target.closest(".m-day");
-        day.querySelector('[data-field="closedFor"]').disabled = !e.target.checked;
+        const more = day.querySelector(".d-closed-more");
+        more.hidden = !e.target.checked;
+        // The message goes with it: under the tick on a closed day, under More on an open one.
+        const msg = day.querySelector(".d-message");
+        (e.target.checked ? more : day.querySelector(".d-message-home")).append(msg);
         day.classList.toggle("closed", e.target.checked);
         return mark(day);
       }
@@ -359,7 +372,12 @@
       const day = e.target.closest(".m-day");
       for (const input of day.querySelectorAll('input[type="text"], textarea')) input.value = "";
       const shut = day.querySelector('[data-field="closed"]');
-      if (shut) { shut.checked = false; day.querySelector('[data-field="closedFor"]').disabled = true; day.classList.remove("closed"); }
+      if (shut) {
+        shut.checked = false;
+        day.querySelector(".d-closed-more").hidden = true;
+        day.querySelector(".d-message-home").append(day.querySelector(".d-message"));
+        day.classList.remove("closed");
+      }
       const set = day.querySelector('input[type="radio"][value="set"]');
       if (set) { set.checked = true; day.querySelector('[data-field="sides"]').disabled = false; day.querySelector('[data-field="default"]').disabled = true; }
       for (const box of day.querySelectorAll(".d-photo")) {
