@@ -479,7 +479,8 @@ async function handle(req, res) {
   }
   // Manage -> Signs, behind the PIN: the day's counter signs as letter pages
   // to show and print (lib/signs.js). `fridge` is the desserts ticked for
-  // the fridge sign, kept before the pages are made.
+  // the fridge sign, kept before the pages are made; `pages` is which signs
+  // to make (none: just the days to pick from).
   if (req.method === "POST" && url.pathname === "/api/front-signs") {
     const body = await readBody(req);
     const refused = pinRefusal(body.pin);
@@ -487,7 +488,7 @@ async function handle(req, res) {
     const today = localDate();
     const date = /^\d{4}-\d{2}-\d{2}$/.test(body.date || "") && body.date >= today ? body.date : today;
     try {
-      return send(res, 200, { ok: true, ...(await require("./signs").buildSigns(date, Array.isArray(body.fridge) ? body.fridge : null)) });
+      return send(res, 200, { ok: true, ...(await require("./signs").buildSigns(date, Array.isArray(body.fridge) ? body.fridge : null, Array.isArray(body.pages) ? body.pages : undefined)) });
     } catch (err) {
       console.error(`Signs: ${err.message}`);
       return send(res, 200, { ok: false, message: `The signs couldn't be made: ${err.message}` });

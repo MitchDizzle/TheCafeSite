@@ -94,3 +94,16 @@ test("signs: a fridge file from before day-only ticks follows Square and the new
   assert.doesNotMatch(signs.fridgePage([{ name: "Carrot Cake", price: 3, lists: [], on: true, treat: false }]), /dc-caution/, "caution \"\" drops the panel");
   fs.rmSync(file, { force: true });
 });
+
+test("signs: only the pages asked for, and none just answers the days", async () => {
+  plan.days[today] = day("Meatloaf", "Potato Cheese", { sides: ["Mashed Potatoes", "Corn"] });
+  const none = await signs.buildSigns(today, null, []);
+  assert.deepEqual(none.has, { sides: false, day: false, fridge: false });
+  assert.equal(none.html, "");
+  assert.deepEqual(none.notes, []);
+  assert.ok(none.days.includes(today));
+  const one = await signs.buildSigns(today, null, ["day"]);
+  assert.deepEqual(one.has, { sides: false, day: true, fridge: false });
+  assert.deepEqual(one.made, ["day"]);
+  assert.equal((one.html.match(/data-page="/g) || []).length - 3, 1, "one page (and the three rules that hide one)");
+});

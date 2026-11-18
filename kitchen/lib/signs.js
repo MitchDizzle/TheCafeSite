@@ -361,36 +361,47 @@ ${pages.join("\n")}
 }
 
 // Everything Manage -> Signs shows for `date`: the pages, what couldn't be
-// made and why, and the fridge's rows to tick.
-async function buildSigns(date, fridgeOn) {
+// made and why, and the fridge's rows to tick. `want` is which pages to make
+// ("sides", "day", "fridge"; all three when not given): only what those need
+// is read from Square, so an empty list just answers which days there are
+// (Mitch 2026-11-18: pick the signs before waiting for them).
+const ALL_PAGES = ["sides", "day", "fridge"];
+async function buildSigns(date, fridgeOn, want = ALL_PAGES) {
   const today = localDate();
   const notes = [];
+  const wants = new Set((Array.isArray(want) ? want : ALL_PAGES).filter((p) => ALL_PAGES.includes(p)));
   let daily = [];
-  try { daily = await require("./specials/daily").dailyItems(); } catch (err) {
-    notes.push(`Square couldn't be read (${err.message}), so the soup has no prices.`);
+  if (wants.has("sides") || wants.has("day")) {
+    try { daily = await require("./specials/daily").dailyItems(); } catch (err) {
+      notes.push(`Square couldn't be read (${err.message}), so the special and soup have no prices.`);
+    }
   }
   let rows = null;
-  try {
-    const items = await require("./desserts").dessertItems();
-    rows = fridgeRows(items);
-    if (fridgeOn) { saveFridge(fridgeOn, rows); rows = fridgeRows(items); }
-  } catch (err) {
-    notes.push(`The desserts couldn't be read from Square (${err.message}), so there's no fridge sign.`);
+  if (wants.has("fridge")) {
+    try {
+      const items = await require("./desserts").dessertItems();
+      rows = fridgeRows(items);
+      if (fridgeOn) { saveFridge(fridgeOn, rows); rows = fridgeRows(items); }
+    } catch (err) {
+      notes.push(`The desserts couldn't be read from Square (${err.message}), so there's no fridge sign.`);
+    }
   }
   const d = signDay(date, daily, today);
   const pages = [];
   const has = { sides: false, day: false, fridge: false };
   const when = date === today ? "today" : "that day";
-  if (!d.special && !d.soup) notes.push(`No special or soup is set for ${when}. Set it in Specials, then open Signs again.`);
-  if (d.special && (d.sides || d.anySide)) { pages.push(sidesPage(d, { swapSides: plan.swapSides, soupSide: plan.soupSide })); has.sides = true; }
-  else if (d.special) notes.push(`${d.special} has no sides in Specials, so there's no sides sign.`);
-  if (d.special || d.soup) { pages.push(dayPage(d, { includesDrink: plan.includesDrink })); has.day = true; }
+  if ((wants.has("sides") || wants.has("day")) && !d.special && !d.soup) notes.push(`No special or soup is set for ${when}. Set it in Specials, then open Signs again.`);
+  if (wants.has("sides")) {
+    if (d.special && (d.sides || d.anySide)) { pages.push(sidesPage(d, { swapSides: plan.swapSides, soupSide: plan.soupSide })); has.sides = true; }
+    else if (d.special) notes.push(`${d.special} has no sides in Specials, so there's no sides sign.`);
+  }
+  if (wants.has("day") && (d.special || d.soup)) { pages.push(dayPage(d, { includesDrink: plan.includesDrink })); has.day = true; }
   if (rows && rows.some((r) => r.on)) { pages.push(fridgePage(rows)); has.fridge = true; }
   else if (rows) notes.push("No dessert is ticked, so there's no fridge sign.");
   // The days to pick from: today and the next two with something planned.
   const days = [today, ...Object.keys(plan.days).filter((x) => x > today).sort().slice(0, 2)];
   return {
-    date, today, days, has, notes,
+    date, today, days, has, notes, made: [...wants],
     special: d.special, soup: d.soup,
     fridge: (rows || []).map(({ key, name, price, out, on, treat }) => ({ key, name, price, out, on, treat })),
     html: pages.length ? renderHtml(pages) : "",
