@@ -137,4 +137,8 @@ test("signs: the week's handout shows a day's price only when it isn't the usual
   const html = signs.weekPage(days, {});
   assert.equal((html.match(/sw-day-price/g) || []).length, 2, "only Ribs, on both copies");
   assert.match(html, /sw-day-price ink-accent">\$12/);
+  // Square's prices are text ("10.00"), the website's usual price a number.
+  const text = days.map((d) => ({ ...d, price: d.price.toFixed(2) }));
+  assert.equal((signs.weekPage(text, { price: 10 }).match(/sw-day-price/g) || []).length, 2, "\"10.00\" is the usual $10");
+  assert.equal((signs.weekPage(text, {}).match(/sw-day-price/g) || []).length, 2, "and so is the most common one");
 });

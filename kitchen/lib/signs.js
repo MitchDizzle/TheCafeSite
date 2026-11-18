@@ -323,7 +323,7 @@ function weekPage(days, { price, includesDrink, soupSide, swapSides = [], soupSi
     }
     const sides = caption.specialSides(d, true);
     return `<li class="sw-row">${dayCell(d)}
-      <div><p class="p-display sw-special ink-teal">${esc(d.special || "")}${d.price && d.price !== price ? ` <span class="sw-day-price ink-accent">${dollars(d.price)}</span>` : ""}</p>
+      <div><p class="p-display sw-special ink-teal">${esc(d.special || "")}${d.price && Number(d.price) !== Number(price) ? ` <span class="sw-day-price ink-accent">${dollars(d.price)}</span>` : ""}</p>
         ${sides ? `<p class="sw-sides">${esc(sides)}</p>` : ""}${message(d)}</div>
       <div class="sw-soup"><p class="sw-soup-name ink-teal">${d.soup ? esc(d.soup) : "&mdash;"}</p></div></li>`;
   }).join("");
