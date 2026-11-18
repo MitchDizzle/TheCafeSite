@@ -506,7 +506,7 @@ If the PC was off at 2:10, or Google didn't answer, it goes as soon as it can: t
 
 ## Signs (Manage on the front page)
 
-**The day's counter signs, ready to print** (client 2026-11-11: they were made by hand on the website every morning). **Manage → Signs** shows three letter pages, as they print, and **Print** sends them to any printer (on the PC, Chrome's print):
+**The day's counter signs, ready to print** (client 2026-11-11: they were made by hand on the website every morning). **Manage → Signs** first asks which day and which signs, remembered on each device, and **Make signs** makes only those (Mitch 2026-11-18: no wait for signs not needed; **Change signs** goes back). Besides the three day signs below there's **Week's specials, two to a page**: this week's or next week's specials as the website's `sign-specials-half-bw` handout, to cut in half (Mitch 2026-11-18). They show as letter pages, as they print, and **Print** sends them to any printer (on the PC, Chrome's print):
 
 - **Special sides** (black & white): the plate's sides in boxes ("comes with both", or "one side, pick from" for a side written with "or"), then the sides to swap in: the day's extra sides marked "today only", the Deli Salads, a cup of the soup. A choice-of-side day lists the sides to pick from; a plate that is one of two shows the two and its breads. A plate with no sides has no sides sign.
 - **Special & soup**: the plate with its sides and "Includes a drink", and the soup with its Cup / Bowl prices and its note. Coloured type, light on ink; tick **Special & soup in black & white** for black ink only.
