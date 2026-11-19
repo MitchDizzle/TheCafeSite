@@ -9,19 +9,29 @@ pageCss: "/assets/css/studio/fb-day-special.css"
 # fb-macho-nachos.*): the day's plate and a dessert, a card each. For another
 # day, change postDate and the photos; the rest comes from specials.json and
 # desserts.json, and the caption (fb-day-special.11tydata.js) reads the same.
-postDate: "2026-11-06"
-dessert: "Cream Puff"
+postDate: "2026-11-19"
+# Empty: no dessert card, and the caption names none.
+dessert: ""
+# A second card in place of the dessert (Mitch 2026-11-19: the Twice Baked
+# Potato Casserole as a today-only swap for a side). Leave empty for the
+# dessert card.
+swapCard:
+  label: "Today only"
+  name: "Twice Baked Potato Casserole"
+  priceLine: "Swap it in for a side"
+  detail: "In place of the mac & cheese or the baked beans"
+  photo: "/assets/studio/twice-baked-potato-casserole.jpg"
 # The sides as the post says them, when they aren't what specials.json says
 # (2026-11-06: carrots; corn until that morning). Leave empty to use the day's.
-sidesWords: "mashed potatoes, brown gravy and carrots"
+sidesWords: "mac & cheese, baked beans and cornbread"
 # Another line for the caption only, after the dessert (Mitch 2026-11-05: the
 # cookies go in the words, not the picture, so the picture sells the plate).
-captionExtra: "New in the dessert fridge: brown butter Triple Chocolate Chip cookies, baked away from gluten, with no food coloring. 2 for $1.75."
+captionExtra: "Today only: swap either side for our Twice Baked Potato Casserole."
 # Mitch's photos, cropped to the cards' shape and stripped of camera data.
-# The meatloaf is from 2026-10-09: the old specials sign behind it and the
-# green beans are blurred, and "carrots" written over them. Without a file,
-# that card shows its words only.
-platePhoto: "/assets/studio/meatloaf-carrots.jpg"
+# The ribs are from 2026-10-05 (bbq-ribs.jpg, cropped); the casserole is cut
+# from the pork tenderloin photo of 2026-10-27. Without a file, that card
+# shows its words only.
+platePhoto: "/assets/studio/bbq-ribs-card.jpg"
 dessertPhoto: "/assets/studio/cream-puff.jpg"
 
 tags: studio
@@ -74,6 +84,23 @@ studioOrder: 25
         </section>
 
         {#- The photo on the other side, so the two rows zig-zag. #}
+        {%- if swapCard and swapCard.name %}
+        <section class="mn-card mn-card--flip">
+            {%- if swapCard.photo | hasAsset %}
+            <img class="mn-photo" src="{{ swapCard.photo }}" alt="">
+            {%- endif %}
+            <div class="mn-words">
+                <p class="p-label mn-label">{{ swapCard.label }}</p>
+                <h2 class="p-display mn-name">{{ swapCard.name }}</h2>
+                {%- if swapCard.priceLine %}
+                <p class="p-display-italic mn-price">{{ swapCard.priceLine }}</p>
+                {%- endif %}
+                {%- if swapCard.detail %}
+                <p class="p-body mn-detail">{{ swapCard.detail }}</p>
+                {%- endif %}
+            </div>
+        </section>
+        {%- else %}
         <section class="mn-card mn-card--flip">
             {%- if dessertPhoto | hasAsset %}
             <img class="mn-photo" src="{{ dessertPhoto }}" alt="">
@@ -85,6 +112,7 @@ studioOrder: 25
                 <p class="p-body mn-detail">{% if sweet.kinds %}{{ sweet.kinds | capitalize }}, while{% else %}While{% endif %} they last</p>
             </div>
         </section>
+        {%- endif %}
     </div>
 
     <footer class="mn-foot">
