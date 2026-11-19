@@ -136,6 +136,17 @@ function mockOrders() {
     fulfillments: [{ type: "PICKUP", state: "PROPOSED", pickup_details: { pickup_at: at(15), recipient: { display_name: "Dee" } } }],
     line_items: [li(2, "Iced Tea / Fountain Drink"), li(1, "Chips", { variation_name: "BBQ" })],
   });
+  // An online pickup 40 minutes off: in the WAIT UNTIL row, and on the
+  // front with Send to kitchen now, for a customer who comes in early.
+  orders.push({
+    id: "MOCKONLINEEARLY",
+    state: "OPEN",
+    created_at: at(-20),
+    source: { name: "Ordering Profile - Web" },
+    tenders: [{ id: "MOCKTEND9", type: "CARD" }],
+    fulfillments: [{ type: "PICKUP", state: "PROPOSED", pickup_details: { pickup_at: at(40), recipient: { display_name: "Jo Early" } } }],
+    line_items: [li(1, "Turkey Club", { variation_name: "Wheat" }), li(1, "Soup of the Day", { variation_name: "Cup" })],
+  });
   // An online order the front already handed over: must NOT show.
   orders.push({
     id: "MOCKONLINEDONE7",

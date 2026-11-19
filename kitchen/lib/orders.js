@@ -239,7 +239,8 @@ function frontSnapshot() {
   const orders = live.all
     .filter((t) => !frontHiddenReason(t, now))
     // holdUntil is cleared at once for one sent to the kitchen, not at the next poll of Square.
-    .map((t) => ({ ...t, holdUntil: sentNow[t.id] ? null : t.holdUntil, readyAt: readyAt(t), platesDone: platesDone[t.id] || null, autoSquare: !!cfg.squareStatus && !t.demo, pinned: pinned[t.id] || null }))
+    // waitUntil: not on the kitchen board yet (a pickup in the WAIT UNTIL row), for Send to kitchen now.
+    .map((t) => ({ ...t, holdUntil: sentNow[t.id] ? null : t.holdUntil, waitUntil: sentNow[t.id] ? null : waitUntil(t, now), readyAt: readyAt(t), platesDone: platesDone[t.id] || null, autoSquare: !!cfg.squareStatus && !t.demo, pinned: pinned[t.id] || null }))
     .sort((a, b) => {
       if (!!a.readyAt !== !!b.readyAt) return a.readyAt ? -1 : 1;
       if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;

@@ -354,9 +354,10 @@
   }
   .cancel-unpaid:hover { background: #FBE3E1; }
 
-  /* DoorDash waiting for its Dasher: not on the kitchen board yet. Says why
-     and when it goes on by itself, with a button for when the Dasher (or the
-     kitchen) can't wait. Teal, not red: nothing is wrong. */
+  /* Not on the kitchen board yet (DoorDash waiting for its Dasher, or a
+     pickup in the WAIT UNTIL row). Says why and when it goes on by itself,
+     with a button for when the Dasher or the customer is here early. Teal,
+     not red: nothing is wrong. */
   .dasher-band { background: #E3EEF1; }
   .dasher-band p { margin: 0 0 0.45rem; font-weight: 700; color: var(--teal-dark); }
   .dasher-band small { display: block; font-weight: 400; font-size: 0.9rem; color: var(--text); margin-top: 0.15rem; }
@@ -567,9 +568,14 @@
     if (bagLeft) bits.push(`<b class="brief-due">check the bag: ${bagLeft} left</b>`);
     if (o.unpaid) bits.push(`<b class="brief-due">not paid${o.due ? ` ($${o.due.toFixed(2)})` : ""}</b>`);
     if (o.holdUntil && Date.now() < Date.parse(o.holdUntil)) bits.push("waiting for its Dasher");
+    else if (notOnBoard(o)) bits.push(`on the kitchen board at ${fmtTime(o.waitUntil)}`);
     if (o.note) bits.push("has a note");
     return `<div class="brief">${bits.join(" · ")}. Tap to show it all.</div>`;
   }
+
+  // A pickup (or phone order for later) still in the kitchen board's WAIT
+  // UNTIL row: the front can send it on early (Mitch 2026-11-19).
+  const notOnBoard = (o) => !o.readyAt && !!o.waitUntil && Date.now() < Date.parse(o.waitUntil);
 
   // A DoorDash order's bag check: how many lines aren't ticked yet.
   const bagList = (o) => o.bagCheck || [];
@@ -613,6 +619,10 @@
         ${o.holdUntil && Date.now() < Date.parse(o.holdUntil) ? `<div class="section dasher-band">
           <p>Not on the kitchen board yet: DoorDash hasn't named a Dasher.
           <small>It goes on by itself when they do, or at ${fmtTime(o.holdUntil)} at the latest. Dasher here already, or want it started? Send it now.</small></p>
+          <button class="send-kitchen" type="button">Send to kitchen now</button></div>`
+        : notOnBoard(o) ? `<div class="section dasher-band">
+          <p>Not on the kitchen board yet: it goes on at ${fmtTime(o.waitUntil)}.
+          <small>Customer here early? Send it now and the kitchen starts it, timed from now.</small></p>
           <button class="send-kitchen" type="button">Send to kitchen now</button></div>` : ""}
         <div class="section">
           <div class="label">From the kitchen</div>
@@ -778,12 +788,12 @@
         text = `Plates out ${fmtTime(o.platesDone)} · to go cooking`;
       } else if (o.holdUntil && now < Date.parse(o.holdUntil)) {
         text = "Not in the kitchen yet";
-      } else if (o.dueAt) {
+      } else if (o.dueAt && !o.hereEarly) {
         const until = Date.parse(o.dueAt) - now;
         late = until < 0;
         text = late ? `${mins(-until)} min late` : `Due in ${mins(until)} min`;
       } else {
-        text = `Cooking ${mins(now - Date.parse(o.boardAt || o.createdAt))} min`;
+        text = `Cooking ${mins(now - Date.parse(o.countFrom || o.boardAt || o.createdAt))} min`;
       }
       el.textContent = text;
       el.classList.toggle("late", late);
@@ -928,7 +938,7 @@
     if (e.target.closest(".send-kitchen")) {
       // Onto the kitchen board; the card stays here, cooking.
       const o = orders.find((x) => x.id === id);
-      if (o) o.holdUntil = null;
+      if (o) { o.holdUntil = null; o.waitUntil = null; }
       render();
       send("/api/send-to-kitchen", { id });
       return;

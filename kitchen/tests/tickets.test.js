@@ -658,3 +658,20 @@ test("Undo on the kitchen board brings a handed-off order back on the front page
   assert.ok(keepOnFront[t.id], "and it stays until handed off by hand");
   assert.equal(frontHiddenReason(t, Date.now()), null);
 });
+
+test("a pickup sent to the kitchen early from the front: on the board now, timed from now", () => {
+  // Mitch 2026-11-19: the customer is here before their pickup time.
+  const { sentNow } = require("../lib/state");
+  const o = online({ id: "PICKUPEARLY" }, { pickup_details: { pickup_at: minutesFromNow(45), schedule_type: "SCHEDULED", recipient: { display_name: "Pat" } } });
+  const before = ticketOf(o);
+  assert.ok(hiddenReason(before, Date.now()), "not on the board yet");
+  assert.ok(waitUntil(before, Date.now()), "in the WAIT UNTIL row");
+  assert.equal(before.countFrom, null);
+  sentNow[o.id] = new Date().toISOString();
+  const t = ticketOf(o);
+  assert.equal(hiddenReason(t, Date.now()), null, "on the kitchen board");
+  assert.equal(waitUntil(t, Date.now()), null);
+  assert.equal(t.hereEarly, true);
+  assert.equal(t.countFrom, sentNow[o.id], "counts up from when it was sent");
+  delete sentNow[o.id];
+});

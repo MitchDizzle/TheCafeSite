@@ -273,7 +273,11 @@ function toTicket(order) {
   // dasherWaitMinutes, or sent from the front) is timed from then, like a
   // counter sale, not against the Dasher's time (client 2026-11-09: one came
   // up already "11 min late"). One scheduled for later still goes by its time.
-  const countFrom = doordash && (forDasher || !!sentNow[order.id]) ? boardAt : null;
+  // A pickup the front sent early (the customer is here before their time,
+  // Mitch 2026-11-19) counts up from when it was sent too: they're waiting
+  // now, so its pickup time no longer says how late it is.
+  const hereEarly = !doordash && !!dueAt && !!sentNow[order.id];
+  const countFrom = (doordash && (forDasher || !!sentNow[order.id])) || hereEarly ? boardAt : null;
   // To go or for here. The Restaurants POS records the dining option as the
   // fulfillment: "To Go" is PICKUP, "For Here" is IN_STORE. To Go is the
   // POS default, so a table number wins: someone sitting down with a number
@@ -312,6 +316,7 @@ function toTicket(order) {
     boardAt,
     leadMinutes: leadMins,
     countFrom,
+    hereEarly,
     holdUntil: forDasher && !courier && !sentNow[order.id] && Date.parse(boardAt) > Date.now() ? boardAt : null,
     courier,
     items,
@@ -337,7 +342,8 @@ function toTicket(order) {
 // one due later: it goes on by its time, whatever its Dasher does (client
 // 2026-10-28: one placed at 10:20 for a 12:45 Dasher said "wait until
 // 10:35"). forDasher: the Dasher rule is what sets the time. One the front
-// sent to the kitchen (Send to kitchen now) goes on when it was sent.
+// sent to the kitchen (Send to kitchen now: a Dasher, or a pickup customer,
+// here early) goes on when it was sent.
 const courierSeen = new Map(); // order id -> when the board first saw its Dasher
 function onBoardAt(order, { dueAt, doordash, courier, leadMins }) {
   const created = Date.parse(order.created_at);

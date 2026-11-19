@@ -225,15 +225,16 @@ async function handle(req, res) {
     saveState();
     return send(res, 200, frontSnapshot());
   }
-  // A DoorDash order still waiting for its Dasher, onto the kitchen board
-  // now: the Dasher is at the counter before DoorDash has named them in
-  // Square (client 2026-11-03), or the kitchen wants to start it anyway.
+  // An order not on the kitchen board yet, onto it now: a DoorDash order
+  // whose Dasher is at the counter before DoorDash has named them in Square
+  // (client 2026-11-03), or a pickup whose customer is here early (Mitch
+  // 2026-11-19), or the kitchen wants to start it anyway.
   if (req.method === "POST" && url.pathname === "/api/send-to-kitchen") {
     const { id } = await readBody(req);
     if (typeof id !== "string" || !id) return send(res, 400, { error: "id required" });
     sentNow[id] = new Date().toISOString();
     saveState();
-    console.log(`Front page: DoorDash order ...${id.slice(-4)} sent to the kitchen before its Dasher (${new Date().toLocaleTimeString()}).`);
+    console.log(`Front page: order ...${id.slice(-4)} sent to the kitchen early (${new Date().toLocaleTimeString()}).`);
     return send(res, 200, frontSnapshot());
   }
   // Desserts, behind the PIN: read (photos, kinds and counts, options), save
