@@ -752,3 +752,28 @@
 .menu-cat--build_sandwich .menu-item + .menu-item {
     margin-top: 0;
 }
+
+/* ── The breakfast flap, bigger where it counts (Mitch 2026-11-19) ──
+   The flap had the most white space, all of it in the 0.5in top margin and
+   the gaps between categories. Taking some of that back pays for the
+   omelet & burrito fillings set upright and bold (they were italic and
+   overlooked) and a larger consumer advisory. The bottom margin stays at
+   about the quarter inch the legend already ended at, so nothing new goes
+   into a printer's unprintable edge. Re-proof the PNG after changing any
+   of these: the panel clips. */
+.panel-flap {
+    padding-top: 0.35in;
+    padding-bottom: 0.25in;
+    gap: 0.14in;
+}
+
+.menu-cat--breakfast .menu-cat-note {
+    font-size: 0.112in;
+    font-style: normal;
+    font-weight: 700;
+    opacity: 1;
+}
+
+.panel-flap .diet-legend-advisory {
+    font-size: 0.098in;
+}

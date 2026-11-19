@@ -87,8 +87,8 @@ default in the description". (`defaultBread` in `menu.json`.)
 | **Bun** | Kaiser (default), plus the Bread list | Pick 1, optional | The 7 burgers |
 | **Wrap** | White Tortilla, Spinach Tortilla, Tomato Tortilla | Pick 1, required | All 7 wraps. "White", not "Flour (white)" (client 2026-10-12) |
 | **BYO Meats & Salads** | Turkey, Ham, Bacon, Curry Chicken Salad, Walnut Tuna Salad, Egg Salad | Pick 1–3, required | Build Your Own Sandwich (staff match the count to the 1/2/3-meat variation; Square can't tie them together) |
-| **BYO Cheese** | American, Pepper Jack, Colby Jack, Provolone, Swiss | Pick 1, required | Build Your Own Sandwich |
-| **BYO Bread** | same as Bread | Pick 1, required | Build Your Own Sandwich |
+| **BYO Cheese** | American, Pepper Jack, Provolone, Swiss (Colby Jack off 2026-11-19) | Pick 1, required | Build Your Own Sandwich |
+| **BYO Bread** | Hoagie, Kaiser, Croissant, Wheat, White, Rye (Bread without 12 Grain, 2026-11-19) | Pick 1, required | Build Your Own Sandwich |
 | **Breakfast Fillings** | Bacon, Sausage, Ham, Cheese, Onion, Bell Pepper, Tomato, Jalapeno, Potato, Mushroom, Olives (bell pepper added 2026-10-12) | Pick any | Burrito, Omelet |
 | **Sour Cream or Salsa** | Sour cream, Salsa | Pick 1 | Burrito, Omelet |
 | **Breakfast Meat** | Bacon, Sausage, Ham | Pick 1, required | Breakfast Sandwich, Big Breakfast |

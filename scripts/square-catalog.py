@@ -203,11 +203,12 @@ for i in cats["drinks"]["items"]:
         # Tea / Fountain Drink before). Also counts which one sells.
         add("Iced Tea / Fountain Drink", D, [(v, i["price"]) for v in i["squareChoices"]],
             "Sweet or unsweet tea, or a Pepsi fountain drink.")
-    elif i["name"] == "Coffee":
-        # Regular and Decaf variations (squareChoices), so an online or
-        # DoorDash order says which pot (client 2026-11-09). Sugar and
-        # creamer are the Sugar & Creamer modifier list (square/README.md).
-        add("Coffee", D, [(v, i["price"]) for v in i["squareChoices"]], "Regular or decaf.")
+    elif i["name"] == "Coffee / Hot Tea":
+        # Regular, Decaf and Hot Tea variations (squareChoices), so an online
+        # or DoorDash order says which pot (client 2026-11-09; Hot Tea, Mitch
+        # 2026-11-19). Sugar and creamer are the Sugar & Creamer modifier
+        # list (square/README.md).
+        add(i["name"], D, [(v, i["price"]) for v in i["squareChoices"]], "Regular or decaf coffee, or hot tea.")
     elif i["name"] == "Bottle Juice":
         # One item; the flavour is the Juice modifier list in Square (made by
         # hand, see square/README.md), as the till was set up on 2026-10-05.
