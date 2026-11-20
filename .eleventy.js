@@ -78,8 +78,10 @@ module.exports = function (eleventyConfig) {
   // "Monday, October 5". Read as a calendar date in UTC on purpose: parsed in
   // the build machine's local zone, midnight on the 5th can land on the 4th
   // and every specials label would be a day early. Formats: "weekday"
-  // (Monday), "short" (Mon), "monthDay" (October 5), "long" (both).
+  // (Monday), "short" (Mon), "monthDay" (October 5), "long" (both),
+  // "medium" (Monday, Oct 5: the closed-days line, where room is short).
   const DAY_FORMATS = {
+    medium: { weekday: "long", month: "short", day: "numeric" },
     weekday: { weekday: "long" },
     short: { weekday: "short" },
     monthDay: { month: "long", day: "numeric" },

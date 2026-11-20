@@ -4,21 +4,24 @@
     closure is hidden, never shown. -#}
 {#- Also a day marked closed in specials.json (on the kitchen board, Mitch
     2026-11-18) that site.closedDays doesn't already have. -#}
-{%- set siteClosed = site.closedDays or [] %}
-{%- set boardClosed = [] %}
-{%- set siteDates = [] %}{% for c in siteClosed %}{% set _ = siteDates.push(c.date) %}{% endfor %}
-{%- for d in (specials.days or []) %}{% if d.closed and not (d.date in siteDates) %}{% set _ = boardClosed.push(d) %}{% endif %}{% endfor %}
-{%- if siteClosed.length or boardClosed.length %}
-{%- for c in siteClosed %}
-    <div class="construction-banner" role="note" data-closed-day="{{ c.date }}" hidden>
-        Closed for {{ c.name }}, <span style="white-space:nowrap">{{ c.date | dayDate("long") }}</span>
-    </div>
+{#- One line for every closed day in the fortnight, not a banner each (Mitch
+    2026-11-20: Thanksgiving and Black Friday as two banners took half a
+    phone screen and pushed the home page past the fold): "Closed Thursday,
+    Nov 26 for Thanksgiving & Friday, Nov 27 for Black Friday". -#}
+{%- set closedList = [] %}
+{%- set siteDates = [] %}
+{%- for c in (site.closedDays or []) %}
+    {%- set _ = siteDates.push(c.date) %}
+    {%- set _ = closedList.push({ date: c.date, why: c.name }) %}
 {%- endfor %}
-{%- for d in boardClosed %}
-    <div class="construction-banner" role="note" data-closed-day="{{ d.date }}" hidden>
-        {{ d | closedText }}, <span style="white-space:nowrap">{{ d.date | dayDate("long") }}</span>
+{%- for d in (specials.days or []) %}{% if d.closed and not (d.date in siteDates) %}
+    {%- set why = d | closedText | replace("Closed for ", "") %}
+    {%- set _ = closedList.push({ date: d.date, why: ("" if why == "Closed" else why) }) %}
+{%- endif %}{% endfor %}
+{%- if closedList.length %}
+    <div class="construction-banner" role="note" data-closed-notice hidden>Closed
+        {%- for c in closedList | sort(false, true, "date") %}<span data-closed-day="{{ c.date }}" hidden><span data-closed-sep> &amp;</span> <span style="white-space:nowrap">{{ c.date | dayDate("medium") }}</span>{% if c.why %} for {{ c.why }}{% endif %}</span>{% endfor -%}
     </div>
-{%- endfor %}
     <script>
         (function () {
             var central = function (ms) {
@@ -26,9 +29,14 @@
             };
             var today = central(Date.now());
             var soon = central(Date.now() + 14 * 864e5);
+            var shown = 0;
             document.querySelectorAll('[data-closed-day]').forEach(function (el) {
                 var day = el.getAttribute('data-closed-day');
                 el.hidden = day < today || day > soon;
+                if (!el.hidden) el.querySelector('[data-closed-sep]').hidden = shown++ === 0;
+            });
+            document.querySelectorAll('[data-closed-notice]').forEach(function (el) {
+                el.hidden = shown === 0;
             });
         })();
     </script>
