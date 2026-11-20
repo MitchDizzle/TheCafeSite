@@ -274,7 +274,7 @@ function mockHistory(today) {
 // skipping a whole category.
 function mockCatalog() {
   const groups = {
-    Drinks: ["Iced Tea / Fountain Drink", "Coffee", "Bottle Juice", "Bottle Water"],
+    Drinks: ["Iced Tea / Fountain Drink", "Coffee", "Bottle Juice", "Bottle Water (12oz)"],
     "Chips & Sweets": ["Chips", "Chocolate Chip Cookie"],
     Breakfast: ["Big Breakfast", "Breakfast Burrito", "Breakfast Sandwich"],
     Sandwiches: ["Turkey Club", "Reuben", "BLT", "Patty Melt", "Chicken Salad Croissant", "Build Your Own", "Grilled Cheese",

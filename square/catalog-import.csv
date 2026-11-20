@@ -87,7 +87,7 @@ Token,Item Name,Customer-facing Name,Variation Name,SKU,Description,Categories,R
 ,Coffee / Hot Tea,Coffee / Hot Tea,Regular,,"Regular or decaf coffee, or hot tea.",Drinks,Drinks,,Prepared food and beverage,,,,1.00,,N,Y,N,N,N,,,,,,
 ,Coffee / Hot Tea,Coffee / Hot Tea,Decaf,,"Regular or decaf coffee, or hot tea.",Drinks,Drinks,,Prepared food and beverage,,,,1.00,,N,Y,N,N,N,,,,,,
 ,Coffee / Hot Tea,Coffee / Hot Tea,Hot Tea,,"Regular or decaf coffee, or hot tea.",Drinks,Drinks,,Prepared food and beverage,,,,1.00,,N,Y,N,N,N,,,,,,
-,Bottle Water,Bottle Water,Regular,,12 fl oz.,Drinks,Drinks,,Prepared food and beverage,,,,1.00,,N,Y,N,N,Y,,,,,,
+,Bottle Water (12oz),Bottle Water (12oz),Regular,,,Drinks,Drinks,,Prepared food and beverage,,,,1.00,,N,Y,N,N,Y,,,,,,
 ,Bottle Juice,Bottle Juice,Regular,,,Drinks,Drinks,,Prepared food and beverage,,,,3.00,,N,Y,N,N,Y,,,,,,
 ,Cheesecake,Cheesecake,Regular,,Plain or Pumpkin; caramel or chocolate sauce on plain.,Desserts,Desserts,,Prepared food and beverage,,,,3.50,,N,Y,N,N,Y,,,,,,
 ,Dessert Bar,Dessert Bar,Regular,,Magic Bar or M&M Chocolate Rice Crispy Treat.,Desserts,Desserts,,Prepared food and beverage,,,,1.50,,N,Y,N,N,Y,,,,,,
