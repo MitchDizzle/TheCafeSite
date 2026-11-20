@@ -19,7 +19,12 @@
     `half: true` (sign-specials-half-bw.njk, Mitch 2026-11-16) draws it as
     a half sheet, 8.5 x 5.5, not its own canvas: the piece puts two on one
     letter page to cut in half and hand out. Same markup; the sizes are
-    .sign--half in sign.css. -#}
+    .sign--half in sign.css.
+
+    THE KITCHEN BOARD DRAWS IT TOO: Manage -> Signs prints the handout and
+    the colour sign from the board's own week (weekSign in
+    kitchen/lib/signs.js, Mitch 2026-11-20), in this same sign.css. A change
+    to the markup here wants the same change there. -#}
 {%- set week = specials.days | latestWeek %}
 {%- set soup = (menu.categories | where("id", "soup"))[0] %}
 {%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}

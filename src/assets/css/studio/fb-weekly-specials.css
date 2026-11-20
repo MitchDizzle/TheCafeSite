@@ -1,6 +1,8 @@
 /* ============================================================
    Weekly lunch specials — Facebook post, 1080 × 1350 px (4:5 portrait)
    Piece: src/studio/fb-weekly-specials.njk  ·  data: src/_data/specials.json
+   Also the kitchen board's Manage -> Signs -> Facebook post
+   (kitchen/lib/signs.js), so a change here reaches it with an update.
 
    Shown about 540px wide on a phone, so every size here is roughly twice
    what it reads as. Nothing a customer needs is set under 24px.

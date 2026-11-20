@@ -404,6 +404,11 @@
 .sg-fridge-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.1rem 1rem; margin: 0.5rem 0; }
 .sg-fridge .check { margin: 0; padding: 0.3rem 0; font-size: 1.05rem; align-items: center; }
 .sg-fridge .check small { color: var(--muted); }
+/* The Facebook post's caption to copy, and its picture (Mitch 2026-11-20). */
+.sg-post { margin: 0 0 0.8rem; }
+.sg-post-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+/* The week picker, only while a week's page is ticked (.r-quick's flex hid nothing). */
+#sg-week[hidden] { display: none; }
 
 /* A closed day (Mitch 2026-11-18): its dishes and More hidden, as they
    aren't saved, so the day takes little room. */

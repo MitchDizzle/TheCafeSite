@@ -507,7 +507,15 @@ If the PC was off at 2:10, or Google didn't answer, it goes as soon as it can: t
 
 ## Signs (Manage on the front page)
 
-**The day's counter signs, ready to print** (client 2026-11-11: they were made by hand on the website every morning). **Manage → Signs** first asks which day and which signs, remembered on each device, and **Make signs** makes only those (Mitch 2026-11-18: no wait for signs not needed; **Change signs** goes back). Besides the three day signs below there's **Week's specials, two to a page**: this week's or next week's specials as the website's `sign-specials-half-bw` handout, to cut in half (Mitch 2026-11-18). They show as letter pages, as they print, and **Print** sends them to any printer (on the PC, Chrome's print):
+**The day's counter signs, ready to print** (client 2026-11-11: they were made by hand on the website every morning). **Manage → Signs** first asks which day and which signs, remembered on each device, and **Make signs** makes only those (Mitch 2026-11-18: no wait for signs not needed; **Change signs** goes back). Besides the three day signs below there are three for a week, this week's or next week's (**Week's specials for**, under the ticks, next week unless changed), from the days in **Specials**:
+
+- **Week's specials, two to a page**: the website's `sign-specials-half-bw` handout, to cut in half (Mitch 2026-11-18).
+- **Week's specials, colour counter sign**: the website's `sign-specials`, the one in colour in the stand on the counter, a whole letter page (Mitch 2026-11-20).
+- **Facebook post**: the website's weekly post (`fb-weekly-specials`), on a letter page to print, with its caption under the ticks and **Copy caption** (Mitch 2026-11-20). **Picture for Facebook** makes the post as its 1080 × 1350 picture, as the website exports it, to save (press and hold it on a phone, or **Download**) and post with the caption. The picture is taken by the kitchen PC's Chrome (or Edge), headless with a profile of its own as the emailed report's PDF is, so it takes a few seconds and needs Chrome there; the caption is worded by the website's own `fb-weekly-specials.11tydata.js`, so the two can't drift.
+
+The week's pages follow the board, not the website: a day typed in Specials is on them straight away, before the website has it. The usual price, the sides to swap in and the soup's Cup / Bowl prices are the website's and Square's, as on the day signs; the website's closed days (`site.json`) are in their place.
+
+They show as letter pages, as they print, and **Print** sends them to any printer (on the PC, Chrome's print):
 
 - **Special sides** (black & white): the plate's sides in boxes ("comes with both", or "one side, pick from" for a side written with "or"), then the sides to swap in: the day's extra sides marked "today only", the Deli Salads, a cup of the soup. A choice-of-side day lists the sides to pick from; a plate that is one of two shows the two and its breads. A plate with no sides has no sides sign.
 - **Special & soup**: the plate with its sides and "Includes a drink", and the soup with its Cup / Bowl prices and its note. Coloured type, light on ink; tick **Special & soup in black & white** for black ink only.
@@ -519,7 +527,7 @@ Nothing is typed there, so the signs can't disagree with the till: the plate, si
 - **What's in the dessert fridge** lists every dessert kind with a tick. Square's count decides (0 is off), and Cinnamon Roll and Pecan Sticky Bun start off. A tick or untick is for **today only**, on every device; the next morning the sign follows Square again (2026-11-16: ticks kept for good outlived the desserts). To change what the sign shows for good, set the count in **Desserts**. Kept in `data\signs.json`, which can also hold `skipItems`, `treats`, `names` (a shorter name for the sign, by the kind's name in Square) and `caution` / `cautionSub` (the warning panel's words, `""` for none) to change the defaults in `lib/signs.js`.
 - A page with too much on it (a long plate, a full fridge) shrinks to fit its sheet.
 
-The pages use the website's own sign styles (`src/assets/css/studio/sign.css`, which an update brings with it), so they match the /studio/ pieces they replace day to day: `sign-todays-sides-bw`, `sign-day-letter` (without its desserts) and `sign-desserts-bw`.
+The pages use the website's own styles (`src/assets/css/studio/sign.css`, and `fb-weekly-specials.css` for the post, which an update brings with it), so they match the /studio/ pieces they replace day to day: `sign-todays-sides-bw`, `sign-day-letter` (without its desserts), `sign-desserts-bw`, `sign-specials-half-bw`, `sign-specials` and `fb-weekly-specials`. Their markup is copied in `lib/signs.js`, so a change to one of those pieces' markup wants the same change there.
 
 ## The look (House style)
 

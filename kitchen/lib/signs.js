@@ -7,12 +7,21 @@
 //   2. Today's special & soup  (sign-day-letter, one page, without the
 //      desserts): the plate with its sides, the soup with Cup / Bowl.
 //   3. Dessert fridge          (sign-desserts-bw): what's in, with prices.
+// And, for this week or next (Mitch 2026-11-18, 11-20), from the plan's days:
+//   4. Week's specials, two to a page (sign-specials-half-bw): the handout.
+//   5. Week's specials, colour (sign-specials): the counter sign, one page.
+//   6. Facebook post (fb-weekly-specials): the weekly post, on a letter page
+//      to print, and as its 1080 x 1350 picture with its caption to post
+//      (postPicture, made by the PC's Chrome).
 // Nothing is typed here. The plate, sides and soup are the day's in Specials
 // (the plan, which is what Square has); the desserts and prices are Square's,
 // as Manage -> Desserts has them. Which desserts are on the fridge sign can
 // be ticked, and the ticks are kept in data\signs.json.
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
+const { execFile } = require("child_process");
+const { pathToFileURL } = require("url");
 const { DIR, DATA, MOCK, cfg } = require("./config");
 const { localDate, cleanText } = require("./util");
 const { plan, siteFieldFor, modsFor, extrasOn } = require("./specials/plan");
@@ -24,8 +33,16 @@ try {
   // A board copied without the website beside it: the same words, simply.
   caption = {
     specialSides: (d) => (d.anySide ? "Choice of side" : (d.sides || []).join(", ")),
+    closedText: (d) => (d.closed === true ? "Closed" : `Closed for ${d.closed}`),
+    withClosed: (week) => week,
     versionsOf: () => [], breadsOf: () => [], plateRest: () => "",
   };
+}
+
+// The website's site.json (phone, address, hours, closed days), read each
+// time so an update brings a change with it. {} without the website beside.
+function siteJson() {
+  try { return JSON.parse(fs.readFileSync(path.join(DIR, "..", "src", "_data", "site.json"), "utf8")); } catch { return {}; }
 }
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -283,57 +300,83 @@ function weekOf(date) {
 const dayWords = (date, opts) => new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", { timeZone: "UTC", ...opts });
 
 // The week's days as the website's specials.json has them (signDay's shape):
-// the days with something planned, closed or a message.
+// the days with something planned, closed or a message, with the website's
+// closed days (site.json closedDays) in their place, as its own sign and
+// post have them. Each price a number.
 function weekDays(monday, daily) {
-  return weekOf(monday).map((date) => {
+  const days = weekOf(monday).map((date) => {
     const d = signDay(date, daily, "");
     const it = (plan.days[date] && plan.days[date].items) || {};
     const plate = Object.entries(it).find(([name]) => siteFieldFor(name) === "special");
     const price = plate && plate[1].prices && plate[1].prices[""];
-    if (price) d.price = Number(price);
+    d.price = Number(price || d.price) || "";
     return d;
   }).filter((d) => d.special || d.soup || d.closed || d.message);
+  return caption.withClosed(days, siteJson().closedDays);
 }
 
-// The handout: the black & white specials sign at half size, twice on a
-// letter page to cut in half (Mitch 2026-11-18: next week's, from Signs).
-// The same markup as partials/studio/sign-specials.njk with half: true.
-function weekPage(days, { price, includesDrink, soupSide, swapSides = [], soupSizes = [] } = {}) {
-  if (!days.length) return "";
-  // The usual price, at the head of the column; a day's own shows beside
-  // it only when it's different (Mitch 2026-11-18: $10 was on every day,
-  // as a board not yet told the website's usual price had none to compare).
-  // Not known yet: the price most days have.
-  if (!price) {
-    const counts = {};
-    for (const d of days) if (d.price) counts[d.price] = (counts[d.price] || 0) + 1;
-    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-    if (top) price = Number(top[0]);
-  }
+// The week Signs is asked for ("this" or "next") and what its pages need
+// besides the days: the usual price, the sides to swap in, the soup's
+// Cup / Bowl prices (Square's).
+function weekFor(week, daily, today = localDate()) {
+  const monday = weekOf(today)[0];
+  const start = week === "this" ? monday : new Date(Date.parse(`${monday}T12:00:00Z`) + 7 * 864e5).toISOString().slice(0, 10);
+  const soupItem = daily.find((it) => !it.missing && siteFieldFor(it.key) === "soup");
+  const soupSizes = soupItem ? (soupItem.variations || []).filter((v) => v.size && v.price).map((v) => ({ size: v.size, price: v.price })) : [];
+  return { start, days: weekDays(start, daily), opts: { price: plan.price, includesDrink: plan.includesDrink, soupSide: plan.soupSide, swapSides: plan.swapSides, soupSizes } };
+}
+
+// "November 23 – 27", or "November 30 – December 4" across a month end.
+function rangeOf(days) {
   const first = dayWords(days[0].date, { month: "long", day: "numeric" });
   const last = dayWords(days[days.length - 1].date, { month: "long", day: "numeric" });
-  const range = first.split(" ")[0] === last.split(" ")[0] ? `${first} – ${last.split(" ")[1]}` : `${first} – ${last}`;
-  const dollars = (n) => money(n).replace(".00", "");
+  return first.split(" ")[0] === last.split(" ")[0] ? `${first} – ${last.split(" ")[1]}` : `${first} – ${last}`;
+}
+
+// The usual price, said once at the head of the plates; a day's own shows
+// beside it only when it's different (Mitch 2026-11-18: $10 was on every
+// day, as a board not yet told the website's usual price had none to
+// compare). Not known yet: the price most days have.
+function usualPrice(days, price) {
+  if (price) return Number(price);
+  const counts = {};
+  for (const d of days) if (Number(d.price)) counts[Number(d.price)] = (counts[Number(d.price)] || 0) + 1;
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  return top ? Number(top[0]) : "";
+}
+const dollars = (n) => money(n).replace(".00", "");
+const ownPrice = (d, price) => !!d.price && Number(d.price) !== Number(price);
+
+// The sides box, on the sign and the post alike: the sides to swap in, and
+// a cup of the soup.
+const choicesOf = ({ swapSides = [], soupSide }) => [...swapSides.map(esc), ...(soupSide ? ["Cup of the day&rsquo;s soup"] : [])];
+const choiceNote = (days) => (days.some((d) => d.anySide)
+  ? "Pick one with &ldquo;choice of side,&rdquo; or swap one in for a side on any special"
+  : "Swap one in for the sides on any special");
+
+// The specials sign, as partials/studio/sign-specials.njk draws it. `half`:
+// the black & white handout's half sheet (two go on a page). Otherwise the
+// counter sign's whole letter page (sign-specials.njk, Mitch 2026-11-20): in
+// colour with the logo in teal over a red rule (its inkLight, to save colour
+// ink), or black ink only with `bw`.
+function weekSign(days, { price, includesDrink, soupSide, swapSides = [], soupSizes = [] } = {}, { half = false, bw = half } = {}) {
+  price = usualPrice(days, price);
   const dayCell = (d) => `<p class="p-display sw-day ink-accent">${esc(dayWords(d.date, { weekday: "short" }))}<span class="p-body sw-date">${esc(dayWords(d.date, { month: "short", day: "numeric" }))}</span></p>`;
   const message = (d) => (d.message ? `<p class="sw-sides sw-message">${esc(d.message)}</p>` : "");
   const rows = days.map((d) => {
-    if (d.closed) {
-      const why = d.closed === true ? "Closed" : `Closed for ${d.closed}`;
-      return `<li class="sw-row sw-row--closed">${dayCell(d)}<div><p class="p-display sw-special sw-closed ink-accent">${esc(why)}</p>${message(d)}</div></li>`;
-    }
+    if (d.closed) return `<li class="sw-row sw-row--closed">${dayCell(d)}<div><p class="p-display sw-special sw-closed ink-accent">${esc(caption.closedText(d))}</p>${message(d)}</div></li>`;
     const sides = caption.specialSides(d, true);
     return `<li class="sw-row">${dayCell(d)}
-      <div><p class="p-display sw-special ink-teal">${esc(d.special || "")}${d.price && Number(d.price) !== Number(price) ? ` <span class="sw-day-price ink-accent">${dollars(d.price)}</span>` : ""}</p>
+      <div><p class="p-display sw-special ink-teal">${esc(d.special || "")}${ownPrice(d, price) ? ` <span class="sw-day-price ink-accent">${dollars(d.price)}</span>` : ""}</p>
         ${sides ? `<p class="sw-sides">${esc(sides)}</p>` : ""}${message(d)}</div>
       <div class="sw-soup"><p class="sw-soup-name ink-teal">${d.soup ? esc(d.soup) : "&mdash;"}</p></div></li>`;
   }).join("");
   const priceLine = price ? `${dollars(price)}${includesDrink ? ", drink included" : ""}` : includesDrink ? "Drink included" : "";
   const qr = menuQr();
-  const choices = [...swapSides.map(esc), ...(soupSide ? ["Cup of the day&rsquo;s soup"] : [])];
-  const half = `<div class="sign sign--bw sign--half">
-    <header class="sign-title-ink"><div class="wordmark wordmark--ink">${wordmark()}</div></header>
+  const choices = choicesOf({ swapSides, soupSide });
+  const inner = `<header class="sign-title-ink"><div class="wordmark wordmark--ink">${wordmark()}</div></header>
     <div class="sign-heading">
-      <h2 class="p-display sign-heading-title ink-teal">${esc(range)}</h2>
+      <h2 class="p-display sign-heading-title ink-teal">${esc(rangeOf(days))}</h2>
       <p class="p-label sign-heading-sub ink-accent">This week&rsquo;s specials &middot; from 11am</p>
     </div>
     <div class="sw-grid">
@@ -346,12 +389,162 @@ function weekPage(days, { price, includesDrink, soupSide, swapSides = [], soupSi
     <div class="sign-spacer"></div>
     <div class="sw-foot">
     ${choices.length ? `<section class="sw-choice"><p class="p-display sw-choice-title ink-teal">Sides</p>
-      <p class="sw-choice-note">${days.some((d) => d.anySide) ? "Pick one with &ldquo;choice of side,&rdquo; or swap one in for a side on any special" : "Swap one in for the sides on any special"}</p>
+      <p class="sw-choice-note">${choiceNote(days)}</p>
       <ul class="sw-choices">${choices.map((c) => `<li>${c}</li>`).join("")}</ul></section>` : ""}
     ${qr ? `<div class="sw-qr"><div class="qr" aria-hidden="true">${qr}</div><p class="p-label sw-qr-label ink-teal">Full menu</p></div>` : ""}
-    </div>
-  </div>`;
+    </div>`;
+  // The half sheet's grid places its children (sign.css), so no .fit there.
+  return half
+    ? `<div class="sign sign--bw sign--half">${inner}</div>`
+    : `<div class="canvas sign${bw ? " sign--bw" : ""}" data-page="counter"><div class="fit">${inner}</div></div>`;
+}
+
+// The handout: the black & white specials sign at half size, twice on a
+// letter page to cut in half (Mitch 2026-11-18: next week's, from Signs).
+// sign-specials-half-bw.njk.
+function weekPage(days, o = {}) {
+  if (!days.length) return "";
+  const half = weekSign(days, o, { half: true });
   return `<div class="canvas sign-halves" data-page="week">${half}<div class="sign-cut" aria-hidden="true"></div>${half}</div>`;
+}
+
+// The week's specials counter sign, in colour (Mitch 2026-11-20: the one
+// that goes in the stand on the counter). sign-specials.njk.
+function counterPage(days, o = {}) {
+  return days.length ? weekSign(days, o) : "";
+}
+
+// ---- The weekly Facebook post (fb-weekly-specials.njk) ----
+
+// The post as the website draws it, 1080 x 1350, in its own styles
+// (fb-weekly-specials.css): the week's plates and soups with their prices
+// at the head of each column, the sides box, the phone, address and hours.
+function postMarkup(days, { price, includesDrink, soupSide, swapSides = [], soupSizes = [] } = {}) {
+  if (!days.length) return "";
+  price = usualPrice(days, price);
+  const site = siteJson();
+  const a = site.address || {};
+  const o = site.opening || {};
+  const dot = ' <span class="dot">&middot;</span> ';
+  const message = (d) => (d.message ? `<p class="p-body wk-sides wk-message">${esc(d.message)}</p>` : "");
+  const rows = days.map((d) => {
+    const name = `<p class="p-display wk-dayname">${esc(dayWords(d.date, { weekday: "short" }))}</p>`;
+    if (d.closed) return `<div class="wk-row wk-row--closed">${name}<div class="wk-special-cell"><p class="p-display wk-special">${esc(caption.closedText(d))}</p>${message(d)}</div></div>`;
+    const sides = caption.specialSides(d, true);
+    return `<div class="wk-row">${name}<div class="wk-special-cell">
+        <p class="p-display wk-special">${esc(d.special || "")}${ownPrice(d, price) ? ` <span class="wk-day-price">${dollars(d.price)}</span>` : ""}</p>
+        ${sides ? `<p class="p-body wk-sides">${esc(sides)}</p>` : ""}${message(d)}</div>
+      ${d.soup ? `<div class="wk-soup-cell"><p class="wk-soup-name">${esc(d.soup)}</p></div>` : ""}</div>`;
+  }).join("");
+  const priceLine = price ? `${dollars(price)}${includesDrink ? ", drink included" : ""}` : includesDrink ? "Drink included" : "";
+  const choices = choicesOf({ swapSides, soupSide });
+  const town = [a.locality, a.region].filter(Boolean).map(esc).join(", ");
+  const time = (t) => (t && t.time ? `${t.time}${t.meridiem || ""}` : "");
+  const hours = o.hoursDays ? `${esc(o.hoursDays)}, ${esc(time(o.opens))} &ndash; ${esc(time(o.closes))}` : "";
+  const street = [a.street, a.locality, a.region].filter(Boolean).map(esc).join(", ");
+  const call = [site.phone, site.social && site.social.website].filter(Boolean).map(esc).join(dot);
+  return `<div class="wk">
+    <header class="wk-head">
+      <div class="wordmark wordmark--light wordmark--hero wk-wordmark">${wordmark()}</div>
+      <p class="p-display-italic wk-kicker">Lunch Specials</p>
+      <p class="p-label wk-range">${esc(rangeOf(days))}${town ? ` &middot; ${town}` : ""}</p>
+    </header>
+    <div class="wk-body">
+      <p class="p-label wk-served">Starting at 11am</p>
+      <div class="wk-grid">
+        <div class="wk-cols"><span></span>
+          <div class="wk-col"><p class="p-label wk-col-label">Lunch Special</p>${priceLine ? `<p class="wk-col-price wk-col-price--special">${priceLine}</p>` : ""}</div>
+          <div class="wk-col wk-col--soup"><p class="p-label wk-col-label">Soup</p>${soupSizes.length ? `<p class="wk-col-price">${soupSizes.map((s) => `${esc(s.size)} ${dollars(s.price)}`).join(dot)}</p>` : ""}</div>
+        </div>
+        <div class="wk-table">${rows}</div>
+      </div>
+      ${choices.length ? `<section class="wk-choice"><p class="p-display wk-choice-title">Sides</p>
+        <p class="p-body wk-choice-note">${choiceNote(days)}</p>
+        <ul class="wk-choices">${choices.map((c) => `<li>${c}</li>`).join("")}</ul></section>` : ""}
+    </div>
+    <footer class="wk-foot">
+      ${call ? `<p class="p-display wk-foot-call">${call}</p>` : ""}
+      <p class="p-body wk-foot-line">${hours}${hours && street ? " &middot; " : ""}${street}</p>
+    </footer>
+  </div>`;
+}
+
+// The post on a letter page, to print: smaller, in the middle, clear of
+// the printer's edge.
+function postPage(days, o = {}) {
+  const post = postMarkup(days, o);
+  return post ? `<div class="canvas post-sheet" data-page="post">${post}</div>` : "";
+}
+
+// The post's caption, worded where the website words it
+// (src/studio/fb-weekly-specials.11tydata.js), from these days: one string,
+// a blank line between paragraphs. "" without the website beside the board.
+function postCaption(days, o = {}) {
+  try {
+    const piece = require(path.join(DIR, "..", "src", "studio", "fb-weekly-specials.11tydata.js"));
+    const specials = { price: usualPrice(days, o.price), includesDrink: !!o.includesDrink, soupSide: !!o.soupSide, days };
+    const menu = { categories: [{ id: "sides", items: (o.swapSides || []).length ? [{ choices: o.swapSides }] : [] }] };
+    return piece.eleventyComputed.caption({ specials, menu, site: siteJson() }).join("\n\n");
+  } catch (err) {
+    console.error(`Signs: no caption for the post (${err.message}).`);
+    return "";
+  }
+}
+
+// The post alone, as the picture is taken of it.
+function postDoc(post) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Café — weekly specials post</title>
+${FONTS}
+<style>
+${siteCss()}
+html, body { margin: 0; background: #FAF7F2; }
+.wk { width: 1080px; height: 1350px; overflow: hidden; }
+</style>
+</head>
+<body>${post}</body>
+</html>`;
+}
+
+// The post as a 1080 x 1350 PNG, as the website exports it, taken by the
+// PC's Chrome (or Edge) headless with a profile of its own, as the emailed
+// report's PDF is (lib/report-mail.js): the board's window is never
+// touched. The fonts are given a few seconds to come from Google. Null when
+// there's no Chrome or it failed.
+function shootPost(html) {
+  const chrome = require("./report-mail").chromePath();
+  if (!chrome) return Promise.resolve(null);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cafe-post-"));
+  const page = path.join(dir, "post.html"), png = path.join(dir, "post.png");
+  fs.writeFileSync(page, html);
+  const args = ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", `--user-data-dir=${path.join(dir, "profile")}`,
+    "--hide-scrollbars", "--window-size=1080,1350", "--force-device-scale-factor=1", "--virtual-time-budget=8000",
+    `--screenshot=${png}`, pathToFileURL(page).href];
+  return new Promise((resolve) => {
+    execFile(chrome, args, { timeout: 60000, windowsHide: true }, (err) => {
+      let out = null;
+      try { if (fs.statSync(png).size > 1000) out = fs.readFileSync(png); } catch {}
+      if (!out) console.error(`Signs: no picture of the post from Chrome${err ? ` (${err.message.split("\n")[0]})` : ""}.`);
+      fs.rm(dir, { recursive: true, force: true }, () => {});
+      resolve(out);
+    });
+  });
+}
+
+// Manage -> Signs' "Picture for Facebook": the week's post as its picture
+// and its caption. { ok, png (a data: URL), file, caption }, or { ok: false,
+// message }.
+async function postPicture(week = "next") {
+  let daily = [];
+  try { daily = await require("./specials/daily").dailyItems(); } catch {}
+  const { start, days, opts } = weekFor(week, daily);
+  if (!days.length) return { ok: false, message: `Nothing is set for ${week === "this" ? "this" : "next"} week yet. Set it in Specials first.` };
+  const png = await shootPost(postDoc(postMarkup(days, opts)));
+  if (!png) return { ok: false, message: "The picture couldn't be made: the kitchen PC needs Chrome (or Edge) for it. The post can still be printed from Signs." };
+  return { ok: true, png: `data:image/png;base64,${png.toString("base64")}`, file: `weekly-specials-${start}.png`, caption: postCaption(days, opts) };
 }
 
 // The warning triangle, as layouts/quick-sign.njk draws it.
@@ -376,12 +569,18 @@ function fridgePage(rows, o = fridgeSettings()) {
   </div></div>`;
 }
 
-// The website's own styles for the signs, read where an update puts them.
+// The website's own styles for the signs and the post, read where an
+// update puts them.
 function siteCss() {
   const css = path.join(DIR, "..", "src", "assets", "css");
-  return ["tokens.css", path.join("studio", "piece.css"), path.join("studio", "sign.css")]
+  return ["tokens.css", path.join("studio", "piece.css"), path.join("studio", "sign.css"), path.join("studio", "fb-weekly-specials.css")]
     .map((f) => fs.readFileSync(path.join(css, f), "utf8")).join("\n");
 }
+
+// The website's fonts, as its pieces load them.
+const FONTS = `<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,900&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">`;
 
 // The pages as one document: letter sheets, one sign each. On screen they
 // shrink to the frame's width; in print each is exactly a page. The Manage
@@ -394,9 +593,7 @@ function renderHtml(pages) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Café — today's signs</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,900&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+${FONTS}
 <style>
 ${siteCss()}
 @page { size: 8.5in 11in; margin: 0; }
@@ -406,7 +603,12 @@ html, body { margin: 0; }
 /* Everything on a sheet, so a sheet with too much on it can shrink as one
    (the script below). It stands in for .sign's own column. */
 .fit { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-html.no-sides [data-page="sides"], html.no-day [data-page="day"], html.no-fridge [data-page="fridge"], html.no-week [data-page="week"] { display: none; }
+html.no-sides [data-page="sides"], html.no-day [data-page="day"], html.no-fridge [data-page="fridge"], html.no-week [data-page="week"],
+html.no-counter [data-page="counter"], html.no-post [data-page="post"] { display: none; }
+/* The Facebook post on a letter page: its 1080 x 1350 at about two thirds,
+   in the middle, clear of the printer's edge. */
+.post-sheet { display: flex; align-items: center; justify-content: center; background: #fff; }
+.post-sheet .wk { width: 1080px; height: 1350px; flex-shrink: 0; overflow: hidden; zoom: 0.68; }
 /* Black & white for the colour sheet: .sign--bw's inks. */
 html.bw .dl { --teal: #000; --teal-dark: #000; --accent: #000; --accent-dark: #000; --text-dark: #000; color: #000; }
 /* The plate and the soup with the page to themselves: a size up. */
@@ -465,16 +667,20 @@ ${pages.join("\n")}
 // ("sides", "day", "fridge"; all three when not given): only what those need
 // is read from Square, so an empty list just answers which days there are
 // (Mitch 2026-11-18: pick the signs before waiting for them).
-// "week" is the week's specials, two to a page, for the week `week` says:
-// "this" or "next" (Mitch 2026-11-18); it isn't made unless asked for.
+// "week" (the week's specials, two to a page, Mitch 2026-11-18), "counter"
+// (the week's colour counter sign) and "post" (the Facebook post, Mitch
+// 2026-11-20) are for the week `week` says, "this" or "next", and aren't
+// made unless asked for.
 const ALL_PAGES = ["sides", "day", "fridge"];
-const PAGE_NAMES = [...ALL_PAGES, "week"];
+const WEEK_PAGES = ["week", "counter", "post"];
+const PAGE_NAMES = [...ALL_PAGES, ...WEEK_PAGES];
 async function buildSigns(date, fridgeOn, want = ALL_PAGES, week = "next") {
   const today = localDate();
   const notes = [];
   const wants = new Set((Array.isArray(want) ? want : ALL_PAGES).filter((p) => PAGE_NAMES.includes(p)));
   let daily = [];
-  if (wants.has("sides") || wants.has("day") || wants.has("week")) {
+  const weekly = WEEK_PAGES.some((p) => wants.has(p));
+  if (wants.has("sides") || wants.has("day") || weekly) {
     try { daily = await require("./specials/daily").dailyItems(); } catch (err) {
       notes.push(`Square couldn't be read (${err.message}), so the special and soup have no prices.`);
     }
@@ -491,7 +697,8 @@ async function buildSigns(date, fridgeOn, want = ALL_PAGES, week = "next") {
   }
   const d = signDay(date, daily, today);
   const pages = [];
-  const has = { sides: false, day: false, fridge: false, week: false };
+  const has = { sides: false, day: false, fridge: false, week: false, counter: false, post: false };
+  let postWords = "";
   const when = date === today ? "today" : "that day";
   if ((wants.has("sides") || wants.has("day")) && d.closed) {
     notes.push(`${d.closed === true ? "Closed" : `Closed for ${d.closed}`} ${when}, so there's no special or soup sign.`);
@@ -502,15 +709,14 @@ async function buildSigns(date, fridgeOn, want = ALL_PAGES, week = "next") {
     else if (d.special) notes.push(`${d.special} has no sides in Specials, so there's no sides sign.`);
   }
   if (wants.has("day") && (d.special || d.soup)) { pages.push(dayPage(d, { includesDrink: plan.includesDrink })); has.day = true; }
-  if (wants.has("week")) {
-    const monday = weekOf(today)[0];
-    const start = week === "this" ? monday : new Date(Date.parse(`${monday}T12:00:00Z`) + 7 * 864e5).toISOString().slice(0, 10);
-    const days = weekDays(start, daily);
-    const soupItem = daily.find((it) => !it.missing && siteFieldFor(it.key) === "soup");
-    const soupSizes = soupItem ? (soupItem.variations || []).filter((v) => v.size && v.price).map((v) => ({ size: v.size, price: v.price })) : [];
-    const page = weekPage(days, { price: plan.price, includesDrink: plan.includesDrink, soupSide: plan.soupSide, swapSides: plan.swapSides, soupSizes });
-    if (page) { pages.push(page); has.week = true; }
-    else notes.push(`Nothing is set for ${week === "this" ? "this" : "next"} week yet. Set it in Specials, then make the signs again.`);
+  if (weekly) {
+    const { days, opts } = weekFor(week, daily, today);
+    if (!days.length) notes.push(`Nothing is set for ${week === "this" ? "this" : "next"} week yet. Set it in Specials, then make the signs again.`);
+    else {
+      if (wants.has("week")) { pages.push(weekPage(days, opts)); has.week = true; }
+      if (wants.has("counter")) { pages.push(counterPage(days, opts)); has.counter = true; }
+      if (wants.has("post")) { pages.push(postPage(days, opts)); has.post = true; postWords = postCaption(days, opts); }
+    }
   }
   if (rows && rows.some((r) => r.on)) { pages.push(fridgePage(rows)); has.fridge = true; }
   else if (rows) notes.push("No dessert is ticked, so there's no fridge sign.");
@@ -518,10 +724,10 @@ async function buildSigns(date, fridgeOn, want = ALL_PAGES, week = "next") {
   const days = [today, ...Object.keys(plan.days).filter((x) => x > today).sort().slice(0, 2)];
   return {
     date, today, days, has, notes, made: [...wants], week,
-    special: d.special, soup: d.soup,
+    special: d.special, soup: d.soup, caption: postWords,
     fridge: (rows || []).map(({ key, name, price, out, on, treat }) => ({ key, name, price, out, on, treat })),
     html: pages.length ? renderHtml(pages) : "",
   };
 }
 
-module.exports = { buildSigns, signDay, sidesPage, dayPage, weekPage, fridgePage, fridgeRows, saveFridge, fridgeSettings, renderHtml, label };
+module.exports = { buildSigns, postPicture, postMarkup, postCaption, postDoc, signDay, sidesPage, dayPage, weekPage, counterPage, fridgePage, fridgeRows, saveFridge, fridgeSettings, renderHtml, label };

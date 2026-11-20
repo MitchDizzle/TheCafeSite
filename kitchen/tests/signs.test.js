@@ -18,7 +18,7 @@ test("signs: three pages from the day's plan and Square's desserts", async () =>
   plan.days[today] = day("Meatloaf", "Potato Cheese", { sides: ["Mashed Potatoes", "Corn"] });
   plan.extraSides[today] = ["Corn", "Twice Baked Potato Salad"];
   const r = await signs.buildSigns(today);
-  assert.deepEqual(r.has, { sides: true, day: true, fridge: true, week: false });
+  assert.deepEqual(r.has, { sides: true, day: true, fridge: true, week: false, counter: false, post: false });
   assert.match(r.html, /comes with <strong>both<\/strong> sides/);
   assert.match(r.html, /Twice Baked Potato Salad <small class="ts-today">today only/);
   assert.doesNotMatch(r.html, /<li>Corn <small/, "the plate's own side isn't a today-only extra");
@@ -28,7 +28,7 @@ test("signs: three pages from the day's plan and Square's desserts", async () =>
   const priced = await signs.buildSigns(today);
   assert.equal((priced.html.match(/\$10\.00/g) || []).length, 2, "the plate's price on the sides sign and the special & soup sign");
   assert.match(priced.html, /class="ts-price">\$10\.00/);
-  assert.equal((r.html.match(/data-page="/g) || []).length - 4, 3, "three pages (and the four rules that hide one)");
+  assert.equal((r.html.match(/data-page="/g) || []).length - 6, 3, "three pages (and the six rules that hide one)");
 });
 
 test("signs: a pick of two sides, choice of side, and a plate with none", async () => {
@@ -98,14 +98,14 @@ test("signs: a fridge file from before day-only ticks follows Square and the new
 test("signs: only the pages asked for, and none just answers the days", async () => {
   plan.days[today] = day("Meatloaf", "Potato Cheese", { sides: ["Mashed Potatoes", "Corn"] });
   const none = await signs.buildSigns(today, null, []);
-  assert.deepEqual(none.has, { sides: false, day: false, fridge: false, week: false });
+  assert.deepEqual(none.has, { sides: false, day: false, fridge: false, week: false, counter: false, post: false });
   assert.equal(none.html, "");
   assert.deepEqual(none.notes, []);
   assert.ok(none.days.includes(today));
   const one = await signs.buildSigns(today, null, ["day"]);
-  assert.deepEqual(one.has, { sides: false, day: true, fridge: false, week: false });
+  assert.deepEqual(one.has, { sides: false, day: true, fridge: false, week: false, counter: false, post: false });
   assert.deepEqual(one.made, ["day"]);
-  assert.equal((one.html.match(/data-page="/g) || []).length - 4, 1, "one page (and the four rules that hide one)");
+  assert.equal((one.html.match(/data-page="/g) || []).length - 6, 1, "one page (and the six rules that hide one)");
 });
 
 test("signs: a closed day makes no special signs, and the week's handout shows it", async () => {
@@ -116,7 +116,7 @@ test("signs: a closed day makes no special signs, and the week's handout shows i
   plan.days[mon] = day("Meatloaf", "Potato Cheese", { sides: ["Mashed Potatoes"], message: "Back after the holiday" });
   plan.days[thu] = { from: "front", items: {}, closed: "Thanksgiving", message: "Happy Thanksgiving!" };
   const shut = await signs.buildSigns(thu, null, ["sides", "day"]);
-  assert.deepEqual(shut.has, { sides: false, day: false, fridge: false, week: false });
+  assert.deepEqual(shut.has, { sides: false, day: false, fridge: false, week: false, counter: false, post: false });
   assert.match(shut.notes.join(" "), /Closed for Thanksgiving/);
   const r = await signs.buildSigns(today, null, ["week"], "next");
   assert.equal(r.has.week, true);
@@ -141,4 +141,53 @@ test("signs: the week's handout shows a day's price only when it isn't the usual
   const text = days.map((d) => ({ ...d, price: d.price.toFixed(2) }));
   assert.equal((signs.weekPage(text, { price: 10 }).match(/sw-day-price/g) || []).length, 2, "\"10.00\" is the usual $10");
   assert.equal((signs.weekPage(text, {}).match(/sw-day-price/g) || []).length, 2, "and so is the most common one");
+});
+
+test("signs: the week's colour counter sign and the Facebook post, with its caption", async () => {
+  const next = new Date(); next.setHours(12, 0, 0, 0); next.setDate(next.getDate() + ((8 - next.getDay()) % 7 || 7));
+  const mon = localDate(next);
+  const tue = localDate(new Date(next.getTime() + 864e5));
+  Object.assign(plan, { price: 10, includesDrink: true, soupSide: true, swapSides: ["Potato Salad", "Coleslaw"] });
+  plan.days[mon] = day("Meatloaf", "Potato Cheese", { sides: ["Mashed Potatoes", "Corn"] });
+  plan.days[tue] = day("BBQ Ribs", "Chili", { sides: ["Mac & Cheese"] });
+  plan.days[tue].items["Lunch Special"].prices = { "": "12.00" };
+  const r = await signs.buildSigns(today, null, ["counter", "post"], "next");
+  assert.deepEqual(r.has, { sides: false, day: false, fridge: false, week: false, counter: true, post: true });
+  const body = r.html.slice(r.html.indexOf("<body"));
+  const counter = body.slice(body.indexOf('data-page="counter"') - 40, body.indexOf('data-page="post"'));
+  assert.match(counter, /class="canvas sign" data-page="counter"/, "one whole page, in colour");
+  assert.match(counter, /sign-title-ink/, "the logo without the teal box (inkLight)");
+  assert.equal((counter.match(/This week&rsquo;s specials/g) || []).length, 1);
+  assert.match(counter, /BBQ Ribs <span class="sw-day-price ink-accent">\$12/);
+  assert.match(r.html, /wk-kicker">Lunch Specials/);
+  assert.match(r.html, /BBQ Ribs <span class="wk-day-price">\$12/, "a day's own price beside its plate on the post");
+  assert.doesNotMatch(r.html, /Meatloaf <span class="wk-day-price"/, "the usual price only at the head");
+  assert.match(r.html, /wk-col-price wk-col-price--special">\$10, drink included/);
+  assert.match(r.html, /<li>Cup of the day&rsquo;s soup<\/li>/);
+  assert.match(r.html, /\(913\) 547-9994/, "the phone from the website's site.json");
+  assert.match(r.caption, /^Lunch specials at The Café in Leavenworth, KS, /);
+  assert.match(r.caption, /Tuesday: BBQ Ribs with Mac & Cheese · Soup: Chili \(\$12\)/);
+  assert.match(r.caption, /Monday: Meatloaf with Mashed Potatoes and Corn · Soup: Potato Cheese\n/, "no price on a usual day");
+  assert.match(r.caption, /Sides \(pick one[^\n]*Potato Salad, Coleslaw, or a cup of the day's soup/);
+  // The website's closed days (site.json) that week are on both, as on its own sign and post.
+  const site = JSON.parse(require("fs").readFileSync(require("path").join(__dirname, "..", "..", "src", "_data", "site.json"), "utf8"));
+  const week = Array.from({ length: 5 }, (_, i) => localDate(new Date(next.getTime() + i * 864e5)));
+  for (const c of (site.closedDays || []).filter((c) => week.includes(c.date))) {
+    assert.equal((r.html.match(new RegExp(`Closed for ${c.name}`, "g")) || []).length, 2, `${c.name} on the sign and the post`);
+  }
+  delete plan.days[mon]; delete plan.days[tue];
+});
+
+const chrome = require("../lib/report-mail").chromePath();
+test("signs: the post's picture is 1080 x 1350", { skip: !chrome && "no Chrome here", timeout: 90000 }, async () => {
+  const next = new Date(); next.setHours(12, 0, 0, 0); next.setDate(next.getDate() + ((8 - next.getDay()) % 7 || 7));
+  const mon = localDate(next);
+  plan.days[mon] = day("Meatloaf", "Potato Cheese", { sides: ["Mashed Potatoes", "Corn"] });
+  const r = await signs.postPicture("next");
+  assert.equal(r.ok, true, r.message);
+  const png = Buffer.from(r.png.split(",")[1], "base64");
+  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1080, 1350]);
+  assert.equal(r.file, `weekly-specials-${mon}.png`);
+  assert.match(r.caption, /Meatloaf/);
+  delete plan.days[mon];
 });

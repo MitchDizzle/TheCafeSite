@@ -55,7 +55,13 @@ studioOrder: 22
     other special (client 2026-10-09), so the box says both.
 
     Every size is set for the ~540px a portrait post shows at on a phone:
-    nothing a customer needs is under 24px. -#}
+    nothing a customer needs is under 24px.
+
+    THE KITCHEN BOARD MAKES IT TOO: Manage -> Signs -> Facebook post draws
+    this markup from the board's own week (postMarkup in kitchen/lib/signs.js,
+    Mitch 2026-11-20), in this same stylesheet, and its picture and caption
+    (the caption from this piece's .11tydata.js). A change to the markup
+    here wants the same change there. -#}
 {%- set week = specials.days | latestWeek %}
 {%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
 {%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
