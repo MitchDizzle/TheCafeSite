@@ -163,8 +163,10 @@
       "date": "2026-11-20",
       "soup": "Potato Cheese",
       "special": "Pot Roast",
-      "anySide": true,
-      "boardSavedAt": "2026-11-13T20:37:00.835Z"
+      "sides": [
+        "Green Beans"
+      ],
+      "boardSavedAt": "2026-11-20T14:14:34.717Z"
     },
     {
       "date": "2026-11-23",
