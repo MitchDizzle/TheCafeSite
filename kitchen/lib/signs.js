@@ -16,7 +16,8 @@
 // Nothing is typed here. The plate, sides and soup are the day's in Specials
 // (the plan, which is what Square has); the desserts and prices are Square's,
 // as Manage -> Desserts has them. Which desserts are on the fridge sign can
-// be ticked, and the ticks are kept in data\signs.json.
+// be ticked, and the ticks are kept in data\signs.json. So can the drinks in
+// that fridge (Mitch 2026-11-23: the Starbucks and the juice), under Drinks.
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -64,6 +65,11 @@ const SIGNS_FILE = path.join(DATA, MOCK ? "signs-mock.json" : "signs.json");
 //   ticks kept for good outlived the desserts, so a dessert set to 0 in
 //   Desserts stayed on the sign and a new one never came on). Each morning
 //   the sign follows Square again.
+// drinkItems: drinks in the fridge that can go on the sign, by their item
+//   name in Square, with Square's price (Mitch 2026-11-23). Square doesn't
+//   count them, so they're off until ticked, and a tick stays until it's
+//   unticked (`drinks`, kept for good, unlike show / hide). One row an item:
+//   the juice's flavours change as they run out, so they're never listed.
 const OLD_SKIP = ["Cheesecake", "Cinnamon Roll", "Pecan Sticky Bun"];
 const FRIDGE_DEFAULTS = {
   skipItems: ["Cinnamon Roll", "Pecan Sticky Bun"],
@@ -74,6 +80,8 @@ const FRIDGE_DEFAULTS = {
   },
   caution: "Not self serve",
   cautionSub: "Please do not open. Ask at the counter.",
+  drinkItems: ["Starbucks Frappuccino (Vanilla)", "Bottle Juice"],
+  drinks: [],
   show: [],
   hide: [],
 };
@@ -98,6 +106,8 @@ function fridgeSettings(today = localDate()) {
     names: kept.names && typeof kept.names === "object" ? kept.names : FRIDGE_DEFAULTS.names,
     caution: text(kept.caution, FRIDGE_DEFAULTS.caution),
     cautionSub: text(kept.cautionSub, FRIDGE_DEFAULTS.cautionSub),
+    drinkItems: list(kept.drinkItems, FRIDGE_DEFAULTS.drinkItems),
+    drinks: list(kept.drinks, FRIDGE_DEFAULTS.drinks),
     show: fresh ? list(kept.show, []) : [],
     hide: fresh ? list(kept.hide, []) : [],
   };
@@ -112,10 +122,28 @@ function label(item, kind) {
   return /\s/.test(k) ? k : `${k} ${item}`;
 }
 
+// The fridge's drinks as Square has them: { name, price }, in drinkItems'
+// order. One not in Square (or archived) is left out.
+async function fridgeDrinks(o = fridgeSettings()) {
+  const { catalog, loadCatalog, readObject } = require("./catalog");
+  await loadCatalog();
+  const out = [];
+  for (const name of o.drinkItems) {
+    const id = catalog.itemIds.get(name.trim().toLowerCase());
+    if (!id) continue;
+    const item = await readObject(id);
+    if (!item || item.item_data.is_archived) continue;
+    const cents = (item.item_data.variations || []).map((v) => v.item_variation_data || {})
+      .filter((v) => v.pricing_type !== "VARIABLE_PRICING").map((v) => (v.price_money || {}).amount).find((a) => a != null);
+    out.push({ name: item.item_data.name, price: cents == null ? null : cents / 100 });
+  }
+  return out;
+}
+
 // Every kind Square has, dearest dessert first (the cookies go to the
 // bottom; the same price keeps Square's order), each with whether it's on
-// the sign. items: dessertItems()'s.
-function fridgeRows(items, o = fridgeSettings()) {
+// the sign, then the drinks. items: dessertItems()'s; drinks: fridgeDrinks()'s.
+function fridgeRows(items, o = fridgeSettings(), drinks = []) {
   const has = (list, w) => list.some((x) => x.trim().toLowerCase() === w.trim().toLowerCase());
   const rows = [];
   // A dessert taken off the POS isn't being sold: not on the sign either.
@@ -140,6 +168,10 @@ function fridgeRows(items, o = fridgeSettings()) {
   const lastOn = new Map();
   for (const r of rows) if (r.on) lastOn.set(r.item, r);
   for (const r of rows) if (lastOn.get(r.item) !== r) r.lists = [];
+  for (const d of drinks) {
+    rows.push({ key: d.name, name: o.names[d.name] || d.name, item: d.name, price: d.price, out: false, usual: false,
+      on: has(o.drinks, d.name), treat: false, drink: true, lists: [] });
+  }
   return rows;
 }
 
@@ -150,8 +182,13 @@ function saveFridge(on, rows, today = localDate()) {
   const ticked = new Set((Array.isArray(on) ? on : []).map(String));
   const o = keptChoices();
   o.day = today;
-  o.show = rows.filter((r) => ticked.has(r.key) && !r.usual).map((r) => r.key);
-  o.hide = rows.filter((r) => !ticked.has(r.key) && r.usual).map((r) => r.key);
+  const sweets = rows.filter((r) => !r.drink);
+  o.show = sweets.filter((r) => ticked.has(r.key) && !r.usual).map((r) => r.key);
+  o.hide = sweets.filter((r) => !ticked.has(r.key) && r.usual).map((r) => r.key);
+  // The drinks are kept for good; one not shown this time keeps its tick.
+  const shown = new Set(rows.filter((r) => r.drink).map((r) => r.key));
+  const before = Array.isArray(o.drinks) ? o.drinks.map(String).filter((k) => !shown.has(k)) : [];
+  o.drinks = [...before, ...[...shown].filter((k) => ticked.has(k))];
   fs.mkdirSync(DATA, { recursive: true });
   fs.writeFileSync(SIGNS_FILE, JSON.stringify(o, null, 2));
 }
@@ -559,11 +596,13 @@ function fridgePage(rows, o = fridgeSettings()) {
       ${r.lists.map((l) => `<p class="sign-row-sub">${esc(l.name)}: ${l.options.map(esc).join(" or ")}</p>`).join("")}</li>`;
   const on = rows.filter((r) => r.on);
   const treats = on.filter((r) => r.treat);
+  const drinks = on.filter((r) => r.drink);
   return `<div class="canvas sign sign--bw fd" data-page="fridge"><div class="fit">
     <div class="sign-heading"><h2 class="p-display sign-heading-title">Desserts</h2></div>
     <ul class="sign-rows fd-rows">
-      ${on.filter((r) => !r.treat).map(row).join("")}
+      ${on.filter((r) => !r.treat && !r.drink).map(row).join("")}
       ${treats.length ? `<li class="fd-group"><h3 class="p-display fd-group-title">Treats</h3></li>${treats.map(row).join("")}` : ""}
+      ${drinks.length ? `<li class="fd-group"><h3 class="p-display fd-group-title">Drinks</h3></li>${drinks.map(row).join("")}` : ""}
     </ul>
     ${caution}
   </div></div>`;
@@ -689,8 +728,12 @@ async function buildSigns(date, fridgeOn, want = ALL_PAGES, week = "next") {
   if (wants.has("fridge")) {
     try {
       const items = await require("./desserts").dessertItems();
-      rows = fridgeRows(items);
-      if (fridgeOn) { saveFridge(fridgeOn, rows); rows = fridgeRows(items); }
+      // The drinks are extra: Square not answering for them leaves the
+      // desserts' sign as it was.
+      let drinks = [];
+      try { drinks = await fridgeDrinks(); } catch (err) { notes.push(`The fridge's drinks couldn't be read from Square (${err.message}).`); }
+      rows = fridgeRows(items, fridgeSettings(), drinks);
+      if (fridgeOn) { saveFridge(fridgeOn, rows); rows = fridgeRows(items, fridgeSettings(), drinks); }
     } catch (err) {
       notes.push(`The desserts couldn't be read from Square (${err.message}), so there's no fridge sign.`);
     }
@@ -719,15 +762,15 @@ async function buildSigns(date, fridgeOn, want = ALL_PAGES, week = "next") {
     }
   }
   if (rows && rows.some((r) => r.on)) { pages.push(fridgePage(rows)); has.fridge = true; }
-  else if (rows) notes.push("No dessert is ticked, so there's no fridge sign.");
+  else if (rows) notes.push("Nothing is ticked, so there's no fridge sign.");
   // The days to pick from: today and the next two with something planned.
   const days = [today, ...Object.keys(plan.days).filter((x) => x > today).sort().slice(0, 2)];
   return {
     date, today, days, has, notes, made: [...wants], week,
     special: d.special, soup: d.soup, caption: postWords,
-    fridge: (rows || []).map(({ key, name, price, out, on, treat }) => ({ key, name, price, out, on, treat })),
+    fridge: (rows || []).map(({ key, name, price, out, on, treat, drink }) => ({ key, name, price, out, on, treat, drink: !!drink })),
     html: pages.length ? renderHtml(pages) : "",
   };
 }
 
-module.exports = { buildSigns, postPicture, postMarkup, postCaption, postDoc, signDay, sidesPage, dayPage, weekPage, counterPage, fridgePage, fridgeRows, saveFridge, fridgeSettings, renderHtml, label };
+module.exports = { buildSigns, postPicture, postMarkup, postCaption, postDoc, signDay, sidesPage, dayPage, weekPage, counterPage, fridgePage, fridgeRows, fridgeDrinks, saveFridge, fridgeSettings, renderHtml, label };

@@ -95,6 +95,30 @@ test("signs: a fridge file from before day-only ticks follows Square and the new
   fs.rmSync(file, { force: true });
 });
 
+test("signs: the fridge's drinks are off until ticked, and a tick stays", async () => {
+  const fs = require("fs");
+  const path = require("path");
+  const { DATA } = require("../lib/config");
+  const file = path.join(DATA, "signs-mock.json");
+  fs.rmSync(file, { force: true });
+  const items = [{ name: "Carrot Cake", price: 3, kinds: [{ name: "Regular", count: 2 }], lists: [] }];
+  const drinks = await signs.fridgeDrinks();
+  assert.deepEqual(drinks.map((d) => d.name), ["Starbucks Frappuccino (Vanilla)", "Bottle Juice"], "both drinks, from test mode's Square");
+  assert.equal(drinks[0].price, 3);
+  let rows = signs.fridgeRows(items, signs.fridgeSettings(), drinks);
+  assert.deepEqual(rows.filter((r) => r.on).map((r) => r.key), ["Carrot Cake"], "the drinks start off");
+  signs.saveFridge(["Carrot Cake", "Starbucks Frappuccino (Vanilla)"], rows);
+  const tomorrow = signs.fridgeSettings("2999-01-01");
+  assert.deepEqual(tomorrow.drinks, ["Starbucks Frappuccino (Vanilla)"], "a drink's tick isn't for today only");
+  rows = signs.fridgeRows(items, tomorrow, drinks);
+  assert.deepEqual(rows.filter((r) => r.on).map((r) => r.key), ["Carrot Cake", "Starbucks Frappuccino (Vanilla)"]);
+  assert.match(signs.fridgePage(rows, tomorrow), /fd-group-title">Drinks<\/h3>[\s\S]*Starbucks Frappuccino \(Vanilla\)[\s\S]*\$3\.00/, "under Drinks, with Square's price");
+  signs.saveFridge(["Carrot Cake"], rows);
+  assert.deepEqual(signs.fridgeSettings().drinks, [], "unticked, it's off");
+  assert.doesNotMatch(signs.fridgePage(signs.fridgeRows(items, signs.fridgeSettings(), drinks)), /Drinks/, "no drinks, no heading");
+  fs.rmSync(file, { force: true });
+});
+
 test("signs: only the pages asked for, and none just answers the days", async () => {
   plan.days[today] = day("Meatloaf", "Potato Cheese", { sides: ["Mashed Potatoes", "Corn"] });
   const none = await signs.buildSigns(today, null, []);

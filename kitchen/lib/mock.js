@@ -331,6 +331,11 @@ function mockCatalog() {
       variations: [kind("VAR-DB-Magic", "Magic Bar", 0, 150), kind("VAR-DB-MM", "M&M Chocolate Rice Crispy Treat", 1, 150)] } },
     { type: "ITEM", id: "ITEM-Cream Puffs", version: 1, item_data: { name: "Cream Puffs", categories: [{ id: "CAT-Desserts" }], channels: ["CH-POS", "CH-Online"],
       variations: [v("VAR-CP", "Regular", 300)] } },
+    // A drink in the dessert fridge, for the fridge sign's Drinks.
+    { type: "ITEM", id: "ITEM-Starbucks Frappuccino (Vanilla)", version: 1, item_data: { name: "Starbucks Frappuccino (Vanilla)", categories: [{ id: "CAT-Drinks" }],
+      variations: [v("VAR-SBX", "Vanilla", 300)] } },
+    { type: "ITEM", id: "ITEM-Bottle Juice", version: 1, item_data: { name: "Bottle Juice", categories: [{ id: "CAT-Drinks" }],
+      variations: [v("VAR-BJ-Orange", "Orange Juice", 300), v("VAR-BJ-Apple", "Apple Juice", 300)] } },
     { type: "MODIFIER_LIST", id: "LIST-Sauce", version: 1, modifier_list_data: { name: "Cheesecake Sauce", selection_type: "MULTIPLE",
       modifiers: [sauce("MOD-Caramel", "Caramel", 0), sauce("MOD-Chocolate", "Chocolate", 1)] } },
     // Square's own lists, for Specials' Preset Modifiers.

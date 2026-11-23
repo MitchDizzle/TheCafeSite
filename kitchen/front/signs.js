@@ -88,13 +88,18 @@
     draw(r);
   }
 
+  // A row of the fridge's ticks: a dessert kind or a drink.
+  const tick = (f) => `<label class="check"><input type="checkbox" data-key="${esc(f.key)}"${f.on ? " checked" : ""}><span>${esc(f.name)}${f.price == null ? "" : ` <small>$${f.price.toFixed(2)}</small>`}${f.out ? " <small>· Square says 0</small>" : ""}</span></label>`;
+
   function draw(r) {
     shown = r;
     const made = PAGES.filter(([page]) => r.made.includes(page));
     const which = made.map(([page, name]) => `<label class="check"><input type="checkbox" data-page="${page}"${prefs[page] && r.has[page] ? " checked" : ""}${r.has[page] ? "" : " disabled"}><span>${name}</span></label>`).join("");
     const fridge = r.fridge.length ? `<details class="m-how sg-fridge" id="sg-fridge"><summary>What's in the dessert fridge (${r.fridge.filter((f) => f.on).length} on the sign)</summary>
         <p class="m-note">Tick what's in the fridge. Square's count decides; a tick or untick here is for today only, and tomorrow the sign follows Square again. To change it for good, set the count in Desserts.</p>
-        <div class="sg-fridge-rows">${r.fridge.map((f) => `<label class="check"><input type="checkbox" data-key="${esc(f.key)}"${f.on ? " checked" : ""}><span>${esc(f.name)}${f.price == null ? "" : ` <small>$${f.price.toFixed(2)}</small>`}${f.out ? " <small>· Square says 0</small>" : ""}</span></label>`).join("")}</div>
+        <div class="sg-fridge-rows">${r.fridge.filter((f) => !f.drink).map(tick).join("")}</div>
+        ${r.fridge.some((f) => f.drink) ? `<p class="m-note"><b>Drinks</b> go under Drinks at the foot of the sign, at Square's price. A drink stays ticked until you untick it.</p>
+        <div class="sg-fridge-rows">${r.fridge.filter((f) => f.drink).map(tick).join("")}</div>` : ""}
       </details>` : "";
     // The Facebook post's caption to copy, and its picture to save.
     const post = r.has.post ? `<div class="sg-post">
