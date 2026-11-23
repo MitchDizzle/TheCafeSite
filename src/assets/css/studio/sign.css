@@ -960,16 +960,26 @@
     line-height: 1.2;
 }
 
-/* The letter-size closed sign (sign-closed-letter-bw, 11 × 8.5 in): the
-   same sign at about two thirds, with the days named under the holiday. */
+/* The letter-size closed sign (sign-closed-letter-bw, 11 × 8.5 in):
+   "Closed" the biggest thing, then the holiday and the days, no week strip. */
 
 .door--letter {
     padding: 0.4in 0.45in;
 }
 
-.door--letter .dc-for { font-size: 0.6in; }
-.door--letter .dc-holiday { font-size: 1.5in; }
-.door--letter .dc-date { font-size: 0.82in; margin-top: 0.04in; }
+.dc-closed {
+    font-size: 2.7in;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.dc-why {
+    font-size: 0.95in;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.door--letter .dc-date { font-size: 0.82in; margin-top: 0.2in; }
 
 .dc-dates {
     font-family: 'Lato', sans-serif;

@@ -23,18 +23,17 @@ studioW: 1056
 studioH: 816
 studioOrder: 26
 ---
-{#- Same layout as sign-closed-bw, at letter size and for a run of days. -#}
+{#- A run of closed days at letter size. "Closed" is the biggest thing on
+    it and there's no week strip: the holiday says enough (Mitch 2026-11-23). -#}
 {%- set first = (specials.days | where("date", closedDates[0]))[0] or {} %}
 {%- set last = (specials.days | where("date", closedDates | last))[0] or {} %}
 {%- set why = first | closedText | replace("Closed for ", "") %}
 {%- set closedDate = closedDates[0] %}
 {%- set o = site.opening %}
 <div class="canvas sign sign--bw door door--closed door--letter">
+    <h2 class="p-display dc-closed">Closed</h2>
     {%- if why and why != "Closed" %}
-    <p class="p-display-italic dc-for">Closed for</p>
-    <h2 class="p-display dc-holiday">{{ why }}</h2>
-    {%- else %}
-    <h2 class="p-display dc-holiday">Closed</h2>
+    <p class="p-display-italic dc-why">for {{ why }}</p>
     {%- endif %}
     <p class="dc-date">
         {%- for d in closedDates %}{{ " & " if not loop.first }}{{ d | dayDate("weekday") }}{% endfor %}
@@ -42,8 +41,6 @@ studioOrder: 26
     <p class="dc-dates">
         {{- closedDates[0] | dayDate("monthDay") }}{% for d in closedDates %}{% if not loop.first %} & {{ d.split("-")[2] | int }}{% endif %}{% endfor -%}
     </p>
-
-    {% include "partials/studio/closed-week.njk" %}
 
     <div class="sign-spacer"></div>
     <p class="dc-back">Back {{ back | dayDate("long") }} at {{ o.opens.time | replace(":00", "") }}{{ o.opens.meridiem }}</p>
