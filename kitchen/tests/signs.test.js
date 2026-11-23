@@ -112,7 +112,7 @@ test("signs: the fridge's drinks are off until ticked, and a tick stays", async 
   assert.deepEqual(tomorrow.drinks, ["Starbucks Frappuccino (Vanilla)"], "a drink's tick isn't for today only");
   rows = signs.fridgeRows(items, tomorrow, drinks);
   assert.deepEqual(rows.filter((r) => r.on).map((r) => r.key), ["Carrot Cake", "Starbucks Frappuccino (Vanilla)"]);
-  assert.match(signs.fridgePage(rows, tomorrow), /fd-group-title">Drinks<\/h3>[\s\S]*Starbucks Frappuccino \(Vanilla\)[\s\S]*\$3\.00/, "under Drinks, with Square's price");
+  assert.match(signs.fridgePage(rows, tomorrow), /fd-group-title">Drinks<\/h3>[\s\S]*Starbucks Frappuccino<[\s\S]*\$3\.00/, "under Drinks, by its short name, with Square's price");
   signs.saveFridge(["Carrot Cake"], rows);
   assert.deepEqual(signs.fridgeSettings().drinks, [], "unticked, it's off");
   assert.doesNotMatch(signs.fridgePage(signs.fridgeRows(items, signs.fridgeSettings(), drinks)), /Drinks/, "no drinks, no heading");

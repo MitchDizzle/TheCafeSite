@@ -77,6 +77,8 @@ const FRIDGE_DEFAULTS = {
   names: {
     "M&M Brown Butter Chocolate Chip (2)": "M&M Cookies (2)",
     "Triple Chocolate Chip (2)": "Triple Chocolate Cookies (2)",
+    // On one line (Mitch 2026-11-23); vanilla is the only one.
+    "Starbucks Frappuccino (Vanilla)": "Starbucks Frappuccino",
   },
   caution: "Not self serve",
   cautionSub: "Please do not open. Ask at the counter.",
@@ -103,7 +105,9 @@ function fridgeSettings(today = localDate()) {
   return {
     skipItems: list(kept.skipItems, FRIDGE_DEFAULTS.skipItems),
     treats: list(kept.treats, FRIDGE_DEFAULTS.treats),
-    names: kept.names && typeof kept.names === "object" ? kept.names : FRIDGE_DEFAULTS.names,
+    // A name of the file's own wins; the defaults fill in the rest, so one
+    // added here still reaches a PC whose file has names.
+    names: { ...FRIDGE_DEFAULTS.names, ...(kept.names && typeof kept.names === "object" ? kept.names : {}) },
     caution: text(kept.caution, FRIDGE_DEFAULTS.caution),
     cautionSub: text(kept.cautionSub, FRIDGE_DEFAULTS.cautionSub),
     drinkItems: list(kept.drinkItems, FRIDGE_DEFAULTS.drinkItems),
