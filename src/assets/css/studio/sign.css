@@ -984,6 +984,13 @@
     white-space: nowrap;
 }
 
+/* The letter sign's holiday name, above "Closed" and nearly as big. */
+.door--letter .dc-holiday {
+    font-size: 1.55in;
+    line-height: 1;
+}
+.dc-closed--under { font-size: 2.3in; margin-top: 0.05in; }
+
 .door--letter .dc-date { font-size: 0.82in; margin-top: 0.2in; }
 
 .dc-dates {

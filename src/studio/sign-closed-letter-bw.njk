@@ -23,17 +23,20 @@ studioW: 1056
 studioH: 816
 studioOrder: 26
 ---
-{#- A run of closed days at letter size. "Closed" is the biggest thing on
-    it and there's no week strip: the holiday says enough (Mitch 2026-11-23). -#}
+{#- A run of closed days at letter size. The holiday is the first big word
+    and "Closed" the second, so someone reading only those from the street
+    knows why (Mitch 2026-11-23); no week strip, the holiday says enough. -#}
 {%- set first = (specials.days | where("date", closedDates[0]))[0] or {} %}
 {%- set last = (specials.days | where("date", closedDates | last))[0] or {} %}
 {%- set why = first | closedText | replace("Closed for ", "") %}
 {%- set closedDate = closedDates[0] %}
 {%- set o = site.opening %}
 <div class="canvas sign sign--bw door door--closed door--letter">
-    <h2 class="p-display dc-closed">Closed</h2>
     {%- if why and why != "Closed" %}
-    <p class="p-display-italic dc-why">for {{ why }}</p>
+    <h2 class="p-display dc-holiday">{{ why }}</h2>
+    <p class="p-display dc-closed dc-closed--under">Closed</p>
+    {%- else %}
+    <h2 class="p-display dc-closed">Closed</h2>
     {%- endif %}
     <p class="dc-date">
         {%- for d in closedDates %}{{ " & " if not loop.first }}{{ d | dayDate("weekday") }}{% endfor %}
