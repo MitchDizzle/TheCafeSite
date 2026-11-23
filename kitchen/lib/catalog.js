@@ -5,6 +5,9 @@
 const { MOCK } = require("./config");
 const { square } = require("./square");
 const { mockItems, mockCatalog, nextMockId } = require("./mock");
+// What Signs keeps from Square: dropped on every write here, so a change
+// the board makes is on the next sign.
+const { forget } = require("./square-cache");
 
 // Square's item list, for skipping whole categories: an order's line item
 // names its variation, not its category, so the catalog says which
@@ -100,6 +103,7 @@ async function readItem(id) {
 }
 
 async function writeItem(object) {
+  forget();
   if (MOCK) {
     if (object.version !== mockItems.get(object.id).version) throw new Error("Square 409: version mismatch");
     mockItems.set(object.id, { ...object, version: object.version + 1 });
@@ -114,6 +118,7 @@ async function readObject(id) {
 }
 
 async function writeObject(object) {
+  forget();
   if (MOCK) return writeItem(object);
   await square("POST", "/catalog/object", { idempotency_key: `kitchen-${object.id}-${Date.now()}`, object });
 }
@@ -136,6 +141,7 @@ async function modifierListsByName() {
 // Upsert one object and get Square's copy back, with real ids for the "#"
 // ones (a new list, a new option).
 async function upsertObject(object) {
+  forget();
   if (MOCK) {
     const copy = structuredClone(object);
     const real = (id) => (String(id).startsWith("#") ? `MOCK-${nextMockId()}` : id);
@@ -161,6 +167,7 @@ async function upsertObject(object) {
 // option). Square keeps past sales under their names.
 async function deleteObjects(ids) {
   if (!ids.length) return;
+  forget();
   if (MOCK) {
     for (const o of mockItems.values()) {
       const d = o.item_data || o.modifier_list_data;

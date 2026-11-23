@@ -26,6 +26,11 @@ const { pathToFileURL } = require("url");
 const { DIR, DATA, MOCK, cfg } = require("./config");
 const { localDate, cleanText } = require("./util");
 const { plan, siteFieldFor, modsFor, extrasOn } = require("./specials/plan");
+// Square's answers, kept until Refresh from Square (lib/square-cache.js).
+const { cached, readAt } = require("./square-cache");
+const squareDaily = (fresh) => cached("daily", () => require("./specials/daily").dailyItems(), fresh);
+const squareDesserts = (fresh) => cached("desserts", () => require("./desserts").dessertItems(), fresh);
+const squareDrinks = (fresh) => cached("drinks", () => fridgeDrinks(), fresh);
 
 let caption;
 try {
@@ -580,7 +585,7 @@ function shootPost(html) {
 // message }.
 async function postPicture(week = "next") {
   let daily = [];
-  try { daily = await require("./specials/daily").dailyItems(); } catch {}
+  try { daily = await squareDaily(); } catch {}
   const { start, days, opts } = weekFor(week, daily);
   if (!days.length) return { ok: false, message: `Nothing is set for ${week === "this" ? "this" : "next"} week yet. Set it in Specials first.` };
   const png = await shootPost(postDoc(postMarkup(days, opts)));
@@ -713,29 +718,30 @@ ${pages.join("\n")}
 // "week" (the week's specials, two to a page, Mitch 2026-11-18), "counter"
 // (the week's colour counter sign) and "post" (the Facebook post, Mitch
 // 2026-11-20) are for the week `week` says, "this" or "next", and aren't
-// made unless asked for.
+// made unless asked for. Square is read once and kept (squareDaily and the
+// rest above); `fresh` reads it again (Refresh from Square).
 const ALL_PAGES = ["sides", "day", "fridge"];
 const WEEK_PAGES = ["week", "counter", "post"];
 const PAGE_NAMES = [...ALL_PAGES, ...WEEK_PAGES];
-async function buildSigns(date, fridgeOn, want = ALL_PAGES, week = "next") {
+async function buildSigns(date, fridgeOn, want = ALL_PAGES, week = "next", fresh = false) {
   const today = localDate();
   const notes = [];
   const wants = new Set((Array.isArray(want) ? want : ALL_PAGES).filter((p) => PAGE_NAMES.includes(p)));
   let daily = [];
   const weekly = WEEK_PAGES.some((p) => wants.has(p));
   if (wants.has("sides") || wants.has("day") || weekly) {
-    try { daily = await require("./specials/daily").dailyItems(); } catch (err) {
+    try { daily = await squareDaily(fresh); } catch (err) {
       notes.push(`Square couldn't be read (${err.message}), so the special and soup have no prices.`);
     }
   }
   let rows = null;
   if (wants.has("fridge")) {
     try {
-      const items = await require("./desserts").dessertItems();
+      const items = await squareDesserts(fresh);
       // The drinks are extra: Square not answering for them leaves the
       // desserts' sign as it was.
       let drinks = [];
-      try { drinks = await fridgeDrinks(); } catch (err) { notes.push(`The fridge's drinks couldn't be read from Square (${err.message}).`); }
+      try { drinks = await squareDrinks(fresh); } catch (err) { notes.push(`The fridge's drinks couldn't be read from Square (${err.message}).`); }
       rows = fridgeRows(items, fridgeSettings(), drinks);
       if (fridgeOn) { saveFridge(fridgeOn, rows); rows = fridgeRows(items, fridgeSettings(), drinks); }
     } catch (err) {
@@ -771,6 +777,8 @@ async function buildSigns(date, fridgeOn, want = ALL_PAGES, week = "next") {
   const days = [today, ...Object.keys(plan.days).filter((x) => x > today).sort().slice(0, 2)];
   return {
     date, today, days, has, notes, made: [...wants], week,
+    // When what's on these pages was read from Square (ms), for the screen.
+    squareAt: readAt([...(daily.length ? ["daily"] : []), ...(rows ? ["desserts", "drinks"] : [])]),
     special: d.special, soup: d.soup, caption: postWords,
     fridge: (rows || []).map(({ key, name, price, out, on, treat, drink }) => ({ key, name, price, out, on, treat, drink: !!drink })),
     html: pages.length ? renderHtml(pages) : "",

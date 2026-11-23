@@ -119,6 +119,27 @@ test("signs: the fridge's drinks are off until ticked, and a tick stays", async 
   fs.rmSync(file, { force: true });
 });
 
+test("signs: Square is read once and kept, until Refresh, the next day or the board's own write", async () => {
+  const kept = require("../lib/square-cache");
+  kept.forget();
+  let reads = 0;
+  const read = () => { reads++; return [reads]; };
+  assert.deepEqual(await kept.cached("t", read), [1]);
+  assert.deepEqual(await kept.cached("t", read), [1], "kept");
+  assert.ok(kept.readAt(["t"]) <= Date.now());
+  assert.deepEqual(await kept.cached("t", read, true), [2], "Refresh from Square reads again");
+  await require("../lib/inventory").setCounts([{ id: "VAR-CC-Plain", count: 5 }]);
+  assert.equal(kept.readAt(["t"]), null, "a write the board makes drops what was kept");
+  assert.deepEqual(await kept.cached("t", read), [3]);
+  let fails = true;
+  await assert.rejects(kept.cached("u", () => { if (fails) throw new Error("no answer"); return "ok"; }));
+  fails = false;
+  assert.equal(await kept.cached("u", () => "ok"), "ok", "a failed read isn't kept");
+  kept.forget();
+  const r = await signs.buildSigns(today, null, ["fridge"]);
+  assert.ok(r.squareAt, "the screen says when Square was read");
+});
+
 test("signs: only the pages asked for, and none just answers the days", async () => {
   plan.days[today] = day("Meatloaf", "Potato Cheese", { sides: ["Mashed Potatoes", "Corn"] });
   const none = await signs.buildSigns(today, null, []);

@@ -5,6 +5,7 @@
 const { MOCK } = require("./config");
 const { square, resolveLocations } = require("./square");
 const { mockStock } = require("./mock");
+const { forget } = require("./square-cache");
 
 // variation id -> count, for the ids given. One missing from Square's answer
 // has never been counted: 0.
@@ -28,6 +29,7 @@ async function readCounts(ids) {
 // counts: [{ id, count }]: what was counted, as of now.
 async function setCounts(counts) {
   if (!counts.length) return;
+  forget(); // Signs' kept counts
   if (MOCK) {
     for (const c of counts) mockStock.set(c.id, c.count);
     return;
