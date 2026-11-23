@@ -1,0 +1,113 @@
+---
+layout: layouts/piece.njk
+title: "The Café — Weekly Specials with Photos, One Picture (1080 × 1350)"
+canvasW: "1080px"
+canvasH: "1350px"
+pageCss: "/assets/css/studio/fb-weekly-combo.css"
+
+# A dessert band under the week. `item` is its name in desserts.json (the
+# price comes from there, i.e. Square) and photos.json; `note` is a short
+# line under it. Delete `treat` for no band.
+treat:
+  name: "Cream Puffs"
+  item: "Cream Puff"
+  note: "Regular & chocolate"
+
+tags: studio
+studioPinned: true
+studioWeekly: true
+studioData: ["specials.json", "photos.json", "desserts.json"]
+studioTitle: "Weekly specials with photos — one Facebook picture"
+studioCategory: "Social"
+studioSize: "1080 × 1350 px · portrait feed post"
+studioNote: "The weekly specials post and the photos post in one picture, for a short week (Mitch 2026-11-22, Thanksgiving week: three days open). Every word comes from specials.json; each open day gets the newest photo in photos.json named like its plate, or a teal tile with the wordmark when there is none. A `treat` in the front matter adds a dessert band. Fits three open days; on a full week use fb-weekly-specials and fb-weekly-photos."
+studioW: 1080
+studioH: 1350
+studioOrder: 24
+---
+{#- A row per open day: the photo on the left, the day, plate, sides and
+    soup beside it. Closed days share one line under them, then the treat,
+    then the sides. Red only on cream. -#}
+{%- set week = specials.days | latestWeek %}
+{%- set soupCat = (menu.categories | where("id", "soup"))[0] %}
+{%- set sidesCat = (menu.categories | where("id", "sides"))[0] %}
+{%- set deli = (sidesCat.items | selectattr("choices") | first) if sidesCat else null %}
+{%- set first = week[0].date | dayDate("monthDay") %}
+{%- set last = week[week.length - 1].date | dayDate("monthDay") %}
+{%- if first.split(" ")[0] == last.split(" ")[0] %}
+{%- set range = first + " – " + last.split(" ")[1] %}
+{%- else %}
+{%- set range = first + " – " + last %}
+{%- endif %}
+{%- set closedDays = days | selectattr("closed") %}
+<div class="canvas wc">
+
+    <header class="wc-head">
+        <div class="wordmark wordmark--light wordmark--hero wc-wordmark">
+            {% inlineSvg "/assets/thecafe.svg", "", site.name %}
+        </div>
+        <p class="p-display-italic wc-kicker">Lunch Specials</p>
+        <p class="p-label wc-range">{{ range }} &middot; {{ site.address.locality }}, {{ site.address.region }}</p>
+    </header>
+
+    <div class="wc-body">
+        <p class="wc-prices">
+            <span class="wc-price wc-price--special">From 11am &middot; {{ specials.price | money | replace(".00", "") }}{% if specials.includesDrink %}, drink included{% endif %}</span>
+            {%- if soupCat and soupCat.items %}
+            <span class="wc-price">Soup {% for s in soupCat.items %}{% if not loop.first %} <span class="dot">&middot;</span> {% endif %}{{ s.name }} {{ s.price | money | replace(".00", "") }}{% endfor %}</span>
+            {%- endif %}
+        </p>
+
+        <div class="wc-days">
+            {%- for d in days %}{% if not d.closed %}
+            {%- set sides = d | specialSides(true) %}
+            <article class="wc-day">
+                {%- if d.photo %}
+                <img class="wc-photo" src="{{ d.photo.file }}" alt="{{ d.photo.alt }}">
+                {%- else %}
+                <div class="wc-photo wc-photo--none" aria-hidden="true">
+                    <div class="wordmark wordmark--light wc-photo-mark">{% inlineSvg "/assets/thecafe.svg", "", site.name %}</div>
+                </div>
+                {%- endif %}
+                <div class="wc-text">
+                    <p class="p-label wc-dayname">{{ d.date | dayDate("weekday") }}</p>
+                    <p class="p-display wc-special">{{ d.special }}{% if d.price and d.price != specials.price %} <span class="wc-day-price">{{ d.price | money | replace(".00", "") }}</span>{% endif %}</p>
+                    {%- if sides %}<p class="p-body wc-sides">{{ sides }}</p>{% endif %}
+                    {%- if d.soup %}<p class="wc-soup"><span class="wc-soup-label">Soup</span> {{ d.soup }}</p>{% endif %}
+                </div>
+            </article>
+            {%- endif %}{% endfor %}
+        </div>
+
+        {%- if closedDays | length %}
+        <div class="wc-closed">
+            <p class="p-display wc-closed-line">Closed {% for d in closedDays %}{% if not loop.first %} &amp; {% endif %}{{ d.date | dayDate("short") }}{% set why = (d | closedText) | replace("Closed for ", "") | replace("Closed", "") %}{% if why %} for {{ why }}{% endif %}{% endfor %}</p>
+            {%- for d in closedDays %}{% if d.message %}
+            <p class="p-body wc-closed-msg">{{ d.message }}</p>
+            {%- endif %}{% endfor %}
+        </div>
+        {%- endif %}
+
+        {%- if treatInfo %}
+        <section class="wc-treat">
+            {%- if treatInfo.photo %}
+            <img class="wc-treat-photo" src="{{ treatInfo.photo.file }}" alt="{{ treatInfo.photo.alt }}">
+            {%- endif %}
+            <div class="wc-treat-text">
+                <p class="p-display wc-treat-name">{{ treatInfo.name }} too!</p>
+                <p class="p-body wc-treat-note">{{ treatInfo.note }}{% if treatInfo.note and treatInfo.price %} <span class="dot">&middot;</span> {% endif %}{{ treatInfo.price }}</p>
+            </div>
+        </section>
+        {%- endif %}
+
+        {%- if deli %}
+        <p class="p-body wc-choice"><strong>Sides:</strong> {{ deli.choices | join(", ") }}{% if specials.soupSide %}, or a cup of the day&rsquo;s soup{% endif %}. Swap one in on any special.</p>
+        {%- endif %}
+    </div>
+
+    <footer class="wc-foot">
+        <p class="p-display wc-foot-call">{{ site.phone }} <span class="dot">&middot;</span> {{ site.social.website }}</p>
+        <p class="p-body wc-foot-line">{{ site.opening.hoursDays }}, {{ site.opening.opens.time }}{{ site.opening.opens.meridiem }} &ndash; {{ site.opening.closes.time }}{{ site.opening.closes.meridiem }} &middot; {{ site.address.street }}, {{ site.address.locality }}, {{ site.address.region }}</p>
+    </footer>
+
+</div>

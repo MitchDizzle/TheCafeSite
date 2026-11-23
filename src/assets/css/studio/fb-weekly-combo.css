@@ -1,0 +1,240 @@
+/* ============================================================
+   Weekly specials with photos, one picture — Facebook post, 1080 × 1350
+   Piece: src/studio/fb-weekly-combo.njk · data: specials.json, photos.json,
+   desserts.json
+
+   The weekly post's teal bands and cream body. Red only on cream. Shown
+   about 540px wide on a phone: nothing a customer needs is under 24px.
+   ============================================================ */
+
+.wc {
+    background: var(--cream);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Masthead ─────────────────────────────────────────────── */
+
+.wc-head {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 55%, #3C7183 100%);
+    color: var(--cream);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 28px 60px 18px;
+    border-bottom: 10px solid var(--accent);
+}
+
+.wc-wordmark { --mark-w: 230px; }
+
+.wc-kicker {
+    font-size: 40px;
+    margin-top: 4px;
+}
+
+.wc-range {
+    font-size: 24px;
+    color: var(--mint);
+    margin-top: 4px;
+    text-indent: 0.18em;
+}
+
+/* ── Body ─────────────────────────────────────────────────── */
+
+.wc-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 44px 14px;
+}
+
+.wc-prices {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 27px;
+    color: var(--teal-dark);
+    padding: 0 4px 12px;
+    border-bottom: 3px solid var(--accent);
+}
+
+.wc-price--special { color: var(--accent); }
+
+.wc-days {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-auto-rows: 1fr;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.wc-day {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    /* One definite row, so a tall photo can't stretch the card and push
+       the words out of sight. */
+    grid-template-rows: 100%;
+    gap: 26px;
+    align-items: center;
+    min-height: 0;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 6px 18px rgba(31, 69, 82, 0.14);
+    overflow: hidden;
+}
+
+.wc-photo {
+    display: block;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Photos taken at the counter: the plate sits low in the frame. */
+.wc-photo { object-position: 50% 70%; }
+
+.wc-photo--none {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wc-photo-mark { --mark-w: 210px; }
+
+.wc-text {
+    padding: 10px 20px 10px 0;
+}
+
+.wc-dayname {
+    font-size: 24px;
+    color: var(--accent);
+}
+
+.wc-special {
+    font-size: 44px;
+    line-height: 1.05;
+    color: var(--teal-dark);
+    margin-top: 2px;
+}
+
+.wc-day-price {
+    font-family: 'Lato', sans-serif;
+    font-weight: 900;
+    font-size: 30px;
+    color: var(--accent);
+}
+
+.wc-sides {
+    font-size: 27px;
+    line-height: 1.2;
+    margin-top: 4px;
+}
+
+.wc-soup {
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 27px;
+    color: var(--teal);
+    margin-top: 6px;
+}
+
+.wc-soup-label {
+    font-weight: 900;
+    font-size: 20px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--teal-dark);
+    margin-right: 0.3em;
+}
+
+/* ── Closed days ──────────────────────────────────────────── */
+
+.wc-closed {
+    text-align: center;
+    margin-top: 16px;
+}
+
+.wc-closed-line {
+    font-style: italic;
+    font-size: 33px;
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+.wc-closed-msg {
+    font-style: italic;
+    font-size: 25px;
+    margin-top: 2px;
+}
+
+/* ── The treat ────────────────────────────────────────────── */
+
+.wc-treat {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-top: 12px;
+    padding: 8px 26px 8px 8px;
+    border: 3px solid var(--teal);
+    border-radius: 18px;
+}
+
+.wc-treat-photo {
+    width: 140px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 12px;
+    flex: none;
+}
+
+.wc-treat-name {
+    font-size: 40px;
+    line-height: 1.05;
+    color: var(--teal-dark);
+}
+
+.wc-treat-note {
+    font-size: 27px;
+    margin-top: 4px;
+}
+
+/* ── Sides ────────────────────────────────────────────────── */
+
+.wc-choice {
+    font-size: 24px;
+    line-height: 1.3;
+    text-align: center;
+    margin-top: 12px;
+}
+
+.wc-choice strong { color: var(--teal-dark); }
+
+/* ── Footer ───────────────────────────────────────────────── */
+
+.wc-foot {
+    background: var(--teal-dark);
+    color: var(--cream);
+    text-align: center;
+    padding: 18px 40px 26px;
+}
+
+.wc-foot-call {
+    font-size: 40px;
+    white-space: nowrap;
+}
+
+.wc-foot-line {
+    font-size: 23px;
+    margin-top: 4px;
+    opacity: 0.88;
+}
+
+.dot { opacity: 0.55; margin: 0 0.3em; }
