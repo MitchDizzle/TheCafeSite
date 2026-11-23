@@ -167,6 +167,17 @@
       "date": "2026-10-12"
     },
     {
+      "file": "/assets/photos/french-dip.jpg",
+      "item": null,
+      "special": true,
+      "variant": null,
+      "title": "French Dip",
+      "description": "Served with au jus and oven baked potatoes",
+      "includesDrink": true,
+      "alt": "A French dip sandwich of sliced roast beef on a hoagie roll, cut in half, with a cup of au jus and oven baked potatoes on a white plate.",
+      "date": "2026-10-13"
+    },
+    {
       "file": "/assets/photos/asian-chicken-wrap-2.jpg",
       "item": "Asian Chicken Wrap",
       "special": false,
