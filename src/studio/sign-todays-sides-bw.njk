@@ -52,7 +52,9 @@ studioOrder: 34
 {%- set picks = [def] if def else ((d.sides if both else (d.sides[0] or "").split(" or ")) if (d and d.sides) else []) %}
 <div class="canvas sign sign--bw ts{% if both %} ts--both{% endif %}{% if versions.length %} ts--versions{% endif %}{% if d and d.anySide %} ts--any{% endif %}">
     <div class="sign-heading">
-        <h2 class="p-display sign-heading-title">Today&rsquo;s Special{% if not versions.length %} Sides{% endif %}</h2>
+        {#- "Today's Special", never "... Sides" (Mitch 2026-11-23: with the
+            sides boxed under "Special Sides", a side read as the plate). #}
+        <h2 class="p-display sign-heading-title">Today&rsquo;s Special</h2>
     </div>
     <div class="ts-fill"></div>
 
@@ -107,7 +109,7 @@ studioOrder: 34
                 above, in the boxes): sides not normally carried, first, as
                 Square lists them (client 2026-11-05: Twice Baked Potato Salad). #}
             {%- for c in ((d.extraSides or []) if d else []) %}
-            {%- if not (d.sides and c in d.sides) %}
+            {%- if not (d.sides and c in d.sides) and not (c in picks) %}
             <li>{{ c }} <small class="ts-today">today only</small></li>
             {%- endif %}
             {%- endfor %}

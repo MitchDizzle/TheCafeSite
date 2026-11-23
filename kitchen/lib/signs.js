@@ -249,7 +249,9 @@ function signDay(date, daily = [], today = localDate()) {
 // the sheet under the heading, not split to top and bottom (Mitch
 // 2026-11-17: too much white space), and a choice of side, with little on
 // it, is set a size up (.ts--any). The plate's price goes under its name
-// (Mitch 2026-11-17: $10 on the sign).
+// (Mitch 2026-11-17: $10 on the sign). The heading is "Today's Special" and
+// the plate is set well above the sides (Mitch 2026-11-23: a big boxed Twice
+// Baked Potato Casserole read as the main dish).
 function sidesPage(d, { swapSides = [], soupSide = false } = {}) {
   const both = !!(d.sides && d.sides.length > 1);
   const def = d.anySide ? cleanText(d.defaultSide) : "";
@@ -276,7 +278,9 @@ function sidesPage(d, { swapSides = [], soupSide = false } = {}) {
       <div class="ts-picks">${picks.map((s, i) => `${i ? `<p class="ts-or">${both ? "and" : "or"}</p>` : ""}<p class="p-display ts-pick${s.length > 22 ? " ts-pick--long" : ""}">${esc(s)}</p>`).join("")}</div>
       ${both ? '<p class="ts-more">Like one better? Double up on it.</p><p class="ts-more">Each side is also sold separately.</p>' : ""}`;
   }
-  const own = new Set([...(d.sides || []), def].filter(Boolean).map((s) => s.toLowerCase()));
+  // Each half of an "A or B" side counts as the plate's own, so it isn't
+  // listed again under the swaps.
+  const own = new Set([...(d.sides || []).flatMap((s) => [s, ...s.split(/\s+or\s+/i)]), def].filter(Boolean).map((s) => s.toLowerCase()));
   const swaps = [
     ...(d.extraSides || []).filter((c) => !own.has(c.toLowerCase())).map((c) => `<li>${esc(c)} <small class="ts-today">today only</small></li>`),
     ...swapSides.filter((c) => !own.has(c.toLowerCase())).map((c) => `<li>${esc(c)}</li>`),
@@ -284,7 +288,7 @@ function sidesPage(d, { swapSides = [], soupSide = false } = {}) {
   ];
   const title = plain ? "Comes with one side. Pick from:" : def ? "Or swap it for any of these" : both ? "Or swap a side for any of these" : "Or any of our regular sides";
   return `<div class="canvas sign sign--bw ts${both ? " ts--both" : ""}${versions.length ? " ts--versions" : ""}${d.anySide ? " ts--any" : ""}" data-page="sides"><div class="fit">
-    <div class="sign-heading"><h2 class="p-display sign-heading-title">Today&rsquo;s Special${versions.length ? "" : " Sides"}</h2></div>
+    <div class="sign-heading"><h2 class="p-display sign-heading-title">Today&rsquo;s Special</h2></div>
     <div class="ts-fill"></div>
     ${top}
     <div class="sign-spacer"></div>
