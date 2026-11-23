@@ -960,6 +960,33 @@
     line-height: 1.2;
 }
 
+/* The letter-size closed sign (sign-closed-letter-bw, 11 × 8.5 in): the
+   same sign at about two thirds, with the days named under the holiday. */
+
+.door--letter {
+    padding: 0.4in 0.45in;
+}
+
+.door--letter .dc-for { font-size: 0.6in; }
+.door--letter .dc-holiday { font-size: 1.5in; }
+.door--letter .dc-date { font-size: 0.82in; margin-top: 0.04in; }
+
+.dc-dates {
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 0.5in;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.door--letter .cw { gap: 0.1in; margin-top: 0.22in; }
+.door--letter .cw-day { border-width: 0.03in; padding: 0.06in 0.06in 0.08in; column-gap: 0.08in; }
+.door--letter .cw-name { font-size: 0.34in; }
+.door--letter .cw-num { font-size: 0.46in; }
+.door--letter .cw-state { font-size: 0.42in; }
+.door--letter .dc-back { font-size: 0.54in; }
+.door--letter .dc-thanks { font-size: 0.4in; margin-top: 0.06in; }
+
 /* ── Tip jar label: two per sheet, cut on the dashes ─────── */
 
 .tipjar-sheet {
