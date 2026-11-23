@@ -417,3 +417,18 @@
 .d-closed-more { display: grid; gap: 0.4rem; margin-top: 0.4rem; }
 .d-closed-more[hidden] { display: none; }
 .m-day.closed .d-item, .m-day.closed .d-more { display: none; }
+
+/* Manage -> Tax exempt (front/tax-exempt.js): a card per tax-free sale,
+   amber until it has its exemption number, dimmed once left off. */
+.tx-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.tx-sale { border: 2px solid var(--line); border-radius: 0.5rem; padding: 0.6rem 0.75rem; display: grid; gap: 0.45rem; }
+.tx-sale.todo { border-color: var(--amber, #D4900F); background: #FFF7E6; }
+.tx-sale.off { opacity: 0.6; }
+.tx-what b { display: block; font-size: 1.05rem; }
+.tx-what small { color: var(--muted); }
+.tx-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.5rem; }
+.tx-acts, .tx-off { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0; }
+.tx-msg { font-size: 0.9rem; }
+.tx-add { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.6rem; }
+.tx-list .m-mini { font: inherit; font-size: 0.9rem; font-weight: 700; padding: 0.3rem 0.75rem; border: 1.5px solid var(--action); border-radius: 999px; background: transparent; color: var(--action-dark); cursor: pointer; }
+.tx-list .m-mini[data-tx="save"] { background: var(--action); color: #fff; }

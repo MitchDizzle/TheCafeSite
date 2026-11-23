@@ -84,6 +84,9 @@ function dayRecords() {
       sales: o.total_money && o.total_money.amount != null ? o.total_money.amount / 100 : null,
       net,
       tip: tipOf(o),
+      // The sales tax on it: 0 on a sale rung with the tax taken off (a
+      // veteran's exemption, Manage -> Tax exempt, lib/tax-exempt.js).
+      tax: taxOf(o),
       items: food.map((li) => ({
         name: itemName(li),
         variation: li.variation_name && li.variation_name !== "Regular" ? li.variation_name : null,
@@ -124,6 +127,7 @@ function netSales(o) {
 }
 
 const tipOf = (o) => ((o.total_tip_money && o.total_tip_money.amount) || 0) / 100;
+const taxOf = (o) => (o.total_money ? ((o.total_tax_money && o.total_tax_money.amount) || 0) / 100 : null);
 
 // A day's order, as sales: Net sales, or its total for an order saved
 // before the board kept Net sales and not yet filled in (fillNet).
@@ -262,8 +266,9 @@ function writeHistory() {
   fs.renameSync(HISTORY_FILE + ".tmp", HISTORY_FILE);
 }
 
-// Days saved before the board kept Net sales and tips (2026-10-27), or the
-// soup picked as the special's side (2026-11-09), get them from
+// Days saved before the board kept Net sales and tips (2026-10-27), the
+// soup picked as the special's side (2026-11-09) or the tax (2026-11-23,
+// so a tax-free sale from before then is found for Tax exempt), get them from
 // Square once, by order id, a hundred orders a call, so Reports and /today
 // compare like with like. Runs at start; an order Square can't find keeps
 // its total.
@@ -273,7 +278,7 @@ async function fillNet() {
   const special = (r) => (r.items || []).some((i) => /^lunch special$/i.test(i.name));
   for (const day of Object.values(history.days)) for (const r of day.orders) {
     if (r.soupSides === undefined && !special(r)) r.soupSides = 0; // nothing to look up
-    if ((r.net === undefined || r.tip === undefined || r.soupSides === undefined) && r.id) todo.set(r.id, r);
+    if ((r.net === undefined || r.tip === undefined || r.soupSides === undefined || r.tax === undefined) && r.id) todo.set(r.id, r);
   }
   if (!todo.size) return;
   const ids = [...todo.keys()];
@@ -281,14 +286,15 @@ async function fillNet() {
   let filled = 0;
   for (let i = 0; i < ids.length; i += 100) {
     const { orders = [] } = await square("POST", "/orders/batch-retrieve", { location_id, order_ids: ids.slice(i, i + 100) });
-    for (const o of orders) Object.assign(todo.get(o.id), { net: netSales(o), tip: tipOf(o), soupSides: soupSidesOf(o) }), filled++;
+    for (const o of orders) Object.assign(todo.get(o.id), { net: netSales(o), tip: tipOf(o), soupSides: soupSidesOf(o), tax: taxOf(o) }), filled++;
   }
   for (const r of todo.values()) {
     if (r.net === undefined) Object.assign(r, { net: null, tip: null });
     if (r.soupSides === undefined) r.soupSides = null; // Square couldn't find it: not counted
+    if (r.tax === undefined) r.tax = null; // not known: never flagged tax-free
   }
   writeHistory();
-  console.log(`Stats history: Net sales, tips and soup sides filled in for ${filled} earlier order(s)`);
+  console.log(`Stats history: Net sales, tips, soup sides and tax filled in for ${filled} earlier order(s)`);
 }
 if (!MOCK) setTimeout(() => fillNet().catch((err) => console.error(`Stats history: ${err.message}`)), 10000).unref();
 

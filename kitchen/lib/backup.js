@@ -19,9 +19,10 @@ const { DATA, MOCK, DEV, cfg } = require("./config");
 const { localDate } = require("./util");
 const { offsiteStatus, pushOffsite } = require("./offsite");
 
-// surveys.json is copied here (this PC, backupDir) but not to the GitHub
-// backup (lib/offsite.js): customers' own words stay off GitHub.
-const FILES = ["stats-history.json", "specials-plan.json", "state.json", "reservations.json", "surveys.json"];
+// surveys.json and tax-exempt.json are copied here (this PC, backupDir) but
+// not to the GitHub backup (lib/offsite.js): customers' own words and
+// veterans' exemption numbers stay off GitHub.
+const FILES = ["stats-history.json", "specials-plan.json", "state.json", "reservations.json", "surveys.json", "tax-exempt.json"];
 const BACKUP_HOUR = 14; // 2pm, closing time: the PC may be off by 3
 const KEEP_DAYS = 30;
 const LOCAL = path.join(DATA, "backups");

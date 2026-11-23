@@ -9,8 +9,9 @@ const { live } = require("./live");
 const { catalog, loadCatalog, modifierListsByName } = require("./catalog");
 const { bump, bumped, platesDone, handedOff, canceled, sentNow, byHand, doneAtFront, keepOnFront, pinned, autoOff, state, unbump, saveState, setSkip, skipSummary } = require("./state");
 const { poll, watched, snapshot, frontSnapshot, lastCleared, lastHandedOff, startDemo, endDemo, resetDay } = require("./orders");
-const { recordHistoryNow, historyReport, todayView } = require("./stats");
+const { recordHistoryNow, historyReport, todayView, historyDays } = require("./stats");
 const surveys = require("./surveys");
+const taxExempt = require("./tax-exempt");
 const { dessertItems, saveDesserts, saveDessertPhoto, newDessert } = require("./desserts");
 const { RETRY_MINUTES, pullSite, planView, savePlanDays } = require("./specials/plan");
 const { applyToday } = require("./specials/today");
@@ -76,7 +77,7 @@ function isLocal(req) {
 
 // What another device on the wifi (or the owner's phone over Tailscale) may
 // reach: the front page, the phone page (/today) and their own actions. With frontKey set, it must also carry ?key=<frontKey>.
-const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/send-to-kitchen", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated", "/api/front-pin", "/api/front-print-report", "/api/front-signs", "/api/front-signs-post", "/api/front-mail-report", "/api/front-mail-report-save", "/api/front-mail-report-send"]);
+const NETWORK_PATHS = new Set(["/front", "/today", "/api/front", "/api/front-today", "/api/handoff", "/api/cancel-unpaid", "/api/send-to-kitchen", "/api/front-skip", "/api/front-skip-save", "/api/front-unlock", "/api/front-desserts", "/api/front-desserts-save", "/api/front-dessert-photo", "/api/front-dessert-new", "/api/handoff-undo", "/api/unhandoff", "/api/front-update", "/api/front-reset", "/api/front-plan", "/api/front-plan-save", "/api/front-report", "/api/front-survey", "/api/front-survey-import", "/api/front-survey-remove", "/api/front-survey-website", "/api/front-photo", "/api/front-photo-save", "/api/front-saved-photos", "/api/front-saved-photo", "/api/front-saved-photos-delete", "/api/front-saved-photos-clear", "/api/front-photo-file", "/api/front-backup", "/api/front-reservations", "/api/front-reservation-save", "/api/front-reservation-act", "/api/reservation-seated", "/api/front-pin", "/api/front-print-report", "/api/front-signs", "/api/front-signs-post", "/api/front-mail-report", "/api/front-mail-report-save", "/api/front-mail-report-send", "/api/front-tax-exempt", "/api/front-tax-exempt-save", "/api/front-tax-exempt-not", "/api/front-tax-exempt-add", "/api/front-tax-exempt-remove"]);
 // The front page's home-screen icon and app manifest: what a phone fetches to
 // put /front on its home screen. Nothing in them is private, and a phone
 // fetches the icons without the page's ?key=, so they never need it.
@@ -105,6 +106,7 @@ const STATIC = {
   "/front/reservations.js": "front/reservations.js",
   "/front/print-report.js": "front/print-report.js",
   "/front/signs.js": "front/signs.js",
+  "/front/tax-exempt.js": "front/tax-exempt.js",
 };
 
 // Wrong update PINs from /front: after 5 in 10 minutes, refuse for 10.
@@ -448,6 +450,28 @@ async function handle(req, res) {
     }
     recordHistoryNow();
     return send(res, 200, { ok: true, ...historyReport(body.from, body.to, !!body.orders) });
+  }
+  // Manage -> Tax exempt, behind the PIN: the tax-free counter sales for a
+  // range with their exemption numbers, a number saved against one, one
+  // marked not an exemption, a sale added or taken out by hand
+  // (lib/tax-exempt.js). Today is saved first, so a sale just rung is there.
+  if (req.method === "POST" && url.pathname.startsWith("/api/front-tax-exempt")) {
+    const body = await readBody(req);
+    const refused = pinRefusal(body.pin);
+    if (refused) return send(res, 200, { ok: false, message: refused });
+    const id = String(body.id || "");
+    if (url.pathname === "/api/front-tax-exempt") {
+      const day = /^\d{4}-\d{2}-\d{2}$/;
+      if (!day.test(body.from || "") || !day.test(body.to || "") || body.from > body.to) {
+        return send(res, 200, { ok: false, message: "Pick a start date on or before the end date." });
+      }
+      recordHistoryNow();
+      return send(res, 200, { ok: true, ...taxExempt.taxExemptReport(body.from, body.to, historyDays()) });
+    }
+    if (url.pathname === "/api/front-tax-exempt-save") return send(res, 200, taxExempt.setNumber(id, { number: body.number, name: body.name }));
+    if (url.pathname === "/api/front-tax-exempt-not") return send(res, 200, taxExempt.setNotExempt(id, !!body.on));
+    if (url.pathname === "/api/front-tax-exempt-add") return send(res, 200, taxExempt.addSale(body));
+    if (url.pathname === "/api/front-tax-exempt-remove") return send(res, 200, taxExempt.removeAdded(id));
   }
   // Manage -> Survey, behind the PIN: the answers for a range, importing a
   // sheet (preview first), taking an import back out, and the summary for

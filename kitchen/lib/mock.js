@@ -229,6 +229,13 @@ function mockOrders() {
   // Each order's total as Square would have it, tax included, for the
   // day's sales.
   for (const o of orders) if (!o.total_money) o.total_money = { amount: mockTotal(o.line_items), currency: "USD" };
+  // Its tax, and one counter sale rung with the tax taken off (a veteran's
+  // exemption), to try Manage -> Tax exempt.
+  for (const o of orders) {
+    if (o.total_tax_money) continue;
+    if (o.id === "MOCKCOUNTER0004") o.total_money.amount = Math.round(o.total_money.amount / 1.09);
+    o.total_tax_money = { amount: o.id === "MOCKCOUNTER0004" ? 0 : o.total_money.amount - Math.round(o.total_money.amount / 1.09), currency: "USD" };
+  }
   return orders;
 }
 

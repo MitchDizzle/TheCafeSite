@@ -9,7 +9,8 @@ const { bumped, platesDone, offBoard, handedOff, canceled, sentNow, keepOnFront,
 const { splitAdded, seenLate } = require("./addons");
 const { toTicket, markSameTable, keepTablesTogether, hiddenReason, waitUntil, frontHiddenReason, readyAt } = require("./tickets");
 const { withMockStates } = require("./square-status");
-const { statsToday, recordHistory } = require("./stats");
+const { statsToday, recordHistory, historyDays } = require("./stats");
+const { toDoToday } = require("./tax-exempt");
 const { DEMO_MINUTES, isDemo, mockOrders, demoOrders } = require("./mock");
 const { screenView } = require("./reservations");
 
@@ -251,7 +252,10 @@ function frontSnapshot() {
   return { orders, lastOkAt: live.lastOkAt, error: live.lastError, mock: MOCK, lastHandedOff: lastHandedOff(),
     handedOffList: undoList(handedOff).map((h) => ({ ...h, auto: autoOff.has(h.id) })), stats: statsToday(), demo: live.demo,
     updatePin: !!cfg.updatePin, pollSeconds: pollEvery, autoHandoffMinutes: cfg.autoHandoffMinutes,
-    reservations: screenView(), pageVersion: pageVersions.front };
+    reservations: screenView(), pageVersion: pageVersions.front,
+    // Today's tax-free counter sales still without an exemption number: the
+    // times and amounts only, for the reminder line (Manage -> Tax exempt).
+    taxFree: toDoToday(historyDays()) };
 }
 
 // ---------------------------------------------------------------- demo

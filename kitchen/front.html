@@ -388,6 +388,10 @@
   .resv-item button { font: inherit; font-weight: 800; padding: 0.35rem 0.9rem; border: 2px solid var(--action); border-radius: 0.4rem; background: var(--action); color: #fff; cursor: pointer; }
   .resv-line { margin: 0; color: var(--teal-dark); font-size: 0.95rem; }
   .resv-line button { font: inherit; font-weight: 800; padding: 0.2rem 0.6rem; border: 2px solid var(--red); border-radius: 0.4rem; background: var(--paper); color: var(--red-dark); cursor: pointer; }
+  /* Today's tax-free sales still without an exemption number (Manage -> Tax exempt). */
+  .taxfree { padding: 0.5rem 1.2rem; background: #FFF7E6; border-bottom: 1px solid var(--line); }
+  .taxfree[hidden] { display: none; }
+  .taxfree button { font: inherit; font-weight: 800; padding: 0.3rem 0.8rem; border: 2px solid var(--action); border-radius: 0.4rem; background: var(--paper); color: var(--text); cursor: pointer; text-align: left; }
   .test-tag { display: inline-block; padding: 0 0.4rem; margin-right: 0.4rem; border-radius: 0.25rem; background: #DDE3E6; color: var(--text); font-weight: 900; }
 </style>
 </head>
@@ -416,6 +420,7 @@
   </div>
   <div class="alert" id="alert" hidden></div>
   <section class="resv" id="resv" aria-label="Reservations today" hidden></section>
+  <section class="taxfree" id="taxfree" aria-label="Tax-free sales" hidden></section>
   <main>
     <h2>Ready <span class="h-note" id="auto-note"></span></h2>
     <div class="list" id="ready"></div>
@@ -819,6 +824,7 @@
     if (!undoMenu.hidden) renderUndoMenu();
     renderStats(data.stats);
     renderResv(data.reservations);
+    renderTaxFree(data.taxFree);
 
     const json = JSON.stringify(data.orders);
     if (json === lastJson) return;
@@ -1041,6 +1047,21 @@
     send("/api/reservation-seated", { id });
   });
 
+  // ---- A sale rung today with the tax taken off (a veteran's exemption)
+  // and no exemption number yet: one line, which opens Manage -> Tax exempt.
+  const taxEl = document.getElementById("taxfree");
+  let taxHtml = "";
+  let lastTaxFree = [];
+  function renderTaxFree(list) {
+    lastTaxFree = list || [];
+    const html = lastTaxFree.length ? `<button type="button" data-taxfree>${lastTaxFree.length === 1
+      ? `Tax-free sale at ${fmtTime(lastTaxFree[0].at)} ($${lastTaxFree[0].amount.toFixed(2)}): add the exemption number`
+      : `${lastTaxFree.length} tax-free sales today need their exemption numbers`}</button>` : "";
+    taxEl.hidden = !html;
+    if (html !== taxHtml) taxEl.innerHTML = taxHtml = html;
+  }
+  taxEl.addEventListener("click", (e) => { if (e.target.closest("[data-taxfree]")) openManage("tax-exempt"); });
+
   // ---- today's numbers (breakfast / lunch split at 10:30am)
   function renderStats(st) {
     const el = document.getElementById("today");
@@ -1152,7 +1173,7 @@
   }
 
   // What the Manage jobs in front/*.js (Specials, Reservations, Photo post,
-  // Reports, Print a report, Signs, Survey, Desserts, Saved photos, Leave off
+  // Reports, Print a report, Signs, Tax exempt, Survey, Desserts, Saved photos, Leave off
   // kitchen tickets) share with this page. Each file is
   // loaded after this script and registers its menu row's job in tools
   // (and any of its own buttons in acts) under the row's data-act name.
@@ -1236,6 +1257,7 @@
     reservations: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     desserts: '<path d="M5 11h14l-1.5 9h-11z"/><path d="M7 11a5 5 0 0 1 10 0"/><path d="M12 6V4"/>',
     photo: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    "tax-exempt": '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 9l6 6M9.5 15h0M14.5 9h0"/>',
     signs: '<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/>',
     numbers: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
     tools: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
@@ -1259,6 +1281,7 @@
           ${tile("desserts", "Desserts", "What's in, how many left")}
           ${tile("photo", "Photo post", "A dish's Facebook picture")}
           ${tile("signs", "Signs", "Today's signs, the week's specials, the Facebook post")}
+          ${tile("tax-exempt", "Tax exempt", lastTaxFree.length ? `${lastTaxFree.length} need${lastTaxFree.length === 1 ? "s" : ""} a number` : "Veterans' exemption numbers", lastTaxFree.length)}
         </div>
         ${section("numbers", "Numbers", "Today's report · Print a report · Reports · Survey", [
           row("today", "Today's report", "Sales so far against last week, and what's selling"),
@@ -1326,5 +1349,6 @@
 <script src="/front/saved-photos.js"></script>
 <script src="/front/print-report.js"></script>
 <script src="/front/signs.js"></script>
+<script src="/front/tax-exempt.js"></script>
 </body>
 </html>
