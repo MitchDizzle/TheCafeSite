@@ -304,7 +304,8 @@
          id="rect35" />
     </pattern>
   </defs>
-  <!-- sky, clouds lit from below, the sun coming up behind the trees -->
+  <!-- sky, clouds lit from below, the sun coming up behind the trees (the sun
+    and its glow are class="sf-sun": the game's intro raises them, owner 2026-11-24) -->
   <rect
      width="360"
      height="132"
@@ -410,12 +411,14 @@
      r="40"
      fill="#FFF1C9"
      opacity=".3"
+     class="sf-sun"
      id="circle48" />
   <circle
      cx="256"
      cy="114"
      r="21"
      fill="#FFF4D2"
+     class="sf-sun"
      id="circle49" />
   <!-- trees and the roof unit, behind the roofline -->
   <g

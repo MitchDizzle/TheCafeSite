@@ -33,3 +33,13 @@
     .ou *, .ou *::before, .ou *::after { animation: none !important; transition: none !important; }
     .ou-ticket.is-aim { transform: none; }
 }
+
+/* ---------- the intro (owner 2026-11-24) ----------
+   Played by 19-start.js once a visit: the wordmark out of the dark, then
+   sunrise over the front, then the buttons. The dark is its own layer so it
+   can lift while the wordmark stays. Never with reduced motion. */
+.ou-intro { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ou-intro-night { position: absolute; inset: 0; background: linear-gradient(180deg, #102A33 0%, var(--teal-dark) 62%, #24505F 100%); }
+.ou-wordmark.ou-intro-mark { position: relative; width: 236px; }
+.ou-title-sky .sf-sun { transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) { .ou-intro { display: none; } }

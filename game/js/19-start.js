@@ -76,6 +76,61 @@
     $('#ou-told').hidden = true;
   });
   stage.addEventListener('focusout', function () { setTimeout(fit, 60); });
+
+  /* ---------- the intro (owner 2026-11-24) ----------
+     As the game opens, once a visit: the café's wordmark comes up out of the
+     dark; the dark lifts, the sky over the front warms into sunrise and the
+     sun comes up behind the trees; the wordmark settles into its place on
+     the title and the buttons come up under it. About two and a half
+     seconds, and a tap or a key anywhere skips it. Never with reduced
+     motion, never on the sound test page. Web Animations, so skipping is
+     finishing every one of them at once; the styles are in 06-motion.css. */
+  function playIntro() {
+    var scr = $('[data-scr="title"]'), mark = scr && scr.querySelector('.ou-wordmark');
+    if (!scr || scr.hidden || !mark || !mark.animate) return;
+    if (/[?&]sound\b/.test(location.search)) return;
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    try { if (sessionStorage.getItem('ou.intro') === '1') return; sessionStorage.setItem('ou.intro', '1'); } catch (e) { /* no storage: play it */ }
+    var veil = document.createElement('div'), night = document.createElement('div'), big = mark.cloneNode(true);
+    veil.className = 'ou-intro'; veil.setAttribute('aria-hidden', 'true');
+    night.className = 'ou-intro-night'; big.classList.add('ou-intro-mark');
+    veil.appendChild(night); veil.appendChild(big); scr.appendChild(veil);
+    var runs = [], soft = 'cubic-bezier(.22,.8,.3,1)';
+    var go = function (el, frames, o) { if (el && el.animate) runs.push(el.animate(frames, Object.assign({ easing: soft }, o))); };
+    // where the wordmark has to end up, in the stage's own pixels (the stage is scaled to the phone)
+    var a = big.getBoundingClientRect(), b = mark.getBoundingClientRect(), k = scaleNow || 1;
+    var dx = (b.left + b.width / 2 - a.left - a.width / 2) / k, dy = (b.top + b.height / 2 - a.top - a.height / 2) / k, r = b.width / a.width;
+    var LAND = 2050;
+    // 1. the wordmark out of the dark
+    go(big, [{ opacity: 0, transform: 'scale(.9)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 750, fill: 'both' });
+    // 2. sunrise: the dark lifts, the sky warms, the sun comes up behind the trees
+    go(night, [{ opacity: 1 }, { opacity: 0 }], { duration: 1100, delay: 950, easing: 'ease-in-out', fill: 'both' });
+    go(scr.querySelector('.ou-title-sky'), [{ filter: 'brightness(.4) saturate(.6)', transform: 'translateY(12px)' }, { filter: 'brightness(1) saturate(1)', transform: 'none' }], { duration: 1600, delay: 900, fill: 'both' });
+    Array.prototype.forEach.call(scr.querySelectorAll('.sf-sun'), function (sun) {
+      go(sun, [{ transform: 'translateY(30px)' }, { transform: 'none' }], { duration: 1700, delay: 950, fill: 'both' });
+    });
+    // 3. the wordmark settles into its place, and the real one takes over
+    go(big, [{ transform: 'scale(1)' }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + r + ')' }], { duration: 900, delay: LAND - 900, easing: 'cubic-bezier(.5,0,.25,1)', fill: 'forwards' });
+    go(big, [{ opacity: 1 }, { opacity: 0 }], { duration: 1, delay: LAND, fill: 'forwards' });
+    go(mark, [{ opacity: 0 }, { opacity: 1 }], { duration: 1, delay: LAND, fill: 'backwards' });
+    // 4. the buttons come up under it
+    ['h1', '.ou-gorow', '.ou-levels', '.ou-level-text', '#ou-inapp', '#ou-told', '.ou-title-links', '.ou-title-foot'].forEach(function (sel, i) {
+      go(scr.querySelector(sel), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: LAND - 150 + i * 70, fill: 'backwards' });
+    });
+    var over = false;
+    var end = function () {
+      if (over) return; over = true;
+      runs.forEach(function (x) { try { x.finish(); x.cancel(); } catch (e) { /* gone already */ } });
+      if (veil.parentNode) veil.parentNode.removeChild(veil);
+      document.removeEventListener('keydown', end, true);
+    };
+    veil.addEventListener('pointerdown', function (e) { e.preventDefault(); end(); });
+    veil.addEventListener('click', end);
+    document.addEventListener('keydown', end, true);
+    Promise.all(runs.map(function (x) { return x.finished; })).then(end, end);
+  }
+  playIntro();
+
   window.ouStarted = true;      // the page's "the game didn't start" note looks for this
   requestAnimationFrame(function (now) { last = now; requestAnimationFrame(frame); });
 

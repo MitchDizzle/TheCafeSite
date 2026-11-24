@@ -633,7 +633,15 @@ of leaving the game; Escape during a shift pauses it.
   the next plate is ready at once.
 - The flip and the flare-up run on their own clocks (`--ago`), so a redraw
   of the flat-top half way through doesn't restart or cut them.
-- **`prefers-reduced-motion`:** every animation is off and the game plays
+- **The intro** (owner 2026-11-24): as the game opens, once a visit, the
+  café's wordmark comes up out of the dark; the dark lifts, the sky over the
+  front warms into sunrise and the sun comes up behind the trees (the
+  storefront's two `sf-sun` circles); the wordmark settles into its place on
+  the title and the buttons come up under it, one after another. About two
+  and a half seconds; a tap or a key anywhere skips it, and the tap that
+  skips never presses a button. Not on the sound test page. In
+  `19-start.js` (`playIntro`) and `06-motion.css`.
+- **`prefers-reduced-motion`:** every animation is off (the intro too) and the game plays
   the same.
 - A short buzz on a walk-out where the phone allows it, off with the sound.
 
