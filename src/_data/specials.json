@@ -172,8 +172,10 @@
       "date": "2026-11-23",
       "soup": "Chicken Noodle",
       "special": "French Dip",
-      "anySide": true,
-      "boardSavedAt": "2026-11-18T14:45:04.116Z"
+      "sides": [
+        "Twice Baked Potato Casserole"
+      ],
+      "boardSavedAt": "2026-11-23T14:46:19.184Z"
     },
     {
       "date": "2026-11-24",
