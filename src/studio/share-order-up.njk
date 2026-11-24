@@ -34,9 +34,9 @@ studioOrder: 60
     <div class="ous-lamp"></div>
 
     <div class="ous-copy">
-        <p class="ous-kicker">A little game from</p>
+        <p class="ous-kicker">A game from</p>
         <div class="wordmark wordmark--light wordmark--hero">{% inlineSvg "/assets/thecafe.svg", "", site.name %}</div>
-        <p class="ous-title">Order Up</p>
+        <div class="ous-title">{% include "partials/game/logo.njk" %}</div>
         <p class="ous-line">A week on the flat-top at {{ site.address.street }}</p>
         <div class="ous-row">
             <span class="ous-play"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l12 7-12 7z"/></svg>Play on your phone</span>

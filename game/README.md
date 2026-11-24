@@ -529,12 +529,22 @@ so they never read as the red of a button or a late ticket.
 | Role | Font | Size on the 360-wide stage |
 |---|---|---|
 | The wordmark | `assets/thecafe.svg`, inlined, hero treatment | 200 wide |
-| "Order Up", headings, item and card names | Playfair Display 700 | 17 – 46 |
+| "Order Up" | on its order ticket, Playfair Display italic 700 (below) | 40 (32 on a short phone) |
+| Headings, item and card names | Playfair Display 700 | 17 – 46 |
 | Kickers ("After close", "Today's special") | Playfair Display italic 400 | 20 |
 | Ticket names, card text, hints | Lato 700 / 400 | 13 – 16 |
 | HUD numbers (tips, clock) | Lato 900, tabular figures | 20 |
 | Labels ("TIPS", "MONDAY", bin names) | Lato 700, CAPITALS, spaced | 10 – 11 |
 | Buttons | Lato 700, CAPITALS, spaced 0.12em | 16 |
+
+**The name is lettered on an order ticket** (owner 2026-11-24, option B of
+three): a cream slip tilted as if just pinned to the rail, "#1 · To go" in
+the corner, "Order Up" in Playfair italic, a red rule under it like the
+paper screens', a torn bottom edge. One partial,
+`src/_includes/partials/game/logo.njk`, carries it and its styles, for the
+title, the share picture and the launch post; the video's end card copies it
+(CafeWork `video-tools/order-up/overlays.js`). The game is "a game from The
+Café", never "a little game" (owner 2026-11-24).
 
 **Ticket names are spelled as `menu.json` spells them**, and the build warns
 if one has left the menu. The stage is scaled to the phone, so on a 390-wide
@@ -788,8 +798,7 @@ House voice (`STYLE.md` §2): plain words, short lines, no exclamation marks.
 | Family fed | Mom poured you a coffee | |
 | Family left | They'll bring it up at dinner. | |
 
-- **Name the café, not the game,** in anything posted about it: "a little
-  game on The Café's website", with the town.
+- **Name the café, not the game,** in anything posted about it: "a game on The Café's website", with the town.
 - **No prizes for scores** unless the owners decide to offer one, and that
   is their call. The game never promises food, discounts or anything at the
   counter on its own.
@@ -935,8 +944,8 @@ at the foot **where to play it** ("Play it at
 lvcafetogo.com/play", `site.json` → `game.playAt`; owner 2026-11-13, even
 while the game is unlisted; change it to play.lvcafetogo.com once that
 subdomain opens the game: `src/.htaccess` already sends it to /play, so the
-game keeps one address and every save stays put) and "A little game from The Café ·
-Leavenworth, KS". Rows and tiles shrink to fit, so nothing runs off the bottom).
+game keeps one address and every save stays put) and "A game from The Café ·
+Leavenworth, KS" (it said "A little game" until 2026-11-24). Rows and tiles shrink to fit, so nothing runs off the bottom).
 The item drawings are the sprite sheet's, turned into images as the end
 screen or Past weeks opens (one not loaded by the tap is left off; a
 browser that won't let the picture be read with them gets it without))

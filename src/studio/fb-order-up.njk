@@ -9,7 +9,7 @@ tags: studio
 studioTitle: "Order Up — launch post"
 studioCategory: "Social"
 studioSize: "1080 × 1350 px · portrait feed post"
-studioNote: "Post once the game is listed (site.json game.listed: true). The address is in the picture; keep it out of the caption (Facebook's link cap). Caption: The Café in Leavenworth made a little game. Work the flat-top for a week, one shift a day: tickets in, plates out. Play it on our website, lvcafetogo.com/play."
+studioNote: "Post once the game is listed (site.json game.listed: true). The address is in the picture; keep it out of the caption (Facebook's link cap). Caption (no link): We turned our kitchen into a game. Work the flat-top at The Café for a week, one shift a day: tickets in, plates out. Free on your phone, nothing to download. Can you make it to Friday?"
 studioW: 1080
 studioH: 1350
 studioOrder: 61
@@ -23,8 +23,8 @@ studioOrder: 61
     <div class="ou-ad-band">
         <p class="ou-ad-label">New on our website · {{ site.address.locality }}, Kansas</p>
         <div class="wordmark wordmark--light wordmark--hero">{% inlineSvg "/assets/thecafe.svg", "", site.name %}</div>
-        <p class="ou-ad-title">Order Up</p>
-        <p class="ou-ad-line">A little game: work our flat-top for a week, one shift a day.</p>
+        <div class="ou-ad-title">{% include "partials/game/logo.njk" %}</div>
+        <p class="ou-ad-line">We turned our kitchen into a game: work our flat-top for a week, one shift a day.</p>
         <ul class="ou-ad-steps">
             <li><b>Tickets come in.</b> Cook what they show, flip it, plate it.</li>
             <li><b>Send it before it's late.</b> Tips buy gear for tomorrow.</li>

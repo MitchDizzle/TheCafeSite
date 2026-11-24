@@ -1,0 +1,22 @@
+{#- The game's name, lettered on an order ticket (owner 2026-11-24, option B
+    of three): the cream slip from the rail, tilted as if just pinned up, its
+    number in the corner, the name in Playfair italic and a red rule under it
+    like the paper screens'. The bottom edge is torn. Used on the title
+    screen (play.njk), the share picture and the launch post, and copied into
+    the video's end card (CafeWork video-tools/order-up/overlays.js), so it
+    looks the same everywhere. Change it here, and there.
+
+    Sized by the font-size of whatever holds it: 1em is the size of the name.
+    Its styles come with it, so it can be dropped into any page once. -#}
+<style>
+  .ou-logo { display: inline-block; transform: rotate(-2.5deg); filter: drop-shadow(.07em .08em 0 rgba(31, 69, 82, .35)); line-height: 1; text-align: left; }
+  .ou-logo-slip {
+    display: block; background: #FAF7F2; color: #22323A; padding: .2em .52em .34em; border-radius: .1em .1em 0 0;
+    -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - .14em) no-repeat, radial-gradient(circle .14em at .14em 100%, transparent .13em, #000 .14em) bottom / .28em .14em repeat-x;
+            mask: linear-gradient(#000 0 0) top / 100% calc(100% - .14em) no-repeat, radial-gradient(circle .14em at .14em 100%, transparent .13em, #000 .14em) bottom / .28em .14em repeat-x;
+  }
+  .ou-logo-no { display: block; font: 700 .24em/1 Lato, sans-serif; letter-spacing: .24em; text-transform: uppercase; color: #2C5E70; margin-bottom: .3em; }
+  .ou-logo-name { display: block; font: italic 700 1em/1.05 "Playfair Display", Georgia, serif; white-space: nowrap; }
+  .ou-logo-rule { display: block; height: .075em; background: #C0392F; margin-top: .1em; border-radius: .04em; }
+</style>
+<span class="ou-logo" role="img" aria-label="Order Up"><span class="ou-logo-slip" aria-hidden="true"><span class="ou-logo-no">#1 · To go</span><span class="ou-logo-name">Order Up</span><span class="ou-logo-rule"></span></span></span>

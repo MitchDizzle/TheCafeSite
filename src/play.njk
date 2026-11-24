@@ -1,12 +1,12 @@
 ---
 layout: layouts/base.njk
 title: "Order Up | The Café"
-description: "A little game from The Café in Leavenworth, KS: work the flat-top for a week, one shift a day."
+description: "A game from The Café in Leavenworth, KS: work the flat-top for a week, one shift a day."
 pageCss: "/assets/css/play.css"
 bodyClass: "ou-body"
 noSiteJs: true
 # noindex comes from site.json (game.listed) by way of play.11tydata.js.
-ogTitle: "Order Up | A little game from The Café"
+ogTitle: "Order Up | A game from The Café"
 ogDescription: "Work the flat-top at The Café in Leavenworth, KS for a week: tickets in, plates out."
 ogImage: "/studio/downloads/share-order-up.png"
 # The tab and bookmark icon is the home-screen icon (owner 2026-11-13), so the game
@@ -59,7 +59,7 @@ headExtra: |
       <div class="ou-title-gap"></div>
       <div class="ou-title-body">
         <div class="ou-wordmark">{% inlineSvg "/assets/thecafe.svg", "", site.name %}</div>
-        <h1>Order Up</h1>
+        <h1 class="ou-title-logo">{% include "partials/game/logo.njk" %}</h1>
         {# play.js turns this into "Continue: Wednesday" when a week was left
            half way, and shows "New week" beside it. #}
         {# With a week saved: Continue, and New week right beside it (behind

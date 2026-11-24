@@ -79,6 +79,6 @@
     if (p.x) lines.push('Free items turned down +' + money(p.x));
     if (p.sp) lines.push('Spent on items −' + money(p.sp));
     lines.push('Kept ' + money(p.k));
-    lines.push('A little game from The Café, Leavenworth KS. Play it at ' + PLAY_AT);
+    lines.push('A game from The Café, Leavenworth KS. Play it at ' + PLAY_AT);
     return lines.join('\n');
   }

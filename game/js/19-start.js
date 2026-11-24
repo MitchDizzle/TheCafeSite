@@ -11,6 +11,7 @@
     var s = Math.min(vw / W, vh / 600, 1.8), h = Math.min(vh / s, 800);
     scaleNow = s;
     stage.style.height = h + 'px';
+    stage.classList.toggle('is-short', h < 660);      // a short phone: the title tightens up (03-title.css)
     stage.style.transform = 'translate(' + Math.round((vw - W * s) / 2) + 'px,' + Math.round(Math.max(0, (vh - h * s) / 2)) + 'px) scale(' + s + ')';
   }
   window.addEventListener('resize', fit);
@@ -113,9 +114,11 @@
     go(big, [{ transform: 'scale(1)' }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + r + ')' }], { duration: 900, delay: LAND - 900, easing: 'cubic-bezier(.5,0,.25,1)', fill: 'forwards' });
     go(big, [{ opacity: 1 }, { opacity: 0 }], { duration: 1, delay: LAND, fill: 'forwards' });
     go(mark, [{ opacity: 0 }, { opacity: 1 }], { duration: 1, delay: LAND, fill: 'backwards' });
-    // 4. the buttons come up under it
-    ['h1', '.ou-gorow', '.ou-levels', '.ou-level-text', '#ou-inapp', '#ou-told', '.ou-title-links', '.ou-title-foot'].forEach(function (sel, i) {
-      go(scr.querySelector(sel), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: LAND - 150 + i * 70, fill: 'backwards' });
+    // 4. the name's ticket drops in, as a ticket lands on the rail, and the buttons come up under it
+    go(scr.querySelector('h1'), [{ opacity: 0, transform: 'translateY(-26px) rotate(-9deg) scale(.92)' }, { opacity: 1, offset: .55 }, { opacity: 1, transform: 'none' }],
+      { duration: 560, delay: LAND - 220, easing: 'cubic-bezier(.3,1.45,.5,1)', fill: 'backwards' });
+    ['.ou-gorow', '.ou-levels', '.ou-level-text', '#ou-inapp', '#ou-told', '.ou-title-links', '.ou-title-foot'].forEach(function (sel, i) {
+      go(scr.querySelector(sel), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: LAND - 80 + i * 70, fill: 'backwards' });
     });
     var over = false;
     var end = function () {

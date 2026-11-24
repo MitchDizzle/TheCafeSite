@@ -138,7 +138,7 @@
     var lead = 'Play it at ', site = PLAY_AT; c.font = '400 36px ' + sans; var lw = c.measureText(lead).width; c.font = '900 36px ' + sans; var sw = c.measureText(site).width;
     c.textAlign = 'left'; c.fillStyle = INK.dark; c.font = '400 36px ' + sans; c.fillText(lead, (W - lw - sw) / 2, H - 76);
     c.fillStyle = INK.teal; c.font = '900 36px ' + sans; c.fillText(site, (W - lw - sw) / 2 + lw, H - 76);
-    c.textAlign = 'center'; c.fillStyle = INK.grey; c.font = '400 28px ' + sans; c.fillText('A little game from The Café · Leavenworth, KS', W / 2, H - 32);
+    c.textAlign = 'center'; c.fillStyle = INK.grey; c.font = '400 28px ' + sans; c.fillText('A game from The Café · Leavenworth, KS', W / 2, H - 32);
     return cv;
   }
   /* A canvas as a PNG file, made on the spot (toBlob would wait). */
