@@ -1,0 +1,26 @@
+---
+# /giftcard — a short address we own that forwards to Square's page for
+# buying the cafe's eGift cards (site.giftCards.url, Mitch 2026-11-24: a
+# giftcard subdomain couldn't be made to forward). Print and post THIS
+# address rather than Square's, so if that link ever changes, one edit to
+# site.json keeps every printed or posted link working. Unlisted: noindex,
+# off the nav and the sitemap. With no link it falls back to /contact.
+permalink: /giftcard.html
+eleventyExcludeFromCollections: true
+---
+{%- set target = site.giftCards.url or "/contact" -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <meta http-equiv="refresh" content="0; url={{ target }}">
+    <title>Gift cards | {{ site.name }}</title>
+    <script>location.replace({{ target | dump | safe }});</script>
+</head>
+<body style="font-family: sans-serif; padding: 2rem;">
+    <p>Taking you to our gift cards&hellip;</p>
+    <p><a href="{{ target }}">Continue to buy a gift card</a></p>
+</body>
+</html>

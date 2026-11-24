@@ -18,6 +18,12 @@ Options -Indexes
     RewriteCond %{HTTP_HOST} ^play\.lvcafetogo\.com$ [NC]
     RewriteRule ^ https://lvcafetogo.com/play [R=301,L]
 
+    # giftcard(s).lvcafetogo.com → /giftcard (Mitch 2026-11-24: a forward set
+    # up at the host didn't work). Works once the subdomain is pointed at this
+    # same folder, with its own certificate, like play.
+    RewriteCond %{HTTP_HOST} ^giftcards?.lvcafetogo.com$ [NC]
+    RewriteRule ^ https://lvcafetogo.com/giftcard [R=301,L]
+
     # www.lvcafetogo.com → lvcafetogo.com
     RewriteCond %{HTTP_HOST} ^www\.lvcafetogo\.com$ [NC]
     RewriteRule ^ https://lvcafetogo.com%{REQUEST_URI} [R=301,L]
@@ -37,6 +43,9 @@ Options -Indexes
     # The 3-page large print was archived the same day (/menu linked it); its
     # address gets the 11 x 17 menu, the big-type one the cafe uses.
     RewriteRule ^studio/downloads/menu-large-print\.(pdf|png)$ /studio/downloads/menu-counter.$1 [R=302,L]
+
+    # Other ways of typing /giftcard (site.giftCards.url): all go there.
+    RewriteRule ^(giftcards|gift-cards?|gifts?)/?$ /giftcard [R=302,L]
 
     # /page.html → /page (drop the extension from visible URLs)
     RewriteCond %{THE_REQUEST} \s/([^\s?]+)\.html[\s?] [NC]
