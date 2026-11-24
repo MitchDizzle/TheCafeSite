@@ -5,7 +5,8 @@ played one shift at a time. Something to tap through while waiting for an
 order, or at home, that feels like this kitchen and no other.
 
 **It's built, and live at lvcafetogo.com/play** (on `main` since 2026-11-10),
-still unlisted: no link to it, noindex, off the sitemap. Locally: `npm
+listed since 2026-11-24 (linked in the footer and on `/menu`, indexed, in the
+sitemap; the owners said go, with no prizes or rewards). Locally: `npm
 start`, then `http://localhost:8080/play`.
 
 | What | Where |
