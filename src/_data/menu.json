@@ -228,7 +228,7 @@
     {
       "id": "salads",
       "name": "Salads",
-      "note": "Dressings: Ranch, Italian, Caesar, Honey Dijon or Creamy French",
+      "note": "Dressings: Ranch, Italian, Caesar or Honey Dijon",
       "sizing": [
         { "size": "Full", "price": 12.00 },
         { "size": "Half", "price": 7.00 }
