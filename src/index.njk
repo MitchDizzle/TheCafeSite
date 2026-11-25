@@ -177,7 +177,12 @@ headExtra: |
                 <a href="https://maps.google.com/?q=417+S+6th+St,+Leavenworth,+KS+66048">417 South 6th St, Leavenworth, KS 66048</a>
             </p>
         </div>
-        <p class="hero-more"><a href="about">More about us</a></p>
+        {#- Order Up sits beside About as a plain link, not a third button
+            (see the note above the buttons), and only while site.json's
+            game.listed says so, like the footer and /menu links. -#}
+        <p class="hero-more"><a href="about">More about us</a>
+            {%- if site.game.listed %}<span class="hero-more-sep" aria-hidden="true">&middot;</span><a href="/play">Play our game</a>{% endif -%}
+        </p>
     </div>
 
     <!-- Plain buttons, not role="tab": there are no tabpanels to own, and the

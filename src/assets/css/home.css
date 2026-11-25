@@ -205,6 +205,12 @@
             text-underline-offset: 0.35em;
         }
 
+        .hero-more-sep {
+            color: var(--cream);
+            opacity: 0.6;
+            margin: 0 0.6em;
+        }
+
         .hero-more a:hover,
         .hero-more a:focus-visible {
             opacity: 1;
