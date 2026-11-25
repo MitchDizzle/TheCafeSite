@@ -180,9 +180,11 @@
     {
       "date": "2026-11-24",
       "soup": "Italian Wedding",
-      "special": "Pork Tenderloin",
-      "anySide": true,
-      "boardSavedAt": "2026-11-18T14:45:04.116Z"
+      "special": "Pork Tenderloin Sandwich",
+      "sides": [
+        "Mac & Cheese"
+      ],
+      "boardSavedAt": "2026-11-24T16:27:15.237Z"
     },
     {
       "date": "2026-11-25",
