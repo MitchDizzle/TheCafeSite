@@ -205,10 +205,23 @@
             text-underline-offset: 0.35em;
         }
 
-        .hero-more-sep {
-            color: var(--cream);
-            opacity: 0.6;
-            margin: 0 0.6em;
+        /* Order Up's ticket as the game's button (partials/game/logo.njk:
+           1em is the size of the name). It lifts a little on hover. */
+        .hero-game {
+            display: flex; flex-direction: column; align-items: center; gap: 0.45rem;
+            margin-top: 0.4rem; padding: 0.35rem 0.75rem;
+            font-size: clamp(1.9rem, 6vw, 2.3rem);
+            color: var(--cream); text-decoration: none;
+            border-radius: 0.3rem;
+        }
+        .hero-game .ou-logo { transition: transform 0.2s; }
+        .hero-game:hover .ou-logo,
+        .hero-game:focus-visible .ou-logo { transform: rotate(-2.5deg) translateY(-3px); }
+        .hero-game:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+        .hero-game-label {
+            font: 400 clamp(0.8rem, 2vw, 0.9rem)/1 'Lato', sans-serif;   /* 400: the page loads Lato 300 and 400 only */
+            letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--mint);
         }
 
         .hero-more a:hover,

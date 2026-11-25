@@ -177,12 +177,19 @@ headExtra: |
                 <a href="https://maps.google.com/?q=417+S+6th+St,+Leavenworth,+KS+66048">417 South 6th St, Leavenworth, KS 66048</a>
             </p>
         </div>
-        {#- Order Up sits beside About as a plain link, not a third button
-            (see the note above the buttons), and only while site.json's
+        {#- Order Up: the game's order ticket is the button (Mitch
+            2026-11-25), so a post that can't carry a link can say "go to
+            our website and tap the Order Up ticket". It is the ticket, not
+            a third red-or-ghost button, so it reads as something apart from
+            ordering (see the note above the buttons). Only while site.json's
             game.listed says so, like the footer and /menu links. -#}
-        <p class="hero-more"><a href="about">More about us</a>
-            {%- if site.game.listed %}<span class="hero-more-sep" aria-hidden="true">&middot;</span><a href="/play">Play our game</a>{% endif -%}
-        </p>
+        {%- if site.game.listed %}
+        <a href="/play" class="hero-game">
+            {% include "partials/game/logo.njk" %}
+            <span class="hero-game-label">Play our game</span>
+        </a>
+        {%- endif %}
+        <p class="hero-more"><a href="about">More about us</a></p>
     </div>
 
     <!-- Plain buttons, not role="tab": there are no tabpanels to own, and the
