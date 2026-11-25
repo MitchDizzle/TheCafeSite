@@ -50,6 +50,7 @@ module.exports = {
         if (r.photo) r.photo = thumbOf(r.photo);
       }
       if (game.rollRecipe && game.rollRecipe.photo) game.rollRecipe.photo = thumbOf(game.rollRecipe.photo);
+      if (game.puffRecipe && game.puffRecipe.photo) game.puffRecipe.photo = thumbOf(game.puffRecipe.photo);
       for (const s of game.specials || []) if (s.photo) s.photo = thumbOf(s.photo);
       for (const o of game.odds || []) {
         const sum = o.normal + o.rare + o.epic;

@@ -1,5 +1,5 @@
   function showBox(from) {
-    var list = D.recipes.concat([D.rollRecipe]).map(function (r) { return { id: r.id, name: r.name, photo: r.photo, sprite: D.parts[r.parts[r.parts.length > 1 ? 1 : 0]].sprite }; })
+    var list = D.recipes.concat([D.rollRecipe, D.puffRecipe].filter(Boolean)).map(function (r) { return { id: r.id, name: r.name, photo: r.photo, sprite: D.parts[r.parts[r.parts.length > 1 ? 1 : 0]].sprite }; })
       .concat(D.specials.map(function (s) { return { id: 'sp-' + s.id, name: s.name, photo: s.photo, sprite: 'special' }; }));
     var seen = list.filter(function (r) { return save.served[r.id]; }).length;
     paper('box',

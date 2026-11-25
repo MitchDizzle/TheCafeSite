@@ -33,6 +33,8 @@
       if (roll >= TU.specialShare * share) o.posted = true;      // here only by the Facebook Post
     } else if (!lunch && has('rollcase') && rand() < 0.3) {
       recipe = D.rollRecipe;
+    } else if (lunch && has('puffcase') && rand() < 0.3) {      // its lunch twin (owner 2026-11-25)
+      recipe = D.puffRecipe;
     } else {
       var gentle = !save.seen && G.day === 0 && T.seq <= 2;
       // Two big tickets already up: the next one is a small one. The rail can
@@ -184,6 +186,7 @@
     if (!t.catering) tip += frac > 0.5 ? 2 : frac > 0.25 ? 1 : 0;
     if (t.catering) tip += 2;
     if (t.rid === 'roll') tip = itemPer('rollcase');
+    if (t.rid === 'puff') tip = itemPer('puffcase');
     if (kind === 'pickle') tip += 1;
     if (kind === 'pickle' || t.parts.indexOf('pickle') !== -1 || kind === 'wild') adds.picklejar = itemPer('picklejar') * has('picklejar');
     adds.tipjar = itemPer('tipjar') * has('tipjar');
@@ -212,6 +215,7 @@
       var gain = base * (mult - 1), lnAll = Math.log(mult);
       mults.forEach(function (m) { if (lnAll > 0 && m[1] > 1) credit(m[0], gain * Math.log(m[1]) / lnAll, 0); });
       if (t.rid === 'roll') credit('rollcase', base, 1);
+      if (t.rid === 'puff') credit('puffcase', base, 1);
       if (t.posted) credit('fbpost', 2, 1);
       if (t.usual) credit('regular', 0, 1);
       if (lucky && has('penny') && luckyPct > TU.luckyBase) credit('penny', 0, 1);

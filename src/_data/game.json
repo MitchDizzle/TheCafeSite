@@ -19,13 +19,14 @@
     "side":     { "name": "Side",      "sprite": "side" },
     "soup":     { "name": "Soup",      "sprite": "soup" },
     "special":  { "name": "Special",   "sprite": "special" },
-    "roll":     { "name": "Roll",      "sprite": "roll" }
+    "roll":     { "name": "Roll",      "sprite": "roll" },
+    "puff":     { "name": "Puff",      "sprite": "puff" }
   },
 
-  "_note_bins": "The twelve bins, four across, top row first. Bacon, tortilla and cheese keep their place when breakfast turns to lunch at 11am, so a thumb finds them again. The bottom row is the same all day; soup, side and special open at 11am and the roll only with the Cinnamon Roll Case.",
+  "_note_bins": "The twelve bins, four across, top row first. Bacon, tortilla and cheese keep their place when breakfast turns to lunch at 11am, so a thumb finds them again. The bottom row is the same all day; soup, side and special open at 11am and the twelfth only with its case: the roll at breakfast (Cinnamon Roll Case), the cream puff at lunch (Cream Puff Case, owner 2026-11-25).",
   "bins": {
     "breakfast": ["egg", "bacon", "toast", "potatoes", "biscuit", "gravy", "tortilla", "cheese", "side", "soup", "special", "roll"],
-    "lunch":     ["patty", "bacon", "bun", "chicken", "lettuce", "pickle", "tortilla", "cheese", "side", "soup", "special", "roll"],
+    "lunch":     ["patty", "bacon", "bun", "chicken", "lettuce", "pickle", "tortilla", "cheese", "side", "soup", "special", "puff"],
     "lunchOnly": ["side", "soup", "special"]
   },
 
@@ -55,6 +56,7 @@
     { "id": "bsalad",     "name": "Buffalo Chicken Salad", "menu": "Buffalo Chicken Salad", "when": "lunch", "tier": 3, "parts": ["lettuce", "chicken", "bacon", "cheese"] }
   ],
   "rollRecipe": { "id": "roll", "name": "Cinnamon Roll", "when": "breakfast", "tier": 1, "parts": ["roll"], "photo": "/assets/photos/cinnamon-roll.jpg" },
+  "puffRecipe": { "id": "puff", "name": "Cream Puff", "when": "lunch", "tier": 1, "parts": ["puff"], "photo": "/assets/photos/cream-puffs-2.jpg" },
 
   "_note_specials": "The dawn pick: three of these are offered each morning. All were real specials with their real sides (the weekly posts). One side is a quicker plate; two sides tips more. A special is held hot, so nothing on it cooks: special, then a side for each side named.",
   "specials": [
@@ -99,6 +101,7 @@
     { "id": "clamshell", "name": "Clamshells", "rarity": "normal", "price": 15, "kind": "survive", "icon": "clamshell", "text": "To-go tickets wait 8 seconds longer" },
     { "id": "earlybird", "name": "Early Bird", "rarity": "normal", "price": 40, "kind": "tips", "icon": "sun", "text": "The first {n} tickets of the day tip double", "per": 5 },
     { "id": "rollcase", "name": "Cinnamon Roll Case", "rarity": "normal", "price": 25, "kind": "tips", "icon": "roll", "text": "Breakfast brings cinnamon roll tickets: one tap, {n} each", "per": 4, "unit": "$" },
+    { "id": "puffcase", "name": "Cream Puff Case", "rarity": "normal", "price": 25, "kind": "tips", "icon": "puff", "text": "Lunch brings cream puff tickets: one tap, {n} each", "per": 4, "unit": "$" },
     { "id": "refills", "name": "Free Refills", "rarity": "normal", "price": 55, "max": 2, "kind": "survive", "icon": "pot", "text": "Every ticket waits {n} longer", "per": 3, "unit": "s" },
     { "id": "fbpost", "name": "Facebook Post", "rarity": "normal", "price": 25, "max": 2, "kind": "tips", "icon": "post", "text": "The special is posted: it's on {n} of lunch tickets", "base": 22, "per": 20, "unit": "%" },
     { "id": "scraper", "name": "Bench Scraper", "rarity": "normal", "price": 15, "kind": "survive", "icon": "scraper", "text": "Burnt food clears itself off the flat-top" },

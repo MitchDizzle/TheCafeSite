@@ -129,7 +129,7 @@
     spatula: ['flip', 'flips'], spare: ['plate swap', 'plate swaps'], smalltalk: ['line answered', 'lines answered'],
     horseshoe: ['trouble kept away', 'troubles kept away'], goldspat: ['food kept from burning', 'foods kept from burning'],
     bigdill: ['plate finished by a pickle', 'plates finished by a pickle'], penny: ['lucky plate', 'lucky plates'], regular: ['usual', 'usuals'],
-    rollcase: ['cinnamon roll', 'cinnamon rolls'], fbpost: ['extra special', 'extra specials']
+    rollcase: ['cinnamon roll', 'cinnamon rolls'], puffcase: ['cream puff', 'cream puffs'], fbpost: ['extra special', 'extra specials']
   };
   function didText(id, s) {
     var n = Math.round(s.n), words = ITEM_DID[id], out = [];

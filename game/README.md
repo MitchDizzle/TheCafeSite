@@ -227,6 +227,7 @@ doesn't stack with it: the bigger of the two applies.
 | Clamshells | To-go tickets wait 8 seconds longer |
 | Early Bird | The first three tickets of the day tip double |
 | Cinnamon Roll Case | Breakfast brings cinnamon roll tickets: one tap, $3 |
+| Cream Puff Case | Its lunch twin (owner 2026-11-25): lunch brings cream puff tickets, one tap, $4, from a twelfth bin that opens at 11am |
 | Free Refills (2) | Every ticket waits 3 seconds longer (each) |
 | Bench Scraper | Burnt food clears itself off the flat-top |
 | Facebook Post (2) | The special is posted: more lunch tickets are for it (22 in 100, then 36, then 50; `tuning.postShare`). Two-sided specials tip the most, so it pays best with one |

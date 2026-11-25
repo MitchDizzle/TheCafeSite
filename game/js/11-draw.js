@@ -4,6 +4,7 @@
 
   function binOpen(part) {
     if (part === 'roll') return has('rollcase') && T.bins === 'breakfast';
+    if (part === 'puff') return has('puffcase') && T.bins === 'lunch';
     if (D.bins.lunchOnly.indexOf(part) !== -1 && T.bins !== 'lunch') return false;
     if (part === 'special' && T.cat) return false;
     if (T.noShow === part && T.bins === 'breakfast' && trouble('noshow')) return false;
@@ -126,7 +127,7 @@
     var full = !T.grill.slice(0, usable()).some(function (x) { return !x; });
     $('#ou-bins').innerHTML = D.bins[T.bins].map(function (part) {
       var p = D.parts[part];
-      if (part === 'roll' && !binOpen(part)) return '<span></span>';
+      if ((part === 'roll' || part === 'puff') && !binOpen(part)) return '<span></span>';
       var open = binOpen(part), cls = 'ou-bin' + (p.cook ? ' is-cook' : '') + (open ? '' : ' is-off') + (open && p.cook && full ? ' is-full' : '');
       return '<button class="' + cls + '" data-act="bin" data-part="' + part + '"' + (open ? '' : ' aria-disabled="true"') + '>' + partSprite(part, 'ou-sh') + '<span class="ou-label">' + p.name + '</span></button>';
     }).join('');
