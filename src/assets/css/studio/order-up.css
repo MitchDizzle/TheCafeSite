@@ -75,7 +75,7 @@
 
 /* 1080 x 1350: the feed post. Three steps under the name, then the address
    in the picture (never in the caption: STYLE.md, Facebook's link cap). */
-.ou-post .ou-ad-art { height: 540px; }
+.ou-post .ou-ad-art { height: 470px; }   /* 540 pushed the address off the bottom (2026-11-25); the sky gives up the difference */
 .ou-post .ou-ad-band { gap: 14px; padding: 26px 80px 40px; justify-content: flex-start; }
 .ou-post { --mark-w: 380px; }
 .ou-post .ou-ad-title { font-size: 80px; margin: 10px 0 8px; }
