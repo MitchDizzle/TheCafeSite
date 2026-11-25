@@ -63,6 +63,15 @@
     line-height: 1.05;
 }
 
+/* A week across a month end, "November 30 – December 4": 7.9in at 0.62in,
+   wider than the sign's 7.3in, so it went onto a second line (Mitch
+   2026-11-25). 0.54in puts the longest on one line (6.9in); the half
+   sheet's own size below wins over this. */
+.sign-heading-title--long {
+    font-size: 0.54in;
+    white-space: nowrap;
+}
+
 .sign-heading-sub {
     font-size: 0.2in;
     margin-top: 0.08in;

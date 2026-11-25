@@ -426,7 +426,7 @@ function weekSign(days, { price, includesDrink, soupSide, swapSides = [], soupSi
   const choices = choicesOf({ swapSides, soupSide });
   const inner = `<header class="sign-title-ink"><div class="wordmark wordmark--ink">${wordmark()}</div></header>
     <div class="sign-heading">
-      <h2 class="p-display sign-heading-title ink-teal">${esc(rangeOf(days))}</h2>
+      <h2 class="p-display sign-heading-title${/– [A-Z]/.test(rangeOf(days)) ? " sign-heading-title--long" : ""} ink-teal">${esc(rangeOf(days))}</h2>
       <p class="p-label sign-heading-sub ink-accent">This week&rsquo;s specials &middot; from 11am</p>
     </div>
     <div class="sw-grid">

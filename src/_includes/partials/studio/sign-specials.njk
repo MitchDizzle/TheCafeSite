@@ -35,14 +35,17 @@
 {%- set range = first + " – " + last.split(" ")[1] %}
 {%- else %}
 {%- set range = first + " – " + last %}
+{%- set longRange = true %}
 {%- endif %}
 <div class="{% if not half %}canvas {% endif %}sign{% if bw %} sign--bw{% endif %}{% if half %} sign--half{% endif %}">
     {% include "partials/studio/sign-mast.njk" %}
 
     {#- The dates are the headline (Mitch 2026-11-18: which week it is, at a
-        glance); it said "This Week's Specials" over them until then. -#}
+        glance); it said "This Week's Specials" over them until then.
+        Across a month end ("November 30 – December 4") it is set smaller
+        on one line, --long in sign.css (Mitch 2026-11-25). -#}
     <div class="sign-heading">
-        <h2 class="p-display sign-heading-title ink-teal">{{ range }}</h2>
+        <h2 class="p-display sign-heading-title{% if longRange %} sign-heading-title--long{% endif %} ink-teal">{{ range }}</h2>
         <p class="p-label sign-heading-sub ink-accent">This week&rsquo;s specials &middot; from 11am</p>
     </div>
 
