@@ -1,7 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect class="blade" x="8" y="12" width="26" height="22" rx="4" fill="#C5CFD3" stroke="#1F4552" stroke-width="2.5"/>
-  <path class="blade2" d="M14 18h14M14 24h14" stroke="#8E9AA0" stroke-width="2"/>
-  <path d="M32 30l20 20" stroke="#1F4552" stroke-width="9" stroke-linecap="round"/>
-  <path d="M32 30l20 20" stroke="#B98552" stroke-width="5" stroke-linecap="round"/>
-  <path d="M12 29h17" stroke="#E6ECEE" stroke-width="2" stroke-linecap="round"/><circle cx="42" cy="40" r="1.2" fill="#E6ECEE"/><circle cx="49" cy="47" r="1.2" fill="#E6ECEE"/>
+  <!-- A flipper, as on the café's flat-top: a wide steel blade, a bent neck
+    from the middle of its back edge, a wooden handle. Drawn upright and
+    turned 45 degrees, blade to the top left (owner 2026-11-25: the first
+    drawing was a square with the handle on its corner). -->
+  <g transform="rotate(-45 32 32)">
+    <path d="M32 26v9" stroke="#1F4552" stroke-width="6" stroke-linecap="round"/>
+    <path d="M32 26v9" stroke="#8E9AA0" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M32 37v20" stroke="#1F4552" stroke-width="9" stroke-linecap="round"/>
+    <path d="M32 37v20" stroke="#B98552" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="32" cy="43" r="1.2" fill="#E6ECEE"/><circle cx="32" cy="51" r="1.2" fill="#E6ECEE"/>
+    <path class="blade" d="M17 5h30l-3 21H20z" fill="#C5CFD3" stroke="#1F4552" stroke-width="2.5" stroke-linejoin="round"/>
+    <path class="blade2" d="M25 10v11M32 10v11M39 10v11" stroke="#8E9AA0" stroke-width="2" stroke-linecap="round"/>
+    <path d="M20 8h24" stroke="#E6ECEE" stroke-width="2" stroke-linecap="round"/>
+  </g>
 </svg>
