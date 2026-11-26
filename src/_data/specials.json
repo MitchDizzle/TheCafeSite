@@ -206,6 +206,52 @@
       "closed": "Black Friday",
       "message": "Have a great Thanksgiving weekend!",
       "boardSavedAt": "2026-11-18T16:16:12.718Z"
+    },
+    {
+      "date": "2026-11-30",
+      "soup": "Chicken Dumpling",
+      "special": "Chicken Bacon Avocado Wrap",
+      "anySide": true,
+      "boardSavedAt": "2026-11-25T19:21:30.844Z"
+    },
+    {
+      "date": "2026-12-01",
+      "soup": "Taco Soup",
+      "special": "Swiss Steak",
+      "sides": [
+        "Oven Browned Potatoes",
+        "Green Beans"
+      ],
+      "boardSavedAt": "2026-11-25T19:21:30.845Z"
+    },
+    {
+      "date": "2026-12-02",
+      "soup": "Chili",
+      "special": "Stuffed Pork Chop",
+      "sides": [
+        "Scalloped Potatoes",
+        "Carrots"
+      ],
+      "boardSavedAt": "2026-11-25T19:21:30.845Z"
+    },
+    {
+      "date": "2026-12-03",
+      "soup": "Broccoli Cheese",
+      "special": "Chicken Noodle Bake",
+      "sides": [
+        "Califlower"
+      ],
+      "boardSavedAt": "2026-11-25T19:21:30.845Z"
+    },
+    {
+      "date": "2026-12-04",
+      "soup": "Potato Cheese",
+      "special": "Hot Beef Sandwich",
+      "sides": [
+        "Mashed Potatoes",
+        "Green Beans"
+      ],
+      "boardSavedAt": "2026-11-25T19:21:30.845Z"
     }
   ]
 }
